@@ -30,9 +30,16 @@ First, invoke the command `sbt` from within this directory:
 sbt
 ~~~
 
-From the prompt, invoke the following command to transform the
+From the prompt, invoke the following command to download
+the latest grib files from NOAA.
+
+~~~
+downloadGribFiles
+~~~
+
+Then, invoke the following command to transform the
 grib files into JSON files that can be consumed by the frontend:
 
 ~~~
-runExample
+makeGfsJson
 ~~~
