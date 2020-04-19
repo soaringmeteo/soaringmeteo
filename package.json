@@ -4,7 +4,8 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
-    "leaflet": "1.6.0"
+    "leaflet": "1.6.0",
+    "redom": "3.26.0"
   },
   "devDependencies": {
     "@types/leaflet": "1.5.11",

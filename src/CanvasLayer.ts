@@ -1,8 +1,12 @@
 import * as L from 'leaflet';
 import { modelResolution } from './Forecast';
 
+export type CanvasLayer = {
+  setDataSource(dataSource: DataSource): void
+}
+
 export type DataSource = {
-  renderPoint: (lat: number, lng: number, ctx: CanvasRenderingContext2D) => void
+  renderPoint: (map: L.Map, lat: number, lng: number, ctx: CanvasRenderingContext2D) => void
 }
 
 export const CanvasLayer = L.Layer.extend({
@@ -65,7 +69,7 @@ export const CanvasLayer = L.Layer.extend({
     })
   },
 
-  setDataSource: function (dataSource: DataSource) {
+  setDataSource: function (dataSource: DataSource): void {
     this._dataSource = dataSource;
     this._update();
   }

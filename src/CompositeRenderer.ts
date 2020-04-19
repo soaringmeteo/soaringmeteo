@@ -29,7 +29,7 @@ export class CompositeRenderer {
       const windForce = Math.sqrt(u * u + v * v);
       // The scale of the wind arrow is proportional to the wind force, and has a “normal” size for 18 km/h
       const windCoeff = windForce / 18;
-      const windDirection = Math.atan2(v, u);
+      const windDirection = Math.atan2(-u, -v);
       ctx.fillStyle = `rgba(62, 0, 0, 0.35)`;
       ctx.beginPath();
       Array.of<[number, number]>(

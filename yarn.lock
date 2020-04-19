@@ -3031,6 +3031,11 @@ readdirp@^2.2.1:
     micromatch "^3.1.10"
     readable-stream "^2.0.2"
 
+redom@3.26.0:
+  version "3.26.0"
+  resolved "https://registry.yarnpkg.com/redom/-/redom-3.26.0.tgz#c947192222e0622710400d2126806569ca242c30"
+  integrity sha512-rAo03O4VnzUJfTGeku9CvDw5Avi5Mx7oe07CnK4I8VvijVF2om7pIO5jvfaCGiHfFQtIQAsNPWv5ce8LLnEOXw==
+
 regex-not@^1.0.0, regex-not@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/regex-not/-/regex-not-1.0.2.tgz#1f4ece27e00b0b65e0247a6810e6a85d83a5752c"
