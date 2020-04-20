@@ -1,4 +1,3 @@
-import { el, mount, text } from 'redom';
 import { initializeMap } from './Map';
 import { CanvasLayer } from './CanvasLayer';
 import { Forecast, LatestForecast } from './Forecast';

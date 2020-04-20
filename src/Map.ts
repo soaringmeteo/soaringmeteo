@@ -16,8 +16,8 @@ export const initializeMap = (element: HTMLElement): CanvasLayer => {
       })
     ],
     zoomControl: false,
-    center: [46.5, 7],
-    zoom: 10
+    center: [45.5, 9.5],
+    zoom: 7
   });
   
   L.control.zoom({ position: 'topright' }).addTo(map);
