@@ -1,6 +1,7 @@
 import { el, mount, setStyle } from 'redom';
 import { App } from './App';
 import { LatestForecast } from './Forecast';
+import * as L from 'leaflet';
 
 export class ForecastSelect {
 
@@ -74,9 +75,11 @@ export class ForecastSelectView {
   constructor(readonly forecastSelect: ForecastSelect, readonly forecastInitDateTime: Date, containerElement: HTMLElement) {
 
     const hover = (htmlEl: HTMLElement): HTMLElement => {
-      // Temporarily disabled
-      // htmlEl.onmouseenter = () => htmlEl.style.backgroundColor = 'gray';
-      // htmlEl.onmouseleave = () => htmlEl.style.backgroundColor = 'inherit';
+      htmlEl.onmouseenter = () => htmlEl.style.backgroundColor = 'lightGray';
+      htmlEl.onmouseleave = () => {
+        htmlEl.style.backgroundColor = 'inherit';
+        this.updateSelectedForecast();
+      }
       return htmlEl
     }
 
@@ -110,16 +113,16 @@ export class ForecastSelectView {
     );
     this.afternoonPeriodEl.onclick = () => { forecastSelect.selectAfternoon(); }
 
-    const previousDayBtn = hover(el('div', { title: '24 hours before', style: { ...buttonStyle } }, '«'));
+    const previousDayBtn = hover(el('div', { title: '24 hours before', style: { ...buttonStyle } }, '-24h'));
     previousDayBtn.onclick = () => { forecastSelect.previousDay(); }
 
-    const previousPeriodBtn = hover(el('div', { title: 'Previous forecast period', style: { ...buttonStyle } }, '<'));
+    const previousPeriodBtn = hover(el('div', { title: 'Previous forecast period', style: { ...buttonStyle } }, '-3h'));
     previousPeriodBtn.onclick = () => { forecastSelect.previousPeriod(); }
 
-    const nextPeriodBtn = hover(el('div', { title: 'Next forecast period', style: { ...buttonStyle } }, '>'));
+    const nextPeriodBtn = hover(el('div', { title: 'Next forecast period', style: { ...buttonStyle } }, '+3h'));
     nextPeriodBtn.onclick = () => { forecastSelect.nextPeriod(); }
 
-    const nextDayBtn = hover(el('div', { title: '24 hours after', style: { ...buttonStyle } }, '»'));
+    const nextDayBtn = hover(el('div', { title: '24 hours after', style: { ...buttonStyle } }, '+24h'));
     nextDayBtn.onclick = () => { forecastSelect.nextDay(); }
 
     this.rootElement =
@@ -128,7 +131,7 @@ export class ForecastSelectView {
         { style: { position: 'absolute', bottom: 0, zIndex: 1000, width: '100%', display: 'flex', justifyContent: 'center' } },
         el(
           'span',
-          { style: { backgroundColor: 'whiteSmoke' } },
+          { style: { backgroundColor: 'whiteSmoke', userSelect: 'none', cursor: 'default' } },
           el(
             'span',
             { style: { display: 'inline-flex', flexDirection: 'column' } },
@@ -142,8 +145,10 @@ export class ForecastSelectView {
           el('span', previousDayBtn, previousPeriodBtn, nextPeriodBtn, nextDayBtn)
         )
       );
-      this.updateSelectedForecast();
-      mount(containerElement, this.rootElement);
+    L.DomEvent.disableClickPropagation(this.rootElement);
+    L.DomEvent.disableScrollPropagation(this.rootElement);
+    this.updateSelectedForecast();
+    mount(containerElement, this.rootElement);
   }
 
   private hoursForPeriod(utcOffset: number): number {
@@ -156,7 +161,7 @@ export class ForecastSelectView {
   updateSelectedForecast() {
     const forecastDateTime = new Date(this.forecastInitDateTime);
     forecastDateTime.setUTCHours(this.forecastInitDateTime.getUTCHours() + this.forecastSelect.getHourOffset());
-    this.currentDayEl.textContent = forecastDateTime.toLocaleDateString(undefined, { month: 'long', year: 'numeric', weekday: 'short', day: 'numeric' });
+    this.currentDayEl.textContent = forecastDateTime.toLocaleString(undefined, { month: 'long', year: 'numeric', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
     setStyle(this.morningPeriodEl, this.periodStyle(this.forecastSelect.morningOffset));
     setStyle(this.noonPeriodEl, this.periodStyle(this.forecastSelect.noonOffset));
     setStyle(this.afternoonPeriodEl, this.periodStyle(this.forecastSelect.afternoonOffset));
@@ -164,7 +169,7 @@ export class ForecastSelectView {
 
   private periodStyle(periodOffset: number): object {
     if ((this.forecastSelect.getHourOffset() + 24 - this.forecastSelect.forecastInitOffset) % 24 === periodOffset) {
-      return { backgroundColor: 'lightGray' }
+      return { backgroundColor: '#999' }
     } else {
       return { backgroundColor: 'inherit' }
     }
