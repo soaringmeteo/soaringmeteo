@@ -35,7 +35,7 @@ export class ForecastSelect {
   private updateHourOffset(value: number) {
     if (value !== this.hourOffset) {
       this.hourOffset = value;
-      this.app.updateForecast();
+      this.app.forecastLayer.updateForecast();
       this.view.updateSelectedForecast();
     }
   }
