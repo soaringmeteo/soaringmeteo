@@ -1,7 +1,7 @@
-import { boundaryDepthColorScale } from "./ColorScale";
 import { scalePoint, rotatePoint } from "./shapes";
 import { Forecast, modelResolution } from "./Forecast";
 import * as L from 'leaflet';
+import { ColorScale, Color } from "./ColorScale";
 
 export class CompositeRenderer {
 
@@ -19,7 +19,7 @@ export class CompositeRenderer {
       // Boundary Layer Height
       const blh = forecastAtPoint.blh;
       const blhNormalized = Math.min(blh / 800, 1);
-      const color = boundaryDepthColorScale.interpolate(blhNormalized);
+      const color = boundaryDepthColorScale.interpolate(blh);
       ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.35)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
   
@@ -73,3 +73,10 @@ export class CompositeRenderer {
   
   }
 }
+
+export const boundaryDepthColorScale = new ColorScale([
+  [0, new Color(0xff, 0x00, 0x00)],
+  [300, new Color(0x7f, 0x7f, 0x00)],
+  [700, new Color(0x3f, 0x7f, 0x3f)],
+  [1200, new Color(0x00, 0xff, 0x00)]
+]);

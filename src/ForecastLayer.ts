@@ -1,14 +1,19 @@
-import { el, mount } from 'redom';
+import { el, mount, setChildren } from 'redom';
 import { DataSource, CanvasLayer } from "./CanvasLayer";
 import * as L from 'leaflet';
-import { CompositeRenderer } from './CompositeRenderer';
+import { CompositeRenderer, boundaryDepthColorScale as mixedColorScale } from './CompositeRenderer';
 import { Forecast } from './Forecast';
-import { ThQ } from './ThQ';
+import { ThQ, colorScale as thQColorScale } from './ThQ';
 import { App } from './App';
+import { ColorScale } from './ColorScale';
 
 class Renderer {
 
-  constructor(readonly name: string, private readonly renderer: (forecast: Forecast) => DataSource) {}
+  constructor(
+    readonly name: string,
+    private readonly renderer: (forecast: Forecast) => DataSource,
+    readonly mapKeyEl: () => HTMLElement
+  ) {}
 
   update(hourOffset: number, canvas: CanvasLayer) {
     fetch(`${hourOffset}.json`)
@@ -22,8 +27,31 @@ class Renderer {
 
 }
 
-const mixedRenderer = new Renderer('Mixed', forecast => new CompositeRenderer(forecast));
-const thqRenderer   = new Renderer('ThQ', forecast => new ThQ(forecast));
+const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): HTMLElement => {
+  return el(
+    'div',
+    colorScale.points.slice().reverse().map(([value, color]) => {
+      return el(
+        'div',
+        { style: { margin: '5px', textAlign: 'right' } },
+        el('span', format(value)),
+        el('span', { style: { width: '20px', height: '15px', backgroundColor: color.css(), display: 'inline-block', border: 'thin solid black' } })
+      )
+    })
+  )
+};
+
+const mixedRenderer = new Renderer(
+  'Mixed',
+  forecast => new CompositeRenderer(forecast),
+  // FIXME Maybe implement map key in datasource...
+  () => colorScaleEl(mixedColorScale, value => `${value}m `)
+);
+const thqRenderer = new Renderer(
+  'ThQ',
+  forecast => new ThQ(forecast),
+  () => colorScaleEl(thQColorScale, value => `${Math.round(value * 100)}% `)
+);
 
 /**
  * Overlay on the map that displays the soaring forecast.
@@ -31,18 +59,19 @@ const thqRenderer   = new Renderer('ThQ', forecast => new ThQ(forecast));
 export class ForecastLayer {
 
   private renderer: Renderer;
+  private rendererKeyEl: HTMLElement;
 
   // TODO Take as parameter the pre-selected layer
   constructor(readonly app: App, containerElement: HTMLElement) {
     this.renderer = mixedRenderer;
 
-    const mixedEl = this.setupRenderer(mixedRenderer);
-    const thqEl   = this.setupRenderer(thqRenderer);
+    const mixedEl = this.setupRendererBtn(mixedRenderer);
+    const thqEl   = this.setupRendererBtn(thqRenderer);
 
     const rootElement = el(
       'div',
       {
-        style: { position: 'absolute', right: 0, zIndex: 1000, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'end', justifyContent: 'center' }
+        style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 1000 }
       },
       thqEl,
       mixedEl
@@ -50,13 +79,17 @@ export class ForecastLayer {
     L.DomEvent.disableClickPropagation(rootElement);
     L.DomEvent.disableScrollPropagation(rootElement);
     mount(containerElement, rootElement);
+
+    this.rendererKeyEl = el('div', { style: { position: 'absolute', top: '5px', left: '5px', zIndex: 1000, backgroundColor: 'rgba(255, 255,  255, 0.5' } });
+    this.replaceRendererKeyEl();
+    mount(containerElement, this.rendererKeyEl);
   }
 
-  setupRenderer(renderer: Renderer): HTMLElement {
+  private setupRendererBtn(renderer: Renderer): HTMLElement {
     const input = el('input', { name: 'layer', type: 'radio', checked: this.renderer === renderer });
     const container = el(
       'div',
-      { style: { backgroundColor: 'rgba(255, 255, 255, 0.5)', userSelect: 'none', border: 'thin solid darkGray' } },
+      { style: { backgroundColor: 'rgba(255, 255, 255, 0.5)', userSelect: 'none', border: 'thin solid darkGray', textAlign: 'right' } },
       el('label', { style: { cursor: 'pointer', padding: '0.3em' } }, renderer.name, input)
     );
     input.onchange = () => { this.setRenderer(renderer); };
@@ -65,10 +98,15 @@ export class ForecastLayer {
 
   private setRenderer(renderer: Renderer): void {
     this.renderer = renderer;
+    this.replaceRendererKeyEl();
     this.updateForecast();
   }
 
-  updateForecast() {
+  private replaceRendererKeyEl(): void {
+    setChildren(this.rendererKeyEl, [this.renderer.mapKeyEl()]);
+  }
+
+  updateForecast():void {
     this.renderer.update(this.app.forecastSelect.getHourOffset(), this.app.canvas);
   }
 

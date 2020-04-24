@@ -7,7 +7,7 @@ export class Color {
 }
 
 export class ColorScale {
-  private readonly points: Array<[number, Color]>;
+  readonly points: Array<[number, Color]>;
   constructor(unsortedPoints: Array<[number, Color]>) {
     this.points = unsortedPoints.sort(([x, c1], [y, c2]) => x - y)
   }
@@ -39,9 +39,3 @@ export class ColorScale {
   }
 
 }
-
-export const boundaryDepthColorScale = new ColorScale([
-  [0.0, new Color(0xff, 0x00, 0x00)],
-  [0.5, new Color(0x00, 0x00, 0x00)],
-  [1.0, new Color(0x00, 0xff, 0x00)]
-]);

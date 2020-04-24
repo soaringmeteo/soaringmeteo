@@ -2,7 +2,7 @@ import { Forecast, modelResolution } from "./Forecast";
 import { ColorScale, Color } from "./ColorScale";
 import * as L from 'leaflet';
 
-const colorScale = new ColorScale([
+export const colorScale = new ColorScale([
   [0.1, new Color(0x99, 0x00, 0x99)],
   [0.2, new Color(0x99, 0x33, 0x33)],
   [0.3, new Color(0xff, 0x00, 0x00)],
@@ -27,7 +27,7 @@ export class ThQ {
 
       // Boundary Layer Height
       const blh = forecastAtPoint.blh;
-      const blhCoeff = Math.min(blh / 800, 1);
+      const blhCoeff = Math.min(blh / 800, 1); // >800 m = 100%
 
       // Boundary Layer Wind
       const u = forecastAtPoint.u;
