@@ -20,7 +20,7 @@ export class CompositeRenderer {
       const blh = forecastAtPoint.blh;
       const blhNormalized = Math.min(blh / 800, 1);
       const color = boundaryDepthColorScale.interpolate(blh);
-      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.35)`;
+      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.4)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
   
       // Boundary Layer Wind
@@ -76,7 +76,8 @@ export class CompositeRenderer {
 
 export const boundaryDepthColorScale = new ColorScale([
   [0, new Color(0xff, 0x00, 0x00)],
-  [300, new Color(0x7f, 0x7f, 0x00)],
-  [700, new Color(0x3f, 0x7f, 0x3f)],
-  [1200, new Color(0x00, 0xff, 0x00)]
+  [300, new Color(0xff, 0x7f, 0x00)],
+  [600, new Color(0x00, 0xff, 0x00)],
+  [1000, new Color(0x00, 0xff, 0xff)],
+  [1500, new Color(0xff, 0xff, 0xff)]
 ]);
