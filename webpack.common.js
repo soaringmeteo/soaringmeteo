@@ -1,19 +1,16 @@
 const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-    mode: "development",
-    devServer: {
-      contentBase: ['./dist', '../makeGFSJson/target/forecast'],
-      host: '0.0.0.0'
-    },
-
     entry: './src/index.ts',
     output: {
-      filename: 'main.js',
+      filename: 'main.[contenthash].js',
       path: path.resolve(__dirname, 'dist')
     },
-
-    devtool: 'inline-source-map',
+    plugins: [new HtmlWebpackPlugin({
+      inject: 'head',
+      scriptLoading: 'defer'
+    })],
 
     resolve: {
         extensions: [".ts", ".js"],
