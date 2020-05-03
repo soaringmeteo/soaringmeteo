@@ -168,7 +168,7 @@ export class ForecastSelectView {
   }
 
   private periodStyle(periodOffset: number): object {
-    if ((this.forecastSelect.getHourOffset() + 24 - this.forecastSelect.forecastInitOffset) % 24 === periodOffset) {
+    if ((this.forecastSelect.getHourOffset() + this.forecastSelect.forecastInitOffset) % 24 === periodOffset) {
       return { backgroundColor: '#999' }
     } else {
       return { backgroundColor: 'inherit' }

@@ -106,7 +106,7 @@ export class ForecastLayer {
     setChildren(this.rendererKeyEl, [this.renderer.mapKeyEl()]);
   }
 
-  updateForecast():void {
+  updateForecast(): void {
     this.renderer.update(this.app.forecastSelect.getHourOffset(), this.app.canvas);
   }
 

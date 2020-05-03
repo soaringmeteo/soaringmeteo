@@ -5,7 +5,7 @@ const mapTilerUrl = 'https://api.maptiler.com/maps/topo/{z}/{x}/{y}.png?key=6hEH
 const smUrl = 'https://tiles.soaringmeteo.org/{z}/{x}/{y}.png';
 const osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-export const initializeMap = (element: HTMLElement): CanvasLayer => {
+export const initializeMap = (element: HTMLElement): [CanvasLayer, L.Map] => {
   const map = L.map(element, {
     layers: [
       L.tileLayer(mapTilerUrl, {
@@ -25,5 +25,5 @@ export const initializeMap = (element: HTMLElement): CanvasLayer => {
   const canvas = new CanvasLayer;
   canvas.addTo(map);
 
-  return canvas as CanvasLayer
+  return [canvas as CanvasLayer, map]
 }

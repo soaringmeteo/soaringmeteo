@@ -1,5 +1,5 @@
 
-type Point = [number, number]
+type Point = [number /* latitade */, number /* longitude */]
 
 export const scalePoint = (point: Point, center: Point, k: number): Point => {
   return [
