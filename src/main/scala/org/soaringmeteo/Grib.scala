@@ -18,12 +18,17 @@ class Grib(data: GridDataset) {
     val hpbl = Option(data.findGridByShortName("Planetary_Boundary_Layer_Height_surface")).get
     val ugrd = Option(data.findGridByShortName("u-component_of_wind_planetary_boundary")).get
     val vgrd = Option(data.findGridByShortName("v-component_of_wind_planetary_boundary")).get
-    val tcdc = Option(data.findGridByShortName("Total_cloud_cover_entire_atmosphere_6_Hour_Average"))
+    // val sunsd = Option(data.findGridByName("Sunshine_Duration_surface")).get
+    // FIXME Is this the correct way of retrieving cloud cover?
+    val tcdc =
+      Option(data.findGridByShortName("Total_cloud_cover_entire_atmosphere_3_Hour_Average"))
+        .orElse(Option(data.findGridByShortName("Total_cloud_cover_entire_atmosphere_6_Hour_Average")))
     (for (location <- locations) yield {
       val u = getXYFeatureAsDouble(ugrd, location) * 60 * 60 / 1000
       val v = getXYFeatureAsDouble(vgrd, location) * 60 * 60 / 1000
       val blh = getXYFeatureAsDouble(hpbl, location).round.toInt
       val cloudCover = tcdc.map(getXYFeatureAsDouble(_, location))
+      // val cloudCover = Some((getXYFeatureAsDouble(sunsd, location) - 3 * 60 * 60) * 100 / (3 * 60 * 60))
       val point = Point(location.latitude, location.longitude)
       point -> GfsForecast(blh, Wind(u, v), cloudCover)
     }).toMap

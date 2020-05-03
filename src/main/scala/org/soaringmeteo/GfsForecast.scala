@@ -6,7 +6,6 @@ case class GfsForecast(
   boundaryLayerHeight: Int,
   wind: Wind,
   cloudCover: Option[Double] // Optional because the first forecast (t = 00) doesn't have it. FIXME Find a better way to get the cloud cover?
-  // TODO More data like air temperature, etc.
 )
 
 object GfsForecast {
@@ -26,10 +25,10 @@ object GfsForecast {
   }
 
   /**
-   * JSON representation of the forecast data.
+   * JSON representation of the forecast data summary.
    * WARNING: client must be consistent with this serialization format.
    */
-  implicit val jsonEncoder: Encoder[GfsForecast] =
+  val summaryEncoder: Encoder[GfsForecast] =
     Encoder.instance { forecast =>
       Json.obj(
         "blh" -> Json.fromInt(forecast.boundaryLayerHeight),

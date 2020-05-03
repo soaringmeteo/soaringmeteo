@@ -43,6 +43,7 @@ object DownloadGribFiles {
     os.remove.all(targetDir)
     os.makeDir.all(targetDir)
 
+    // Beware: I’ve been banned for using a parallelism level of 8
     inParallel(4, Settings.forecastHours) { t =>
       val file = f"gfs.t${time}z.pgrb2.0p50.f$t%03d"
       // In my experience, the `time` directory is created ~3 hours after the run initialization
@@ -71,6 +72,9 @@ object DownloadGribFiles {
     }
   }
 
+  // Downloading is slow, but it seems that by starting several downloads in parallel
+  // makes the whole process faster (up to 5x), although we always download from the
+  // very same server... Maybe they limit the download rate per file, not per IP…?
   def inParallel[A, B](parallelism: Int, as: Seq[A])(f: A => B): Seq[B] =
     for {
       batch <- as.grouped(parallelism).toSeq

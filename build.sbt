@@ -30,6 +30,7 @@ resolvers += "Unidata Al" at "https://artifacts.unidata.ucar.edu/repository/unid
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 enablePlugins(GraalVMNativeImagePlugin)
+Compile / mainClass := Some("org.soaringmeteo.Main")
 graalVMNativeImageGraalVersion := Some("20.0.0")
 graalVMNativeImageOptions ++= Seq("--no-fallback", "--allow-incomplete-classpath", "--no-server", "--initialize-at-build-time=scala.runtime.Statics$VM")
 
