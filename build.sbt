@@ -25,14 +25,21 @@ run / fork := true
 
 testFrameworks += new TestFramework("verify.runner.Framework")
 
-resolvers += "Unidata Al" at "https://artifacts.unidata.ucar.edu/repository/unidata-all"
+resolvers += "Unidata All" at "https://artifacts.unidata.ucar.edu/repository/unidata-all"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 enablePlugins(GraalVMNativeImagePlugin)
 Compile / mainClass := Some("org.soaringmeteo.Main")
 graalVMNativeImageGraalVersion := Some("20.0.0")
-graalVMNativeImageOptions ++= Seq("--no-fallback", "--allow-incomplete-classpath", "--no-server", "--initialize-at-build-time=scala.runtime.Statics$VM")
+graalVMNativeImageOptions ++= Seq(
+  "--enable-https",
+  "--verbose",
+  "--no-fallback",
+  "--static",
+//  "--initialize-at-build-time",
+  "-H:+AllowIncompleteClasspath"
+)
 
 TaskKey[Unit]("deploy") := {
   IO.move(
