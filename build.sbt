@@ -37,9 +37,10 @@ graalVMNativeImageOptions ++= Seq(
   "--verbose",
   "--no-fallback",
   "--static",
-//  "--initialize-at-build-time",
-  "-H:+AllowIncompleteClasspath"
+  "-H:+ReportExceptionStackTraces"
 )
+// To re-generate reflect-config.json file:
+// javaOptions += "-agentlib:native-image-agent=config-output-dir=src/main/resources/META-INF/native-image/org.soaringmeteo/soaringmeteo"
 
 TaskKey[Unit]("deploy") := {
   IO.move(
