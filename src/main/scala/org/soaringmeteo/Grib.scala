@@ -15,24 +15,73 @@ class Grib(data: GridDataset) {
    * Extract a [[GfsForecast]] for each of the given `locations`.
    */
   def forecast(locations: Seq[GfsLocation]): Map[Point, GfsForecast] = {
-    val hpbl = Option(data.findGridByShortName("Planetary_Boundary_Layer_Height_surface")).get
-    val ugrd = Option(data.findGridByShortName("u-component_of_wind_planetary_boundary")).get
-    val vgrd = Option(data.findGridByShortName("v-component_of_wind_planetary_boundary")).get
-    // val sunsd = Option(data.findGridByName("Sunshine_Duration_surface")).get
-    // FIXME Is this the correct way of retrieving cloud cover?
-    val tcdc =
-      Option(data.findGridByShortName("Total_cloud_cover_entire_atmosphere_3_Hour_Average"))
-        .orElse(Option(data.findGridByShortName("Total_cloud_cover_entire_atmosphere_6_Hour_Average")))
+    // HPBL:surface
+    val hpbl = feature("Planetary_Boundary_Layer_Height_surface")
+    // UGRD:planetary
+    val ugrd = feature("u-component_of_wind_planetary_boundary")
+    // VGRD:planetary
+    val vgrd = feature("v-component_of_wind_planetary_boundary")
+    // TCDC:entire
+    val tcdcEntire =
+      maybeFeature("Total_cloud_cover_entire_atmosphere_3_Hour_Average")
+        .getOrElse(feature("Total_cloud_cover_entire_atmosphere_6_Hour_Average"))
+    // TCDC:low
+    val tcdcLow =
+      maybeFeature("Total_cloud_cover_low_cloud_3_Hour_Average")
+        .getOrElse(feature("Total_cloud_cover_low_cloud_6_Hour_Average"))
+    // TCDC:middle
+    val tcdcMiddle =
+      maybeFeature("Total_cloud_cover_middle_cloud_3_Hour_Average")
+        .getOrElse(feature("Total_cloud_cover_middle_cloud_6_Hour_Average"))
+    // TCDC:high
+    val tcdcHigh =
+      maybeFeature("Total_cloud_cover_high_cloud_3_Hour_Average")
+        .getOrElse(feature("Total_cloud_cover_high_cloud_6_Hour_Average"))
+
+    // TODO The following variables were used by the old soarGFS implementation
+    // You can see how they were used here: https://soaringmeteo.org/GFSw/helpProfile.pdf
+    // -- Cloud Cover
+    // "Total_cloud_cover_convective_cloud" (TCDC:convective) See also https://github.com/Boran/soaringmeteo/blob/46ba843c2fe22b69c66db30a97679a3d1fb34f35/src/makeGFSJs.pas#L912
+    // "Total_cloud_cover_boundary_layer_cloud_3_Hour_Average" (TCDC:boundary)
+    // -- Solar Radiation
+    // "Downward_Short-Wave_Radiation_Flux_surface_3_Hour_Average" (DSWRF:surface)
+    // -- 0°C Isotherm
+    // "Geopotential_height_zeroDegC_isotherm" (HGT:0C)
+    // -- Thunder & Rain
+    // "Total_precipitation_surface_3_Hour_Accumulation" (APCP:surface)
+    // "Convective_precipitation_surface_3_Hour_Accumulation" (ACPCP:surface)
+    // "Latent_heat_net_flux_surface_3_Hour_Average" (LHTFL:surface)
+    // "Sensible_heat_net_flux_surface_3_Hour_Average" (SHTFL:surface)
+    // "Convective_available_potential_energy_surface" (CAPE:surface)
+    // "Convective_inhibition_surface" (CIN:surface)
+    // -- Sounding
+    // "Geopotential_height_isobaric" (HGT:200-950)
+    // "Temperature_isobaric" (TMP:200-950)
+    // "Relative_humidity_isobaric" (RH:200-950)
+    // "u-component_of_wind_isobaric" (UGRD:400-950)
+    // "v-component_of_wind_isobaric" (VGRD:400-950)
+    // "MSLP_Eta_model_reduction_msl" (MSLET:mean)
+    // "Water_equivalent_of_accumulated_snow_depth_surface" (WEASD:surface)
+    // "Temperature_height_above_ground" (TMP:2)
+
     (for (location <- locations) yield {
       val u = getXYFeatureAsDouble(ugrd, location) * 60 * 60 / 1000
       val v = getXYFeatureAsDouble(vgrd, location) * 60 * 60 / 1000
       val blh = getXYFeatureAsDouble(hpbl, location).round.toInt
-      val cloudCover = tcdc.map(getXYFeatureAsDouble(_, location))
-      // val cloudCover = Some((getXYFeatureAsDouble(sunsd, location) - 3 * 60 * 60) * 100 / (3 * 60 * 60))
+      val cloudCover = CloudCover(
+        getXYFeatureAsDouble(tcdcEntire, location),
+        getXYFeatureAsDouble(tcdcLow, location),
+        getXYFeatureAsDouble(tcdcMiddle, location),
+        getXYFeatureAsDouble(tcdcHigh, location)
+      )
       val point = Point(location.latitude, location.longitude)
       point -> GfsForecast(blh, Wind(u, v), cloudCover)
     }).toMap
   }
+
+  private def feature(name: String): GeoGrid = maybeFeature(name).get
+
+  private def maybeFeature(name: String): Option[GeoGrid] = Option(data.findGridByShortName(name))
 
   private def getXYCoordinates(feature: GeoGrid, location: GfsLocation): (Int, Int) = {
     val Array(x, y) =

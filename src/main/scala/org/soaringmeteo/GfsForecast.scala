@@ -5,8 +5,10 @@ import io.circe.{Encoder, Json}
 case class GfsForecast(
   boundaryLayerHeight: Int,
   wind: Wind,
-  cloudCover: Option[Double] // Optional because the first forecast (t = 00) doesn't have it. FIXME Find a better way to get the cloud cover?
+  cloudCover: CloudCover
 )
+
+case class CloudCover(entire: Double, low: Double, middle: Double, high: Double)
 
 object GfsForecast {
 
@@ -34,7 +36,12 @@ object GfsForecast {
         "blh" -> Json.fromInt(forecast.boundaryLayerHeight),
         "u" -> Json.fromInt(forecast.wind.u.round.toInt),
         "v" -> Json.fromInt(forecast.wind.v.round.toInt),
-        "c" -> forecast.cloudCover.fold(Json.Null)(Json.fromBigDecimal(_))
+        "c" -> Json.obj(
+          "e" -> Json.fromBigDecimal(forecast.cloudCover.entire),
+          "l" -> Json.fromBigDecimal(forecast.cloudCover.low),
+          "m" -> Json.fromBigDecimal(forecast.cloudCover.middle),
+          "h" -> Json.fromBigDecimal(forecast.cloudCover.high)
+        )
       )
     }
 
