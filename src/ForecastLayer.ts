@@ -1,12 +1,12 @@
 import { el, mount, setChildren } from 'redom';
 import { DataSource, CanvasLayer } from "./CanvasLayer";
 import * as L from 'leaflet';
-import { CompositeRenderer, boundaryDepthColorScale as mixedColorScale } from './layers/Composite';
+import { Mixed, boundaryDepthColorScale as mixedColorScale } from './layers/Mixed';
 import { Forecast } from './Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
 import { App } from './App';
 import { ColorScale } from './ColorScale';
-import { Clouds } from './layers/CloudCover';
+import { Clouds } from './layers/Clouds';
 
 class Renderer {
 
@@ -44,7 +44,7 @@ const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string)
 
 const mixedRenderer = new Renderer(
   'Mixed',
-  forecast => new CompositeRenderer(forecast),
+  forecast => new Mixed(forecast),
   // FIXME Maybe implement map key in datasource...
   () => colorScaleEl(mixedColorScale, value => `${value}m `)
 );
@@ -53,7 +53,7 @@ const thqRenderer = new Renderer(
   forecast => new ThQ(forecast),
   () => colorScaleEl(thQColorScale, value => `${Math.round(value * 100)}% `)
 );
-const cloudRenderer = new Renderer(
+const cloudsRenderer = new Renderer(
   'Clouds',
   forecast => new Clouds(forecast),
   () => el('div')
@@ -73,7 +73,7 @@ export class ForecastLayer {
 
     const mixedEl  = this.setupRendererBtn(mixedRenderer);
     const thqEl    = this.setupRendererBtn(thqRenderer);
-    const cloudsEl = this.setupRendererBtn(cloudRenderer);
+    const cloudsEl = this.setupRendererBtn(cloudsRenderer);
 
     const rootElement = el(
       'div',

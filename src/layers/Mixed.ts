@@ -3,7 +3,7 @@ import { Forecast, modelResolution } from "../Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
 
-export class CompositeRenderer {
+export class Mixed {
 
   constructor(readonly forecast: Forecast) {}
 

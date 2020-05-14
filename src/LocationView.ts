@@ -9,7 +9,7 @@ export const locationView = (gfsRun: LatestForecast, forecasts: Array<ForecastDa
   const relevantForecastOffsets = Array.from({ length: periodsPerDay }, (_, i) => firstPeriodOffset + i * 3);
   const relevantForecasts =
     forecasts
-      .map<[ForecastData, number]>((forecast, i) => [forecast, gfsRunDateTime.getUTCHours() + i * 3])
+      .map<[ForecastData, number]>((forecast, i) => [forecast, gfsRunDateTime.getUTCHours() + (i + 1) * 3])
       .filter(([_, hourOffset]) => relevantForecastOffsets.includes(hourOffset % 24))
       .map<[ForecastData, Date]>(([forecast, hourOffset]) => {
         const date = new Date(gfsRunDateTime);
