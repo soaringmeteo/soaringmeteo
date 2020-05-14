@@ -1,11 +1,12 @@
 import { el, mount, setChildren } from 'redom';
 import { DataSource, CanvasLayer } from "./CanvasLayer";
 import * as L from 'leaflet';
-import { CompositeRenderer, boundaryDepthColorScale as mixedColorScale } from './CompositeRenderer';
+import { CompositeRenderer, boundaryDepthColorScale as mixedColorScale } from './layers/Composite';
 import { Forecast } from './Forecast';
-import { ThQ, colorScale as thQColorScale } from './ThQ';
+import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
 import { App } from './App';
 import { ColorScale } from './ColorScale';
+import { Clouds } from './layers/CloudCover';
 
 class Renderer {
 
@@ -52,6 +53,11 @@ const thqRenderer = new Renderer(
   forecast => new ThQ(forecast),
   () => colorScaleEl(thQColorScale, value => `${Math.round(value * 100)}% `)
 );
+const cloudRenderer = new Renderer(
+  'Clouds',
+  forecast => new Clouds(forecast),
+  () => el('div')
+);
 
 /**
  * Overlay on the map that displays the soaring forecast.
@@ -65,8 +71,9 @@ export class ForecastLayer {
   constructor(readonly app: App, containerElement: HTMLElement) {
     this.renderer = mixedRenderer;
 
-    const mixedEl = this.setupRendererBtn(mixedRenderer);
-    const thqEl   = this.setupRendererBtn(thqRenderer);
+    const mixedEl  = this.setupRendererBtn(mixedRenderer);
+    const thqEl    = this.setupRendererBtn(thqRenderer);
+    const cloudsEl = this.setupRendererBtn(cloudRenderer);
 
     const rootElement = el(
       'div',
@@ -74,7 +81,8 @@ export class ForecastLayer {
         style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 1000 }
       },
       thqEl,
-      mixedEl
+      mixedEl,
+      cloudsEl
     )
     L.DomEvent.disableClickPropagation(rootElement);
     L.DomEvent.disableScrollPropagation(rootElement);

@@ -1,5 +1,5 @@
-import { Forecast, modelResolution } from "./Forecast";
-import { ColorScale, Color } from "./ColorScale";
+import { Forecast, modelResolution } from "../Forecast";
+import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
 
 export const colorScale = new ColorScale([
@@ -38,7 +38,7 @@ export class ThQ {
       const windCoeff = Math.exp(-Math.max(windForce - 10, 0) / 10);
 
       // Cloud cover
-      const cloudCover = forecastAtPoint.c;
+      const cloudCover = forecastAtPoint.c.e;
       const cloudCoverCoeff = (cloudCover === null || cloudCover === undefined) ? 1 : (100 - cloudCover) / 100;
 
       const thq = blhCoeff * windCoeff * cloudCoverCoeff;

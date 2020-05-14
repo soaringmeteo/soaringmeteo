@@ -39,6 +39,7 @@ export class ForecastSelect {
       this.view.updateSelectedForecast();
     }
   }
+  // TODO fix bug
   selectMorning(): void {
     this.updateHourOffset(Math.floor((this.hourOffset + this.forecastInitOffset) / 24) * 24 + this.morningOffset - this.forecastInitOffset);
   }
@@ -57,10 +58,10 @@ export class ForecastSelect {
   }
   previousPeriod() {
     // TODO jump to previous day afternoon if we are on the morning period
-    this.updateHourOffset(Math.max(this.hourOffset - 3, 0));
+    this.updateHourOffset(Math.max(this.hourOffset - 3, 3));
   }
   previousDay() {
-    this.updateHourOffset(Math.max(this.hourOffset - 24, 0));
+    this.updateHourOffset(Math.max(this.hourOffset - 24, 3));
   }
 }
 

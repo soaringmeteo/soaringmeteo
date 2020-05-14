@@ -1,7 +1,7 @@
-import { scalePoint, rotatePoint } from "./shapes";
-import { Forecast, modelResolution } from "./Forecast";
+import { scalePoint, rotatePoint } from "../shapes";
+import { Forecast, modelResolution } from "../Forecast";
 import * as L from 'leaflet';
-import { ColorScale, Color } from "./ColorScale";
+import { ColorScale, Color } from "../ColorScale";
 
 export class CompositeRenderer {
 
@@ -37,7 +37,7 @@ export class CompositeRenderer {
   
       // Cloud cover
       const cloudCover = forecastAtPoint.c;
-      const cloudCoverCoeff = (cloudCover === null || cloudCover === undefined ? 0 : cloudCover) / 100;
+      const cloudCoverCoeff = cloudCover.e / 100;
       const ch = 5;
       const hSpace = width / ch;
       const cv = 7;

@@ -94,7 +94,7 @@ const tbody = (forecasts: Array<ForecastData>): HTMLElement => {
     'tbody',
     row('BL Depth (m)', forecasts, forecast => `${forecast.blh}`, 'Boundary Layer Depth'),
     row('Wind (km/h)', forecasts, forecast => `${windSpeed(forecast)}`, 'Wind in Boundary Layer'),
-    row('Clouds (%)', forecasts, forecast => `${forecast.c !== null ? forecast.c : '?'}`, 'Total Cloud Cover')
+    row('Clouds (%)', forecasts, forecast => `${forecast.c.e}`, 'Total Cloud Cover')
   )
 }
 

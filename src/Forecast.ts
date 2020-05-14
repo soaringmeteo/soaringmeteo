@@ -8,7 +8,12 @@ export type ForecastData = {
   blh: number,
   u: number,
   v: number,
-  c?: number
+  c: {
+    e: number,
+    l: number,
+    m: number,
+    h: number
+  }
 }
 
 export type Forecast = {
