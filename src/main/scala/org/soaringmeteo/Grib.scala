@@ -1,5 +1,9 @@
 package org.soaringmeteo
 
+import squants.motion.{MetersPerSecond, Pascals}
+import squants.radio.WattsPerSquareMeter
+import squants.space.{Meters, Millimeters}
+import squants.thermal.Kelvin
 import ucar.nc2.dt.grid.{GeoGrid, GridDataset}
 
 import scala.util.Using
@@ -11,71 +15,135 @@ import scala.util.Using
  */
 class Grib(data: GridDataset) {
 
+  // You can see how the following variables were used here:
+  // https://soaringmeteo.org/GFSw/helpProfile.pdf
+  private val hpblSurface = feature("Planetary_Boundary_Layer_Height_surface")
+  private val ugrdPlanetary = feature("u-component_of_wind_planetary_boundary")
+  private val vgrdPlanetary = feature("v-component_of_wind_planetary_boundary")
+  private val tcdcEntire =
+    maybeFeature("Total_cloud_cover_entire_atmosphere_3_Hour_Average")
+      .getOrElse(feature("Total_cloud_cover_entire_atmosphere_6_Hour_Average"))
+  private val tcdcLow =
+    maybeFeature("Total_cloud_cover_low_cloud_3_Hour_Average")
+      .getOrElse(feature("Total_cloud_cover_low_cloud_6_Hour_Average"))
+  private val tcdcMiddle =
+    maybeFeature("Total_cloud_cover_middle_cloud_3_Hour_Average")
+      .getOrElse(feature("Total_cloud_cover_middle_cloud_6_Hour_Average"))
+  private val tcdcHigh =
+    maybeFeature("Total_cloud_cover_high_cloud_3_Hour_Average")
+      .getOrElse(feature("Total_cloud_cover_high_cloud_6_Hour_Average"))
+  // See also https://github.com/Boran/soaringmeteo/blob/46ba843c2fe22b69c66db30a97679a3d1fb34f35/src/makeGFSJs.pas#L912
+  private val tcdcConv = feature("Total_cloud_cover_convective_cloud")
+  private val tcdcBoundary =
+    maybeFeature("Total_cloud_cover_boundary_layer_cloud_3_Hour_Average")
+      .getOrElse(feature("Total_cloud_cover_boundary_layer_cloud_6_Hour_Average"))
+
+  private val dswrfSurface =
+    maybeFeature("Downward_Short-Wave_Radiation_Flux_surface_3_Hour_Average")
+      .getOrElse(feature("Downward_Short-Wave_Radiation_Flux_surface_6_Hour_Average"))
+
+  private val hgt0 = feature("Geopotential_height_zeroDegC_isotherm")
+
+  private val apcpSurface =
+    maybeFeature("Total_precipitation_surface_3_Hour_Accumulation")
+      .orElse(maybeFeature("Total_precipitation_surface_6_Hour_Accumulation"))
+      .getOrElse(feature("Total_precipitation_surface_Mixed_intervals_Accumulation"))
+  private val acpcpSurface =
+    maybeFeature("Convective_precipitation_surface_3_Hour_Accumulation")
+      .orElse(maybeFeature("Convective_precipitation_surface_6_Hour_Accumulation"))
+      .getOrElse(feature("Convective_precipitation_surface_Mixed_intervals_Accumulation"))
+
+  private val lhtflSurface =
+    maybeFeature("Latent_heat_net_flux_surface_3_Hour_Average")
+      .getOrElse(feature("Latent_heat_net_flux_surface_6_Hour_Average"))
+  private val shtflSurface =
+    maybeFeature("Sensible_heat_net_flux_surface_3_Hour_Average")
+      .getOrElse(feature("Sensible_heat_net_flux_surface_6_Hour_Average"))
+  private val capeSurface = feature("Convective_available_potential_energy_surface")
+  private val cinSurface = feature("Convective_inhibition_surface")
+
+  private val isobaricFeatures = GfsForecast.pressureLevels.map { pressureLevel =>
+    val hgt = feature("Geopotential_height_isobaric")
+    val tmp = feature("Temperature_isobaric")
+    val rh = feature("Relative_humidity_isobaric")
+    val ugrd = feature("u-component_of_wind_isobaric")
+    val vgrd = feature("v-component_of_wind_isobaric")
+    pressureLevel -> ((hgt, tmp, rh, ugrd, vgrd))
+  }.to(Map)
+
+  private val msletMean = feature("MSLP_Eta_model_reduction_msl")
+  private val weasdSurface = feature("Water_equivalent_of_accumulated_snow_depth_surface")
+
+  private val tmp2 = feature("Temperature_height_above_ground")
+  private val rh2 = feature("Relative_humidity_height_above_ground")
+
+  private val ugrd10 = feature("u-component_of_wind_height_above_ground")
+  private val vgrd10 = feature("v-component_of_wind_height_above_ground")
+
   /**
    * Extract a [[GfsForecast]] for each of the given `locations`.
    */
   def forecast(locations: Seq[GfsLocation]): Map[Point, GfsForecast] = {
-    // HPBL:surface
-    val hpbl = feature("Planetary_Boundary_Layer_Height_surface")
-    // UGRD:planetary
-    val ugrd = feature("u-component_of_wind_planetary_boundary")
-    // VGRD:planetary
-    val vgrd = feature("v-component_of_wind_planetary_boundary")
-    // TCDC:entire
-    val tcdcEntire =
-      maybeFeature("Total_cloud_cover_entire_atmosphere_3_Hour_Average")
-        .getOrElse(feature("Total_cloud_cover_entire_atmosphere_6_Hour_Average"))
-    // TCDC:low
-    val tcdcLow =
-      maybeFeature("Total_cloud_cover_low_cloud_3_Hour_Average")
-        .getOrElse(feature("Total_cloud_cover_low_cloud_6_Hour_Average"))
-    // TCDC:middle
-    val tcdcMiddle =
-      maybeFeature("Total_cloud_cover_middle_cloud_3_Hour_Average")
-        .getOrElse(feature("Total_cloud_cover_middle_cloud_6_Hour_Average"))
-    // TCDC:high
-    val tcdcHigh =
-      maybeFeature("Total_cloud_cover_high_cloud_3_Hour_Average")
-        .getOrElse(feature("Total_cloud_cover_high_cloud_6_Hour_Average"))
-
-    // TODO The following variables were used by the old soarGFS implementation
-    // You can see how they were used here: https://soaringmeteo.org/GFSw/helpProfile.pdf
-    // -- Cloud Cover
-    // "Total_cloud_cover_convective_cloud" (TCDC:convective) See also https://github.com/Boran/soaringmeteo/blob/46ba843c2fe22b69c66db30a97679a3d1fb34f35/src/makeGFSJs.pas#L912
-    // "Total_cloud_cover_boundary_layer_cloud_3_Hour_Average" (TCDC:boundary)
-    // -- Solar Radiation
-    // "Downward_Short-Wave_Radiation_Flux_surface_3_Hour_Average" (DSWRF:surface)
-    // -- 0°C Isotherm
-    // "Geopotential_height_zeroDegC_isotherm" (HGT:0C)
-    // -- Thunder & Rain
-    // "Total_precipitation_surface_3_Hour_Accumulation" (APCP:surface)
-    // "Convective_precipitation_surface_3_Hour_Accumulation" (ACPCP:surface)
-    // "Latent_heat_net_flux_surface_3_Hour_Average" (LHTFL:surface)
-    // "Sensible_heat_net_flux_surface_3_Hour_Average" (SHTFL:surface)
-    // "Convective_available_potential_energy_surface" (CAPE:surface)
-    // "Convective_inhibition_surface" (CIN:surface)
-    // -- Sounding
-    // "Geopotential_height_isobaric" (HGT:200-950)
-    // "Temperature_isobaric" (TMP:200-950)
-    // "Relative_humidity_isobaric" (RH:200-950)
-    // "u-component_of_wind_isobaric" (UGRD:400-950)
-    // "v-component_of_wind_isobaric" (VGRD:400-950)
-    // "MSLP_Eta_model_reduction_msl" (MSLET:mean)
-    // "Water_equivalent_of_accumulated_snow_depth_surface" (WEASD:surface)
-    // "Temperature_height_above_ground" (TMP:2)
-
     (for (location <- locations) yield {
-      val u = getXYFeatureAsDouble(ugrd, location) * 60 * 60 / 1000
-      val v = getXYFeatureAsDouble(vgrd, location) * 60 * 60 / 1000
-      val blh = getXYFeatureAsDouble(hpbl, location).round.toInt
-      val cloudCover = CloudCover(
-        getXYFeatureAsDouble(tcdcEntire, location),
-        getXYFeatureAsDouble(tcdcLow, location),
-        getXYFeatureAsDouble(tcdcMiddle, location),
-        getXYFeatureAsDouble(tcdcHigh, location)
+      // Read the value of the given `grid` at the current `location`
+      def readXY(grid: GeoGrid): Double = {
+        val (x, y) = getXYCoordinates(grid, location)
+        grid.readDataSlice(0, -1, y, x).getDouble(0)
+      }
+
+      val isobaricVariables = isobaricFeatures.map { case (pressure, (hgt, tmp, rh, ugrd, vgrd)) =>
+        // Read the value of the given `grid` at the current `location` and `pressure` level
+        def readXYZ(grid: GeoGrid) = {
+          val (x, y) = getXYCoordinates(grid, location)
+          val z = grid.getCoordinateSystem.getVerticalAxis.findCoordElement(pressure.toPascals)
+          grid.readDataSlice(0, z, y, x).getDouble(0)
+        }
+
+        pressure -> IsobaricVariables(
+          Meters(readXYZ(hgt)),
+          Kelvin(readXYZ(tmp)),
+          readXYZ(rh),
+          Wind(
+            MetersPerSecond(readXYZ(ugrd)),
+            MetersPerSecond(readXYZ(vgrd))
+          )
+        )
+      }
+
+      val gfsForecast = GfsForecast(
+        boundaryLayerHeight = Meters(readXY(hpblSurface)),
+        boundaryLayerWind = Wind(
+          MetersPerSecond(readXY(ugrdPlanetary)),
+          MetersPerSecond(readXY(vgrdPlanetary))
+        ),
+        cloudCover = CloudCover(
+          readXY(tcdcEntire),
+          readXY(tcdcLow),
+          readXY(tcdcMiddle),
+          readXY(tcdcHigh),
+          readXY(tcdcConv),
+          readXY(tcdcBoundary)
+        ),
+        atPressure = isobaricVariables,
+        mslet = Pascals(readXY(msletMean)),
+        snowDepth = Millimeters(readXY(weasdSurface)), // kg/m² <=> mm (for water)
+        surfaceTemperature = Kelvin(readXY(tmp2)),
+        surfaceRelativeHumidity = readXY(rh2),
+        surfaceWind = Wind(
+          MetersPerSecond(readXY(ugrd10)),
+          MetersPerSecond(readXY(vgrd10))
+        ),
+        accumulatedRain = Millimeters(readXY(apcpSurface)),
+        accumulatedConvectiveRain = Millimeters(readXY(acpcpSurface)),
+        latentHeatNetFlux = WattsPerSquareMeter(readXY(lhtflSurface)),
+        sensibleHeatNetFlux = WattsPerSquareMeter(readXY(shtflSurface)),
+        cape = readXY(capeSurface),
+        cin = readXY(cinSurface),
+        downwardShortWaveRadiationFlux = WattsPerSquareMeter(readXY(dswrfSurface)),
+        isothermZero = Meters(readXY(hgt0))
       )
       val point = Point(location.latitude, location.longitude)
-      point -> GfsForecast(blh, Wind(u, v), cloudCover)
+      point -> gfsForecast
     }).toMap
   }
 
@@ -89,11 +157,6 @@ class Grib(data: GridDataset) {
         .getCoordinateSystem
         .findXYindexFromLatLon(location.latitude.doubleValue, location.longitude.doubleValue, null)
     (x, y)
-  }
-
-  private def getXYFeatureAsDouble(feature: GeoGrid, location: GfsLocation): Double = {
-    val (x, y) = getXYCoordinates(feature, location)
-    feature.readDataSlice(0, -1, y, x).getDouble(0)
   }
 
 }

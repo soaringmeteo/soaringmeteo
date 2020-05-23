@@ -30,12 +30,14 @@ object MakeGFSJson {
   }
 
   /**
-   * Extract data from the GFS forecast in the form of JSON documents. We create one JSON
-   * document per forecast time (e.g., `0.json`, `3.json`, `6.json`, etc.), and each document
-   * contains the [[GfsForecast]] data for each location listed in the file `gfsLocFile`.
+   * Extract data from the GFS forecast in the form of JSON documents.
    *
-   * FIXME Create one file per type of data we want to show (boundary layer height, ThQ, etc.)
-   *       so that users download only the necessary amount of data.
+   * We create one JSON document per forecast time (e.g., `0.json`, `3.json`, `6.json`, etc.),
+   * and each document contains the summary of the forecast for each location listed in the
+   * file `gfsLocFile`.
+   *
+   * We also create one JSON document per location (e.g., `700-4650.json`), where each
+   * document contains the detail of the forecast for each period of forecast.
    *
    * @param gfsLocFile CSV file containing the information of the GFS points shown by soaringmeteo
    * @param gribsDir   Directory containing the .grib2 files of the GFS forecast
@@ -76,7 +78,7 @@ object MakeGFSJson {
       logger.debug(s"Writing forecast for location ${gfsLocation.longitude},${gfsLocation.latitude}")
       val locationForecasts = forecasts.map(_(Point(gfsLocation.latitude, gfsLocation.longitude)))
       val targetFile = targetDir / s"${(gfsLocation.longitude * 100).intValue}-${(gfsLocation.latitude * 100).intValue}.json"
-      os.write.over(targetFile, Json.arr(locationForecasts.map(GfsForecast.summaryEncoder(_)): _*).noSpaces)
+      os.write.over(targetFile, Json.arr(locationForecasts.map(GfsForecast.detailEncoder(_)): _*).noSpaces)
     }
   }
 
