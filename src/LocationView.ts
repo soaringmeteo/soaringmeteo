@@ -1,17 +1,17 @@
 import { el } from 'redom';
-import { ForecastData, LatestForecast } from './Forecast';
+import { DetailedForecastData, LatestForecast } from './Forecast';
 
 const periodsPerDay = 3 // TODO Make it a global setting
 
-export const locationView = (gfsRun: LatestForecast, forecasts: Array<ForecastData>, firstPeriodOffset: number): HTMLElement => {
+export const locationView = (gfsRun: LatestForecast, forecasts: Array<DetailedForecastData>, firstPeriodOffset: number): HTMLElement => {
   const gfsRunDateTime = new Date(`${gfsRun.date}T${gfsRun.time}:00Z`);
   // Keep only `periodsPerDay` forecasts (e.g. we don’t show show the forecasts for the night)
   const relevantForecastOffsets = Array.from({ length: periodsPerDay }, (_, i) => firstPeriodOffset + i * 3);
   const relevantForecasts =
     forecasts
-      .map<[ForecastData, number]>((forecast, i) => [forecast, gfsRunDateTime.getUTCHours() + (i + 1) * 3])
+      .map<[DetailedForecastData, number]>((forecast, i) => [forecast, gfsRunDateTime.getUTCHours() + (i + 1) * 3])
       .filter(([_, hourOffset]) => relevantForecastOffsets.includes(hourOffset % 24))
-      .map<[ForecastData, Date]>(([forecast, hourOffset]) => {
+      .map<[DetailedForecastData, Date]>(([forecast, hourOffset]) => {
         const date = new Date(gfsRunDateTime);
         date.setUTCHours(hourOffset);
         return [forecast, date]
@@ -77,7 +77,7 @@ const row = <A>(name: string, columns: Array<A>, show: (a: A) => string, title?:
   )
 }
 
-const tbody = (forecasts: Array<ForecastData>): HTMLElement => {
+const tbody = (forecasts: Array<DetailedForecastData>): HTMLElement => {
   // TODO thq
   // TODO cumuli size
   // TODO cumuli base altitude
@@ -92,15 +92,15 @@ const tbody = (forecasts: Array<ForecastData>): HTMLElement => {
   // TODO thunderstorm rainfall level
   return el(
     'tbody',
-    row('BL Depth (m)', forecasts, forecast => `${forecast.blh}`, 'Boundary Layer Depth'),
+    row('BL Depth (m)', forecasts, forecast => `${forecast.bl.h}`, 'Boundary Layer Depth'),
     row('Wind (km/h)', forecasts, forecast => `${windSpeed(forecast)}`, 'Wind in Boundary Layer'),
     row('Clouds (%)', forecasts, forecast => `${forecast.c.e}`, 'Total Cloud Cover')
   )
 }
 
 // TODO Move somewhere else
-const windSpeed = (forecast: ForecastData): number => {
-  const u = forecast.u;
-  const v = forecast.v;
+const windSpeed = (forecast: DetailedForecastData): number => {
+  const u = forecast.bl.u;
+  const v = forecast.bl.v;
   return Math.round(Math.sqrt(u * u + v * v))
 }

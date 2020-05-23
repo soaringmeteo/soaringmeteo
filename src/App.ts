@@ -1,7 +1,7 @@
 import { el, mount, setStyle, setChildren } from 'redom';
 import { initializeMap } from './Map';
 import { CanvasLayer } from './CanvasLayer';
-import { LatestForecast, modelResolution, ForecastData } from './Forecast';
+import { LatestForecast, modelResolution, ForecastData, DetailedForecastData } from './Forecast';
 import { ForecastSelect } from './ForecastSelect';
 import { ForecastLayer } from './ForecastLayer';
 import { locationView } from './LocationView';
@@ -35,7 +35,7 @@ export class App {
 
       fetch(`${longitude}-${latitude}.json`)
         .then(response => response.json())
-        .then((forecasts: Array<ForecastData>) => {
+        .then((forecasts: Array<DetailedForecastData>) => {
           // TODO On mobile only
           // setStyle(mapElement, { flex: 0 });
           // TODO Let user resize, and remember preference in a cookie
