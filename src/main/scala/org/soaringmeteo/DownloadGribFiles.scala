@@ -18,27 +18,28 @@ object DownloadGribFiles {
   }
 
   def run(targetDir: os.Path): Unit = {
-    val rootUrl = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod"
-    val dateSegment =
+    val rootUrl = "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p50.pl"
+    val item =
       Jsoup.connect(rootUrl).get()
-        .select("a[href^=gfs.]")
-        .last()
-        .attr("href").stripSuffix("/")
-    val time =
-      Jsoup.connect(s"$rootUrl/$dateSegment").get()
         .select("a")
-        .last()
-        .attr("href").stripSuffix("/")
+        .first()
+    val date = item.text() // e.g. “20200529”
+    // e.g. “06”
+    val time =
+      Jsoup.connect(item.attr("href")).get()
+        .select("a")
+        .first()
+        .text()
 
-    val date =
-      dateSegment.stripPrefix("gfs.").pipe { s =>
+    val dateIso =
+      date.stripPrefix("gfs.").pipe { s =>
         val year  = s.substring(0, 4)
         val month = s.substring(4, 6)
         val day   = s.substring(6, 8)
         s"$year-$month-$day"
       }
 
-    logger.info(s"Found last run at ${date}T${time}Z")
+    logger.info(s"Found last run at ${dateIso}T${time}Z")
 
     os.remove.all(targetDir)
     os.makeDir.all(targetDir)
@@ -47,14 +48,20 @@ object DownloadGribFiles {
     inParallel(4, Settings.forecastHours) { t =>
       // For now, download the entire files. Eventually, we might want to use the GRIB Filter
       // system to select only the parameters and altitudes we are interested in.
-      val file = f"gfs.t${time}z.pgrb2.0p50.f$t%03d"
+      val file = f"gfs.t${time}z.pgrb2full.0p50.f$t%03d"
+
+      // This URL has been constructed by going to https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p50.pl,
+      // and then selecting a GFS run, and then selecting the levels as well as the variables we are
+      // interested in.
+      val url = s"$rootUrl?file=${file}&dir=%2F${date}%2F${time}&lev_mean_sea_level=on&lev_0C_isotherm=on&lev_10_m_above_ground=on&lev_200_mb=on&lev_2_m_above_ground=on&lev_300_mb=on&lev_400_mb=on&lev_450_mb=on&lev_500_mb=on&lev_550_mb=on&lev_600_mb=on&lev_650_mb=on&lev_700_mb=on&lev_750_mb=on&lev_800_mb=on&lev_850_mb=on&lev_900_mb=on&lev_950_mb=on&lev_boundary_layer_cloud_layer=on&lev_convective_cloud_layer=on&lev_entire_atmosphere=on&lev_high_cloud_layer=on&lev_low_cloud_layer=on&lev_middle_cloud_layer=on&lev_planetary_boundary_layer=on&lev_surface=on&var_ACPCP=on&var_APCP=on&var_CAPE=on&var_CIN=on&var_DSWRF=on&var_HGT=on&var_HPBL=on&var_LHTFL=on&var_MSLET=on&var_RH=on&var_SHTFL=on&var_TCDC=on&var_TMP=on&var_UGRD=on&var_VGRD=on&var_WEASD=on&leftlon=0&rightlon=360&toplat=90&bottomlat=-90"
+
       // In my experience, the `time` directory is created ~3 hours after the run initialization
       // But the grib files that we are interested are only available around 3 hours and 30 min after the run initialization
-      val response = insist(maxAttempts = 10, delay = 3.minutes, s"$rootUrl/$dateSegment/$time/$file")
+      val response = insist(maxAttempts = 10, delay = 3.minutes, url)
       os.write(targetDir / t.toString(), response.data.array)
       logger.debug(s"Downloaded grib file for hour $t")
     }
-    os.write(targetDir / "forecast.json", json"""{ "date": $date, "time": $time }""".noSpaces)
+    os.write(targetDir / "forecast.json", json"""{ "date": $dateIso, "time": $time }""".noSpaces)
   }
 
   /**
