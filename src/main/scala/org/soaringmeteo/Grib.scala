@@ -61,6 +61,7 @@ class Grib(data: GridDataset) {
   // You can see how the following variables were used here:
   // https://soaringmeteo.org/GFSw/helpProfile.pdf
   private val hpblSurface = Feature("Planetary_Boundary_Layer_Height_surface")
+  private val hgtSurface = Feature("Geopotential_height_surface")
   private val ugrdPlanetary = Feature("u-component_of_wind_planetary_boundary")
   private val vgrdPlanetary = Feature("v-component_of_wind_planetary_boundary")
   private val tcdcEntire =
@@ -147,6 +148,7 @@ class Grib(data: GridDataset) {
       }
 
       val gfsForecast = GfsForecast(
+        elevation = Meters(readXY(hgtSurface)),
         boundaryLayerHeight = Meters(readXY(hpblSurface)),
         boundaryLayerWind = Wind(
           MetersPerSecond(readXY(ugrdPlanetary)),

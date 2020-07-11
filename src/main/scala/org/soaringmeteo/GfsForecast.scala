@@ -11,6 +11,7 @@ import squants.thermal.Temperature
  * Forecast data for one point at one time
  */
 case class GfsForecast(
+  elevation: Length, // FIXME Find another way to send this information since it doesn’t vary accross forecasts (it is dependent on the location only)
   boundaryLayerHeight: Length,
   boundaryLayerWind: Wind,
   cloudCover: CloudCover,
@@ -20,7 +21,7 @@ case class GfsForecast(
   surfaceTemperature: Temperature,
   surfaceRelativeHumidity: Double,
   surfaceWind: Wind,
-  accumulatedRain: Length,
+  accumulatedRain: Length, // TODO Compute rain per forecast period instead of total accumulated rain
   accumulatedConvectiveRain: Length,
   latentHeatNetFlux: Irradiance,
   sensibleHeatNetFlux: Irradiance,
@@ -118,6 +119,7 @@ object GfsForecast {
           )
         }: _*),
         "s" -> Json.obj(
+          "h" -> Json.fromInt(forecast.elevation.toMeters.round.toInt),
           "t" -> Json.fromBigDecimal(forecast.surfaceTemperature.toCelsiusDegrees),
           "rh" -> Json.fromBigDecimal(forecast.surfaceRelativeHumidity),
           "u" -> Json.fromInt(forecast.surfaceWind.u.toKilometersPerHour.round.toInt),
