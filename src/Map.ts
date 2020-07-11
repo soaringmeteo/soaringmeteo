@@ -20,7 +20,7 @@ export const initializeMap = (element: HTMLElement): [CanvasLayer, L.Map] => {
     zoom: 7
   });
   
-  L.control.zoom({ position: 'topright' }).addTo(map);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
 
   const canvas = new CanvasLayer;
   canvas.addTo(map);

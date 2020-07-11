@@ -88,7 +88,7 @@ export class ForecastLayer {
     L.DomEvent.disableScrollPropagation(rootElement);
     mount(containerElement, rootElement);
 
-    this.rendererKeyEl = el('div', { style: { position: 'absolute', top: '5px', left: '5px', zIndex: 1000, backgroundColor: 'rgba(255, 255,  255, 0.5' } });
+    this.rendererKeyEl = el('div', { style: { position: 'absolute', bottom: '5px', left: '5px', zIndex: 1000, backgroundColor: 'rgba(255, 255,  255, 0.5' } });
     this.replaceRendererKeyEl();
     mount(containerElement, this.rendererKeyEl);
   }

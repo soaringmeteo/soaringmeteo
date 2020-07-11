@@ -1,4 +1,4 @@
-import { scalePoint, rotatePoint } from "../shapes";
+import { scalePoint, rotatePoint, windArrowCoordinates, drawWindArrow } from "../shapes";
 import { Forecast, modelResolution } from "../Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
@@ -23,17 +23,7 @@ export class Mixed {
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
   
       // Boundary Layer Wind
-      const u = forecastAtPoint.u;
-      const v = forecastAtPoint.v;
-      const windForce = Math.sqrt(u * u + v * v);
-      const windDirection = Math.atan2(-u, -v);
-      ctx.fillStyle = `rgba(62, 0, 0, 0.35)`;
-      ctx.beginPath();
-      windArrowCoordinates(center.x, center.y, width, windDirection, windForce).forEach(([y, x]) => {
-        ctx.lineTo(x, y);
-      })
-      ctx.closePath();
-      ctx.fill();
+      drawWindArrow(ctx, center.x, center.y, width, `rgba(62, 0, 0, 0.35)`, forecastAtPoint.u, forecastAtPoint.v);
   
       // Cloud cover
       const cloudCover = forecastAtPoint.c;
@@ -65,29 +55,3 @@ export const boundaryDepthColorScale = new ColorScale([
   [1500, new Color(0xff, 0xff, 0xff)]
 ]);
 
-/**
- * Canvas coordinates of an arrow representing the wind in a box
- * @param x         x-coordinate of the center of the box containing the arrow
- * @param y         y-coordinate of the center of the box containing the arrow
- * @param width     Width of the box containing the arrow
- * @param direction Wind direction (radians)
- * @param force     Wind force (km/h)
- */
-export const windArrowCoordinates = (x: number, y: number, width: number, direction: number, force: number): Array<[number, number]> => {
-  return Array.of<[number, number]>(
-    [y - width / 3, x + width / 10],
-    [y + width / 10, x + width / 10],
-    [y + width / 10, x + width / 4],
-    [y + width / 3, x],
-    [y + width / 10, x - width / 4],
-    [y + width / 10, x - width / 10],
-    [y - width / 3, x - width / 10]
-  ).map(point =>
-      // The scale of the wind arrow is proportional to the wind force, and has a “normal” size for 18 km/h
-      scalePoint(
-      rotatePoint(point, [y, x], direction),
-      [y, x],
-      force / 18
-    )
-  )
-}

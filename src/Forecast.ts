@@ -49,6 +49,7 @@ export type DetailedForecastData = {
   },
   // Surface
   s: {
+    h: number, // elevation
     t: number, // temperature
     rh: number, // relative humidity
     // Wind

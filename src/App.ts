@@ -1,10 +1,11 @@
 import { el, mount, setStyle, setChildren } from 'redom';
 import { initializeMap } from './Map';
 import { CanvasLayer } from './CanvasLayer';
-import { LatestForecast, modelResolution, ForecastData, DetailedForecastData } from './Forecast';
+import { LatestForecast, modelResolution, DetailedForecastData } from './Forecast';
 import { ForecastSelect } from './ForecastSelect';
 import { ForecastLayer } from './ForecastLayer';
-import { locationView } from './LocationView';
+import { meteogram } from './Meteogram';
+import { filterDetailedForecast } from './ForecastFilter';
 
 export class App {
 
@@ -17,7 +18,7 @@ export class App {
     // TODO center and zoom
     // The map *must* be initialized before we call the other constructors
     // It *must* also be mounted before we initialize it
-    const mapElement = el('div', { style: { flex: 1 } });
+    const mapElement = el('div', { style: { flex: 1 } }); // TODO Simplify
     mount(containerElement, mapElement);
     const [canvas, map] = initializeMap(mapElement);
     this.canvas = canvas;
@@ -26,9 +27,6 @@ export class App {
     this.forecastLayer = new ForecastLayer(this, mapElement);
     this.forecastLayer.updateForecast();
 
-    const detailElement = el('div', { style: { flex: 0, maxWidth: '50%' } });
-    mount(containerElement, detailElement);
-
     map.on('click', (e: L.LeafletMouseEvent) => {
       const longitude = Math.floor(((e.latlng.lng * 100) + modelResolution / 2) / modelResolution) * modelResolution;
       const latitude = Math.floor(((e.latlng.lat * 100) + modelResolution / 2) / modelResolution) * modelResolution;
@@ -36,15 +34,12 @@ export class App {
       fetch(`${longitude}-${latitude}.json`)
         .then(response => response.json())
         .then((forecasts: Array<DetailedForecastData>) => {
-          // TODO On mobile only
-          // setStyle(mapElement, { flex: 0 });
-          // TODO Let user resize, and remember preference in a cookie
-          setStyle(detailElement, { flex: 1 });
-          setChildren(detailElement, [locationView(latestForecast, forecasts, 9 /* TODO Compute from location */)]);
+          const [keyElement, meteogramElement] =
+            meteogram(filterDetailedForecast(latestForecast, forecasts, 9 /* TODO Compute from location */));
+          this.forecastSelect.showMeteogram(keyElement, meteogramElement);
         })
         .catch(_ => {
-          setStyle(detailElement, { flex: 0} );
-          setChildren(detailElement, []);
+          this.forecastSelect.hideMeteogram();
         })
     });
   }
