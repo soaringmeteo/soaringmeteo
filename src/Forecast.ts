@@ -62,7 +62,9 @@ export type DetailedForecastData = {
   r: {
     t: number, // total
     c: number // convective
-  }
+  },
+  // Mean sea level pressure 
+  mslet: number // hPa
 }
 
 type PressureLevel =

@@ -19,6 +19,11 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
   const rainLevels        = [0, 5, 10, 15];
   const rainDiagramTop    = gutterHeight + airDiagramHeight + gutterHeight;
 
+  const pressureScale     = new Scale([980, 1040 /* hPa */], [0, rainDiagramHeight], false);
+  const pressureLevels    = [980, 1000, 1020, 1040];
+
+  const temperatureScale  = new Scale([0, 15], [0, rainDiagramHeight], false);
+
   const canvasWidth  = columnWidth * forecasts.length;
   const canvasHeight = rainDiagramTop + rainDiagramHeight + gutterHeight;
   const canvas = el(
@@ -33,11 +38,11 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
 
   if (ctx !== null && forecasts.length !== 0) {
 
-    const columns = (drawColumn: (forecast: DetailedForecastData, columnStart: number, columnEnd: number) => void): void => {
+    const columns = (drawColumn: (forecast: DetailedForecastData, columnStart: number, columnEnd: number, date: Date) => void): void => {
       forecasts.forEach(([forecast, date], i) => {
         const columnStart = i * columnWidth;
         const columnEnd   = columnStart + columnWidth;
-        drawColumn(forecast, columnStart, columnEnd);
+        drawColumn(forecast, columnStart, columnEnd, date);
       });
     }
 
@@ -120,11 +125,11 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
       const y = elevationScale.apply(elevation);
       airDiagram.line([0, y], [canvasWidth, y], 'gray');
     });
-    
+
     // Rain diagram
     const rainDiagram = new Diagram([0, rainDiagramTop], rainDiagramHeight, ctx);
 
-    var previousTotalRain = 0;
+    let previousTotalRain = 0;
     columns((forecast, columnStart, columnEnd) => {
       const currentRain = forecast.r.t - previousTotalRain;
       if (currentRain !== 0) {
@@ -137,11 +142,46 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
       previousTotalRain = forecast.r.t;
     });
 
+    // QNH, temperature, and humidity
+    forecasts.reduce(
+      ([previousForecast, _], [forecast, date], i) => {
+        const x1 = columnWidth * (i - 0.5);
+        const x2 = columnWidth * (i + 0.5)
+        rainDiagram.line(
+          [x1, pressureScale.apply(previousForecast.mslet)],
+          [x2, pressureScale.apply(forecast.mslet)],
+          'black'
+        );
+        rainDiagram.line(
+          [x1, temperatureScale.apply(previousForecast.s.t)],
+          [x2, temperatureScale.apply(forecast.s.t)],
+          'red'
+        );
+        rainDiagram.line(
+          [x1, temperatureScale.apply(previousForecast.s.t * previousForecast.s.rh / 100)],
+          [x2, temperatureScale.apply(forecast.s.t * forecast.s.rh / 100)],
+          'blue'
+        );
+        return [forecast, date]
+      }
+    );
+
     // Rain levels
     rainLevels.forEach(rainMillimeters => {
       const y = rainScale.apply(rainMillimeters);
       rainDiagram.line([0, y], [canvasWidth, y], 'gray');
     });
+
+    // Day separation lines
+    let previousDay: number | undefined = undefined;
+    columns((forecast, columnStart, columnEnd, date) => {
+      const currentDay = date.getDay(); // FIXME Users can’t use a custom timezone
+      if (previousDay !== currentDay) {
+        airDiagram.line([columnStart, 0], [columnStart, airDiagramHeight], 'gray');
+        rainDiagram.line([columnStart, 0], [columnStart, rainDiagramHeight], 'gray');
+      }
+      previousDay = currentDay;
+    })
   }
 
   const keyWidth = 60; // TODO Unify with margin in ForecastSelect.ts
@@ -195,6 +235,11 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
 
       rainDiagram.text(rainMillimeters.toString(), [keyWidth - 10, y], rainStyle);
     });
+
+    // pressureLevels.forEach(pascals => {
+    //   const y = pressureScale.apply(pascals);
+    //   rainDiagram.text(pascals.toString(), [keyWidth - 20, y], 'black');
+    // });
   }
 
   return [canvasKey, canvas]
