@@ -112,7 +112,7 @@ object GfsForecast {
           val variables = forecast.atPressure(pressure)
           (pressure.toPascals.round.toInt / 100).toString -> Json.obj(
             "h" -> Json.fromInt(variables.geopotentialHeight.toMeters.round.toInt),
-            "t" -> Json.fromBigDecimal(variables.temperature.toCelsiusDegrees),
+            "t" -> Json.fromBigDecimal(variables.temperature.toCelsiusScale),
             "rh" -> Json.fromBigDecimal(variables.relativeHumidity),
             "u" -> Json.fromInt(variables.wind.u.toKilometersPerHour.round.toInt),
             "v" -> Json.fromInt(variables.wind.v.toKilometersPerHour.round.toInt)
@@ -120,7 +120,7 @@ object GfsForecast {
         }: _*),
         "s" -> Json.obj(
           "h" -> Json.fromInt(forecast.elevation.toMeters.round.toInt),
-          "t" -> Json.fromBigDecimal(forecast.surfaceTemperature.toCelsiusDegrees),
+          "t" -> Json.fromBigDecimal(forecast.surfaceTemperature.toCelsiusScale),
           "rh" -> Json.fromBigDecimal(forecast.surfaceRelativeHumidity),
           "u" -> Json.fromInt(forecast.surfaceWind.u.toKilometersPerHour.round.toInt),
           "v" -> Json.fromInt(forecast.surfaceWind.v.toKilometersPerHour.round.toInt)
@@ -129,8 +129,9 @@ object GfsForecast {
         "r" -> Json.obj(
           "t" -> Json.fromInt(forecast.accumulatedRain.toMillimeters.round.toInt),
           "c" -> Json.fromInt(forecast.accumulatedConvectiveRain.toMillimeters.round.toInt)
-        )
-        // TODO Irradiance, CAPE, CIN, MSLET, snow
+        ),
+        "mslet" -> Json.fromInt(forecast.mslet.toPascals.round.toInt / 100) // hPa
+        // TODO Irradiance, CAPE, CIN, snow
       )
     }
 
