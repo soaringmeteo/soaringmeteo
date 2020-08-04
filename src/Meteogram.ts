@@ -13,11 +13,12 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   const elevationScale  = new Scale([0, 6000 /* m (TODO dynamic) */], [0, airDiagramHeight], true);
   const elevationLevels = [0, 1000, 2000, 3000, 4000, 5000, 6000];
 
-  const rainDiagramHeight = 50; // px
-  const rainStyle         = 'blue';
-  const rainScale         = new Scale([0, 15 /* mm */], [0, rainDiagramHeight], false);
-  const rainLevels        = [0, 5, 10, 15];
-  const rainDiagramTop    = gutterHeight + airDiagramHeight + gutterHeight;
+  const rainDiagramHeight   = 50; // px
+  const rainStyle           = 'blue';
+  const convectiveRainStyle = 'cyan';
+  const rainScale           = new Scale([0, 15 /* mm */], [0, rainDiagramHeight], false);
+  const rainLevels          = [0, 5, 10, 15];
+  const rainDiagramTop      = gutterHeight + airDiagramHeight + gutterHeight;
 
   const pressureScale     = new Scale([980, 1040 /* hPa */], [0, rainDiagramHeight], false);
   const pressureLevels    = [980, 1000, 1020, 1040];
@@ -135,17 +136,17 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     // Rain diagram
     const rainDiagram = new Diagram([0, rainDiagramTop], rainDiagramHeight, ctx);
 
-    let previousTotalRain = 0;
     columns((forecast, columnStart, columnEnd) => {
-      const currentRain = forecast.r.t - previousTotalRain;
-      if (currentRain !== 0) {
-        rainDiagram.fillRect(
-          [columnStart, 0],
-          [columnEnd,   rainScale.apply(currentRain)],
-          rainStyle
-        );
-      }
-      previousTotalRain = forecast.r.t;
+      rainDiagram.fillRect(
+        [columnStart, 0],
+        [columnEnd,   rainScale.apply(forecast.r.c)],
+        convectiveRainStyle
+      );
+      rainDiagram.fillRect(
+        [columnStart, rainScale.apply(forecast.r.c)],
+        [columnEnd,   rainScale.apply(forecast.r.t)],
+        rainStyle
+      );
     });
 
     // QNH, temperature, and humidity
