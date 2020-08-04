@@ -1,5 +1,6 @@
 package org.soaringmeteo
 
+import eu.timepit.refined.refineV
 import squants.radio.WattsPerSquareMeter
 import squants.space.Meters
 import verify.BasicTestSuite
@@ -26,7 +27,7 @@ object GfsLocationTestSuite extends BasicTestSuite {
       GfsLocation("Mont Blanc-Verbier", 7.0, 46.0, Meters(1934), 1, 2, WattsPerSquareMeter(68), WattsPerSquareMeter(214), WattsPerSquareMeter(284), WattsPerSquareMeter(608), WattsPerSquareMeter(792), WattsPerSquareMeter(920))
 
     val forecastTimeOffsets0 =
-      location.forecastTimeOffsets(GfsInitializationTime(0))
+      location.forecastTimeOffsets(refineV.unsafeFrom(0))
     assert(forecastTimeOffsets0.startsWith(Seq(9, 12, 15, 33, 36, 39)))
   }
 

@@ -2,6 +2,7 @@ package org.soaringmeteo
 
 import kantan.csv.{CsvSource, RowDecoder, rfc}
 import org.slf4j.LoggerFactory
+import org.soaringmeteo.Settings.gfsForecastTimeResolution
 import squants.radio.{Irradiance, WattsPerSquareMeter}
 import squants.space.{Length, Meters}
 
@@ -67,7 +68,7 @@ case class GfsLocation(
     val firstNoonTime = dayOffset + noonTime - initializationTime.value
     for {
       day  <- 0 until 7
-      timeOffset <- Seq(firstNoonTime - 3, firstNoonTime, firstNoonTime + 3)
+      timeOffset <- Seq(firstNoonTime - gfsForecastTimeResolution, firstNoonTime, firstNoonTime + gfsForecastTimeResolution)
     } yield timeOffset + day * 24
   }
 

@@ -1,6 +1,9 @@
 package org.soaringmeteo
 
+import java.time.{LocalTime, OffsetDateTime, ZoneOffset}
+
 import io.circe.{Encoder, Json}
+import squants.energy.SpecificEnergy
 import squants.motion
 import squants.motion.{Pascals, Pressure, Velocity}
 import squants.radio.Irradiance
@@ -11,7 +14,8 @@ import squants.thermal.Temperature
  * Forecast data for one point at one time
  */
 case class GfsForecast(
-  elevation: Length, // FIXME Find another way to send this information since it doesn’t vary accross forecasts (it is dependent on the location only)
+  time: OffsetDateTime,
+  elevation: Length,
   boundaryLayerHeight: Length,
   boundaryLayerWind: Wind,
   cloudCover: CloudCover,
@@ -25,8 +29,8 @@ case class GfsForecast(
   accumulatedConvectiveRain: Length,
   latentHeatNetFlux: Irradiance,
   sensibleHeatNetFlux: Irradiance,
-  cape: Double, // J/kg
-  cin: Double, // J/kg
+  cape: SpecificEnergy,
+  cin: SpecificEnergy,
   downwardShortWaveRadiationFlux: Irradiance,
   isothermZero: Length
 )
@@ -60,16 +64,23 @@ object GfsForecast {
       .map(Pascals(_))
 
   /**
-   * @param gribsDir     Directory containing the downloaded GRIB files
-   * @param forecastTime Time of forecast we want to extract, in number of hours
-   *                     from the forecast initialization (e.g., 0, 3, 6, etc.)
-   * @param locations    Set of points for which we want to extract the forecast data. FIXME Extract data for all points
+   * @param gribsDir Directory containing the downloaded GRIB files
+   * @param forecastInitDateTime Initialization time of the forecast
+   * @param forecastHourOffset Time of forecast we want to extract, in number of hours
+   *                           from the forecast initialization (e.g., 0, 3, 6, etc.)
+   * @param locations Set of points for which we want to extract the forecast data. FIXME Extract data for all points
    * @return
    */
-  def fromGribFile(gribsDir: os.Path, forecastTime: Int, locations: Seq[GfsLocation]): Map[Point, GfsForecast] = {
-    val gribFile = gribsDir / forecastTime.toString()
+  def fromGribFile(
+    gribsDir: os.Path,
+    forecastInitDateTime: OffsetDateTime,
+    forecastHourOffset: Int,
+    locations: Seq[GfsLocation]
+  ): Map[Point, GfsForecast] = {
+    val gribFile = gribsDir / forecastHourOffset.toString()
     Grib.bracket(gribFile) { grib =>
-      grib.forecast(locations)
+      val forecastTime = forecastInitDateTime.plusHours(forecastHourOffset)
+      grib.forecast(locations, forecastTime)
     }
   }
 
@@ -77,7 +88,7 @@ object GfsForecast {
    * JSON representation of the forecast data summary.
    * WARNING: client must be consistent with this serialization format.
    */
-  val summaryEncoder: Encoder[GfsForecast] =
+  val jsonEncoder: Encoder[GfsForecast] =
     Encoder.instance { forecast =>
       Json.obj(
         "blh" -> Json.fromInt(forecast.boundaryLayerHeight.toMeters.round.toInt),
@@ -89,49 +100,6 @@ object GfsForecast {
           "m" -> Json.fromBigDecimal(forecast.cloudCover.middle),
           "h" -> Json.fromBigDecimal(forecast.cloudCover.high)
         )
-      )
-    }
-
-  val detailEncoder: Encoder[GfsForecast] =
-    Encoder.instance { forecast =>
-      Json.obj(
-        "bl" -> Json.obj(
-          "h" -> Json.fromInt(forecast.boundaryLayerHeight.toMeters.round.toInt),
-          "u" -> Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
-          "v" -> Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt)
-        ),
-        "c" -> Json.obj(
-          "e" -> Json.fromBigDecimal(forecast.cloudCover.entire),
-          "l" -> Json.fromBigDecimal(forecast.cloudCover.low),
-          "m" -> Json.fromBigDecimal(forecast.cloudCover.middle),
-          "h" -> Json.fromBigDecimal(forecast.cloudCover.high),
-          "c" -> Json.fromBigDecimal(forecast.cloudCover.conv),
-          "b" -> Json.fromBigDecimal(forecast.cloudCover.boundary)
-        ),
-        "p" -> Json.obj(pressureLevels.map { pressure =>
-          val variables = forecast.atPressure(pressure)
-          (pressure.toPascals.round.toInt / 100).toString -> Json.obj(
-            "h" -> Json.fromInt(variables.geopotentialHeight.toMeters.round.toInt),
-            "t" -> Json.fromBigDecimal(variables.temperature.toCelsiusScale),
-            "rh" -> Json.fromBigDecimal(variables.relativeHumidity),
-            "u" -> Json.fromInt(variables.wind.u.toKilometersPerHour.round.toInt),
-            "v" -> Json.fromInt(variables.wind.v.toKilometersPerHour.round.toInt)
-          )
-        }: _*),
-        "s" -> Json.obj(
-          "h" -> Json.fromInt(forecast.elevation.toMeters.round.toInt),
-          "t" -> Json.fromBigDecimal(forecast.surfaceTemperature.toCelsiusScale),
-          "rh" -> Json.fromBigDecimal(forecast.surfaceRelativeHumidity),
-          "u" -> Json.fromInt(forecast.surfaceWind.u.toKilometersPerHour.round.toInt),
-          "v" -> Json.fromInt(forecast.surfaceWind.v.toKilometersPerHour.round.toInt)
-        ),
-        "iso" -> Json.fromInt(forecast.isothermZero.toMeters.round.toInt),
-        "r" -> Json.obj(
-          "t" -> Json.fromInt(forecast.accumulatedRain.toMillimeters.round.toInt),
-          "c" -> Json.fromInt(forecast.accumulatedConvectiveRain.toMillimeters.round.toInt)
-        ),
-        "mslet" -> Json.fromInt(forecast.mslet.toPascals.round.toInt / 100) // hPa
-        // TODO Irradiance, CAPE, CIN, snow
       )
     }
 

@@ -16,11 +16,4 @@ object GfsInitializationTime {
       new GfsInitializationTime()
     )
 
-  /**
-   * Validate that the given `n` value is a valid GFS initialization time,
-   * otherwise throws an exception.
-   */
-  def apply(n: Int): Value =
-    refineV.unsafeFrom(n)
-
 }

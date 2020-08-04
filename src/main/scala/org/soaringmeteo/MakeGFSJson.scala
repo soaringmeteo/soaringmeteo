@@ -55,17 +55,27 @@ object MakeGFSJson {
     os.makeDir.all(targetDir)
     os.copy.over(gribsDir / "forecast.json", targetDir / "forecast.json", replaceExisting = true)
 
+    val forecastInformation =
+      io.circe.parser.parse(os.read(gribsDir / "forecast.json"))
+        .flatMap(ForecastInitDateTime.jsonCodec.decodeJson)
+        .left.map { error =>
+          logger.error("Unable to read forecast.json file", error)
+          throw error
+        }
+        .merge
+
     val forecasts =
       for (t <- Settings.forecastHours) yield {
         logger.debug(s"Extracting GFS forecast data at time $t")
-        val forecast = GfsForecast.fromGribFile(gribsDir, t, gfsLocations)
+        val forecast =
+          GfsForecast.fromGribFile(gribsDir, forecastInformation, t, gfsLocations)
         val fields =
           forecast.iterator.map { case (p, forecast) =>
             // Coordinates are multiplied by 100 so that they are always rendered as integer
             // values and never have a trailing `.0` which would make it complicated to read
             // from the client-side
             val locationKey = s"${(p.longitude * 100).intValue},${(p.latitude * 100).intValue}"
-            locationKey -> GfsForecast.summaryEncoder(forecast)
+            locationKey -> GfsForecast.jsonEncoder(forecast)
           }.toSeq
 
         val targetFile = targetDir / s"$t.json"
@@ -75,10 +85,11 @@ object MakeGFSJson {
       }
 
     for (gfsLocation <- gfsLocations) {
+      val point = Point(gfsLocation.latitude, gfsLocation.longitude)
       logger.debug(s"Writing forecast for location ${gfsLocation.longitude},${gfsLocation.latitude}")
-      val locationForecasts = forecasts.map(_(Point(gfsLocation.latitude, gfsLocation.longitude)))
+      val locationForecasts = LocationForecasts(point, forecasts.map(_(point)))
       val targetFile = targetDir / s"${(gfsLocation.longitude * 100).intValue}-${(gfsLocation.latitude * 100).intValue}.json"
-      os.write.over(targetFile, Json.arr(locationForecasts.map(GfsForecast.detailEncoder(_)): _*).noSpaces)
+      os.write.over(targetFile, LocationForecasts.jsonEncoder(locationForecasts).noSpaces)
     }
   }
 

@@ -1,5 +1,8 @@
 package org.soaringmeteo
 
+import java.time.OffsetDateTime
+
+import squants.energy.Grays
 import squants.motion.{MetersPerSecond, Pascals}
 import squants.radio.WattsPerSquareMeter
 import squants.space.{Meters, Millimeters}
@@ -127,7 +130,7 @@ class Grib(data: GridDataset) {
   /**
    * Extract a [[GfsForecast]] for each of the given `locations`.
    */
-  def forecast(locations: Seq[GfsLocation]): Map[Point, GfsForecast] = {
+  def forecast(locations: Seq[GfsLocation], time: OffsetDateTime): Map[Point, GfsForecast] = {
     (for (location <- locations) yield {
       // Read the value of the given `grid` at the current `location`
       def readXY(feature: Feature): Double = feature.read(location)
@@ -148,6 +151,7 @@ class Grib(data: GridDataset) {
       }
 
       val gfsForecast = GfsForecast(
+        time = time,
         elevation = Meters(readXY(hgtSurface)),
         boundaryLayerHeight = Meters(readXY(hpblSurface)),
         boundaryLayerWind = Wind(
@@ -175,8 +179,8 @@ class Grib(data: GridDataset) {
         accumulatedConvectiveRain = Millimeters(readXY(acpcpSurface)),
         latentHeatNetFlux = WattsPerSquareMeter(readXY(lhtflSurface)),
         sensibleHeatNetFlux = WattsPerSquareMeter(readXY(shtflSurface)),
-        cape = readXY(capeSurface),
-        cin = readXY(cinSurface),
+        cape = Grays(readXY(capeSurface)),
+        cin = Grays(readXY(cinSurface)),
         downwardShortWaveRadiationFlux = WattsPerSquareMeter(readXY(dswrfSurface)),
         isothermZero = Meters(readXY(hgt0))
       )
