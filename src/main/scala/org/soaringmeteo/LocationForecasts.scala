@@ -30,10 +30,29 @@ object LocationForecasts {
 
   def apply(location: Point, forecasts: Seq[GfsForecast]): LocationForecasts = {
     val isRelevantAtLocation = isRelevant(location)
+    // HACK We reuse the same data structure, `GfsForecast`, but we give a different meaning to
+    // the `accumulatedRain` field: it does not contain anymore the accumulated rain, but only
+    // the rain that fell during the forecast period.
+    val forecastsWithRainPerPeriod: Seq[GfsForecast] =
+      forecasts.foldLeft((List.newBuilder[GfsForecast], Option.empty[GfsForecast])) {
+        case ((builder, maybePreviousForecast), forecast) =>
+          maybePreviousForecast match {
+            case None =>
+              builder += forecast // First forecast (+3h) is special, it contains the accumulated
+                                  // rain since the forecast initialization time, which is equivalent
+                                  // to the rain that fell during the forecast period
+            case Some(previousForecast) =>
+              builder += forecast.copy(
+                accumulatedRain = forecast.accumulatedRain - previousForecast.accumulatedRain,
+                accumulatedConvectiveRain = forecast.accumulatedConvectiveRain - previousForecast.accumulatedConvectiveRain
+              )
+          }
+          (builder, Some(forecast))
+      }._1.result()
     LocationForecasts(
       elevation = forecasts.head.elevation,
       dayForecasts =
-        forecasts
+        forecastsWithRainPerPeriod
           .filter(forecast => isRelevantAtLocation(forecast.time)) // Keep only forecasts during the day, and around noon
           .groupBy(_.time.toLocalDate)
           .filter { case (_, forecasts) => forecasts.nonEmpty }
