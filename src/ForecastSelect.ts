@@ -27,11 +27,10 @@ export class ForecastSelect {
     this.morningOffset      = 9;
     this.noonOffset         = 12;
     this.afternoonOffset    = 15;
-    this.forecastInitOffset = +latestForecast.time;
+    this.forecastInitOffset = +latestForecast.init.getUTCHours();
     // Tomorrow, noon period
-    this.hourOffset = (latestForecast.time === '00' ? 0 : 24) + this.noonOffset - this.forecastInitOffset;
-    const latestForecastDateTime = new Date(`${latestForecast.date}T${latestForecast.time}:00Z`);
-    this.view = new ForecastSelectView(this, latestForecastDateTime, containerElement);
+    this.hourOffset = (this.forecastInitOffset === 0 ? 0 : 24) + this.noonOffset - this.forecastInitOffset;
+    this.view = new ForecastSelectView(this, latestForecast.init, containerElement);
   }
 
   updateHourOffset(value: number): void {

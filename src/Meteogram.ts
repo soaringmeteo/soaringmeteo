@@ -1,11 +1,11 @@
 import { el } from 'redom';
-import { DetailedForecastData } from './Forecast';
+import { DetailedForecastData, LocationForecasts } from './Forecast';
 import { drawWindArrow } from './shapes';
 import { Diagram, Scale } from './Diagram';
 
 export const columnWidth = 33;
 
-export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTMLElement, HTMLElement] => {
+export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLElement] => {
 
   const gutterHeight = 15;
 
@@ -24,7 +24,7 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
 
   const temperatureScale  = new Scale([0, 15], [0, rainDiagramHeight], false);
 
-  const canvasWidth  = columnWidth * forecasts.length;
+  const canvasWidth  = columnWidth * forecasts.d.reduce((n, forecast) => n + forecast.h.length, 0);
   const canvasHeight = rainDiagramTop + rainDiagramHeight + gutterHeight;
   const canvas = el(
     'canvas',
@@ -36,13 +36,17 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
   ) as HTMLCanvasElement;
   const ctx = canvas.getContext('2d');
 
-  if (ctx !== null && forecasts.length !== 0) {
+  if (ctx !== null && forecasts.d.length !== 0) {
 
     const columns = (drawColumn: (forecast: DetailedForecastData, columnStart: number, columnEnd: number, date: Date) => void): void => {
-      forecasts.forEach(([forecast, date], i) => {
-        const columnStart = i * columnWidth;
-        const columnEnd   = columnStart + columnWidth;
-        drawColumn(forecast, columnStart, columnEnd, date);
+      let i = 0;
+      forecasts.d.forEach(dayForecast => {
+        dayForecast.h.forEach(forecast => {
+          const columnStart = i * columnWidth;
+          const columnEnd   = columnStart + columnWidth;
+          drawColumn(forecast, columnStart, columnEnd, new Date(forecast.t) /* TODO Store date directly instead of creating it from JSON string */);
+          i = i + 1;
+        });
       });
     }
 
@@ -52,7 +56,7 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
     // Ground level & Boundary Layer
     columns((forecast, columnStart, columnEnd) => {
       // Ground level
-      const groundLevelY = elevationScale.apply(forecast.s.h);
+      const groundLevelY = elevationScale.apply(forecasts.h);
       airDiagram.fillRect(
         [columnStart, 0],
         [columnEnd,   groundLevelY],
@@ -69,7 +73,7 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
 
     // Wind
     columns((forecast, columnStart, _) => {
-      const groundLevelY = elevationScale.apply(forecast.s.h);
+      const groundLevelY = elevationScale.apply(forecasts.h);
       const boundaryLayerHeight = elevationScale.apply(forecast.bl.h);
       const windCenterX = columnStart + columnWidth / 2;
       const windColor = `rgba(62, 0, 0, 0.35)`;
@@ -81,23 +85,25 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
     });
 
     // Isotherm 0°C
-    forecasts.reduce(
-      ([previousForecast, _], [forecast, date], i) => {
+    forecasts.d
+      .map(f => f.h).reduce((x, y) => x.concat(y), []) // Alternative to flatMap
+      .reduce(
+      (previousForecast, forecast, i) => {
         airDiagram.line(
           [columnWidth * (i - 0.5), elevationScale.apply(previousForecast.iso)],
           [columnWidth * (i + 0.5), elevationScale.apply(forecast.iso)],
           'cyan'
         );
-        return [forecast, date]
+        return forecast
       }
     );
 
     // Clouds
     columns((forecast, columnStart, columnEnd) => {
-      const groundLevelY = elevationScale.apply(forecast.s.h);
+      const groundLevelY = elevationScale.apply(forecasts.h);
       // Low-level clouds
       const lowCloudsTop = 2000; // m
-      if (forecast.s.h < lowCloudsTop) {
+      if (forecasts.h < lowCloudsTop) {
         const lowCloudsY = elevationScale.apply(lowCloudsTop);
         airDiagram.fillRect(
           [columnStart, groundLevelY],
@@ -108,7 +114,7 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
 
       // Middle-level clouds
       const middleCloudsTop    = 6000; // m
-      const middleCloudsBottom = Math.max(forecast.s.h, lowCloudsTop);
+      const middleCloudsBottom = Math.max(forecasts.h, lowCloudsTop);
       const middleCloudsY0     = elevationScale.apply(middleCloudsBottom);
       const middleCloudsY1     = elevationScale.apply(middleCloudsTop);
       airDiagram.fillRect(
@@ -143,28 +149,30 @@ export const meteogram = (forecasts: Array<[DetailedForecastData, Date]>): [HTML
     });
 
     // QNH, temperature, and humidity
-    forecasts.reduce(
-      ([previousForecast, _], [forecast, date], i) => {
-        const x1 = columnWidth * (i - 0.5);
-        const x2 = columnWidth * (i + 0.5)
-        rainDiagram.line(
-          [x1, pressureScale.apply(previousForecast.mslet)],
-          [x2, pressureScale.apply(forecast.mslet)],
-          'black'
-        );
-        rainDiagram.line(
-          [x1, temperatureScale.apply(previousForecast.s.t)],
-          [x2, temperatureScale.apply(forecast.s.t)],
-          'red'
-        );
-        rainDiagram.line(
-          [x1, temperatureScale.apply(previousForecast.s.t * previousForecast.s.rh / 100)],
-          [x2, temperatureScale.apply(forecast.s.t * forecast.s.rh / 100)],
-          'blue'
-        );
-        return [forecast, date]
-      }
-    );
+    forecasts.d
+      .map(f => f.h).reduce((x, y) => x.concat(y), []) // Alternative to flatMap
+      .reduce(
+        (previousForecast, forecast, i) => {
+          const x1 = columnWidth * (i - 0.5);
+          const x2 = columnWidth * (i + 0.5)
+          rainDiagram.line(
+            [x1, pressureScale.apply(previousForecast.mslet)],
+            [x2, pressureScale.apply(forecast.mslet)],
+            'black'
+          );
+          rainDiagram.line(
+            [x1, temperatureScale.apply(previousForecast.s.t)],
+            [x2, temperatureScale.apply(forecast.s.t)],
+            'red'
+          );
+          rainDiagram.line(
+            [x1, temperatureScale.apply(previousForecast.s.t * previousForecast.s.rh / 100)],
+            [x2, temperatureScale.apply(forecast.s.t * forecast.s.rh / 100)],
+            'blue'
+          );
+          return forecast
+        }
+      );
 
     // Rain levels
     rainLevels.forEach(rainMillimeters => {

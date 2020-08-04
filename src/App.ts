@@ -1,11 +1,10 @@
-import { el, mount, setStyle, setChildren } from 'redom';
+import { el, mount, setStyle } from 'redom';
 import { initializeMap } from './Map';
 import { CanvasLayer } from './CanvasLayer';
-import { LatestForecast, modelResolution, DetailedForecastData } from './Forecast';
+import { modelResolution, LocationForecasts, LatestForecast } from './Forecast';
 import { ForecastSelect } from './ForecastSelect';
 import { ForecastLayer } from './ForecastLayer';
 import { meteogram } from './Meteogram';
-import { filterDetailedForecast } from './ForecastFilter';
 
 export class App {
 
@@ -33,9 +32,9 @@ export class App {
 
       fetch(`${longitude}-${latitude}.json`)
         .then(response => response.json())
-        .then((forecasts: Array<DetailedForecastData>) => {
+        .then((forecasts: LocationForecasts) => {
           const [keyElement, meteogramElement] =
-            meteogram(filterDetailedForecast(latestForecast, forecasts, 9 /* TODO Compute from location */));
+            meteogram(forecasts);
           this.forecastSelect.showMeteogram(keyElement, meteogramElement);
         })
         .catch(_ => {

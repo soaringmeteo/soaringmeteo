@@ -1,7 +1,13 @@
 // Note: do we really need to access older forecasts?
-export type LatestForecast = {
-  date: string // e.g., "2020-04-14"
-  time: string // "00", "06", "12", or "18"
+export type LatestForecastData = {
+  init: string // e.g., "2020-04-14T06:00:00Z"
+}
+
+export class LatestForecast {
+  readonly init: Date
+  constructor(readonly data: LatestForecastData) {
+    this.init = new Date(data.init)
+  }
 }
 
 export type ForecastData = {
@@ -18,7 +24,18 @@ export type ForecastData = {
   }
 }
 
+export type LocationForecasts = {
+  h: number // elevation
+  d: Array<DayForecasts>
+}
+
+type DayForecasts = {
+  th: number // thunderstorm risk
+  h: Array<DetailedForecastData>
+}
+
 export type DetailedForecastData = {
+  t: string // Forecast time
   // Boundary layer
   bl: {
     // Height
@@ -49,7 +66,6 @@ export type DetailedForecastData = {
   },
   // Surface
   s: {
-    h: number, // elevation
     t: number, // temperature
     rh: number, // relative humidity
     // Wind
