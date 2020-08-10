@@ -24,12 +24,41 @@ export type ForecastData = {
   }
 }
 
-export type LocationForecasts = {
-  h: number // elevation
-  d: Array<DayForecasts>
+export class LocationForecasts {
+  readonly elevation: number;
+  readonly dayForecasts: Array<DayForecasts>;
+  constructor(data: LocationForecastsData, private readonly latestForecast: LatestForecast) {
+    this.elevation = data.h;
+    this.dayForecasts = data.d.map(data => new DayForecasts(data));
+  }
+
+  initializationTime(): Date {
+    return this.latestForecast.init
+  }
 }
 
-type DayForecasts = {
+export class DayForecasts {
+  readonly thunderstormRisk: number;
+  readonly forecasts: Array<DetailedForecast>;
+  constructor(data: DayForecastsData) {
+    this.thunderstormRisk = data.th;
+    this.forecasts = data.h.map(data => new DetailedForecast(data));
+  }
+}
+
+export class DetailedForecast {
+  readonly time: Date;
+  constructor(readonly data: DetailedForecastData) {
+    this.time = new Date(data.t);
+  }
+}
+
+export type LocationForecastsData = {
+  h: number // elevation
+  d: Array<DayForecastsData>
+}
+
+type DayForecastsData = {
   th: number // thunderstorm risk
   h: Array<DetailedForecastData>
 }

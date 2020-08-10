@@ -3,7 +3,7 @@ export const periodsPerDay = 3;
 // The last forecast period we have is +186 hours after initialization time
 export const lastForecastOffset = 186;
 
-// TODO Read directly from forecast data instead of re-computing
+// TODO Return an array containing an array for each day instead of a flat array
 export const forecastOffsets = (gfsRunDateTime: Date, firstPeriodOffset: number): Array<[number, Date]> => {
   // UTC-offsets of the periods we are interested in in a day (e.g., [9, 12, 15] around longitude 0)
   const forecastUTCOffsets = Array.from({ length: periodsPerDay }, (_, i) => firstPeriodOffset + i * 3);

@@ -1,9 +1,9 @@
 import { el, mount, setChildren, setStyle } from 'redom';
 import { App } from './App';
-import { LatestForecast } from './Forecast';
+import { LatestForecast, LocationForecasts } from './Forecast';
 import * as L from 'leaflet';
 import { forecastOffsets, periodsPerDay } from './ForecastFilter';
-import { columnWidth as meteogramColumnWidth } from './Meteogram';
+import { columnWidth as meteogramColumnWidth, meteogram } from './Meteogram';
 
 export class ForecastSelect {
 
@@ -66,8 +66,18 @@ export class ForecastSelect {
     this.updateHourOffset(Math.max(this.hourOffset - 24, 3));
   }
 
-  showMeteogram(key: HTMLElement, meteogram: HTMLElement): void {
-    this.view.showMeteogram(key, meteogram);
+  showMeteogram(forecasts: LocationForecasts): void {
+    const [keyElement, meteogramElement] = meteogram(forecasts);
+    const forecastOffsetAndDates: Array<[number, Date]> =
+      forecasts.dayForecasts
+        .map(_ => _.forecasts)
+        .reduce((x, y) => x.concat(y), [])
+        .map(forecast => {
+          const hourOffset =
+            (forecast.time.getTime() - forecasts.initializationTime().getTime()) / 3600000;
+          return [hourOffset, forecast.time]
+        });
+    this.view.showMeteogram(keyElement, meteogramElement, forecastOffsetAndDates);
   }
 
   hideMeteogram(): void {
@@ -83,29 +93,22 @@ export class ForecastSelectView {
   readonly morningPeriodEl: HTMLElement
   readonly noonPeriodEl: HTMLElement
   readonly afternoonPeriodEl: HTMLElement
+  private periodSelectorEl: HTMLElement;
   private meteogramEl: HTMLElement
   private meteogramKeyEl: HTMLElement
+  private readonly marginLeft: number;
 
   constructor(readonly forecastSelect: ForecastSelect, readonly forecastInitDateTime: Date, containerElement: HTMLElement) {
 
     this.meteogramEl = el('div'); // Filled later by showMeteogram
-    const marginLeft = 60; // TODO Unify with canvasKey width in Meteogram.ts
+    this.marginLeft = 60; // TODO Unify with canvasKey width in Meteogram.ts
     const marginTop = 35; // Day height + hour height + 2 (wtf)
-    this.meteogramKeyEl = el('div', { style: { position: 'absolute', width: `${marginLeft}px`, left: 0, top: `${marginTop}px`, backgroundColor: 'white' } });
-
-    const hover = (htmlEl: HTMLElement): HTMLElement => {
-      htmlEl.onmouseenter = () => htmlEl.style.backgroundColor = 'lightGray';
-      htmlEl.onmouseleave = () => {
-        htmlEl.style.backgroundColor = 'inherit';
-        this.updateSelectedForecast();
-      }
-      return htmlEl
-    }
+    this.meteogramKeyEl = el('div', { style: { position: 'absolute', width: `${this.marginLeft}px`, left: 0, top: `${marginTop}px`, backgroundColor: 'white' } });
 
     const buttonStyle = { padding: '0.2em', display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray' };
     this.currentDayEl = el('div'); // Will be filled later by `updateSelectedForecast`
 
-    this.morningPeriodEl = hover(
+    this.morningPeriodEl = this.hover(
       el(
         'div',
         { style: { flexGrow: 1, ...buttonStyle } },
@@ -114,7 +117,7 @@ export class ForecastSelectView {
     );
     this.morningPeriodEl.onclick = () => { forecastSelect.selectMorning(); }
 
-    this.noonPeriodEl = hover(
+    this.noonPeriodEl = this.hover(
       el(
         'div',
         { style: { flexGrow: 1, ...buttonStyle } },
@@ -123,7 +126,7 @@ export class ForecastSelectView {
     );
     this.noonPeriodEl.onclick = () => { forecastSelect.selectNoon(); }
 
-    this.afternoonPeriodEl = hover(
+    this.afternoonPeriodEl = this.hover(
       el(
         'div',
         { style: { flexGrow: 1, ...buttonStyle } },
@@ -132,28 +135,99 @@ export class ForecastSelectView {
     );
     this.afternoonPeriodEl.onclick = () => { forecastSelect.selectAfternoon(); }
 
-    const previousDayBtn = hover(el('div', { title: '24 hours before', style: { ...buttonStyle } }, '-24'));
+    const previousDayBtn = this.hover(el('div', { title: '24 hours before', style: { ...buttonStyle } }, '-24'));
     previousDayBtn.onclick = () => { forecastSelect.previousDay(); }
 
-    const previousPeriodBtn = hover(el('div', { title: 'Previous forecast period', style: { ...buttonStyle } }, '-3'));
+    const previousPeriodBtn = this.hover(el('div', { title: 'Previous forecast period', style: { ...buttonStyle } }, '-3'));
     previousPeriodBtn.onclick = () => { forecastSelect.previousPeriod(); }
 
-    const nextPeriodBtn = hover(el('div', { title: 'Next forecast period', style: { ...buttonStyle } }, '+3'));
+    const nextPeriodBtn = this.hover(el('div', { title: 'Next forecast period', style: { ...buttonStyle } }, '+3'));
     nextPeriodBtn.onclick = () => { forecastSelect.nextPeriod(); }
 
-    const nextDayBtn = hover(el('div', { title: '24 hours after', style: { ...buttonStyle } }, '+24'));
+    const nextDayBtn = this.hover(el('div', { title: '24 hours after', style: { ...buttonStyle } }, '+24'));
     nextDayBtn.onclick = () => { forecastSelect.nextDay(); }
 
+    this.periodSelectorEl =
+      this.periodSelectorElement(forecastOffsets(forecastInitDateTime, forecastSelect.morningOffset));
+
+    this.rootElement =
+      el(
+        'span',
+        { style: { position: 'absolute', top: 0, left: 0, zIndex: 1000, maxWidth: '100%', userSelect: 'none', cursor: 'default' } },
+        this.meteogramKeyEl,
+        // Period selector
+        this.periodSelectorEl,
+        // Current period
+        el(
+          'div',
+          { style: { width: '100px', backgroundColor: 'white' } },
+          this.currentDayEl,
+          el('div', previousDayBtn, previousPeriodBtn, nextPeriodBtn, nextDayBtn)
+        ),
+      );
+    L.DomEvent.disableClickPropagation(this.rootElement);
+    L.DomEvent.disableScrollPropagation(this.rootElement);
+    this.updateSelectedForecast();
+    mount(containerElement, this.rootElement);
+  }
+
+  private hover(htmlEl: HTMLElement): HTMLElement {
+    htmlEl.onmouseenter = () => htmlEl.style.backgroundColor = 'lightGray';
+    htmlEl.onmouseleave = () => {
+      htmlEl.style.backgroundColor = 'inherit';
+      this.updateSelectedForecast();
+    }
+    return htmlEl
+  }
+
+  private hoursForPeriod(utcOffset: number): number {
+    const date = new Date(this.forecastInitDateTime);
+    date.setUTCHours(utcOffset);
+    return date.getHours()
+  }
+
+  /** Update the view according to the selected forecast period */
+  updateSelectedForecast(): void {
+    const forecastDateTime = new Date(this.forecastInitDateTime);
+    forecastDateTime.setUTCHours(this.forecastInitDateTime.getUTCHours() + this.forecastSelect.getHourOffset());
+    this.currentDayEl.textContent = forecastDateTime.toLocaleString(undefined, { month: 'long', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
+    setStyle(this.morningPeriodEl, this.periodStyle(this.forecastSelect.morningOffset));
+    setStyle(this.noonPeriodEl, this.periodStyle(this.forecastSelect.noonOffset));
+    setStyle(this.afternoonPeriodEl, this.periodStyle(this.forecastSelect.afternoonOffset));
+  }
+
+  private periodStyle(periodOffset: number): object {
+    if ((this.forecastSelect.getHourOffset() + this.forecastSelect.forecastInitOffset) % 24 === periodOffset) {
+      return { backgroundColor: '#999' }
+    } else {
+      return { backgroundColor: 'inherit' }
+    }
+  }
+
+  showMeteogram(key: HTMLElement, meteogram: HTMLElement, forecastOffsetAndDates: Array<[number, Date]>): void {
+    const updatedPeriodSelectorEl = this.periodSelectorElement(forecastOffsetAndDates);
+    mount(this.rootElement, updatedPeriodSelectorEl, this.periodSelectorEl, /* replace = */ true);
+    this.periodSelectorEl = updatedPeriodSelectorEl;
+    setChildren(this.meteogramKeyEl, [key]);
+    setChildren(this.meteogramEl, [meteogram]);
+  }
+
+  hideMeteogram(): void {
+    setChildren(this.meteogramKeyEl, []);
+    setChildren(this.meteogramEl, []);
+  }
+
+  private periodSelectorElement(forecastOffsetAndDates: Array<[number, Date]>): HTMLElement {
     const flatPeriodSelectors: Array<[HTMLElement, Date]> = 
-      forecastOffsets(forecastInitDateTime, forecastSelect.morningOffset)
+      forecastOffsetAndDates
         .map(([gfsOffset, date]) => {
           const htmlEl = el(
             'span',
             { style: { display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray', width: `${meteogramColumnWidth}px`, lineHeight: '20px', boxSizing: 'border-box', textAlign: 'center' } },
             date.toLocaleTimeString(undefined, { hour12: false, hour: 'numeric' })
           );
-          htmlEl.onclick = () => { forecastSelect.updateHourOffset(gfsOffset); };
-          hover(htmlEl);
+          htmlEl.onclick = () => { this.forecastSelect.updateHourOffset(gfsOffset); };
+          this.hover(htmlEl);
           return [htmlEl, date]
         });
 
@@ -188,71 +262,19 @@ export class ForecastSelectView {
         )
       });
 
+    const length = periodSelectorsByDay.reduce((n, ss) => n + ss[0].length, 0);
     const scrollablePeriodSelector =
       el(
         'div',
-        { style: { overflowX: 'auto', marginLeft: `${marginLeft}px`, backgroundColor: 'white' } },
+        { style: { overflowX: 'auto', marginLeft: `${this.marginLeft}px`, backgroundColor: 'white' } },
         el(
           'div',
-          { style: { width: `${flatPeriodSelectors.length * meteogramColumnWidth}px` } },
+          { style: { width: `${length * meteogramColumnWidth}px` } },
           el('div', periodSelectors),
           this.meteogramEl
         )
       );
-
-    this.rootElement =
-      el(
-        'span',
-        { style: { position: 'absolute', top: 0, left: 0, zIndex: 1000, maxWidth: '100%', userSelect: 'none', cursor: 'default' } },
-        this.meteogramKeyEl,
-        // Period selector
-        scrollablePeriodSelector,
-        // Current period
-        el(
-          'div',
-          { style: { width: '100px', backgroundColor: 'white' } },
-          this.currentDayEl,
-          el('div', previousDayBtn, previousPeriodBtn, nextPeriodBtn, nextDayBtn)
-        ),
-      );
-    L.DomEvent.disableClickPropagation(this.rootElement);
-    L.DomEvent.disableScrollPropagation(this.rootElement);
-    this.updateSelectedForecast();
-    mount(containerElement, this.rootElement);
-  }
-
-  private hoursForPeriod(utcOffset: number): number {
-    const date = new Date(this.forecastInitDateTime);
-    date.setUTCHours(utcOffset);
-    return date.getHours()
-  }
-
-  /** Update the view according to the selected forecast period */
-  updateSelectedForecast(): void {
-    const forecastDateTime = new Date(this.forecastInitDateTime);
-    forecastDateTime.setUTCHours(this.forecastInitDateTime.getUTCHours() + this.forecastSelect.getHourOffset());
-    this.currentDayEl.textContent = forecastDateTime.toLocaleString(undefined, { month: 'long', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
-    setStyle(this.morningPeriodEl, this.periodStyle(this.forecastSelect.morningOffset));
-    setStyle(this.noonPeriodEl, this.periodStyle(this.forecastSelect.noonOffset));
-    setStyle(this.afternoonPeriodEl, this.periodStyle(this.forecastSelect.afternoonOffset));
-  }
-
-  private periodStyle(periodOffset: number): object {
-    if ((this.forecastSelect.getHourOffset() + this.forecastSelect.forecastInitOffset) % 24 === periodOffset) {
-      return { backgroundColor: '#999' }
-    } else {
-      return { backgroundColor: 'inherit' }
-    }
-  }
-
-  showMeteogram(key: HTMLElement, meteogram: HTMLElement): void {
-    setChildren(this.meteogramKeyEl, [key]);
-    setChildren(this.meteogramEl, [meteogram]);
-  }
-
-  hideMeteogram(): void {
-    setChildren(this.meteogramKeyEl, []);
-    setChildren(this.meteogramEl, []);
+    return scrollablePeriodSelector
   }
 
 }
