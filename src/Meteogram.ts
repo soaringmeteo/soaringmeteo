@@ -6,9 +6,9 @@ import { Diagram, Scale } from './Diagram';
 export const columnWidth = 33;
 
 /**
- * @return [key HTML element, meteogram HTML element]
+ * @return [left key element, meteogram element, right key element]
  */
-export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLElement] => {
+export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLElement, HTMLElement] => {
 
   const gutterHeight = 15;
 
@@ -16,17 +16,20 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   const elevationScale  = new Scale([0, 6000 /* m (TODO dynamic) */], [0, airDiagramHeight], true);
   const elevationLevels = [0, 1000, 2000, 3000, 4000, 5000, 6000];
 
-  const rainDiagramHeight   = 50; // px
+  const rainDiagramHeight   = 80; // px
   const rainStyle           = 'blue';
   const convectiveRainStyle = 'cyan';
   const rainScale           = new Scale([0, 15 /* mm */], [0, rainDiagramHeight], false);
   const rainLevels          = [0, 5, 10, 15];
   const rainDiagramTop      = gutterHeight + airDiagramHeight + gutterHeight;
 
-  const pressureScale     = new Scale([980, 1040 /* hPa */], [0, rainDiagramHeight], false);
-  const pressureLevels    = [980, 1000, 1020, 1040];
+  const pressureScale     = new Scale([980, 1040 /* hPa */], [0, airDiagramHeight], false);
+  const pressureLevels    = [980, 990, 1000, 1010, 1020, 1030, 1040];
+  const pressureStyle     = 'black'
 
-  const temperatureScale  = new Scale([0, 15], [0, rainDiagramHeight], false);
+  const temperatureScale  = new Scale([0, 30], [0, rainDiagramHeight], false);
+  const temperatureLevels = [0, 10, 20, 30];
+  const temperatureStyle  = 'black';
 
   const canvasWidth  = columnWidth * forecasts.dayForecasts.reduce((n, forecast) => n + forecast.forecasts.length, 0);
   const canvasHeight = rainDiagramTop + rainDiagramHeight + gutterHeight;
@@ -159,10 +162,10 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         (previousForecast, forecast, i) => {
           const x1 = columnWidth * (i - 0.5);
           const x2 = columnWidth * (i + 0.5)
-          rainDiagram.line(
+          airDiagram.line(
             [x1, pressureScale.apply(previousForecast.data.mslet)],
             [x2, pressureScale.apply(forecast.data.mslet)],
-            'black'
+            pressureStyle
           );
           rainDiagram.line(
             [x1, temperatureScale.apply(previousForecast.data.s.t)],
@@ -197,7 +200,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   }
 
   const keyWidth = 60; // TODO Unify with margin in ForecastSelect.ts
-  const canvasKey = el(
+  const canvasLeftKey = el(
     'canvas',
     {
       width: keyWidth,
@@ -205,16 +208,16 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       style: { flex: '0 0 auto', width: `${keyWidth}px`, height: `${canvasHeight}px` }
     }
   ) as HTMLCanvasElement;
-  const keyCtx = canvasKey.getContext('2d');
-  if (keyCtx !== null) {
-    keyCtx.textAlign    = 'right';
-    keyCtx.textBaseline = 'middle';
+  const leftKeyCtx = canvasLeftKey.getContext('2d');
+  if (leftKeyCtx !== null) {
+    leftKeyCtx.textAlign    = 'right';
+    leftKeyCtx.textBaseline = 'middle';
 
     // Elevation
-    const airDiagram = new Diagram([0, gutterHeight], airDiagramHeight, keyCtx);
+    const airDiagram = new Diagram([0, gutterHeight], airDiagramHeight, leftKeyCtx);
     airDiagram.line(
-      [keyWidth - keyCtx.lineWidth, 0],
-      [keyWidth - keyCtx.lineWidth, airDiagramHeight],
+      [keyWidth - leftKeyCtx.lineWidth, 0],
+      [keyWidth - leftKeyCtx.lineWidth, airDiagramHeight],
       'black'
     );
 
@@ -226,14 +229,14 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         'black'
       );
 
-      airDiagram.text(elevation.toString(), [keyWidth - 10, y], 'black');
+      airDiagram.text(`${elevation} m`, [keyWidth - 10, y], 'black');
     });
 
     // Rain
-    const rainDiagram = new Diagram([0, rainDiagramTop], rainDiagramHeight, keyCtx);
+    const rainDiagram = new Diagram([0, rainDiagramTop], rainDiagramHeight, leftKeyCtx);
     rainDiagram.line(
-      [keyWidth - keyCtx.lineWidth, 0],
-      [keyWidth - keyCtx.lineWidth, rainDiagramHeight],
+      [keyWidth - leftKeyCtx.lineWidth, 0],
+      [keyWidth - leftKeyCtx.lineWidth, rainDiagramHeight],
       rainStyle
     );
 
@@ -245,16 +248,58 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         rainStyle
       );
 
-      rainDiagram.text(rainMillimeters.toString(), [keyWidth - 10, y], rainStyle);
+      rainDiagram.text(`${rainMillimeters} mm`, [keyWidth - 10, y], rainStyle);
     });
 
-    // pressureLevels.forEach(pascals => {
-    //   const y = pressureScale.apply(pascals);
-    //   rainDiagram.text(pascals.toString(), [keyWidth - 20, y], 'black');
-    // });
   }
 
-  return [canvasKey, canvas]
+  const canvasRightKey = el(
+    'canvas',
+    {
+      width: keyWidth,
+      height: canvasHeight,
+      style: { flex: '0 0 auto', width: `${keyWidth}px`, height: `${canvasHeight}px` }
+    }
+  ) as HTMLCanvasElement;
+  const rightKeyCtx = canvasRightKey.getContext('2d');
+  if (rightKeyCtx !== null) {
+    rightKeyCtx.textAlign    = 'left';
+    rightKeyCtx.textBaseline = 'middle';
+
+    // Temperature
+    const rainDiagram = new Diagram([0, rainDiagramTop], rainDiagramHeight, rightKeyCtx);
+    rainDiagram.line(
+      [0, 0],
+      [0, rainDiagramHeight],
+      temperatureStyle
+    );
+
+    temperatureLevels.forEach(temperatureDegrees => {
+      const y = temperatureScale.apply(temperatureDegrees);
+      rainDiagram.line(
+        [0, y],
+        [8, y],
+        temperatureStyle
+      );
+
+      rainDiagram.text(`${temperatureDegrees} °C`, [10, y], temperatureStyle);
+    });
+
+    // Pressure
+    const airDiagram = new Diagram([0, gutterHeight], airDiagramHeight, rightKeyCtx);
+    pressureLevels.forEach(pascals => {
+      const y = pressureScale.apply(pascals);
+      airDiagram.line(
+        [0, y],
+        [8, y],
+        pressureStyle
+      );
+      airDiagram.text(`${pascals} hPa`, [10, y], pressureStyle);
+    });
+
+  }
+
+  return [canvasLeftKey, canvas, canvasRightKey]
 }
 
 // TODO Move somewhere else

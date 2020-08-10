@@ -67,7 +67,7 @@ export class ForecastSelect {
   }
 
   showMeteogram(forecasts: LocationForecasts): void {
-    const [keyElement, meteogramElement] = meteogram(forecasts);
+    const [leftKeyElement, meteogramElement, rightKeyElement] = meteogram(forecasts);
     const forecastOffsetAndDates: Array<[number, Date]> =
       forecasts.dayForecasts
         .map(_ => _.forecasts)
@@ -77,7 +77,7 @@ export class ForecastSelect {
             (forecast.time.getTime() - forecasts.initializationTime().getTime()) / 3600000;
           return [hourOffset, forecast.time]
         });
-    this.view.showMeteogram(keyElement, meteogramElement, forecastOffsetAndDates);
+    this.view.showMeteogram(leftKeyElement, meteogramElement, rightKeyElement, forecastOffsetAndDates);
   }
 
   hideMeteogram(): void {
@@ -204,12 +204,12 @@ export class ForecastSelectView {
     }
   }
 
-  showMeteogram(key: HTMLElement, meteogram: HTMLElement, forecastOffsetAndDates: Array<[number, Date]>): void {
+  showMeteogram(leftKey: HTMLElement, meteogram: HTMLElement, rightKey: HTMLElement, forecastOffsetAndDates: Array<[number, Date]>): void {
     const updatedPeriodSelectorEl = this.periodSelectorElement(forecastOffsetAndDates);
     mount(this.rootElement, updatedPeriodSelectorEl, this.periodSelectorEl, /* replace = */ true);
     this.periodSelectorEl = updatedPeriodSelectorEl;
-    setChildren(this.meteogramKeyEl, [key]);
-    setChildren(this.meteogramEl, [meteogram]);
+    setChildren(this.meteogramKeyEl, [leftKey]);
+    setChildren(this.meteogramEl, [meteogram, rightKey /* HACK Temporary... at some point we want to polish the layout... */]);
   }
 
   hideMeteogram(): void {
@@ -269,7 +269,7 @@ export class ForecastSelectView {
         { style: { overflowX: 'auto', marginLeft: `${this.marginLeft}px`, backgroundColor: 'white' } },
         el(
           'div',
-          { style: { width: `${length * meteogramColumnWidth}px` } },
+          { style: { width: `${length * meteogramColumnWidth + this.marginLeft}px` } },
           el('div', periodSelectors),
           this.meteogramEl
         )
