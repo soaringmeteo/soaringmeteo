@@ -4,6 +4,7 @@ import { drawWindArrow } from './shapes';
 import { Diagram, Scale } from './Diagram';
 
 export const columnWidth = 33;
+export const keyWidth = 40;
 
 /**
  * @return [left key element, meteogram element, right key element]
@@ -12,23 +13,23 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
   const gutterHeight = 15;
 
-  const airDiagramHeight = 500; // px
-  const elevationScale  = new Scale([0, 6000 /* m (TODO dynamic) */], [0, airDiagramHeight], true);
-  const elevationLevels = [0, 1000, 2000, 3000, 4000, 5000, 6000];
+  const airDiagramHeight = 400; // px
+  const elevationScale  = new Scale([0, 4500 /* m (FIXME dynamic) */], [0, airDiagramHeight], false);
+  const elevationLevels = [0, 1000, 2000, 3000, 4000];
 
-  const rainDiagramHeight   = 80; // px
+  const rainDiagramHeight   = 100; // px
   const rainStyle           = 'blue';
   const convectiveRainStyle = 'cyan';
   const rainScale           = new Scale([0, 15 /* mm */], [0, rainDiagramHeight], false);
-  const rainLevels          = [0, 5, 10, 15];
+  const rainLevels          = [0, 5, 10];
   const rainDiagramTop      = gutterHeight + airDiagramHeight + gutterHeight;
 
-  const pressureScale     = new Scale([980, 1040 /* hPa */], [0, airDiagramHeight], false);
-  const pressureLevels    = [980, 990, 1000, 1010, 1020, 1030, 1040];
+  const pressureScale     = new Scale([990, 1035 /* hPa */], [0, airDiagramHeight], false);
+  const pressureLevels    = [990, 1000, 1010, 1020, 1030];
   const pressureStyle     = 'black'
 
-  const temperatureScale  = new Scale([0, 30], [0, rainDiagramHeight], false);
-  const temperatureLevels = [0, 10, 20, 30];
+  const temperatureScale  = new Scale([0, 36], [0, rainDiagramHeight], false);
+  const temperatureLevels = [0, 12, 24];
   const temperatureStyle  = 'black';
 
   const canvasWidth  = columnWidth * forecasts.dayForecasts.reduce((n, forecast) => n + forecast.forecasts.length, 0);
@@ -120,7 +121,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       }
 
       // Middle-level clouds
-      const middleCloudsTop    = 6000; // m
+      const middleCloudsTop    = 4500; // m
       const middleCloudsBottom = Math.max(forecasts.elevation, lowCloudsTop);
       const middleCloudsY0     = elevationScale.apply(middleCloudsBottom);
       const middleCloudsY1     = elevationScale.apply(middleCloudsTop);
@@ -199,7 +200,6 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     })
   }
 
-  const keyWidth = 60; // TODO Unify with margin in ForecastSelect.ts
   const canvasLeftKey = el(
     'canvas',
     {
@@ -220,6 +220,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       [keyWidth - leftKeyCtx.lineWidth, airDiagramHeight],
       'black'
     );
+    airDiagram.text('m', [keyWidth - 5, airDiagramHeight], 'black');
 
     elevationLevels.forEach(elevation => {
       const y = elevationScale.apply(elevation);
@@ -228,8 +229,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         [keyWidth,     y],
         'black'
       );
-
-      airDiagram.text(`${elevation} m`, [keyWidth - 10, y], 'black');
+      airDiagram.text(`${elevation}`, [keyWidth - 10, y], 'black');
     });
 
     // Rain
@@ -239,6 +239,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       [keyWidth - leftKeyCtx.lineWidth, rainDiagramHeight],
       rainStyle
     );
+    rainDiagram.text('mm', [keyWidth - 5, rainDiagramHeight], rainStyle);
 
     rainLevels.forEach(rainMillimeters => {
       const y = rainScale.apply(rainMillimeters);
@@ -247,8 +248,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         [keyWidth, y],
         rainStyle
       );
-
-      rainDiagram.text(`${rainMillimeters} mm`, [keyWidth - 10, y], rainStyle);
+      rainDiagram.text(`${rainMillimeters}`, [keyWidth - 10, y], rainStyle);
     });
 
   }
@@ -273,6 +273,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       [0, rainDiagramHeight],
       temperatureStyle
     );
+    rainDiagram.text('°C', [5, rainDiagramHeight], temperatureStyle);
 
     temperatureLevels.forEach(temperatureDegrees => {
       const y = temperatureScale.apply(temperatureDegrees);
@@ -281,12 +282,17 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         [8, y],
         temperatureStyle
       );
-
-      rainDiagram.text(`${temperatureDegrees} °C`, [10, y], temperatureStyle);
+      rainDiagram.text(`${temperatureDegrees}`, [10, y], temperatureStyle);
     });
 
     // Pressure
     const airDiagram = new Diagram([0, gutterHeight], airDiagramHeight, rightKeyCtx);
+    airDiagram.line(
+      [0, 0],
+      [0, airDiagramHeight],
+      pressureStyle
+    );
+    airDiagram.text('hPa', [5, airDiagramHeight], pressureStyle);
     pressureLevels.forEach(pascals => {
       const y = pressureScale.apply(pascals);
       airDiagram.line(
@@ -294,7 +300,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         [8, y],
         pressureStyle
       );
-      airDiagram.text(`${pascals} hPa`, [10, y], pressureStyle);
+      airDiagram.text(`${pascals}`, [10, y], pressureStyle);
     });
 
   }

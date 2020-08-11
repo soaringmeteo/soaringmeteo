@@ -3,7 +3,7 @@ import { App } from './App';
 import { LatestForecast, LocationForecasts } from './Forecast';
 import * as L from 'leaflet';
 import { forecastOffsets, periodsPerDay } from './ForecastFilter';
-import { columnWidth as meteogramColumnWidth, meteogram } from './Meteogram';
+import { columnWidth as meteogramColumnWidth, meteogram, keyWidth } from './Meteogram';
 
 export class ForecastSelect {
 
@@ -101,7 +101,7 @@ export class ForecastSelectView {
   constructor(readonly forecastSelect: ForecastSelect, readonly forecastInitDateTime: Date, containerElement: HTMLElement) {
 
     this.meteogramEl = el('div'); // Filled later by showMeteogram
-    this.marginLeft = 60; // TODO Unify with canvasKey width in Meteogram.ts
+    this.marginLeft = keyWidth;
     const marginTop = 35; // Day height + hour height + 2 (wtf)
     this.meteogramKeyEl = el('div', { style: { position: 'absolute', width: `${this.marginLeft}px`, left: 0, top: `${marginTop}px`, backgroundColor: 'white' } });
 
