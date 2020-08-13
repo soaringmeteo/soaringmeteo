@@ -1,4 +1,4 @@
-import { scalePoint, rotatePoint, windArrowCoordinates, drawWindArrow } from "../shapes";
+import { drawWindArrow } from "../shapes";
 import { Forecast, modelResolution } from "../Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
@@ -19,7 +19,7 @@ export class Mixed {
       // Boundary Layer Height
       const blh = forecastAtPoint.blh;
       const color = boundaryDepthColorScale.interpolate(blh);
-      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.4)`;
+      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.3)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
   
       // Boundary Layer Wind

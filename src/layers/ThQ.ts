@@ -46,6 +46,7 @@ export class ThQ {
       const color = colorScale.interpolate(thq);
       ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.45)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.rect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
       ctx.stroke();

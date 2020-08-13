@@ -68,7 +68,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       airDiagram.fillRect(
         [columnStart, 0],
         [columnEnd,   groundLevelY],
-        'maroon'
+        '#FFC972'
       );
       // Boundary Layer
       const boundaryLayerHeight = elevationScale.apply(forecast.bl.h);
@@ -86,9 +86,9 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       const windCenterX = columnStart + columnWidth / 2;
       const windColor = `rgba(62, 0, 0, 0.35)`;
       // Surface wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth, windColor, forecast.s.u, forecast.s.v);
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth - 4, windColor, forecast.s.u, forecast.s.v);
       // Boundary layer wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY + boundaryLayerHeight / 2), columnWidth, windColor, forecast.bl.u, forecast.bl.v);
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY + boundaryLayerHeight / 2), columnWidth - 4, windColor, forecast.bl.u, forecast.bl.v);
       // TODO Top wind
     });
 
@@ -306,11 +306,4 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   }
 
   return [canvasLeftKey, canvas, canvasRightKey]
-}
-
-// TODO Move somewhere else
-const windSpeed = (forecast: DetailedForecastData): number => {
-  const u = forecast.bl.u;
-  const v = forecast.bl.v;
-  return Math.round(Math.sqrt(u * u + v * v))
 }

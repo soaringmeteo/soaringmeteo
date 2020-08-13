@@ -1,64 +1,87 @@
 
-type Point = [number /* latitade */, number /* longitude */]
+type Point = [number /* x */, number /* y */]
+type Line = [Point, Point]
 
-export const scalePoint = (point: Point, center: Point, k: number): Point => {
+const scalePoint = (point: Point, center: Point, k: number): Point => {
   return [
     center[0] + (point[0] - center[0]) * k,
     center[1] + (point[1] - center[1]) * k
   ]
 };
 
-export const rotatePoint = (point: Point, center: Point, angle: number /* radians */): Point => {
-  const deltaLon = point[1] - center[1];
-  const deltaLat = point[0] - center[0];
-  const length   = Math.sqrt(deltaLat * deltaLat + deltaLon * deltaLon);
-  const theta    = Math.atan2(deltaLat, deltaLon);
+/**
+ * @param angle clockwise, in radians
+ */
+const rotatePoint = (point: Point, center: Point, angle: number): Point => {
+  const deltaX = point[0] - center[0];
+  const deltaY = point[1] - center[1];
+  const length   = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  const theta    = Math.atan2(deltaX, deltaY);
 
   const theta2 = theta + angle;
 
-  return [center[0] + Math.sin(theta2) * length, center[1] + Math.cos(theta2) * length]
+  return [center[0] + Math.cos(theta2) * length, center[1] + Math.sin(theta2) * length]
 };
 
 export const rotateShape = (shape: Array<[number, number]>, center: [number, number], angle: number): Array<[number, number]> => {
   return shape.map(point => rotatePoint(point, center, angle))
 };
 
-
 /**
- * Canvas coordinates of an arrow representing the wind in a box
- * @param x         x-coordinate of the center of the box containing the arrow
- * @param y         y-coordinate of the center of the box containing the arrow
- * @param width     Width of the box containing the arrow
- * @param direction Wind direction (radians)
- * @param force     Wind force (km/h)
+ * Canvas coordinates of an arrow representing the wind.
+ * 
+ * The number of barbs of the arrow depends on the wind speed and offers a
+ * resolution of 2.5 km/h. Between 0 and 2.5 km/h, the arrow has a small
+ * barb on one side (e.g. ⇀). For each additional 2.5 km/h, we add more barbs,
+ * or increase their length.
+ * 
+ * @param x         x-coordinate of the center of the arrow
+ * @param y         y-coordinate of the center of the arrow
+ * @param width     Width of the arrow bounding box
+ * @param direction Wind direction in radians
+ * @param speed     Wind speed in km/h
  */
-export const windArrowCoordinates = (x: number, y: number, width: number, direction: number, force: number): Array<[number, number]> => {
-  return Array.of<[number, number]>(
-    [y - width / 3, x + width / 10],
-    [y + width / 10, x + width / 10],
-    [y + width / 10, x + width / 4],
-    [y + width / 3, x],
-    [y + width / 10, x - width / 4],
-    [y + width / 10, x - width / 10],
-    [y - width / 3, x - width / 10]
-  ).map(point =>
-      // The scale of the wind arrow is proportional to the wind force, and has a “normal” size for 18 km/h
-      scalePoint(
-      rotatePoint(point, [y, x], direction),
-      [y, x],
-      force / 18
-    )
-  )
+const windArrowLines = (x: number, y: number, width: number, direction: number, speed: number): Array<Line> => {
+  const resolution = 2.5 /* km/h */
+  const entireBarbsSpeed = resolution * 4; // An entire barb is made of an upward barb and a downward barb, both at full scale
+  const axis: Line = [[x - width / 2, y], [x + width / 2, y]];
+  const barbsNumber = Math.floor((speed + entireBarbsSpeed) / entireBarbsSpeed);
+  const barbLength = width / 3;
+  const barbLines = (remainingSpeed: number, currentX: number): Array<Line> => {
+    const upwardBarbScale = (remainingSpeed > resolution * 2) ? 1 : 0.5;
+    const upwardBarbLines: Array<Line> = [
+      [[currentX, y],
+      [currentX - barbLength * upwardBarbScale, y - barbLength * upwardBarbScale]]
+    ];
+    const downwardBarbScale = (remainingSpeed > resolution * 3) ? 1 : 0.5;
+    const downwardBarbLines: Array<Line> =
+      (remainingSpeed > resolution) ?
+        [
+          [[currentX, y],
+          [currentX - barbLength * downwardBarbScale, y + barbLength * downwardBarbScale]]
+        ] :
+        [];
+    const lines: Array<Line> = upwardBarbLines.concat(downwardBarbLines);
+    if (remainingSpeed > entireBarbsSpeed) {
+      return lines.concat(barbLines(remainingSpeed - entireBarbsSpeed, currentX - (width / barbsNumber)));
+    } else {
+      return lines
+    }
+  }
+  return [axis].concat(barbLines(speed, x + width / 2))
+    .map(([p1, p2]) => [rotatePoint(p1, [x, y], direction), rotatePoint(p2, [x, y], direction)]);
 }
 
 export const drawWindArrow = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, color: string, u: number, v: number): void => {
   const windForce = Math.sqrt(u * u + v * v);
-  const windDirection = Math.atan2(-u, -v);
-  ctx.fillStyle = color;
+  const windDirection = -Math.atan2(u, -v);
+  ctx.lineWidth = Math.ceil(width / 20);
+  ctx.strokeStyle = color;
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  windArrowCoordinates(x, y, width, windDirection, windForce).forEach(([y, x]) => {
-    ctx.lineTo(x, y);
+  windArrowLines(x, y, width, windDirection, windForce).forEach(([[x1, y1], [x2, y2]]) => {
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
   });
-  ctx.closePath();
-  ctx.fill();
+  ctx.stroke();
 }

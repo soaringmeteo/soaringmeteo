@@ -13,6 +13,7 @@ export class Diagram {
 
   line(from: Point, to: Point, style: string): void {
     this.ctx.strokeStyle = style;
+    this.ctx.lineWidth = 1;
     this.ctx.beginPath();
     this.ctx.moveTo(this.projectX(from[0]), this.projectY(from[1]));
     this.ctx.lineTo(this.projectX(to[0]), this.projectY(to[1]));
