@@ -72,6 +72,18 @@ const windArrowLines = (x: number, y: number, width: number, direction: number, 
     .map(([p1, p2]) => [rotatePoint(p1, [x, y], direction), rotatePoint(p2, [x, y], direction)]);
 }
 
+export const lightningShape = (x: number, y: number, width: number): Array<Point> => {
+  return [
+    [x + width / 4, y + width / 2],
+    [x - width / 6, y + width / 6],
+    [x + width / 5, y - width / 6],
+    [x - width / 8, y - width / 2],
+    [x + width / 9, y - width / 6],
+    [x - width / 3, y + width / 6],
+    [x,             y + width / 2],
+  ]
+};
+
 export const drawWindArrow = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, color: string, u: number, v: number): void => {
   const windForce = Math.sqrt(u * u + v * v);
   const windDirection = -Math.atan2(u, -v);

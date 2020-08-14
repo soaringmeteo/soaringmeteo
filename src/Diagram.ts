@@ -20,6 +20,16 @@ export class Diagram {
     this.ctx.stroke();
   }
 
+  fillShape(points: Array<Point>, style: string): void {
+    this.ctx.fillStyle = style;
+    this.ctx.beginPath();
+    points.forEach(([x, y]) => {
+      this.ctx.lineTo(this.projectX(x), this.projectY(y));
+    });
+    this.ctx.closePath();
+    this.ctx.fill();
+  }
+
   text(content: string, location: Point, style: string): void {
     this.ctx.fillStyle = style;
     this.ctx.fillText(content, this.projectX(location[0]), this.projectY(location[1]));

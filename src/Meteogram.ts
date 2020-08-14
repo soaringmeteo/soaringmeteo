@@ -1,6 +1,6 @@
 import { el } from 'redom';
 import { DetailedForecastData, LocationForecasts } from './Forecast';
-import { drawWindArrow } from './shapes';
+import { drawWindArrow, lightningShape } from './shapes';
 import { Diagram, Scale } from './Diagram';
 
 export const columnWidth = 33;
@@ -92,20 +92,6 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       // TODO Top wind
     });
 
-    // Isotherm 0°C
-    forecasts.dayForecasts
-      .map(f => f.forecasts).reduce((x, y) => x.concat(y), []) // Alternative to flatMap
-      .reduce(
-      (previousForecast, forecast, i) => {
-        airDiagram.line(
-          [columnWidth * (i - 0.5), elevationScale.apply(previousForecast.data.iso)],
-          [columnWidth * (i + 0.5), elevationScale.apply(forecast.data.iso)],
-          'cyan'
-        );
-        return forecast
-      }
-    );
-
     // Clouds
     columns((forecast, columnStart, columnEnd) => {
       const groundLevelY = elevationScale.apply(forecasts.elevation);
@@ -133,6 +119,39 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
       // TODO High-level clouds
     });
+
+    // Thunderstorm risk
+    let previousLightningX = 0
+    forecasts.dayForecasts.forEach(forecast => {
+      const lightningWidth = forecast.forecasts.length * columnWidth;
+      const x = previousLightningX + lightningWidth / 2;
+      const y = airDiagramHeight - lightningWidth / 2;
+      if (forecast.thunderstormRisk > 0) {
+        let lightningStyle: string;
+        switch (forecast.thunderstormRisk) {
+          case 1: lightningStyle = 'yellow'; break
+          case 2: lightningStyle = 'orange'; break
+          case 3: lightningStyle = 'red'; break
+          default: lightningStyle = 'purple'; break
+        }
+        airDiagram.fillShape(lightningShape(x, y, lightningWidth), lightningStyle);
+      }
+      previousLightningX = previousLightningX + lightningWidth;
+    });
+
+    // Isotherm 0°C
+    forecasts.dayForecasts
+      .map(f => f.forecasts).reduce((x, y) => x.concat(y), []) // Alternative to flatMap
+      .reduce(
+      (previousForecast, forecast, i) => {
+        airDiagram.line(
+          [columnWidth * (i - 0.5), elevationScale.apply(previousForecast.data.iso)],
+          [columnWidth * (i + 0.5), elevationScale.apply(forecast.data.iso)],
+          'cyan'
+        );
+        return forecast
+      }
+    );
 
     // Elevation levels
     elevationLevels.forEach(elevation => {
