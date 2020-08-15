@@ -35,7 +35,7 @@ export class Diagram {
     this.ctx.fillText(content, this.projectX(location[0]), this.projectY(location[1]));
   }
 
-  fillRect(from: Point, to: Point, style: string): void {
+  fillRect(from: Point, to: Point, style: string | CanvasPattern): void {
     this.ctx.fillStyle = style;
     this.ctx.beginPath();
     this.ctx.moveTo(this.projectX(from[0]), this.projectY(from[1]));

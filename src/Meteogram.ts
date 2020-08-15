@@ -1,10 +1,13 @@
 import { el } from 'redom';
 import { DetailedForecastData, LocationForecasts } from './Forecast';
-import { drawWindArrow, lightningShape } from './shapes';
+import { drawWindArrow, lightningShape, cloudPattern } from './shapes';
 import { Diagram, Scale } from './Diagram';
 
 export const columnWidth = 33;
 export const keyWidth = 40;
+
+// Pre-compute cloud pattern
+const columnCloud = cloudPattern(columnWidth / 3, 'rgba(255, 255, 255, 0.7)');
 
 /**
  * @return [left key element, meteogram element, right key element]
@@ -79,19 +82,6 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       );
     });
 
-    // Wind
-    columns((forecast, columnStart, _) => {
-      const groundLevelY = elevationScale.apply(forecasts.elevation);
-      const boundaryLayerHeight = elevationScale.apply(forecast.bl.h);
-      const windCenterX = columnStart + columnWidth / 2;
-      const windColor = `rgba(62, 0, 0, 0.35)`;
-      // Surface wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth - 4, windColor, forecast.s.u, forecast.s.v);
-      // Boundary layer wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY + boundaryLayerHeight / 2), columnWidth - 4, windColor, forecast.bl.u, forecast.bl.v);
-      // TODO Top wind
-    });
-
     // Clouds
     columns((forecast, columnStart, columnEnd) => {
       const groundLevelY = elevationScale.apply(forecasts.elevation);
@@ -118,10 +108,34 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       );
 
       // TODO High-level clouds
+
+      // Cumuli
+      // Cumuli base height is computed via Hennig formula
+      const cumuliBase = 122.6 * forecast.s.t * (1 - forecast.s.rh / 100);
+      if (cumuliBase < forecast.bl.h) {
+        airDiagram.fillRect(
+          [columnStart, elevationScale.apply(forecasts.elevation + cumuliBase)],
+          [columnEnd, elevationScale.apply(forecasts.elevation + forecast.bl.h)],
+          columnCloud
+        );
+      }
+    });
+
+    // Wind
+    columns((forecast, columnStart, _) => {
+      const groundLevelY = elevationScale.apply(forecasts.elevation);
+      const boundaryLayerHeight = elevationScale.apply(forecast.bl.h);
+      const windCenterX = columnStart + columnWidth / 2;
+      const windColor = `rgba(62, 0, 0, 0.35)`;
+      // Surface wind
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth - 4, windColor, forecast.s.u, forecast.s.v);
+      // Boundary layer wind
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY + boundaryLayerHeight / 2), columnWidth - 4, windColor, forecast.bl.u, forecast.bl.v);
+      // TODO Top wind
     });
 
     // Thunderstorm risk
-    let previousLightningX = 0
+    let previousLightningX = 0;
     forecasts.dayForecasts.forEach(forecast => {
       const lightningWidth = forecast.forecasts.length * columnWidth;
       const x = previousLightningX + lightningWidth / 2;

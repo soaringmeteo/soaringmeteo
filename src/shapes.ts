@@ -97,3 +97,21 @@ export const drawWindArrow = (ctx: CanvasRenderingContext2D, x: number, y: numbe
   });
   ctx.stroke();
 }
+
+export const cloudPattern = (width: number, style: string): CanvasPattern => {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = width;
+  const ctx    = canvas.getContext('2d')
+  if (ctx === null) {
+    throw 'Unsupported execution environment'
+  }
+  ctx.ellipse(width / 2, width / 2, width / 2 - 1, width / 2 - 1, 0, 0, Math.PI * 2);
+  ctx.fillStyle = style;
+  ctx.fill();
+  const pattern = ctx.createPattern(canvas, 'repeat');
+  if (pattern === null) {
+    throw 'Unsupported execution environment'
+  }
+  return pattern
+};
