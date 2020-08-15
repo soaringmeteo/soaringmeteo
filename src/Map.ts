@@ -8,10 +8,10 @@ const osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 export const initializeMap = (element: HTMLElement): [CanvasLayer, L.Map] => {
   const map = L.map(element, {
     layers: [
-      L.tileLayer(mapTilerUrl, {
-        tileSize: 512,
-        zoomOffset: -1,
-        minZoom: 1,
+      L.tileLayer(smUrl, {
+        tileSize: 256,
+        minZoom: 4,
+        maxZoom: 14,
         crossOrigin: true
       })
     ],
