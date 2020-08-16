@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, Future}
+import scala.util.Try
 import scala.util.chaining._
 
 object DownloadGribFiles {
@@ -78,16 +79,22 @@ object DownloadGribFiles {
    * Try to fetch `url` at most `maxAttempts` times, waiting `delay` between each attempt.
    */
   def insist(maxAttempts: Int, delay: Duration, url: String): requests.Response = {
-    val response = requests.get(url, readTimeout = 1200000, check = false)
-    if (response.statusCode == 200) response
-    else if (maxAttempts <= 1) {
-      logger.error(s"Failed to fetch $url.")
-      throw new RuntimeException
-    } else {
-      val remainingAttempts = maxAttempts - 1
-      logger.debug(s"Failed to fetch $url. Waiting ${delay.toSeconds} seconds… ($remainingAttempts remaining attempts)")
-      Thread.sleep(delay.toMillis)
-      insist(remainingAttempts, delay, url)
+    val errorOrSucessfulResponse =
+      Try(requests.get(url, readTimeout = 1200000, check = false))
+        .toEither
+        .filterOrElse(_.statusCode == 200, new Exception("Unexpected status code"))
+    errorOrSucessfulResponse match {
+      case Right(response) => response
+      case Left(error) =>
+        if (maxAttempts <= 1) {
+          logger.error(s"Failed to fetch $url.", error)
+          throw new RuntimeException(s"Unable to fetch $url.")
+        } else {
+          val remainingAttempts = maxAttempts - 1
+          logger.debug(s"Failed to fetch $url. Waiting ${delay.toSeconds} seconds… ($remainingAttempts remaining attempts)", error)
+          Thread.sleep(delay.toMillis)
+          insist(remainingAttempts, delay, url)
+        }
     }
   }
 
