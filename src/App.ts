@@ -35,7 +35,7 @@ export class App {
           this.forecastSelect.showMeteogram(new LocationForecasts(data, latestForecast));
         })
         .catch(_ => {
-          this.forecastSelect.hideMeteogram();
+          // FIMXE Report issue
         })
     });
   }
