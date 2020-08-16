@@ -1,12 +1,15 @@
 // Note: do we really need to access older forecasts?
-export type LatestForecastData = {
+export type ForecastMetadataData = {
   init: string // e.g., "2020-04-14T06:00:00Z"
+  latest: number // e.g., 189
 }
 
-export class LatestForecast {
+export class ForecastMetadata {
   readonly init: Date
-  constructor(readonly data: LatestForecastData) {
-    this.init = new Date(data.init)
+  readonly latest: number
+  constructor(private readonly data: ForecastMetadataData) {
+    this.init = new Date(data.init);
+    this.latest = data.latest;
   }
 }
 
@@ -27,7 +30,7 @@ export type ForecastData = {
 export class LocationForecasts {
   readonly elevation: number;
   readonly dayForecasts: Array<DayForecasts>;
-  constructor(data: LocationForecastsData, private readonly latestForecast: LatestForecast) {
+  constructor(data: LocationForecastsData, private readonly latestForecast: ForecastMetadata) {
     this.elevation = data.h;
     this.dayForecasts = data.d.map(data => new DayForecasts(data));
   }

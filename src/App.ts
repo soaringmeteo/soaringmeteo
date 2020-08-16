@@ -1,7 +1,7 @@
 import { el, mount, setStyle } from 'redom';
 import { initializeMap } from './Map';
 import { CanvasLayer } from './CanvasLayer';
-import { modelResolution, LocationForecastsData, LatestForecast, LocationForecasts } from './Forecast';
+import { modelResolution, LocationForecastsData, ForecastMetadata, LocationForecasts } from './Forecast';
 import { ForecastSelect } from './ForecastSelect';
 import { ForecastLayer } from './ForecastLayer';
 
@@ -11,7 +11,7 @@ export class App {
   forecastLayer: ForecastLayer
   canvas: CanvasLayer
 
-  constructor(latestForecast: LatestForecast, containerElement: HTMLElement) {
+  constructor(latestForecast: ForecastMetadata, containerElement: HTMLElement) {
     setStyle(containerElement, { display: 'flex', alignIitems: 'stretch', alignContent: 'stretch' });
     // TODO center and zoom
     // The map *must* be initialized before we call the other constructors

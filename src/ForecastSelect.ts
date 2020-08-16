@@ -1,6 +1,6 @@
 import { el, mount, setChildren, setStyle } from 'redom';
 import { App } from './App';
-import { LatestForecast, LocationForecasts } from './Forecast';
+import { ForecastMetadata, LocationForecasts } from './Forecast';
 import * as L from 'leaflet';
 import { forecastOffsets, periodsPerDay } from './ForecastFilter';
 import { columnWidth as meteogramColumnWidth, meteogram, keyWidth } from './Meteogram';
@@ -9,10 +9,6 @@ export class ForecastSelect {
 
   /** Number of hours to add to 00:00Z to be on the morning forecast period (e.g., 9 for Switzerland) */
   readonly morningOffset: number
-  /** Number of hours to add to 00:00Z to be on the noon forecast period (e.g., 12 for Switzerland) */
-  readonly noonOffset: number
-  /** Number of hours to add to 00:00Z to be on the afternoon forecast period (e.g., 15 for Switzerland) */
-  readonly afternoonOffset: number
   /** Number of hours to add to 00:00Z to be on the beginning of the forecast (can be 0, 6, 12, or 18) */
   readonly forecastInitOffset: number
 
@@ -22,14 +18,13 @@ export class ForecastSelect {
 
   private view: ForecastSelectView
 
-  constructor(private readonly app: App, latestForecast: LatestForecast, containerElement: HTMLElement) {
+  constructor(private readonly app: App, readonly latestForecast: ForecastMetadata, containerElement: HTMLElement) {
     // TODO Compute based on user preferred time zone (currently hard-coded for central Europe)
-    this.morningOffset      = 9;
-    this.noonOffset         = 12;
-    this.afternoonOffset    = 15;
+    this.morningOffset = 9;
+    const noonOffset   = 12;
     this.forecastInitOffset = +latestForecast.init.getUTCHours();
     // Tomorrow, noon period
-    this.hourOffset = (this.forecastInitOffset === 0 ? 0 : 24) + this.noonOffset - this.forecastInitOffset;
+    this.hourOffset = (this.forecastInitOffset === 0 ? 0 : 24) + noonOffset - this.forecastInitOffset;
     this.view = new ForecastSelectView(this, latestForecast.init, containerElement);
   }
 
@@ -41,22 +36,12 @@ export class ForecastSelect {
       this.view.updateSelectedForecast();
     }
   }
-  // TODO fix bug
-  selectMorning(): void {
-    this.updateHourOffset(Math.floor((this.hourOffset + this.forecastInitOffset) / 24) * 24 + this.morningOffset - this.forecastInitOffset);
-  }
-  selectNoon(): void {
-    this.updateHourOffset(Math.floor((this.hourOffset + this.forecastInitOffset) / 24) * 24 + this.noonOffset - this.forecastInitOffset);
-  }
-  selectAfternoon(): void {
-    this.updateHourOffset(Math.floor((this.hourOffset + this.forecastInitOffset) / 24) * 24 + this.afternoonOffset - this.forecastInitOffset);
-  }
   nextDay(): void {
-    this.updateHourOffset(Math.min(this.hourOffset + 24, 186 /* TODO Store this setting somewhere */));
+    this.updateHourOffset(Math.min(this.hourOffset + 24, this.latestForecast.latest));
   }
   nextPeriod(): void {
     // TODO jump to next day morning if we are on the afternoon period
-    this.updateHourOffset(Math.min(this.hourOffset + 3, 186));
+    this.updateHourOffset(Math.min(this.hourOffset + 3, this.latestForecast.latest));
   }
   previousPeriod(): void {
     // TODO jump to previous day afternoon if we are on the morning period
@@ -119,7 +104,7 @@ export class ForecastSelectView {
     nextDayBtn.onclick = () => { forecastSelect.nextDay(); }
 
     this.periodSelectorEl =
-      this.periodSelectorElement(forecastOffsets(forecastInitDateTime, forecastSelect.morningOffset));
+      this.periodSelectorElement(forecastOffsets(forecastInitDateTime, forecastSelect.morningOffset, this.forecastSelect.latestForecast));
 
     this.hideMeteogramBtn =
       el(
