@@ -90,9 +90,6 @@ export class ForecastSelectView {
 
   readonly rootElement: HTMLElement
   readonly currentDayEl: HTMLElement
-  readonly morningPeriodEl: HTMLElement
-  readonly noonPeriodEl: HTMLElement
-  readonly afternoonPeriodEl: HTMLElement
   private periodSelectorEl: HTMLElement;
   private meteogramEl: HTMLElement
   private meteogramKeyEl: HTMLElement
@@ -107,33 +104,6 @@ export class ForecastSelectView {
 
     const buttonStyle = { padding: '0.2em', display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray' };
     this.currentDayEl = el('div'); // Will be filled later by `updateSelectedForecast`
-
-    this.morningPeriodEl = this.hover(
-      el(
-        'div',
-        { style: { flexGrow: 1, ...buttonStyle } },
-        `${this.hoursForPeriod(forecastSelect.morningOffset)}h`
-      )
-    );
-    this.morningPeriodEl.onclick = () => { forecastSelect.selectMorning(); }
-
-    this.noonPeriodEl = this.hover(
-      el(
-        'div',
-        { style: { flexGrow: 1, ...buttonStyle } },
-        `${this.hoursForPeriod(forecastSelect.noonOffset)}h`
-      )
-    );
-    this.noonPeriodEl.onclick = () => { forecastSelect.selectNoon(); }
-
-    this.afternoonPeriodEl = this.hover(
-      el(
-        'div',
-        { style: { flexGrow: 1, ...buttonStyle } },
-        `${this.hoursForPeriod(forecastSelect.afternoonOffset)}h`
-      )
-    );
-    this.afternoonPeriodEl.onclick = () => { forecastSelect.selectAfternoon(); }
 
     const previousDayBtn = this.hover(el('div', { title: '24 hours before', style: { ...buttonStyle } }, '-24'));
     previousDayBtn.onclick = () => { forecastSelect.previousDay(); }
@@ -191,9 +161,6 @@ export class ForecastSelectView {
     const forecastDateTime = new Date(this.forecastInitDateTime);
     forecastDateTime.setUTCHours(this.forecastInitDateTime.getUTCHours() + this.forecastSelect.getHourOffset());
     this.currentDayEl.textContent = forecastDateTime.toLocaleString(undefined, { month: 'long', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
-    setStyle(this.morningPeriodEl, this.periodStyle(this.forecastSelect.morningOffset));
-    setStyle(this.noonPeriodEl, this.periodStyle(this.forecastSelect.noonOffset));
-    setStyle(this.afternoonPeriodEl, this.periodStyle(this.forecastSelect.afternoonOffset));
   }
 
   private periodStyle(periodOffset: number): object {
