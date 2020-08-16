@@ -55,9 +55,9 @@ object MakeGFSJson {
     os.makeDir.all(targetDir)
     os.copy.over(gribsDir / "forecast.json", targetDir / "forecast.json", replaceExisting = true)
 
-    val forecastInformation =
+    val forecastMetadata =
       io.circe.parser.parse(os.read(gribsDir / "forecast.json"))
-        .flatMap(ForecastInitDateTime.jsonCodec.decodeJson)
+        .flatMap(ForecastMetadata.jsonCodec.decodeJson)
         .left.map { error =>
           logger.error("Unable to read forecast.json file", error)
           throw error
@@ -68,7 +68,7 @@ object MakeGFSJson {
       for (t <- Settings.forecastHours) yield {
         logger.debug(s"Extracting GFS forecast data at time $t")
         val forecast =
-          GfsForecast.fromGribFile(gribsDir, forecastInformation, t, gfsLocations)
+          GfsForecast.fromGribFile(gribsDir, forecastMetadata.initDateTime, t, gfsLocations)
         val fields =
           forecast.iterator.map { case (p, forecast) =>
             // Coordinates are multiplied by 100 so that they are always rendered as integer

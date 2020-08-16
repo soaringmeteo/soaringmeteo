@@ -69,9 +69,10 @@ object DownloadGribFiles {
       os.write(targetDir / t.toString(), response.data.array)
       logger.debug(s"Downloaded grib file for hour $t")
     }
+    val metadata = ForecastMetadata(forecastInitDateTime, Settings.forecastHours.last)
     os.write(
       targetDir / "forecast.json",
-      ForecastInitDateTime.jsonCodec(forecastInitDateTime).noSpaces
+      ForecastMetadata.jsonCodec(metadata).noSpaces
     )
   }
 
