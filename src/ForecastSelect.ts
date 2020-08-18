@@ -70,10 +70,8 @@ export class ForecastSelect {
   }
 
 }
-
 export class ForecastSelectView {
 
-  readonly rootElement: HTMLElement
   readonly currentDayEl: HTMLElement
   private periodSelectorEl: HTMLElement;
   private meteogramEl: HTMLElement
@@ -124,30 +122,40 @@ export class ForecastSelectView {
       );
     this.hideMeteogramBtn.onclick = () => { forecastSelect.hideMeteogram(); };
 
-    this.rootElement =
+    // Period selector and close button for the meteogram
+    const periodSelectorContainer =
       el(
         'span',
         { style: { position: 'absolute', top: 0, left: 0, zIndex: 1000, maxWidth: '100%', userSelect: 'none', cursor: 'default' } },
         this.meteogramKeyEl,
-        // Period selector and close button for the meteogram
         el(
           'div',
           { style: { display: 'flex', alignItems: 'flex-start' } },
           this.hideMeteogramBtn,
           this.periodSelectorEl
-        ),
-        // Current period
+        )
+      );
+    L.DomEvent.disableClickPropagation(periodSelectorContainer);
+    L.DomEvent.disableScrollPropagation(periodSelectorContainer);
+    this.updateSelectedForecast();
+
+    mount(containerElement, periodSelectorContainer);
+
+    // Current period
+    const currentDayContainer =
+      el(
+        'span',
+        { style: { position: 'absolute', bottom: 0, marginLeft: 'auto', marginRight: 'auto', left: 0, right: 0, textAlign: 'center', zIndex: 1050, userSelect: 'none', cursor: 'default' } },
         el(
           'div',
-          { style: { width: '100px', backgroundColor: 'white' } },
+          { style: { width: '125px', display: 'inline-block', backgroundColor: 'white' } },
           this.currentDayEl,
           el('div', previousDayBtn, previousPeriodBtn, nextPeriodBtn, nextDayBtn)
-        ),
+        )
       );
-    L.DomEvent.disableClickPropagation(this.rootElement);
-    L.DomEvent.disableScrollPropagation(this.rootElement);
-    this.updateSelectedForecast();
-    mount(containerElement, this.rootElement);
+    L.DomEvent.disableClickPropagation(currentDayContainer);
+    L.DomEvent.disableScrollPropagation(currentDayContainer);
+    mount(containerElement, currentDayContainer);
   }
 
   private hover(htmlEl: HTMLElement): HTMLElement {
@@ -169,7 +177,7 @@ export class ForecastSelectView {
   updateSelectedForecast(): void {
     const forecastDateTime = new Date(this.forecastInitDateTime);
     forecastDateTime.setUTCHours(this.forecastInitDateTime.getUTCHours() + this.forecastSelect.getHourOffset());
-    this.currentDayEl.textContent = forecastDateTime.toLocaleString(undefined, { month: 'long', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
+    this.currentDayEl.textContent = forecastDateTime.toLocaleString(undefined, { month: 'short', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
   }
 
   private periodStyle(periodOffset: number): object {

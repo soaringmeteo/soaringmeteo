@@ -16,7 +16,7 @@ export class App {
     // TODO center and zoom
     // The map *must* be initialized before we call the other constructors
     // It *must* also be mounted before we initialize it
-    const mapElement = el('div', { style: { flex: 1 } }); // TODO Simplify
+    const mapElement = el('div', { style: { flex: 1 } });
     mount(containerElement, mapElement);
     const [canvas, map] = initializeMap(mapElement);
     this.canvas = canvas;
