@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const WebpackPwaManifest = require('webpack-pwa-manifest');
 
 module.exports = {
     entry: './src/index.ts',
@@ -7,10 +8,25 @@ module.exports = {
       filename: 'main.[contenthash].js',
       path: path.resolve(__dirname, 'dist')
     },
-    plugins: [new HtmlWebpackPlugin({
-      inject: 'head',
-      scriptLoading: 'defer'
-    })],
+    plugins: [
+      new HtmlWebpackPlugin({
+        inject: 'head',
+        scriptLoading: 'defer'
+      }),
+      new WebpackPwaManifest({
+        name: 'Soaring Meteo',
+        description: 'Meteorology for soaring pilots',
+        background_color: '#ffffff',
+        icons: [
+          {
+            src: path.resolve('src/favicoSoaringMeteo.png'),
+            sizes: "28x28"
+          }
+        ],
+        // Temporary workaround because the plugin doesn’t support the last version of html-webpack-plugin
+        fingerprints: false
+      })
+    ],
 
     resolve: {
         extensions: [".ts", ".js"],
