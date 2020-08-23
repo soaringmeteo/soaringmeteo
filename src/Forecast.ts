@@ -122,5 +122,4 @@ export type Forecast = {
   [key: string]: ForecastData
 }
 
-// TODO Upgrade to GFS0.25!
-export const modelResolution = 50 // Hundredths of degrees
+export const modelResolution = 25 // Hundredths of degrees
