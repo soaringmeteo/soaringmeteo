@@ -240,7 +240,7 @@ export class ForecastSelectView {
             'div',
             { style: { width: `${periods.length * meteogramColumnWidth}px`, textAlign: 'center', boxSizing: 'border-box', borderRight: 'thin solid darkGray', borderLeft: 'thin solid darkGray', lineHeight: '13px' } },
             periods.length === periodsPerDay ?
-              date.toLocaleDateString(undefined, { day: 'numeric', month: 'long', weekday: 'short' }) :
+              date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', weekday: 'short' }) :
               '\xa0'
           ),
           // Periods in each day
