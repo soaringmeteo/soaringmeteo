@@ -27,7 +27,7 @@ class Grib(data: GridDataset) {
     private val data = grid.readDataSlice(/* t = */ -1, /* z = */ -1, /* y = */ -1, /* x = */ -1)
 
     /** Assumes that the feature has 3 or 4 dimensions (where the time and elevation have only one possible value) */
-    def read(location: GfsLocation): Double = {
+    def read(location: Point): Double = {
       val (x, y) = getXYCoordinates(location)
       data match {
         case d3: ArrayFloat.D3 => d3.get(/* t = */ 0, y, x)
@@ -36,13 +36,13 @@ class Grib(data: GridDataset) {
     }
 
     /** Assumes that the feature has 4 dimensions (where the time has only one possible value) */
-    def read(location: GfsLocation, elevation: Double): Double = {
+    def read(location: Point, elevation: Double): Double = {
       val (x, y) = getXYCoordinates(location)
       val z = grid.getCoordinateSystem.getVerticalAxis.findCoordElement(elevation)
       data.asInstanceOf[ArrayFloat.D4].get(/* t = */ 0, z, y, x)
     }
 
-    private def getXYCoordinates(location: GfsLocation): (Int, Int) = {
+    private def getXYCoordinates(location: Point): (Int, Int) = {
       val Array(x, y) =
         grid
           .getCoordinateSystem
@@ -130,7 +130,7 @@ class Grib(data: GridDataset) {
   /**
    * Extract a [[GfsForecast]] for each of the given `locations`.
    */
-  def forecast(locations: Seq[GfsLocation], time: OffsetDateTime): Map[Point, GfsForecast] = {
+  def forecast(locations: Seq[Point], time: OffsetDateTime): Map[Point, GfsForecast] = {
     (for (location <- locations) yield {
       // Read the value of the given `grid` at the current `location`
       def readXY(feature: Feature): Double = feature.read(location)

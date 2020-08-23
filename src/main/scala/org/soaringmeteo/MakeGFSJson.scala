@@ -49,7 +49,6 @@ object MakeGFSJson {
     targetDir: os.Path
   ): Unit = {
     logger.debug("Parsing GFS locations CSV file")
-    val gfsLocations = GfsLocation.parse(os.read(gfsLocFile))
 
     os.remove.all(targetDir)
     os.makeDir.all(targetDir)
@@ -68,7 +67,7 @@ object MakeGFSJson {
       for (t <- Settings.forecastHours) yield {
         logger.debug(s"Extracting GFS forecast data at time $t")
         val forecast =
-          GfsForecast.fromGribFile(gribsDir, forecastMetadata.initDateTime, t, gfsLocations)
+          GfsForecast.fromGribFile(gribsDir, forecastMetadata.initDateTime, t, Settings.gfsForecastLocations)
         val fields =
           forecast.iterator.map { case (p, forecast) =>
             // Coordinates are multiplied by 100 so that they are always rendered as integer
@@ -84,7 +83,7 @@ object MakeGFSJson {
         forecast
       }
 
-    for (gfsLocation <- gfsLocations) {
+    for (gfsLocation <- Settings.gfsForecastLocations) {
       val point = Point(gfsLocation.latitude, gfsLocation.longitude)
       logger.debug(s"Writing forecast for location ${gfsLocation.longitude},${gfsLocation.latitude}")
       val locationForecasts = LocationForecasts(point, forecasts.map(_(point)))

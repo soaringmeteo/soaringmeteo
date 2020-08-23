@@ -75,7 +75,7 @@ object GfsForecast {
     gribsDir: os.Path,
     forecastInitDateTime: OffsetDateTime,
     forecastHourOffset: Int,
-    locations: Seq[GfsLocation]
+    locations: Seq[Point]
   ): Map[Point, GfsForecast] = {
     val gribFile = gribsDir / forecastHourOffset.toString()
     Grib.bracket(gribFile) { grib =>
