@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import { modelResolution } from './Forecast';
+import { modelResolution, ForecastMetadata } from './Forecast';
 
 export type CanvasLayer = {
   setDataSource(dataSource: DataSource): void
@@ -9,7 +9,7 @@ export type DataSource = {
   renderPoint: (map: L.Map, lat: number, lng: number, ctx: CanvasRenderingContext2D) => void
 }
 
-export const CanvasLayer = L.Layer.extend({
+export const CanvasLayer = (forecastMetadata: ForecastMetadata) => L.Layer.extend({
 
   onAdd: function(map: L.Map) {
     this._map = map;
@@ -72,6 +72,10 @@ export const CanvasLayer = L.Layer.extend({
   setDataSource: function (dataSource: DataSource): void {
     this._dataSource = dataSource;
     this._update();
+  },
+
+  getAttribution: function (): String {
+    return `Data initialization: ${forecastMetadata.init.toLocaleString(undefined, { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}`
   }
 
 });

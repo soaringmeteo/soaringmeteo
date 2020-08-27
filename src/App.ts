@@ -18,7 +18,7 @@ export class App {
     // It *must* also be mounted before we initialize it
     const mapElement = el('div', { style: { flex: 1 } });
     mount(containerElement, mapElement);
-    const [canvas, map] = initializeMap(mapElement);
+    const [canvas, map] = initializeMap(mapElement, latestForecast);
     this.canvas = canvas;
 
     this.forecastSelect = new ForecastSelect(this, latestForecast, mapElement);
