@@ -15,7 +15,7 @@ export class Clouds {
       const high   = forecastAtPoint.c.h;
 
       // Same color palette as meteociel: red = low, green = middle, blue = high
-      ctx.fillStyle = `rgba(${low * 255 / 100}, ${middle * 255 / 100}, ${high * 255 / 100}, 0.45)`;
+      ctx.fillStyle = `rgba(${low * 255 / 100}, ${middle * 255 / 100}, ${high * 255 / 100}, 0.4)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
     }
   }

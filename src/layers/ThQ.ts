@@ -44,7 +44,7 @@ export class ThQ {
       const thq = blhCoeff * windCoeff * cloudCoverCoeff;
 
       const color = colorScale.interpolate(thq);
-      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.45)`;
+      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.40)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
       ctx.lineWidth = 1;
       ctx.beginPath();

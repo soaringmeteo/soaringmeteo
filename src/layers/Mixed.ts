@@ -19,11 +19,11 @@ export class Mixed {
       // Boundary Layer Height
       const blh = forecastAtPoint.blh;
       const color = boundaryDepthColorScale.interpolate(blh);
-      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.3)`;
+      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
   
       // Boundary Layer Wind
-      drawWindArrow(ctx, center.x, center.y, width, `rgba(62, 0, 0, 0.35)`, forecastAtPoint.u, forecastAtPoint.v);
+      drawWindArrow(ctx, center.x, center.y, width, `rgba(62, 0, 0, 0.25)`, forecastAtPoint.u, forecastAtPoint.v);
   
       // Cloud cover
       const cloudCover = forecastAtPoint.c;
@@ -36,7 +36,7 @@ export class Mixed {
         Array.from({ length: cv }, (_, j) => {
           const x = topLeft.x + hSpace * (i + 1 / 2);
           const y = topLeft.y + vSpace * (j + 1 / 2);
-          ctx.fillStyle = `rgba(60, 60, 60, ${cloudCoverCoeff / 2})`;
+          ctx.fillStyle = `rgba(60, 60, 60, ${cloudCoverCoeff / 3})`;
           ctx.beginPath();
           ctx.arc(x, y, hSpace / 2, 0, Math.PI * 2);
           ctx.fill();
