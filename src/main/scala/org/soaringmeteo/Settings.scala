@@ -4,7 +4,7 @@ object Settings {
 
   /** Sequence of forecast hour offsets of a GFS run (e.g. 3, 6, 9, 12, etc.) */
   val forecastHours: Seq[Int] = (for {
-    day  <- 0 to 9
+    day  <- 0 to 14
     time <- 0 until 24 by gfsForecastTimeResolution
   } yield day * 24 + time).drop(1) // Drop the first forecast because it doesn't contain the same information as the others
 
@@ -33,11 +33,22 @@ object Settings {
   val numberOfForecastsPerDay: Int = 24 / gfsForecastTimeResolution
 
   /** The forecast locations we are interested in */
-  val gfsForecastLocations: Seq[Point] =
+  val gfsForecastLocations: Seq[Point] = {
     // Let’s focus on the alps only to avoid generating huge files
-    for {
-      longitude <- BigDecimal(4) to 18 by (BigDecimal(gfsForecastSpaceResolution) / 100)
-      latitude  <- BigDecimal(42) to 49 by (BigDecimal(gfsForecastSpaceResolution) / 100)
-    } yield Point(latitude, longitude)
+    val alps =
+      for {
+        longitude <- BigDecimal(4) to 18 by (BigDecimal(gfsForecastSpaceResolution) / 100)
+        latitude  <- BigDecimal(42) to 49 by (BigDecimal(gfsForecastSpaceResolution) / 100)
+      } yield Point(latitude, longitude)
+
+    // Asked by Jocelyne
+    val bulgaria =
+      for {
+        longitude <- BigDecimal(20) to 28 by (BigDecimal(gfsForecastSpaceResolution) / 100)
+        latitude  <- BigDecimal(41) to 44 by (BigDecimal(gfsForecastSpaceResolution) / 100)
+      } yield Point(latitude, longitude)
+
+    alps ++ bulgaria
+  }
 
 }

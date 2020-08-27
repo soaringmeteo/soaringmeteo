@@ -22,13 +22,13 @@ object DownloadGribFiles {
   def run(targetDir: os.Path): Unit = {
     val rootUrl = "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl"
     val item =
-      Jsoup.connect(rootUrl).get()
+      Jsoup.connect(rootUrl).timeout(120000).get()
         .select("a")
         .first()
     val date = item.text() // e.g. “20200529”
     // e.g. “06”
     val timeString =
-      Jsoup.connect(item.attr("href")).get()
+      Jsoup.connect(item.attr("href")).timeout(120000).get()
         .select("a")
         .first()
         .text()
