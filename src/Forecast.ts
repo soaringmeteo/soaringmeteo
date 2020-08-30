@@ -7,7 +7,7 @@ export type ForecastMetadataData = {
 export class ForecastMetadata {
   readonly init: Date
   readonly latest: number
-  constructor(private readonly data: ForecastMetadataData) {
+  constructor(data: ForecastMetadataData) {
     this.init = new Date(data.init);
     this.latest = data.latest;
   }
@@ -51,10 +51,69 @@ export class DayForecasts {
 
 export class DetailedForecast {
   readonly time: Date;
-  constructor(readonly data: DetailedForecastData) {
+  readonly clouds: DetailedClouds;
+  readonly boundaryLayer: DetailedBoundaryLayer;
+  readonly surface: DetailedSurface;
+  readonly rain: DetailedRain;
+  readonly meanSeaLevelPressure: number;
+  readonly isothermZero: number; // m
+  constructor(data: DetailedForecastData) {
     this.time = new Date(data.t);
+    this.clouds = {
+      highLevel: data.c.h / 100,
+      middleLevel: data.c.m / 100,
+      lowLevel: data.c.l / 100
+    };
+    this.boundaryLayer = {
+      height: data.bl.h,
+      wind: {
+        u: data.bl.u,
+        v: data.bl.v
+      }
+    };
+    this.surface = {
+      temperature: data.s.t,
+      relativeHumidity: data.s.rh / 100,
+      wind: {
+        u: data.s.u,
+        v: data.s.v
+      }
+    };
+    this.rain = {
+      convective: data.r.c,
+      total: data.r.t
+    };
+    this.meanSeaLevelPressure = data.mslet;
+    this.isothermZero = data.iso;
   }
 }
+
+export type DetailedClouds = {
+  highLevel: number // %
+  middleLevel: number // %
+  lowLevel: number // %
+};
+
+export type DetailedSurface = {
+  temperature: number // °C
+  relativeHumidity: number // %
+  wind: Wind
+};
+
+export type DetailedBoundaryLayer = {
+  height: number // m
+  wind: Wind
+};
+
+export type DetailedRain = {
+  convective: number // mm
+  total: number // mm
+};
+
+type Wind = {
+  u: number, // km/h
+  v: number // km/h
+};
 
 export type LocationForecastsData = {
   h: number // elevation

@@ -1,5 +1,5 @@
 import { el } from 'redom';
-import { DetailedForecastData, LocationForecasts } from './Forecast';
+import { LocationForecasts, DetailedForecast } from './Forecast';
 import { drawWindArrow, lightningShape, cloudPattern } from './shapes';
 import { Diagram, Scale } from './Diagram';
 
@@ -59,13 +59,13 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
   if (ctx !== null && forecasts.dayForecasts.length !== 0) {
 
-    const columns = (drawColumn: (forecast: DetailedForecastData, columnStart: number, columnEnd: number, date: Date) => void): void => {
+    const columns = (drawColumn: (forecast: DetailedForecast, columnStart: number, columnEnd: number, date: Date) => void): void => {
       let i = 0;
       forecasts.dayForecasts.forEach(dayForecast => {
         dayForecast.forecasts.forEach(forecast => {
           const columnStart = i * columnWidth;
           const columnEnd   = columnStart + columnWidth;
-          drawColumn(forecast.data, columnStart, columnEnd, forecast.time);
+          drawColumn(forecast, columnStart, columnEnd, forecast.time);
           i = i + 1;
         });
       });
@@ -79,7 +79,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       highAirDiagram.fillRect(
         [columnStart, 0],
         [columnEnd,   highAirDiagramHeight],
-        `rgba(60, 60, 60, ${ (forecast.c.h / 100) / 2 })`
+        `rgba(60, 60, 60, ${ (forecast.clouds.highLevel) / 2 })`
       );
     });
 
@@ -96,7 +96,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         '#FFC972'
       );
       // Boundary Layer
-      const boundaryLayerHeight = elevationScale.apply(forecast.bl.h);
+      const boundaryLayerHeight = elevationScale.apply(forecast.boundaryLayer.height);
       airDiagram.fillRect(
         [columnStart, groundLevelY],
         [columnEnd,   groundLevelY + boundaryLayerHeight],
@@ -114,7 +114,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         airDiagram.fillRect(
           [columnStart, groundLevelY],
           [columnEnd,   lowCloudsY],
-          `rgba(60, 60, 60, ${ (forecast.c.l / 100) / 2 })`
+          `rgba(60, 60, 60, ${ (forecast.clouds.lowLevel) / 2 })`
         );
       }
 
@@ -125,16 +125,16 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       airDiagram.fillRect(
         [columnStart, middleCloudsY0],
         [columnEnd,   middleCloudsY1],
-        `rgba(60, 60, 60, ${ (forecast.c.m / 100) / 2 })`
+        `rgba(60, 60, 60, ${ (forecast.clouds.middleLevel) / 2 })`
       );
 
       // Cumuli
       // Cumuli base height is computed via Hennig formula
-      const cumuliBase = 122.6 * forecast.s.t * (1 - forecast.s.rh / 100);
-      if (cumuliBase < forecast.bl.h) {
+      const cumuliBase = 122.6 * forecast.surface.temperature * (1 - forecast.surface.relativeHumidity);
+      if (cumuliBase < forecast.boundaryLayer.height) {
         airDiagram.fillRect(
           [columnStart, elevationScale.apply(forecasts.elevation + cumuliBase)],
-          [columnEnd, elevationScale.apply(forecasts.elevation + forecast.bl.h)],
+          [columnEnd, elevationScale.apply(forecasts.elevation + forecast.boundaryLayer.height)],
           columnCloud
         );
       }
@@ -143,13 +143,13 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     // Wind
     columns((forecast, columnStart, _) => {
       const groundLevelY = elevationScale.apply(forecasts.elevation);
-      const boundaryLayerHeight = elevationScale.apply(forecast.bl.h);
+      const boundaryLayerHeight = elevationScale.apply(forecast.boundaryLayer.height);
       const windCenterX = columnStart + columnWidth / 2;
       const windColor = `rgba(62, 0, 0, 0.35)`;
       // Surface wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth - 4, windColor, forecast.s.u, forecast.s.v);
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth - 4, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
       // Boundary layer wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY + boundaryLayerHeight / 2), columnWidth - 4, windColor, forecast.bl.u, forecast.bl.v);
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY + boundaryLayerHeight / 2), columnWidth - 4, windColor, forecast.boundaryLayer.wind.u, forecast.boundaryLayer.wind.v);
       // TODO Top wind
     });
 
@@ -178,8 +178,8 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       .reduce(
       (previousForecast, forecast, i) => {
         airDiagram.line(
-          [columnWidth * (i - 0.5), elevationScale.apply(previousForecast.data.iso)],
-          [columnWidth * (i + 0.5), elevationScale.apply(forecast.data.iso)],
+          [columnWidth * (i - 0.5), elevationScale.apply(previousForecast.isothermZero)],
+          [columnWidth * (i + 0.5), elevationScale.apply(forecast.isothermZero)],
           'cyan'
         );
         return forecast
@@ -198,12 +198,12 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     columns((forecast, columnStart, columnEnd) => {
       rainDiagram.fillRect(
         [columnStart, 0],
-        [columnEnd,   rainScale.apply(forecast.r.c)],
+        [columnEnd,   rainScale.apply(forecast.rain.convective)],
         convectiveRainStyle
       );
       rainDiagram.fillRect(
-        [columnStart, rainScale.apply(forecast.r.c)],
-        [columnEnd,   rainScale.apply(forecast.r.t)],
+        [columnStart, rainScale.apply(forecast.rain.convective)],
+        [columnEnd,   rainScale.apply(forecast.rain.total)],
         rainStyle
       );
     });
@@ -216,18 +216,18 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
           const x1 = columnWidth * (i - 0.5);
           const x2 = columnWidth * (i + 0.5)
           airDiagram.line(
-            [x1, pressureScale.apply(previousForecast.data.mslet)],
-            [x2, pressureScale.apply(forecast.data.mslet)],
+            [x1, pressureScale.apply(previousForecast.meanSeaLevelPressure)],
+            [x2, pressureScale.apply(forecast.meanSeaLevelPressure)],
             pressureStyle
           );
           rainDiagram.line(
-            [x1, temperatureScale.apply(previousForecast.data.s.t)],
-            [x2, temperatureScale.apply(forecast.data.s.t)],
+            [x1, temperatureScale.apply(previousForecast.surface.temperature)],
+            [x2, temperatureScale.apply(forecast.surface.temperature)],
             'red'
           );
           rainDiagram.line(
-            [x1, temperatureScale.apply(previousForecast.data.s.t * previousForecast.data.s.rh / 100)],
-            [x2, temperatureScale.apply(forecast.data.s.t * forecast.data.s.rh / 100)],
+            [x1, temperatureScale.apply(previousForecast.surface.temperature * previousForecast.surface.relativeHumidity)],
+            [x2, temperatureScale.apply(forecast.surface.temperature * forecast.surface.relativeHumidity)],
             'blue'
           );
           return forecast
