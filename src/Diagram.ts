@@ -11,13 +11,18 @@ export class Diagram {
     this.origX = this.topLeft[0];
   }
 
-  line(from: Point, to: Point, style: string): void {
+  line(from: Point, to: Point, style: string, dash?: Array<number>): void {
+    const previousLineDash = this.ctx.getLineDash();
+    if (dash !== undefined) {
+      this.ctx.setLineDash(dash);
+    }
     this.ctx.strokeStyle = style;
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
     this.ctx.moveTo(this.projectX(from[0]), this.projectY(from[1]));
     this.ctx.lineTo(this.projectX(to[0]), this.projectY(to[1]));
     this.ctx.stroke();
+    this.ctx.setLineDash(previousLineDash);
   }
 
   fillShape(points: Array<Point>, style: string): void {

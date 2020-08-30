@@ -16,19 +16,29 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
   const gutterHeight = 15;
 
+  // Our meteogram is made of three diagram stacked on top of each other.
+  // The first one only shows the cloud cover for high-level clouds (above 5000 m).
+  // The second one shows the boundary layer, wind, and middle-level clouds.
+  // The third one shows rainfalls and ground temperature.
+
+  const highAirDiagramHeight = 20; // px
+
   const airDiagramHeight = 400; // px
-  const elevationScale  = new Scale([0, 4500 /* m (FIXME dynamic) */], [0, airDiagramHeight], false);
-  const elevationLevels = [0, 1000, 2000, 3000, 4000];
+  // We show only up to 5000m to reduce the height of the diagram
+  const middleCloudsTop  = 5000 // m
+  const elevationScale  = new Scale([0, middleCloudsTop /* m (FIXME dynamic) */], [0, airDiagramHeight], false);
+  const elevationLevels = [0, 1000, 2000, 3000, 4000, 5000];
+  const airDiagramTop   = gutterHeight + highAirDiagramHeight; // No gutter between high air diagram and air diagram
 
   const rainDiagramHeight   = 100; // px
   const rainStyle           = 'blue';
   const convectiveRainStyle = 'cyan';
   const rainScale           = new Scale([0, 15 /* mm */], [0, rainDiagramHeight], false);
   const rainLevels          = [0, 5, 10];
-  const rainDiagramTop      = gutterHeight + airDiagramHeight + gutterHeight;
+  const rainDiagramTop      = airDiagramTop + gutterHeight + airDiagramHeight;
 
   const pressureScale     = new Scale([990, 1035 /* hPa */], [0, airDiagramHeight], false);
-  const pressureLevels    = [990, 1000, 1010, 1020, 1030];
+  const pressureLevels    = [990, 999, 1008, 1017, 1026, 1035];
   const pressureStyle     = 'black'
 
   const temperatureScale  = new Scale([0, 36], [0, rainDiagramHeight], false);
@@ -61,8 +71,20 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       });
     }
 
+    // High air diagram
+    const highAirDiagram = new Diagram([0, gutterHeight], highAirDiagramHeight, ctx);
+
+    columns((forecast, columnStart, columnEnd) => {
+      // High-level clouds
+      highAirDiagram.fillRect(
+        [columnStart, 0],
+        [columnEnd,   highAirDiagramHeight],
+        `rgba(60, 60, 60, ${ (forecast.c.h / 100) / 2 })`
+      );
+    });
+
     // Air diagram
-    const airDiagram = new Diagram([0, gutterHeight], airDiagramHeight, ctx);
+    const airDiagram = new Diagram([0, airDiagramTop], airDiagramHeight, ctx);
 
     // Ground level & Boundary Layer
     columns((forecast, columnStart, columnEnd) => {
@@ -97,7 +119,6 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       }
 
       // Middle-level clouds
-      const middleCloudsTop    = 4500; // m
       const middleCloudsBottom = Math.max(forecasts.elevation, lowCloudsTop);
       const middleCloudsY0     = elevationScale.apply(middleCloudsBottom);
       const middleCloudsY1     = elevationScale.apply(middleCloudsTop);
@@ -106,8 +127,6 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         [columnEnd,   middleCloudsY1],
         `rgba(60, 60, 60, ${ (forecast.c.m / 100) / 2 })`
       );
-
-      // TODO High-level clouds
 
       // Cumuli
       // Cumuli base height is computed via Hennig formula
@@ -246,14 +265,23 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     leftKeyCtx.textAlign    = 'right';
     leftKeyCtx.textBaseline = 'middle';
 
+    // High air diagram
+    const highAirDiagram = new Diagram([0, gutterHeight], highAirDiagramHeight, leftKeyCtx);
+    highAirDiagram.line(
+      [keyWidth - leftKeyCtx.lineWidth, 0],
+      [keyWidth - leftKeyCtx.lineWidth, highAirDiagramHeight],
+      'black',
+      [5, 3]
+    );
+
     // Elevation
-    const airDiagram = new Diagram([0, gutterHeight], airDiagramHeight, leftKeyCtx);
+    const airDiagram = new Diagram([0, airDiagramTop], airDiagramHeight, leftKeyCtx);
     airDiagram.line(
       [keyWidth - leftKeyCtx.lineWidth, 0],
       [keyWidth - leftKeyCtx.lineWidth, airDiagramHeight],
       'black'
     );
-    airDiagram.text('m', [keyWidth - 5, airDiagramHeight], 'black');
+    airDiagram.text('m', [keyWidth - 5, airDiagramHeight - 15], 'black');
 
     elevationLevels.forEach(elevation => {
       const y = elevationScale.apply(elevation);
@@ -319,13 +347,13 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     });
 
     // Pressure
-    const airDiagram = new Diagram([0, gutterHeight], airDiagramHeight, rightKeyCtx);
+    const airDiagram = new Diagram([0, airDiagramTop], airDiagramHeight, rightKeyCtx);
     airDiagram.line(
       [0, 0],
       [0, airDiagramHeight],
       pressureStyle
     );
-    airDiagram.text('hPa', [5, airDiagramHeight], pressureStyle);
+    airDiagram.text('hPa', [5, airDiagramHeight - 15], pressureStyle);
     pressureLevels.forEach(pascals => {
       const y = pressureScale.apply(pascals);
       airDiagram.line(
