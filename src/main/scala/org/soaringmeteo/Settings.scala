@@ -4,7 +4,7 @@ object Settings {
 
   /** Sequence of forecast hour offsets of a GFS run (e.g. 3, 6, 9, 12, etc.) */
   val forecastHours: Seq[Int] = (for {
-    day  <- 0 to 14
+    day  <- 0 to 13
     time <- 0 until 24 by gfsForecastTimeResolution
   } yield day * 24 + time).drop(1) // Drop the first forecast because it doesn't contain the same information as the others
 
@@ -34,21 +34,22 @@ object Settings {
 
   /** The forecast locations we are interested in */
   val gfsForecastLocations: Seq[Point] = {
-    // Let’s focus on the alps only to avoid generating huge files
-    val alps =
-      for {
-        longitude <- BigDecimal(4) to 18 by (BigDecimal(gfsForecastSpaceResolution) / 100)
-        latitude  <- BigDecimal(42) to 49 by (BigDecimal(gfsForecastSpaceResolution) / 100)
-      } yield Point(latitude, longitude)
+    // Let’s focus on the alps only to avoid generating huge files (and looong computations)
+    val alps = gfsArea(Point(4, 43), Point(17, 49))
+    val bulgaria = gfsArea(Point(21, 41), Point(27, 44))
+    alps // ++ bulgaria
+  }
 
-    // Asked by Jocelyne
-    val bulgaria =
-      for {
-        longitude <- BigDecimal(20) to 28 by (BigDecimal(gfsForecastSpaceResolution) / 100)
-        latitude  <- BigDecimal(41) to 44 by (BigDecimal(gfsForecastSpaceResolution) / 100)
-      } yield Point(latitude, longitude)
-
-    alps ++ bulgaria
+  /**
+   * @return All the GFS points that are in the area delimited by the two
+   *         given points, `p1` and `p2`.
+   */
+  def gfsArea(p1: Point, p2: Point): Seq[Point] = {
+    val step = BigDecimal(gfsForecastSpaceResolution) / 100
+    for {
+      longitude <- p1.longitude.min(p2.longitude) to p1.longitude.max(p2.longitude) by step
+      latitude  <- p1.latitude.min(p2.latitude) to p1.latitude.max(p2.latitude) by step
+    } yield Point(latitude, longitude)
   }
 
 }

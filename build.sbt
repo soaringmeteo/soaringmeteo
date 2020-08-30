@@ -34,7 +34,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 
 enablePlugins(GraalVMNativeImagePlugin)
 Compile / mainClass := Some("org.soaringmeteo.Main")
-graalVMNativeImageGraalVersion := Some("20.0.0")
+graalVMNativeImageGraalVersion := Some("20.2.0")
 graalVMNativeImageOptions ++= Seq(
   "--enable-https",
   "--verbose",
