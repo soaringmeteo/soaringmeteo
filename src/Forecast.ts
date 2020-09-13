@@ -1,6 +1,6 @@
 // Note: do we really need to access older forecasts?
 export type ForecastMetadataData = {
-  init: string // e.g., "2020-04-14T06:00:00Z"
+  init: string   // e.g., "2020-04-14T06:00:00Z"
   latest: number // e.g., 189
 }
 
@@ -32,7 +32,7 @@ export class LocationForecasts {
   readonly dayForecasts: Array<DayForecasts>;
   constructor(data: LocationForecastsData, private readonly latestForecast: ForecastMetadata) {
     this.elevation = data.h;
-    this.dayForecasts = data.d.map(data => new DayForecasts(data));
+    this.dayForecasts = data.d.map(data => new DayForecasts(data, this.elevation));
   }
 
   initializationTime(): Date {
@@ -43,9 +43,9 @@ export class LocationForecasts {
 export class DayForecasts {
   readonly thunderstormRisk: number;
   readonly forecasts: Array<DetailedForecast>;
-  constructor(data: DayForecastsData) {
+  constructor(data: DayForecastsData, elevation: number) {
     this.thunderstormRisk = data.th;
-    this.forecasts = data.h.map(data => new DetailedForecast(data));
+    this.forecasts = data.h.map(data => new DetailedForecast(data, elevation));
   }
 }
 
@@ -57,7 +57,9 @@ export class DetailedForecast {
   readonly rain: DetailedRain;
   readonly meanSeaLevelPressure: number;
   readonly isothermZero: number; // m
-  constructor(data: DetailedForecastData) {
+  readonly topWind: TopWind;
+
+  constructor(data: DetailedForecastData, elevation: number) {
     this.time = new Date(data.t);
     this.clouds = {
       highLevel: data.c.h / 100,
@@ -85,7 +87,51 @@ export class DetailedForecast {
     };
     this.meanSeaLevelPressure = data.mslet;
     this.isothermZero = data.iso;
+
+    const boundaryLayerElevation = elevation + this.boundaryLayer.height;
+    this.topWind = this.findTopWind(data, boundaryLayerElevation, 0, pressureLevels.length - 1);
   }
+
+  /**
+   * Finds the wind value in the air layer just above the top of the boundary layer.
+   * 
+   * @param data                      Forecast data
+   * @param boundaryLayerTopElevation Elevation (in meters above sea level) of the boundary layer top
+   * @param lowPressureLevelIndex     Lower bound of pressure level index in the `pressureLevels` table
+   * @param highPressureLevelIndex    Upper bound of pressure level index in the `pressureLevels` table
+   * 
+   * The algorithm finds the lowest pressure level that is still above the boundary layer top. It
+   * performs a binary search by tuning the `lowPressureLevelIndex` and `highPressureLevelIndex`.
+   * 
+   * The algorithm terminates when the `lowPressureLevelIndex` is adjacent to the `highPressureLevelIndex`,
+   * which means that we can’t reduce further the interval.
+   */
+  private findTopWind(data: DetailedForecastData, boundaryLayerTopElevation: number, lowPressureLevelIndex: number, highPressureLevelIndex: number): TopWind {
+    // Compute the index in the middle of the low and high indices
+    const pressureLevelIndex = Math.floor((lowPressureLevelIndex + highPressureLevelIndex) / 2);
+    const pressureLevel      = pressureLevels[pressureLevelIndex];
+    // If there is no index in between the low and high indices, that’s the end.
+    // Let’s return the wind value at the `lowPressureLevelIndex` (remember that the lower the pressure, the higher the elevation)
+    if (pressureLevelIndex === lowPressureLevelIndex) {
+      const dataAtPressureLevel = data.p[pressureLevel];
+      return {
+        elevation: dataAtPressureLevel.h,
+        u: dataAtPressureLevel.u,
+        v: dataAtPressureLevel.v
+      }
+    } else {
+      if (data.p[pressureLevel].h > boundaryLayerTopElevation) {
+        // The elevation at `pressureLevel` higher than the boundary layer top,
+        // let’s increase the `lowPressureLevelIndex`.
+        return this.findTopWind(data, boundaryLayerTopElevation, pressureLevelIndex, highPressureLevelIndex)
+      } else {
+        // The elevation at `pressureLevel` is lower than the boundary layer top,
+        // let’s decrease the `highPressureLevelIndex`.
+        return this.findTopWind(data, boundaryLayerTopElevation, lowPressureLevelIndex, pressureLevelIndex)
+      }
+    }
+  }
+
 }
 
 export type DetailedClouds = {
@@ -111,8 +157,14 @@ export type DetailedRain = {
 };
 
 type Wind = {
-  u: number, // km/h
+  u: number // km/h
   v: number // km/h
+};
+
+type TopWind = {
+  u: number // km/h
+  v: number // km/h
+  elevation: number // m
 };
 
 export type LocationForecastsData = {
@@ -176,6 +228,9 @@ export type DetailedForecastData = {
 
 type PressureLevel =
   '200' | '300' | '400' | '450' | '500' | '550' | '600' | '650' | '700' | '750' | '800' | '850' | '900' | '950'
+
+const pressureLevels: Array<PressureLevel> =
+  ['200', '300', '400',  '450', '500', '550', '600', '650', '700', '750', '800', '850', '900', '950'];
 
 export type Forecast = {
   [key: string]: ForecastData

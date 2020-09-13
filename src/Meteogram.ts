@@ -140,19 +140,6 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       }
     });
 
-    // Wind
-    columns((forecast, columnStart, _) => {
-      const groundLevelY = elevationScale.apply(forecasts.elevation);
-      const boundaryLayerHeight = elevationScale.apply(forecast.boundaryLayer.height);
-      const windCenterX = columnStart + columnWidth / 2;
-      const windColor = `rgba(62, 0, 0, 0.35)`;
-      // Surface wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth - 4, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
-      // Boundary layer wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY + boundaryLayerHeight / 2), columnWidth - 4, windColor, forecast.boundaryLayer.wind.u, forecast.boundaryLayer.wind.v);
-      // TODO Top wind
-    });
-
     // Thunderstorm risk
     let previousLightningX = 0;
     forecasts.dayForecasts.forEach(forecast => {
@@ -170,6 +157,20 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         airDiagram.fillShape(lightningShape(x, y, lightningWidth), lightningStyle);
       }
       previousLightningX = previousLightningX + lightningWidth;
+    });
+
+    // Wind
+    columns((forecast, columnStart, _) => {
+      const groundLevelY = elevationScale.apply(forecasts.elevation);
+      const boundaryLayerHeight = elevationScale.apply(forecast.boundaryLayer.height);
+      const windCenterX = columnStart + columnWidth / 2;
+      const windColor = `rgba(62, 0, 0, 0.35)`;
+      // Surface wind
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth - 4, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
+      // Boundary layer wind
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY + boundaryLayerHeight / 2), columnWidth - 4, windColor, forecast.boundaryLayer.wind.u, forecast.boundaryLayer.wind.v);
+      // Top wind (just above the top of the boundary layer)
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(elevationScale.apply(forecast.topWind.elevation)), columnWidth - 4, windColor, forecast.topWind.u, forecast.topWind.v);
     });
 
     // Isotherm 0°C
