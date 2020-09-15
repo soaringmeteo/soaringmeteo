@@ -23,6 +23,6 @@
   },
   "scripts": {
     "start": "webpack-dev-server --open --config webpack.dev.js",
-    "bundle": "webpack --config webpack.prod.js"
+    "bundle": "rm dist/* && webpack --config webpack.prod.js"
   }
 }
