@@ -75,9 +75,15 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     const highAirDiagram = new Diagram([0, gutterHeight], highAirDiagramHeight, ctx);
 
     columns((forecast, columnStart, columnEnd) => {
-      // High-level clouds
+      // Middle-level clouds
       highAirDiagram.fillRect(
         [columnStart, 0],
+        [columnEnd,   highAirDiagramHeight / 2],
+        `rgba(60, 60, 60, ${ (forecast.clouds.middleLevel) / 2 })`
+      );
+      // High-level clouds
+      highAirDiagram.fillRect(
+        [columnStart, highAirDiagramHeight / 2],
         [columnEnd,   highAirDiagramHeight],
         `rgba(60, 60, 60, ${ (forecast.clouds.highLevel) / 2 })`
       );
@@ -106,27 +112,24 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
     // Clouds
     columns((forecast, columnStart, columnEnd) => {
+      // Low-level clouds (up to 2 km above ground level)
       const groundLevelY = elevationScale.apply(forecasts.elevation);
-      // Low-level clouds
-      const lowCloudsTop = 2000; // m
-      if (forecasts.elevation < lowCloudsTop) {
-        const lowCloudsY = elevationScale.apply(lowCloudsTop);
+      const lowCloudsTop = Math.min(forecasts.elevation + 2000, middleCloudsTop);
+      const lowCloudsY   = elevationScale.apply(lowCloudsTop);
+      airDiagram.fillRect(
+        [columnStart, groundLevelY],
+        [columnEnd,   lowCloudsY],
+        `rgba(60, 60, 60, ${ (forecast.clouds.lowLevel) / 2 })`
+      );
+
+      // Middle-level clouds (if visible)
+      if (lowCloudsTop < middleCloudsTop) {
         airDiagram.fillRect(
-          [columnStart, groundLevelY],
-          [columnEnd,   lowCloudsY],
-          `rgba(60, 60, 60, ${ (forecast.clouds.lowLevel) / 2 })`
+          [columnStart, lowCloudsY],
+          [columnEnd,   elevationScale.apply(middleCloudsTop)],
+          `rgba(60, 60, 60, ${ (forecast.clouds.middleLevel) / 2 })`
         );
       }
-
-      // Middle-level clouds
-      const middleCloudsBottom = Math.max(forecasts.elevation, lowCloudsTop);
-      const middleCloudsY0     = elevationScale.apply(middleCloudsBottom);
-      const middleCloudsY1     = elevationScale.apply(middleCloudsTop);
-      airDiagram.fillRect(
-        [columnStart, middleCloudsY0],
-        [columnEnd,   middleCloudsY1],
-        `rgba(60, 60, 60, ${ (forecast.clouds.middleLevel) / 2 })`
-      );
 
       // Cumuli
       // Cumuli base height is computed via Hennig formula
