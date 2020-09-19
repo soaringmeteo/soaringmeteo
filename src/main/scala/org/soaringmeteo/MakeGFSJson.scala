@@ -48,8 +48,6 @@ object MakeGFSJson {
     gribsDir: os.Path,
     targetDir: os.Path
   ): Unit = {
-    logger.debug("Parsing GFS locations CSV file")
-
     os.remove.all(targetDir)
     os.makeDir.all(targetDir)
     os.copy.over(gribsDir / "forecast.json", targetDir / "forecast.json", replaceExisting = true)

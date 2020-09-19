@@ -5,8 +5,11 @@ import java.time.format.DateTimeFormatter
 
 import io.circe.{Encoder, Json}
 import org.soaringmeteo.GfsForecast.pressureLevels
+import squants.energy.SpecificEnergy
 import squants.motion.Pressure
+import squants.radio.Irradiance
 import squants.space.Length
+import squants.thermal.Temperature
 
 import scala.util.chaining._
 
@@ -22,31 +25,72 @@ case class LocationForecasts(
 
 case class DayForecast(
   date: LocalDate,
-  hourForecasts: Seq[GfsForecast],
+  hourForecasts: Seq[DetailedForecast],
   thunderstormRisk: Int /* Between 0 and 4, for the entire day (not just the forecast period. */
+)
+
+case class DetailedForecast(
+  time: OffsetDateTime,
+  boundaryLayerHeight: Length,
+  boundaryLayerWind: Wind,
+  cloudCover: CloudCover,
+  atPressure: Map[Pressure, IsobaricVariables],
+  mslet: Pressure,
+  snowDepth: Length,
+  surfaceTemperature: Temperature,
+  surfaceDewPoint: Temperature,
+  surfaceWind: Wind,
+  totalRain: Length,
+  convectiveRain: Length,
+  latentHeatNetFlux: Irradiance,
+  sensibleHeatNetFlux: Irradiance,
+  cape: SpecificEnergy,
+  cin: SpecificEnergy,
+  downwardShortWaveRadiationFlux: Irradiance,
+  isothermZero: Length
 )
 
 object LocationForecasts {
 
   def apply(location: Point, forecasts: Seq[GfsForecast]): LocationForecasts = {
     val isRelevantAtLocation = isRelevant(location)
-    // HACK We reuse the same data structure, `GfsForecast`, but we give a different meaning to
-    // the `accumulatedRain` field: it does not contain anymore the accumulated rain, but only
-    // the rain that fell during the forecast period.
-    val forecastsWithRainPerPeriod: Seq[GfsForecast] =
-      forecasts.foldLeft((List.newBuilder[GfsForecast], Option.empty[GfsForecast])) {
+    val forecastsWithRainPerPeriod: Seq[DetailedForecast] =
+      forecasts.foldLeft((List.newBuilder[DetailedForecast], Option.empty[GfsForecast])) {
         case ((builder, maybePreviousForecast), forecast) =>
-          maybePreviousForecast match {
-            case None =>
-              builder += forecast // First forecast (+3h) is special, it contains the accumulated
-                                  // rain since the forecast initialization time, which is equivalent
-                                  // to the rain that fell during the forecast period
-            case Some(previousForecast) =>
-              builder += forecast.copy(
-                accumulatedRain = forecast.accumulatedRain - previousForecast.accumulatedRain,
-                accumulatedConvectiveRain = forecast.accumulatedConvectiveRain - previousForecast.accumulatedConvectiveRain
-              )
-          }
+          val (totalRain, convectiveRain) =
+            maybePreviousForecast match {
+              case None =>
+                // First forecast (+3h) is special, it contains the accumulated
+                // rain since the forecast initialization time, which is equivalent
+                // to the rain that fell during the forecast period
+                (forecast.accumulatedRain, forecast.accumulatedConvectiveRain)
+              case Some(previousForecast) =>
+                (
+                  forecast.accumulatedRain - previousForecast.accumulatedRain,
+                  forecast.accumulatedConvectiveRain - previousForecast.accumulatedConvectiveRain
+                )
+            }
+
+          builder += DetailedForecast(
+            forecast.time,
+            forecast.boundaryLayerHeight,
+            forecast.boundaryLayerWind,
+            forecast.cloudCover,
+            forecast.atPressure,
+            forecast.mslet,
+            forecast.snowDepth,
+            forecast.surfaceTemperature,
+            forecast.surfaceTemperature * forecast.surfaceRelativeHumidity / 100,
+            forecast.surfaceWind,
+            totalRain,
+            convectiveRain,
+            forecast.latentHeatNetFlux,
+            forecast.sensibleHeatNetFlux,
+            forecast.cape,
+            forecast.cin,
+            forecast.downwardShortWaveRadiationFlux,
+            forecast.isothermZero
+          )
           (builder, Some(forecast))
       }._1.result()
     LocationForecasts(
@@ -105,9 +149,9 @@ object LocationForecasts {
 
   // FIXME Generalize to an arbitrary number of forecasts for the day
   def thunderstormRisk(
-    forecastMorning: GfsForecast,
-    forecastNoon: GfsForecast,
-    forecastAfternoon: GfsForecast
+    forecastMorning: DetailedForecast,
+    forecastNoon: DetailedForecast,
+    forecastAfternoon: DetailedForecast
   ): Int = {
     // Blindly copied from src/makeGFSJs.pas. We seriously need to check the formulas again.
     val baseCAPE = (forecastNoon.cape.toGrays + forecastAfternoon.cape.toGrays) / 100
@@ -133,10 +177,9 @@ object LocationForecasts {
         forecastNoon.cloudCover.conv +
         forecastAfternoon.cloudCover.conv
       ) / 10 +
-      // FIXME This looks wrong, we should not add accumulated rain over and over
-      forecastMorning.accumulatedConvectiveRain.toMillimeters +
-      forecastNoon.accumulatedConvectiveRain.toMillimeters +
-      forecastAfternoon.accumulatedConvectiveRain.toMillimeters
+      forecastMorning.convectiveRain.toMillimeters +
+      forecastNoon.convectiveRain.toMillimeters +
+      forecastAfternoon.convectiveRain.toMillimeters
     ) / 2
 
     val factorG = factorCAPE + factorConvection + factorSensibleHeat - factorSpread
@@ -149,7 +192,7 @@ object LocationForecasts {
   }
 
   /** Average “spread” value for altitudes above 3000 m */
-  def spreadAlti(forecast: GfsForecast): Double = {
+  def spreadAlti(forecast: DetailedForecast): Double = {
     spreadAndTds(forecast)
       .map { case (pressure, (spread, _)) => (pressure, spread) }
       .filter { case (pressure, _) => pressure.toPascals <= 70000 }
@@ -157,7 +200,7 @@ object LocationForecasts {
       .pipe(spreads => spreads.sum / spreads.size)
   }
 
-  def spreadAndTds(forecast: GfsForecast): Map[Pressure, (Double, Double)] = {
+  def spreadAndTds(forecast: DetailedForecast): Map[Pressure, (Double, Double)] = {
     forecast.atPressure.map { case (pressure, variables) =>
       val temperature = variables.temperature.toCelsiusScale
       val exponentBase10 = 7.5 * temperature / (237.7 + temperature) // Computation of the main base 10 power exponent used below from the air temperature in °C
@@ -208,16 +251,15 @@ object LocationForecasts {
                       )
                     }: _*),
                     "s" -> Json.obj(
-                      "h" -> Json.fromInt(forecast.elevation.toMeters.round.toInt),
                       "t" -> Json.fromBigDecimal(forecast.surfaceTemperature.toCelsiusScale),
-                      "rh" -> Json.fromBigDecimal(forecast.surfaceRelativeHumidity),
+                      "dt" -> Json.fromBigDecimal(forecast.surfaceDewPoint.toCelsiusScale),
                       "u" -> Json.fromInt(forecast.surfaceWind.u.toKilometersPerHour.round.toInt),
                       "v" -> Json.fromInt(forecast.surfaceWind.v.toKilometersPerHour.round.toInt)
                     ),
                     "iso" -> Json.fromInt(forecast.isothermZero.toMeters.round.toInt),
                     "r" -> Json.obj(
-                      "t" -> Json.fromInt(forecast.accumulatedRain.toMillimeters.round.toInt),
-                      "c" -> Json.fromInt(forecast.accumulatedConvectiveRain.toMillimeters.round.toInt)
+                      "t" -> Json.fromInt(forecast.totalRain.toMillimeters.round.toInt),
+                      "c" -> Json.fromInt(forecast.convectiveRain.toMillimeters.round.toInt)
                     ),
                     "mslet" -> Json.fromInt(forecast.mslet.toPascals.round.toInt / 100) // hPa
                     // TODO Irradiance, CIN, snow

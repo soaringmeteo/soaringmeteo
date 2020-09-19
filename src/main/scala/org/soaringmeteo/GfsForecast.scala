@@ -25,7 +25,7 @@ case class GfsForecast(
   surfaceTemperature: Temperature,
   surfaceRelativeHumidity: Double,
   surfaceWind: Wind,
-  accumulatedRain: Length, // TODO Compute rain per forecast period instead of total accumulated rain
+  accumulatedRain: Length,
   accumulatedConvectiveRain: Length,
   latentHeatNetFlux: Irradiance,
   sensibleHeatNetFlux: Irradiance,
