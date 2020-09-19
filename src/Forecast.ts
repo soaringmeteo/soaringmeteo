@@ -75,7 +75,7 @@ export class DetailedForecast {
     };
     this.surface = {
       temperature: data.s.t,
-      relativeHumidity: data.s.rh / 100,
+      dewPoint: data.s.dt,
       wind: {
         u: data.s.u,
         v: data.s.v
@@ -142,7 +142,7 @@ export type DetailedClouds = {
 
 export type DetailedSurface = {
   temperature: number // °C
-  relativeHumidity: number // %
+  dewPoint: number // °C
   wind: Wind
 };
 
@@ -210,7 +210,7 @@ export type DetailedForecastData = {
   // Surface
   s: {
     t: number, // temperature
-    rh: number, // relative humidity
+    dt: number, // dew point temperature
     // Wind
     u: number,
     v: number

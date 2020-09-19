@@ -133,7 +133,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
       // Cumuli
       // Cumuli base height is computed via Hennig formula
-      const cumuliBase = 122.6 * forecast.surface.temperature * (1 - forecast.surface.relativeHumidity);
+      const cumuliBase = 122.6 * (forecast.surface.temperature - forecast.surface.dewPoint);
       if (cumuliBase < forecast.boundaryLayer.height) {
         airDiagram.fillRect(
           [columnStart, elevationScale.apply(forecasts.elevation + cumuliBase)],
@@ -169,11 +169,11 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       const windCenterX = columnStart + columnWidth / 2;
       const windColor = `rgba(62, 0, 0, 0.35)`;
       // Surface wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth - 4, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth - 6, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
       // Boundary layer wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY + boundaryLayerHeight / 2), columnWidth - 4, windColor, forecast.boundaryLayer.wind.u, forecast.boundaryLayer.wind.v);
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY + boundaryLayerHeight / 2), columnWidth - 6, windColor, forecast.boundaryLayer.wind.u, forecast.boundaryLayer.wind.v);
       // Top wind (just above the top of the boundary layer)
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(elevationScale.apply(forecast.topWind.elevation)), columnWidth - 4, windColor, forecast.topWind.u, forecast.topWind.v);
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(elevationScale.apply(forecast.topWind.elevation)), columnWidth - 6, windColor, forecast.topWind.u, forecast.topWind.v);
     });
 
     // Isotherm 0°C
@@ -230,8 +230,8 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
             'red'
           );
           rainDiagram.line(
-            [x1, temperatureScale.apply(previousForecast.surface.temperature * previousForecast.surface.relativeHumidity)],
-            [x2, temperatureScale.apply(forecast.surface.temperature * forecast.surface.relativeHumidity)],
+            [x1, temperatureScale.apply(previousForecast.surface.dewPoint)],
+            [x2, temperatureScale.apply(forecast.surface.dewPoint)],
             'blue'
           );
           return forecast
