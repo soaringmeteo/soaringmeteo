@@ -9,7 +9,7 @@ import squants.energy.SpecificEnergy
 import squants.motion.Pressure
 import squants.radio.Irradiance
 import squants.space.Length
-import squants.thermal.Temperature
+import squants.thermal.{Celsius, Temperature}
 
 import scala.util.chaining._
 
@@ -80,7 +80,7 @@ object LocationForecasts {
             forecast.mslet,
             forecast.snowDepth,
             forecast.surfaceTemperature,
-            forecast.surfaceTemperature * forecast.surfaceRelativeHumidity / 100,
+            dewPoint(forecast.surfaceTemperature, forecast.surfaceRelativeHumidity),
             forecast.surfaceWind,
             totalRain,
             convectiveRain,
@@ -213,6 +213,15 @@ object LocationForecasts {
       val td = (-430.22 + 237.7 * math.log(vaporPress) / (-math.log(vaporPress) + 19.08)).max(temperature)
       (pressure, (temperature - td, td))
     }
+  }
+
+  def dewPoint(temperature: Temperature, relativeHumidity: Double): Temperature = {
+    // Magnus formula: https://en.wikipedia.org/wiki/Dew_point#Calculating_the_dew_point
+    val b = 17.67
+    val c = 243.5
+    val t = temperature.toCelsiusScale
+    val gamma = math.log(relativeHumidity / 100) + b * t / (c + t)
+    Temperature(c * gamma / (b - gamma), Celsius)
   }
 
   val jsonEncoder: Encoder[LocationForecasts] =
