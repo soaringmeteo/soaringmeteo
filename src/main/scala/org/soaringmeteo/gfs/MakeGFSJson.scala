@@ -1,7 +1,8 @@
-package org.soaringmeteo
+package org.soaringmeteo.gfs
 
 import io.circe.Json
 import org.slf4j.LoggerFactory
+import org.soaringmeteo.Point
 
 /**
  * Produce soaring forecast data from the GFS forecast data.

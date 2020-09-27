@@ -33,7 +33,7 @@ resolvers += "Unidata All" at "https://artifacts.unidata.ucar.edu/repository/uni
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 enablePlugins(GraalVMNativeImagePlugin)
-Compile / mainClass := Some("org.soaringmeteo.Main")
+Compile / mainClass := Some("org.soaringmeteo.gfs.Main")
 graalVMNativeImageGraalVersion := Some("20.2.0")
 graalVMNativeImageOptions ++= Seq(
   "--enable-https",
@@ -53,15 +53,17 @@ TaskKey[Unit]("deploy") := {
 }
 
 TaskKey[Unit]("downloadGribAndMakeJson") := {
-  (Compile / runMain).toTask(" org.soaringmeteo.Main /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/forecast").value
+  (Compile / runMain).toTask(" org.soaringmeteo.gfs.Main /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/forecast").value
 }
 
 TaskKey[Unit]("makeGfsJson") := {
-  (Compile / runMain).toTask(" org.soaringmeteo.MakeGFSJson /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/forecast").value
+  (Compile / runMain).toTask(" org.soaringmeteo.gfs.MakeGFSJson /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/forecast").value
+}
+
+TaskKey[Unit]("makeWrfJson") := {
+  (Compile / runMain).toTask(" org.soaringmeteo.wrf.MakeWRFJson /home/julien/workspace/dev/Boran/soaringmeteo/wrf/wrf-loc.csv /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson 2020-09-29_Init2020092700Z+54h.nc /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/soarwrf").value
 }
 
 TaskKey[Unit]("downloadGribFiles") := {
-//  val gribsDir = target.value / "grib"
-//  (Compile / runMain).toTask(s" org.soaringmeteo.DownloadGribFiles $gribsDir").value
-  (Compile / runMain).toTask(" org.soaringmeteo.DownloadGribFiles /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib").value
+  (Compile / runMain).toTask(" org.soaringmeteo.gfs.DownloadGribFiles /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib").value
 }

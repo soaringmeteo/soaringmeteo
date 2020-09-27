@@ -1,8 +1,10 @@
-package org.soaringmeteo
+package org.soaringmeteo.gfs
 
-import java.time.{LocalTime, OffsetDateTime, ZoneOffset}
+import java.time.OffsetDateTime
 
 import io.circe.{Encoder, Json}
+import org.soaringmeteo.Point
+import org.soaringmeteo.grib.Grib
 import squants.energy.SpecificEnergy
 import squants.motion
 import squants.motion.{Pascals, Pressure, Velocity}
@@ -80,7 +82,7 @@ object GfsForecast {
     val gribFile = gribsDir / forecastHourOffset.toString()
     Grib.bracket(gribFile) { grib =>
       val forecastTime = forecastInitDateTime.plusHours(forecastHourOffset)
-      grib.forecast(locations, forecastTime)
+      GfsGrib.forecast(grib, locations, forecastTime)
     }
   }
 

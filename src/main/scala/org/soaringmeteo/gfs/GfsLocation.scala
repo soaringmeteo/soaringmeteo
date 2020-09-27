@@ -1,8 +1,8 @@
-package org.soaringmeteo
+package org.soaringmeteo.gfs
 
 import kantan.csv.{CsvSource, RowDecoder, rfc}
 import org.slf4j.LoggerFactory
-import org.soaringmeteo.Settings.gfsForecastTimeResolution
+import Settings.gfsForecastTimeResolution
 import squants.radio.{Irradiance, WattsPerSquareMeter}
 import squants.space.{Length, Meters}
 

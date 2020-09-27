@@ -1,7 +1,6 @@
-package org.soaringmeteo
+package org.soaringmeteo.gfs
 
 import eu.timepit.refined.api.{Refined, Validate}
-import eu.timepit.refined.refineV
 
 class GfsInitializationTime private ()
 

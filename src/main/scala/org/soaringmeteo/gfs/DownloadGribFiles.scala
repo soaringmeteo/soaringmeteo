@@ -1,4 +1,4 @@
-package org.soaringmeteo
+package org.soaringmeteo.gfs
 
 import java.time.{LocalDate, LocalTime, OffsetDateTime, ZoneOffset}
 

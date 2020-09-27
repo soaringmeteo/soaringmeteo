@@ -3,7 +3,8 @@ package org.soaringmeteo
 import java.time.{LocalDate, LocalTime, OffsetDateTime, ZoneOffset}
 import java.time.OffsetDateTime.parse
 
-import org.soaringmeteo.LocationForecasts.isRelevant
+import org.soaringmeteo.gfs.LocationForecasts.isRelevant
+import org.soaringmeteo.gfs.Settings
 import verify.BasicTestSuite
 
 object LocationForecastsTestSuite extends BasicTestSuite {

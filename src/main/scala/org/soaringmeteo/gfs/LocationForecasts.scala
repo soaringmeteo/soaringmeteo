@@ -1,10 +1,11 @@
-package org.soaringmeteo
+package org.soaringmeteo.gfs
 
-import java.time.{LocalDate, OffsetDateTime}
 import java.time.format.DateTimeFormatter
+import java.time.{LocalDate, OffsetDateTime}
 
 import io.circe.{Encoder, Json}
-import org.soaringmeteo.GfsForecast.pressureLevels
+import GfsForecast.pressureLevels
+import org.soaringmeteo.Point
 import squants.energy.SpecificEnergy
 import squants.motion.Pressure
 import squants.radio.Irradiance

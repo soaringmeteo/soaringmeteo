@@ -1,4 +1,6 @@
-package org.soaringmeteo
+package org.soaringmeteo.gfs
+
+import org.soaringmeteo.Point
 
 object Settings {
 
@@ -34,7 +36,7 @@ object Settings {
 
   /** The forecast locations we are interested in */
   val gfsForecastLocations: Seq[Point] = {
-    // Let’s focus on the alps only to avoid generating huge files (and looong computations)
+    // Let’s focus on the alps only to avoid generating huge files (and looong computations on the client-side)
     val alps = gfsArea(Point(43, 3), Point(49, 17))
     alps
   }

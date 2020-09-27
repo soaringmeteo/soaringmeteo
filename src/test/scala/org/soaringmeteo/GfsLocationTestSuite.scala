@@ -1,6 +1,7 @@
 package org.soaringmeteo
 
 import eu.timepit.refined.refineV
+import org.soaringmeteo.gfs.GfsLocation
 import squants.radio.WattsPerSquareMeter
 import squants.space.Meters
 import verify.BasicTestSuite
