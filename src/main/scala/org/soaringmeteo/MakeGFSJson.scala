@@ -22,29 +22,26 @@ object MakeGFSJson {
    * running [[DownloadGribFiles.main]]
    */
   def main(args: Array[String]): Unit = {
-    val gfsLocFile = os.Path(args(0))
-    val gribsDir   = os.Path(args(1))
-    val jsonDir    = os.Path(args(2))
+    val gribsDir   = os.Path(args(0))
+    val jsonDir    = os.Path(args(1))
 
-    MakeGFSJson.makeJsons(gfsLocFile, gribsDir, jsonDir)
+    MakeGFSJson.makeJsons(gribsDir, jsonDir)
   }
 
   /**
    * Extract data from the GFS forecast in the form of JSON documents.
    *
    * We create one JSON document per forecast time (e.g., `0.json`, `3.json`, `6.json`, etc.),
-   * and each document contains the summary of the forecast for each location listed in the
-   * file `gfsLocFile`.
+   * and each document contains the summary of the forecast for each location listed in
+   * [[Settings.gfsForecastLocations]].
    *
    * We also create one JSON document per location (e.g., `700-4650.json`), where each
    * document contains the detail of the forecast for each period of forecast.
    *
-   * @param gfsLocFile CSV file containing the information of the GFS points shown by soaringmeteo
    * @param gribsDir   Directory containing the .grib2 files of the GFS forecast
    * @param targetDir  Directory where we write our resulting JSON documents
    */
   def makeJsons(
-    gfsLocFile: os.Path,
     gribsDir: os.Path,
     targetDir: os.Path
   ): Unit = {

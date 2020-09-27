@@ -53,11 +53,11 @@ TaskKey[Unit]("deploy") := {
 }
 
 TaskKey[Unit]("downloadGribAndMakeJson") := {
-  (Compile / runMain).toTask(" org.soaringmeteo.Main /home/julien/workspace/dev/Boran/soaringmeteo/gfs/gfs-loc.csv /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/forecast").value
+  (Compile / runMain).toTask(" org.soaringmeteo.Main /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/forecast").value
 }
 
 TaskKey[Unit]("makeGfsJson") := {
-  (Compile / runMain).toTask(" org.soaringmeteo.MakeGFSJson /home/julien/workspace/dev/Boran/soaringmeteo/gfs/gfs-loc.csv /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/forecast").value
+  (Compile / runMain).toTask(" org.soaringmeteo.MakeGFSJson /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/forecast").value
 }
 
 TaskKey[Unit]("downloadGribFiles") := {

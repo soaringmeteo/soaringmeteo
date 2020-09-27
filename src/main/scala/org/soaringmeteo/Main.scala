@@ -3,12 +3,11 @@ package org.soaringmeteo
 object Main {
 
   def main(args: Array[String]): Unit = {
-    val gfsLocFile = os.Path(args(0))
-    val gribsDir   = os.Path(args(1))
-    val jsonDir    = os.Path(args(2))
+    val gribsDir   = os.Path(args(0))
+    val jsonDir    = os.Path(args(1))
 
     DownloadGribFiles.run(gribsDir)
-    MakeGFSJson.makeJsons(gfsLocFile, gribsDir, jsonDir)
+    MakeGFSJson.makeJsons(gribsDir, jsonDir)
     os.remove.all(gribsDir)
   }
 
