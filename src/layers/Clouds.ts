@@ -1,15 +1,11 @@
-import { Forecast, modelResolution } from "../Forecast";
+import { Forecast, ForecastData } from "../Forecast";
 
 export class Clouds {
 
   constructor(readonly forecast: Forecast) {}
 
-  renderPoint(map: L.Map, lat: number, lng: number, ctx: CanvasRenderingContext2D): void {
-    const forecastAtPoint = this.forecast[`${lng},${lat}`];
+  renderPoint(forecastAtPoint: ForecastData, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     if (forecastAtPoint !== undefined) {
-      const topLeft = map.latLngToContainerPoint([(lat + modelResolution / 2) / 100, (lng - modelResolution / 2) / 100]);
-      const bottomRight = map.latLngToContainerPoint([(lat - modelResolution / 2) / 100, (lng + modelResolution / 2) / 100]);
-      
       const low    = forecastAtPoint.c.l;
       const middle = forecastAtPoint.c.m;
       const high   = forecastAtPoint.c.h;
