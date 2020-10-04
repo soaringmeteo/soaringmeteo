@@ -34,7 +34,7 @@ export class ThQ {
       const windCoeff = Math.exp(-Math.max(windForce - 10, 0) / 10);
 
       // Cloud cover
-      const cloudCover = forecastAtPoint.c.e;
+      const cloudCover = forecastAtPoint.c;
       const cloudCoverCoeff = (cloudCover === null || cloudCover === undefined) ? 1 : (100 - cloudCover) / 100;
 
       const thq = blhCoeff * windCoeff * cloudCoverCoeff;

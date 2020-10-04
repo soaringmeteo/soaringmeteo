@@ -99,7 +99,7 @@ export const CanvasLayer = (forecastMetadata: ForecastMetadata) => L.Layer.exten
  * @param lat             Hundreth of degrees (e.g. 4675)
  * @param lng             Hundreth of degrees (e.g. 7250)
  */
-const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng: number) => {
+const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng: number): ForecastData | undefined => {
   // According to the zoom level, users see the actual points, or
   // an average of several points.
   const points: Array<ForecastData> = [];
@@ -122,33 +122,20 @@ const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng
       blh: 0,
       u: 0,
       v: 0,
-      c: {
-        e: 0,
-        l: 0,
-        m: 0,
-        h: 0
-      }
+      c: 0
     };
     points.forEach(point => {
       sumPoint.blh += point.blh;
       sumPoint.u += point.u;
       sumPoint.v += point.v;
-      sumPoint.c.e += point.c.e;
-      sumPoint.c.l += point.c.l;
-      sumPoint.c.m += point.c.m;
-      sumPoint.c.h += point.c.h;
+      sumPoint.c += point.c;
     })
     const n = points.length;
     return {
       blh: sumPoint.blh / n,
       u: sumPoint.u / n,
       v: sumPoint.v / n,
-      c: {
-        e: sumPoint.c.e / n,
-        l: sumPoint.c.l / n,
-        m: sumPoint.c.m / n,
-        h: sumPoint.c.h / n
-      }
+      c: sumPoint.c / n
     };          
   } else {
     return

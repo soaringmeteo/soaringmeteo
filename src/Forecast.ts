@@ -14,17 +14,13 @@ export class ForecastMetadata {
 }
 
 export type ForecastData = {
+  // Boundary layer height
   blh: number,
   // Wind
   u: number,
   v: number,
   // Clouds
-  c: {
-    e: number,
-    l: number,
-    m: number,
-    h: number
-  }
+  c: number
 }
 
 export class LocationForecasts {

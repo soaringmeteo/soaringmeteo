@@ -6,7 +6,6 @@ import { Forecast } from './Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
 import { App } from './App';
 import { ColorScale } from './ColorScale';
-import { Clouds } from './layers/Clouds';
 
 class Renderer {
 
@@ -53,11 +52,6 @@ const thqRenderer = new Renderer(
   forecast => new ThQ(forecast),
   () => colorScaleEl(thQColorScale, value => `${Math.round(value * 100)}% `)
 );
-const cloudsRenderer = new Renderer(
-  'Clouds',
-  forecast => new Clouds(forecast),
-  () => el('div')
-);
 
 /**
  * Overlay on the map that displays the soaring forecast.
@@ -73,7 +67,6 @@ export class ForecastLayer {
 
     const mixedEl  = this.setupRendererBtn(mixedRenderer);
     const thqEl    = this.setupRendererBtn(thqRenderer);
-    const cloudsEl = this.setupRendererBtn(cloudsRenderer);
 
     const rootElement = el(
       'div',
@@ -81,8 +74,7 @@ export class ForecastLayer {
         style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 1000 }
       },
       thqEl,
-      mixedEl,
-      cloudsEl
+      mixedEl
     )
     L.DomEvent.disableClickPropagation(rootElement);
     L.DomEvent.disableScrollPropagation(rootElement);
