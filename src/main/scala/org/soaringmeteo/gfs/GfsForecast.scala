@@ -92,11 +92,11 @@ object GfsForecast {
    */
   val jsonEncoder: Encoder[GfsForecast] =
     Encoder.instance { forecast =>
-      Json.obj(
-        "blh" -> Json.fromInt(forecast.boundaryLayerHeight.toMeters.round.toInt),
-        "u" -> Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
-        "v" -> Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt),
-        "c" -> Json.fromBigDecimal(forecast.cloudCover.entire)
+      Json.arr(
+        Json.fromInt(forecast.boundaryLayerHeight.toMeters.round.toInt),
+        Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
+        Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt),
+        Json.fromBigDecimal(forecast.cloudCover.entire)
       )
     }
 
