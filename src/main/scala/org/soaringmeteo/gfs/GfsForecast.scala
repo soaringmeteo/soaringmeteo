@@ -96,12 +96,7 @@ object GfsForecast {
         "blh" -> Json.fromInt(forecast.boundaryLayerHeight.toMeters.round.toInt),
         "u" -> Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
         "v" -> Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt),
-        "c" -> Json.obj(
-          "e" -> Json.fromBigDecimal(forecast.cloudCover.entire),
-          "l" -> Json.fromBigDecimal(forecast.cloudCover.low),
-          "m" -> Json.fromBigDecimal(forecast.cloudCover.middle),
-          "h" -> Json.fromBigDecimal(forecast.cloudCover.high)
-        )
+        "c" -> Json.fromBigDecimal(forecast.cloudCover.entire)
       )
     }
 
