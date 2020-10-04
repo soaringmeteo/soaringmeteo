@@ -13,15 +13,46 @@ export class ForecastMetadata {
   }
 }
 
-export type ForecastData = {
-  // Boundary layer height
-  blh: number,
-  // Wind
-  u: number,
-  v: number,
-  // Clouds
-  c: number
+export type ForecastPoint = {
+  boundaryLayerHeight: number
+  uWind: number
+  vWind: number
+  cloudCover: number
 }
+
+export class Forecast {
+  constructor(readonly data: ForecastData) {}
+
+  /**
+   * @param latitude  Must be hundredth of latitude (e.g. 4650 instead of 46.5)
+   * @param longitude Must be hundredth of longitude (e.g 725 instead of 7.25)
+   */
+  at(latitude: number, longitude: number): ForecastPoint | undefined {
+    const pointData = this.data[`${longitude},${latitude}`];
+    if (pointData !== undefined) {
+      return {
+        boundaryLayerHeight: pointData[0],
+        uWind: pointData[1],
+        vWind: pointData[2],
+        cloudCover: pointData[3]
+      }
+    } else {
+      return
+    }
+  }
+}
+
+export type ForecastData = {
+  [key: string]: ForecastPointData
+}
+
+// WARN Must be consistent with `GfsForecast` JSON encoder in the backend
+type ForecastPointData = [
+  number, // Boundary layer height
+  number, // Wind: u component
+  number, // Wind: v component
+  number  // Cloud cover
+]
 
 export class LocationForecasts {
   readonly elevation: number;
@@ -227,9 +258,5 @@ type PressureLevel =
 
 const pressureLevels: Array<PressureLevel> =
   ['200', '300', '400',  '450', '500', '550', '600', '650', '700', '750', '800', '850', '900', '950'];
-
-export type Forecast = {
-  [key: string]: ForecastData
-}
 
 export const modelResolution = 25 // Hundredths of degrees

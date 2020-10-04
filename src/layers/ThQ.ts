@@ -1,4 +1,4 @@
-import { Forecast, ForecastData } from "../Forecast";
+import { Forecast, ForecastData, ForecastPoint } from "../Forecast";
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
 
@@ -19,22 +19,22 @@ export class ThQ {
 
   constructor(readonly forecast: Forecast) {}
 
-  renderPoint(forecastAtPoint: ForecastData, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
+  renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     if (forecastAtPoint !== undefined) {
       // Boundary Layer Height
-      const blh = forecastAtPoint.blh;
+      const blh = forecastAtPoint.boundaryLayerHeight;
       const blhCoeff = Math.min(blh / 800, 1); // >800 m = 100%
 
       // Boundary Layer Wind
-      const u = forecastAtPoint.u;
-      const v = forecastAtPoint.v;
+      const u = forecastAtPoint.uWind;
+      const v = forecastAtPoint.vWind;
       const windForce = Math.sqrt(u * u + v * v);
       // windForce <= 10 => windCoeff = 1
       // windForce >  30 => windCoeff ~= 0
       const windCoeff = Math.exp(-Math.max(windForce - 10, 0) / 10);
 
       // Cloud cover
-      const cloudCover = forecastAtPoint.c;
+      const cloudCover = forecastAtPoint.cloudCover;
       const cloudCoverCoeff = (cloudCover === null || cloudCover === undefined) ? 1 : (100 - cloudCover) / 100;
 
       const thq = blhCoeff * windCoeff * cloudCoverCoeff;

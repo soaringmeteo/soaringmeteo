@@ -2,7 +2,7 @@ import { el, mount, setChildren } from 'redom';
 import { DataSource, CanvasLayer } from "./CanvasLayer";
 import * as L from 'leaflet';
 import { Mixed, boundaryDepthColorScale as mixedColorScale } from './layers/Mixed';
-import { Forecast } from './Forecast';
+import { Forecast, ForecastData } from './Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
 import { App } from './App';
 import { ColorScale } from './ColorScale';
@@ -18,7 +18,7 @@ class Renderer {
   update(hourOffset: number, canvas: CanvasLayer) {
     fetch(`${hourOffset}.json`)
       .then(response => response.json())
-      .then((forecast: Forecast) => canvas.setDataSource(this.renderer(forecast)))
+      .then((data: ForecastData) => canvas.setDataSource(this.renderer(new Forecast(data))))
       .catch(error => {
         console.error(error);
         alert('Unable to retrieve forecast data');

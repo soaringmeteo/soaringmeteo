@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import { modelResolution, ForecastMetadata, ForecastData, Forecast } from './Forecast';
+import { modelResolution, ForecastMetadata, Forecast, ForecastPoint } from './Forecast';
 
 export type CanvasLayer = {
   setDataSource(dataSource: DataSource): void
@@ -7,7 +7,7 @@ export type CanvasLayer = {
 
 export type DataSource = {
   forecast: Forecast
-  renderPoint: (forecastData: ForecastData, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => void
+  renderPoint: (forecastPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => void
 }
 
 export const CanvasLayer = (forecastMetadata: ForecastMetadata) => L.Layer.extend({
@@ -99,15 +99,15 @@ export const CanvasLayer = (forecastMetadata: ForecastMetadata) => L.Layer.exten
  * @param lat             Hundreth of degrees (e.g. 4675)
  * @param lng             Hundreth of degrees (e.g. 7250)
  */
-const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng: number): ForecastData | undefined => {
+const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng: number): ForecastPoint | undefined => {
   // According to the zoom level, users see the actual points, or
   // an average of several points.
-  const points: Array<ForecastData> = [];
+  const points: Array<ForecastPoint> = [];
   let i = 0;
   while (i < averagingFactor) {
     let j = 0;
     while (j < averagingFactor) {
-      const point = forecast[`${lng + i * modelResolution},${lat + i * modelResolution}`];
+      const point = forecast.at(lat + i * modelResolution, lng + i * modelResolution);
       if (point !== undefined) {
         points.push(point);
       }
@@ -118,24 +118,24 @@ const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng
   if (points.length == 1) {
     return points[0]
   } else if (points.length > 1) {
-    const sumPoint: ForecastData = {
-      blh: 0,
-      u: 0,
-      v: 0,
-      c: 0
+    const sumPoint: ForecastPoint = {
+      boundaryLayerHeight: 0,
+      uWind: 0,
+      vWind: 0,
+      cloudCover: 0
     };
     points.forEach(point => {
-      sumPoint.blh += point.blh;
-      sumPoint.u += point.u;
-      sumPoint.v += point.v;
-      sumPoint.c += point.c;
+      sumPoint.boundaryLayerHeight += point.boundaryLayerHeight;
+      sumPoint.uWind += point.uWind;
+      sumPoint.vWind += point.vWind;
+      sumPoint.cloudCover += point.cloudCover;
     })
     const n = points.length;
     return {
-      blh: sumPoint.blh / n,
-      u: sumPoint.u / n,
-      v: sumPoint.v / n,
-      c: sumPoint.c / n
+      boundaryLayerHeight: sumPoint.boundaryLayerHeight / n,
+      uWind: sumPoint.uWind / n,
+      vWind: sumPoint.vWind / n,
+      cloudCover: sumPoint.cloudCover / n
     };          
   } else {
     return

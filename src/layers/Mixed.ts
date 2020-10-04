@@ -1,5 +1,5 @@
 import { drawWindArrow } from "../shapes";
-import { Forecast, ForecastData } from "../Forecast";
+import { Forecast, ForecastPoint } from "../Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
 
@@ -7,22 +7,22 @@ export class Mixed {
 
   constructor(readonly forecast: Forecast) {}
 
-  renderPoint(forecastAtPoint: ForecastData, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
+  renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     const center = L.point((topLeft.x + bottomRight.x) / 2, (topLeft.y + bottomRight.y) / 2);
     const width  = bottomRight.x - topLeft.x;
     const height = bottomRight.y - topLeft.y;
 
     // Boundary Layer Height
-    const blh = forecastAtPoint.blh;
+    const blh = forecastAtPoint.boundaryLayerHeight;
     const color = boundaryDepthColorScale.interpolate(blh);
     ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
     ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
 
     // Boundary Layer Wind
-    drawWindArrow(ctx, center.x, center.y, width, `rgba(62, 0, 0, 0.25)`, forecastAtPoint.u, forecastAtPoint.v);
+    drawWindArrow(ctx, center.x, center.y, width, `rgba(62, 0, 0, 0.25)`, forecastAtPoint.uWind, forecastAtPoint.vWind);
 
     // Cloud cover
-    const cloudCover = forecastAtPoint.c;
+    const cloudCover = forecastAtPoint.cloudCover;
     const cloudCoverCoeff = cloudCover / 100;
     const ch = 5;
     const hSpace = width / ch;
