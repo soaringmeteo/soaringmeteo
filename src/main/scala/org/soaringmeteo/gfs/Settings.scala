@@ -36,9 +36,9 @@ object Settings {
 
   /** The forecast locations we are interested in */
   val gfsForecastLocations: Seq[Point] = {
-    // Let’s focus on the alps only to avoid generating huge files (and looong computations on the client-side)
-    val alps = gfsArea(Point(43, 3), Point(49, 17))
-    alps
+    // val alps = gfsArea(Point(43, 3), Point(49, 17))
+    val westernEurope = gfsArea(Point(35, -12), Point(51, 29))
+    westernEurope
   }
 
   /**
