@@ -66,20 +66,18 @@ object GfsForecast {
       .map(Pascals(_))
 
   /**
-   * @param gribsDir Directory containing the downloaded GRIB files
+   * @param gribFile GRIB file to read
    * @param forecastInitDateTime Initialization time of the forecast
    * @param forecastHourOffset Time of forecast we want to extract, in number of hours
    *                           from the forecast initialization (e.g., 0, 3, 6, etc.)
    * @param locations Set of points for which we want to extract the forecast data. FIXME Extract data for all points
-   * @return
    */
   def fromGribFile(
-    gribsDir: os.Path,
+    gribFile: os.Path,
     forecastInitDateTime: OffsetDateTime,
     forecastHourOffset: Int,
     locations: Seq[Point]
   ): Map[Point, GfsForecast] = {
-    val gribFile = gribsDir / forecastHourOffset.toString()
     Grib.bracket(gribFile) { grib =>
       val forecastTime = forecastInitDateTime.plusHours(forecastHourOffset)
       GfsGrib.forecast(grib, locations, forecastTime)

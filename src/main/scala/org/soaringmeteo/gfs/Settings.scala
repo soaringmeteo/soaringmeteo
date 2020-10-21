@@ -35,22 +35,48 @@ object Settings {
   val numberOfForecastsPerDay: Int = 24 / gfsForecastTimeResolution
 
   /** The forecast locations we are interested in */
-  val gfsForecastLocations: Seq[Point] = {
-    // val alps = gfsArea(Point(43, 3), Point(49, 17))
-    val westernEurope = gfsArea(Point(35, -12), Point(55, 30))
-    westernEurope
+  def gfsForecastLocations(csvFile: os.Path): Seq[Point] = {
+//    val alps = gfsArea(Point(43, 3), Point(49, 17))
+    val westernEurope = gfsArea(Point(35, -11), Point(55, 30)) -- gfsArea(Point(44, -11), Point(47, -3)) -- gfsArea(Point(47, -11), Point(51, -6))
+    (westernEurope ++ fromCsvFile(csvFile)).toSeq
+  }
+
+  def fromCsvFile(csvFile: os.Path): Set[Point] = {
+    val step = BigDecimal(gfsForecastSpaceResolution) / 100
+    for {
+      location  <- GfsLocation.parse(os.read(csvFile)).to(Set)
+      longitude <- (location.longitude - step) to (location.longitude + step) by step
+      if longitude >= -180 && longitude <= 180
+      latitude  <- (location.latitude - step) to (location.latitude + step) by step
+      if latitude >= -90 && latitude <= 90
+    } yield Point(latitude, longitude)
   }
 
   /**
    * @return All the GFS points that are in the area delimited by the two
    *         given points, `p1` and `p2`.
    */
-  def gfsArea(p1: Point, p2: Point): Seq[Point] = {
+  def gfsArea(p1: Point, p2: Point): Set[Point] = {
     val step = BigDecimal(gfsForecastSpaceResolution) / 100
     for {
-      longitude <- p1.longitude.min(p2.longitude) to p1.longitude.max(p2.longitude) by step
+      longitude <- (p1.longitude.min(p2.longitude) to p1.longitude.max(p2.longitude) by step).to(Set)
       latitude  <- p1.latitude.min(p2.latitude) to p1.latitude.max(p2.latitude) by step
     } yield Point(latitude, longitude)
   }
+
+  /**
+   * Areas defined by old soargfs.
+   */
+  val gfsDownloadAreas: Seq[GfsDownloadBounds] = Seq(
+    GfsDownloadBounds("A",  -26,   57,  27,  65), // Europe
+    GfsDownloadBounds("B",   71,  141, -10,  56), // Asia
+    GfsDownloadBounds("C",   16,   56, -35,   2), // South Africa
+    GfsDownloadBounds("D",  116,  177, -45, -21), // Australia
+    GfsDownloadBounds("E", -159, -149, -18,  22), // Pacific
+    GfsDownloadBounds("F", -125,  -70,  16,  52), // North America
+    GfsDownloadBounds("G",  -81,  -37, -43,  11)  // South America
+  )
+
+  val gfsRootUrl = "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl"
 
 }
