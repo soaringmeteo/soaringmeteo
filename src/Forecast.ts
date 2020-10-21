@@ -28,7 +28,7 @@ export class Forecast {
    * @param longitude Must be hundredth of longitude (e.g 725 instead of 7.25)
    */
   at(latitude: number, longitude: number): ForecastPoint | undefined {
-    const pointData = this.data[`${longitude},${latitude}`];
+    const pointData = this.data[`${longitude / modelResolution},${latitude / modelResolution}`];
     if (pointData !== undefined) {
       return {
         boundaryLayerHeight: pointData[0],
