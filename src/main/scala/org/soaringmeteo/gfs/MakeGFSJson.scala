@@ -29,7 +29,7 @@ object MakeGFSJson {
     val gribsDir         = os.Path(args(1))
     val jsonDir          = os.Path(args(2))
 
-    MakeGFSJson.makeJsons(csvLocationsFile, gribsDir, jsonDir, FindLatestRun.now())
+    MakeGFSJson.makeJsons(csvLocationsFile, gribsDir, jsonDir, GfsRun.findLatest())
   }
 
   /**

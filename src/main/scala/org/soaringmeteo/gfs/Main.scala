@@ -7,7 +7,7 @@ object Main {
     val gribsDir         = os.Path(args(1))
     val jsonDir          = os.Path(args(2))
 
-    val gfsRun = FindLatestRun.now()
+    val gfsRun = GfsRun.findLatest()
     DownloadGribFiles.run(gribsDir, gfsRun)
     MakeGFSJson.makeJsons(csvLocationsFile, gribsDir, jsonDir, gfsRun)
     // Let’s keep the grib files because they are also used by the old soargfs
