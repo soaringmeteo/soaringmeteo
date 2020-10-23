@@ -14,25 +14,9 @@ case class GfsRun(
   initDateTime: OffsetDateTime
 ) {
 
-  /**
-   * Name of the grib file we save on disk
-   * @param t    Number of hours since initialization time
-   * @param area Downloaded area
-   */
-  def fileName(t: Int, area: GfsDownloadBounds): String = s"${area.id}-$t"
-
-  /**
-   * This URL has been constructed by going to https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl,
-   * and then selecting a GFS run, and then selecting the levels as well as the variables we are
-   * interested in.
-   *
-   * @param area Area to download
-   * @param t    Number of hours since initialization time
-   */
-  def gribUrl(area: GfsDownloadBounds, t: Int): String = {
-    val file = f"gfs.t${initTimeString}z.pgrb2.0p25.f$t%03d"
-    s"$gfsRootUrl?file=${file}&dir=%2F${dateDirectory}%2F${initTimeString}&lev_mean_sea_level=on&lev_0C_isotherm=on&lev_10_m_above_ground=on&lev_200_mb=on&lev_2_m_above_ground=on&lev_300_mb=on&lev_400_mb=on&lev_450_mb=on&lev_500_mb=on&lev_550_mb=on&lev_600_mb=on&lev_650_mb=on&lev_700_mb=on&lev_750_mb=on&lev_800_mb=on&lev_850_mb=on&lev_900_mb=on&lev_950_mb=on&lev_boundary_layer_cloud_layer=on&lev_convective_cloud_layer=on&lev_entire_atmosphere=on&lev_high_cloud_layer=on&lev_low_cloud_layer=on&lev_middle_cloud_layer=on&lev_planetary_boundary_layer=on&lev_surface=on&var_ACPCP=on&var_APCP=on&var_CAPE=on&var_CIN=on&var_DSWRF=on&var_HGT=on&var_HPBL=on&var_LHTFL=on&var_MSLET=on&var_RH=on&var_SHTFL=on&var_TCDC=on&var_TMP=on&var_UGRD=on&var_VGRD=on&var_WEASD=on&leftlon=${area.leftLongitude}&rightlon=${area.rightLongitude}&toplat=${area.topLatitude}&bottomlat=${area.bottomLatitude}&subregion="
-  }
+  // File name used by the old soargfs
+  def fileName(hoursOffset: Int, area: GfsDownloadBounds): String =
+    f"GFS${area.id}-initDate${dateDirectory.stripPrefix("gfs.").drop(2)}-initTime${initTimeString}-forecastTime${hoursOffset}%03d.grib2"
 
 }
 

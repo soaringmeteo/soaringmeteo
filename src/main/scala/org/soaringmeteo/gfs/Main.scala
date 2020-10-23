@@ -10,7 +10,9 @@ object Main {
     val gfsRun = FindLatestRun.now()
     DownloadGribFiles.run(gribsDir, gfsRun)
     MakeGFSJson.makeJsons(csvLocationsFile, gribsDir, jsonDir, gfsRun)
-    os.remove.all(gribsDir)
+    // Let’s keep the grib files because they are also used by the old soargfs
+    // We should uncomment this line after we drop support for old soargfs
+    // os.remove.all(gribsDir)
   }
 
 }
