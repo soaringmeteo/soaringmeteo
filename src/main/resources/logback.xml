@@ -6,24 +6,11 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>makeGfsJson.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>makeGfsJson.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>10</maxHistory>
-            <totalSizeCap>100MB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
     <logger name="ucar" level="WARN" />
     <logger name="cacheLogger" level="WARN" />
 
     <root level="debug">
         <appender-ref ref="STDOUT" />
-        <!-- <appender-ref ref="FILE" /> -->
     </root>
 
 </configuration>

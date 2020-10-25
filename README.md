@@ -31,15 +31,9 @@ sbt
 ~~~
 
 From the prompt, invoke the following command to download
-the latest grib files from NOAA.
+the latest grib files from NOAA, and transform them into JSON
+files that can be consumed by the frontend:
 
 ~~~
-downloadGribFiles
-~~~
-
-Then, invoke the following command to transform the
-grib files into JSON files that can be consumed by the frontend:
-
-~~~
-makeGfsJson
+downloadGribAndMakeJson
 ~~~

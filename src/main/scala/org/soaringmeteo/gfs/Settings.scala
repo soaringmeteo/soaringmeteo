@@ -67,14 +67,14 @@ object Settings {
   /**
    * Areas defined by old soargfs.
    */
-  val gfsDownloadAreas: Seq[GfsDownloadBounds] = Seq(
-    GfsDownloadBounds("A",  -26,   57,  27,  65), // Europe
-    GfsDownloadBounds("B",   71,  141, -10,  56), // Asia
-    GfsDownloadBounds("C",   16,   56, -35,   2), // South Africa
-    GfsDownloadBounds("D",  116,  177, -45, -21), // Australia
-    GfsDownloadBounds("E", -159, -149, -18,  22), // Pacific
-    GfsDownloadBounds("F", -125,  -70,  16,  52), // North America
-    GfsDownloadBounds("G",  -81,  -37, -43,  11)  // South America
+  val gfsDownloadAreas: Seq[Area] = Seq(
+    Area("A",  -26,   57,  27,  65), // Europe
+    Area("B",   71,  141, -10,  56), // Asia
+    Area("C",   16,   56, -35,   2), // South Africa
+    Area("D",  116,  177, -45, -21), // Australia
+    Area("E", -159, -149, -18,  22), // Pacific
+    Area("F", -125,  -70,  16,  52), // North America
+    Area("G",  -81,  -37, -43,  11)  // South America
   )
 
   val gfsRootUrl = "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl"

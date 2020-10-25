@@ -5,7 +5,7 @@ import org.soaringmeteo.Point
 /**
   * Area for which we want to download forecast data
   */
-case class GfsDownloadBounds(
+case class Area(
   id: String, // "A", "B", "C", etc. in old soargfs
   leftLongitude: BigDecimal,
   rightLongitude: BigDecimal,
@@ -18,5 +18,24 @@ case class GfsDownloadBounds(
       topLatitude >= point.latitude &&
       leftLongitude <= point.longitude &&
       rightLongitude >= point.longitude
+
+}
+
+/**
+ * An area coupled with an hour offset (number of hours after a
+ * run initialization time)
+ */
+case class AreaAndHour(area: Area, hourOffset: Int)
+
+object AreaAndHour {
+
+  /**
+   * All the areas and hour offsets we are interested in.
+   */
+  val all: Seq[AreaAndHour] =
+    for {
+      area <- Settings.gfsDownloadAreas
+      t    <- Settings.forecastHours
+    } yield AreaAndHour(area, t)
 
 }

@@ -56,14 +56,6 @@ TaskKey[Unit]("downloadGribAndMakeJson") := {
   (Compile / runMain).toTask(" org.soaringmeteo.gfs.Main /home/julien/workspace/dev/Boran/soaringmeteo/gfs/gfs-loc.csv /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/forecast").value
 }
 
-TaskKey[Unit]("makeGfsJson") := {
-  (Compile / runMain).toTask(" org.soaringmeteo.gfs.MakeGFSJson /home/julien/workspace/dev/Boran/soaringmeteo/gfs/gfs-loc.csv /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/forecast").value
-}
-
 TaskKey[Unit]("makeWrfJson") := {
   (Compile / runMain).toTask(" org.soaringmeteo.wrf.MakeWRFJson /home/julien/workspace/dev/Boran/soaringmeteo/wrf/wrf-loc.csv /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson 2020-09-29_Init2020092700Z+54h.nc /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/soarwrf").value
-}
-
-TaskKey[Unit]("downloadGribFiles") := {
-  (Compile / runMain).toTask(" org.soaringmeteo.gfs.DownloadGribFiles /home/julien/workspace/dev/Boran/soaringmeteo/src/makeGFSJson/target/grib").value
 }
