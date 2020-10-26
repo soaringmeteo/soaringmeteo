@@ -3,6 +3,7 @@ package org.soaringmeteo.gfs
 import java.time.OffsetDateTime
 
 import io.circe.{Encoder, Json}
+import org.slf4j.LoggerFactory
 import org.soaringmeteo.Point
 import org.soaringmeteo.grib.Grib
 import squants.energy.SpecificEnergy
@@ -61,6 +62,8 @@ case class Wind(u: Velocity, v: Velocity)
 
 object GfsForecast {
 
+  private val logger = LoggerFactory.getLogger(classOf[GfsForecast])
+
   val pressureLevels: Seq[motion.Pressure] =
     Seq(20000, 30000, 40000, 45000, 50000, 55000, 60000, 65000, 70000, 75000, 80000, 85000, 90000, 95000)
       .map(Pascals(_))
@@ -80,6 +83,7 @@ object GfsForecast {
   ): Map[Point, GfsForecast] = {
     Grib.bracket(gribFile) { grib =>
       val forecastTime = forecastInitDateTime.plusHours(forecastHourOffset)
+      logger.debug(s"Reading $gribFile")
       GfsGrib.forecast(grib, locations, forecastTime)
     }
   }

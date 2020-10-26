@@ -1,5 +1,6 @@
 package org.soaringmeteo.gfs
 
+import org.slf4j.LoggerFactory
 import org.soaringmeteo.Point
 
 import scala.concurrent.{Await, Future, Promise}
@@ -11,6 +12,8 @@ import scala.util.{Failure, Success}
 // makes the whole process faster (up to 5x), although we always download from the
 // very same server... Maybe they limit the download rate per file, not per IP…?
 object DownloadAndRead {
+
+  private val logger = LoggerFactory.getLogger(classOf[DownloadAndRead])
 
   /**
    * Downloads GRIB files from GFS forecast, and read relevant data from
@@ -42,6 +45,7 @@ object DownloadAndRead {
     os.remove.all(gribsDir)
     os.makeDir.all(gribsDir)
 
+    logger.info("Downloading forecast data")
     val eventuallyRead = downloadAndRead.start()
 
     // TEMP Simulate old soargfs script for downloading data
@@ -185,6 +189,7 @@ class DownloadAndRead private (
       case Some(previousForecast) => Some(previousForecast ++ forecast)
       case None => Some(forecast)
     }
+    DownloadAndRead.logger.debug(s"Processed ${ numberOfProcessedTasks * 100 / numberOfTasksToProcess }% of the forecasts")
     if (numberOfProcessedTasks == numberOfTasksToProcess) {
       readPromise.success(processedForecasts)
     }

@@ -42,7 +42,7 @@ case class GfsRun(
 
 object GfsRun {
 
-  private val logger = LoggerFactory.getLogger(getClass)
+  private val logger = LoggerFactory.getLogger(classOf[GfsRun])
 
   def findLatest(): GfsRun = {
     val item =
