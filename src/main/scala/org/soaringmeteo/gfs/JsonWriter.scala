@@ -37,7 +37,7 @@ object JsonWriter {
     forecastsByHour: ForecastsByHour,
     locations: Iterable[Point]
   ): Unit = {
-    logger.info(s"Writing searing forecasts in $targetDir")
+    logger.info(s"Writing soaring forecasts in $targetDir")
     os.remove.all(targetDir)
     os.makeDir.all(targetDir)
 

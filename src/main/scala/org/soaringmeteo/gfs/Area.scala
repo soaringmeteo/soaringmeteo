@@ -34,8 +34,8 @@ object AreaAndHour {
    */
   val all: Seq[AreaAndHour] =
     for {
-      area <- Settings.gfsDownloadAreas
       t    <- Settings.forecastHours
+      area <- Settings.gfsDownloadAreas
     } yield AreaAndHour(area, t)
 
 }
