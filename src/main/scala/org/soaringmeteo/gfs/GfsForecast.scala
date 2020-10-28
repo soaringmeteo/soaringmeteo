@@ -83,8 +83,9 @@ object GfsForecast {
   ): Map[Point, GfsForecast] = {
     Grib.bracket(gribFile) { grib =>
       val forecastTime = forecastInitDateTime.plusHours(forecastHourOffset)
-      logger.debug(s"Reading $gribFile")
-      GfsGrib.forecast(grib, locations, forecastTime)
+      val forecast = GfsGrib.forecast(grib, locations, forecastTime)
+      logger.debug(s"Read $gribFile")
+      forecast
     }
   }
 
