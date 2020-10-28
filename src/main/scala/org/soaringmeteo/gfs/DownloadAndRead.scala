@@ -53,7 +53,7 @@ object DownloadAndRead {
     downloadAndRead.eventuallyDownloaded
       .foreach(_ => writeFilesForOldSoargfs(gribsDir))
 
-    Await.result(eventuallyRead, 10.hours)
+    Await.result(eventuallyRead, 5.hours)
   }
 
   // Download a GRIB file as a background task
@@ -77,10 +77,14 @@ object DownloadAndRead {
   ): Future[Map[Point, GfsForecast]] =
     Future {
       concurrent.blocking {
-        val locations = locationsByArea(areaAndHour.area)
-        GfsForecast.fromGribFile(gribFile, gfsRun.initDateTime, areaAndHour.hourOffset, locations)
+        gribLock.synchronized {
+          val locations = locationsByArea(areaAndHour.area)
+          GfsForecast.fromGribFile(gribFile, gfsRun.initDateTime, areaAndHour.hourOffset, locations)
+        }
       }
     }
+
+  private val gribLock: AnyRef = new {} // The grib library is not thread-safe
 
   private def writeFilesForOldSoargfs(gribsDir: os.Path): Unit = {
     os.write(gribsDir / "aDone.txt", "")

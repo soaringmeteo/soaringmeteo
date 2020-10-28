@@ -23,7 +23,7 @@ libraryDependencies ++= Seq(
 )
 
 run / fork := true
-javaOptions ++= Seq("-Xmx8g", "-Xms1g")
+javaOptions ++= Seq("-Xmx8g", "-Xms6g")
 Universal / javaOptions ++= javaOptions.value.map(opt => s"-J$opt")
 
 testFrameworks += new TestFramework("verify.runner.Framework")
