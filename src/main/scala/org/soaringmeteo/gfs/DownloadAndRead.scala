@@ -2,6 +2,7 @@ package org.soaringmeteo.gfs
 
 import java.util.concurrent.Executors
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.Point
 
@@ -39,13 +40,15 @@ object DownloadAndRead {
 
     logger.info("Downloading forecast data")
 
+    // Daemonic so that it won't prevent the application from shutting down
+    val daemonicThreadFactory = new ThreadFactoryBuilder().setDaemon(true).build()
     // We use the following thread-pool to manage the execution of the
     // tasks that download the forecast.
-    val fourThreads = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4))
+    val fourThreads = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4, daemonicThreadFactory))
     // We use the following thread-pool to manage the execution of the
     // tasks that read the forecast data from disk. This task uses
     // the grib library, which is not thread-safe, hence parallelism = 1.
-    val oneThread = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
+    val oneThread = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor(daemonicThreadFactory))
 
     // Download a GRIB file as a background task
     def download(areaAndHour: AreaAndHour): Future[os.Path] =
@@ -78,10 +81,6 @@ object DownloadAndRead {
           // TEMP Simulate old soargfs script for downloading data
           // We can safely remove this line after we drop support for old soargfs
           writeFilesForOldSoargfs(gribsDir)
-
-          // We don't need these anymore
-          oneThread.shutdown()
-          fourThreads.shutdown()
 
           forecastsByHour.groupMapReduce { case (hour, _) => hour } { case (_, forecast) => forecast } { _ ++ _ }
         }
