@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.Try
+import scala.util.control.NonFatal
 
 object GribDownloader {
 
@@ -35,7 +36,7 @@ object GribDownloader {
     errorOrSucessfulResponse match {
       case Right(response) => response
       case Left(error) =>
-        if (maxAttempts <= 1) {
+        if (maxAttempts <= 1 || !NonFatal(error)) {
           logger.error(s"Failed to fetch $url.", error)
           throw new RuntimeException(s"Unable to fetch $url.")
         } else {
