@@ -1,6 +1,6 @@
 package org.soaringmeteo.gfs
 
-import java.util.concurrent.{LinkedBlockingDeque, ThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.Executors
 
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.Point
@@ -41,11 +41,11 @@ object DownloadAndRead {
 
     // We use the following thread-pool to manage the execution of the
     // tasks that download the forecast.
-    val fourThreads = threadPool(4)
+    val fourThreads = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4))
     // We use the following thread-pool to manage the execution of the
     // tasks that read the forecast data from disk. This task uses
     // the grib library, which is not thread-safe, hence parallelism = 1.
-    val oneThread = threadPool(1)
+    val oneThread = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
 
     // Download a GRIB file as a background task
     def download(areaAndHour: AreaAndHour): Future[os.Path] =
@@ -96,16 +96,5 @@ object DownloadAndRead {
     os.write(gribsDir / "bDone.txt", "")
     os.write(gribsDir / "cDone.txt", "")
   }
-
-  private def threadPool(parallelism: Int) =
-    ExecutionContext.fromExecutorService(
-      new ThreadPoolExecutor(
-        parallelism,
-        parallelism,
-        0,
-        TimeUnit.SECONDS,
-        new LinkedBlockingDeque[Runnable]()
-      )
-    )
 
 }
