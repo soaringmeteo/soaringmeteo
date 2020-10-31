@@ -18,11 +18,14 @@ export const CanvasLayer = (forecastMetadata: ForecastMetadata) => L.Layer.exten
     if (pane !== undefined) {
       this._canvas = L.DomUtil.create('canvas', 'leaflet-layer');
       const size = map.getSize();
-      // TODO update on resize
       this._canvas.width = size.x;
       this._canvas.height = size.y;
       pane.appendChild(this._canvas)
       map.on('moveend viewreset', this._update, this);
+      map.on('resize', (e) => {
+        this._canvas.width = e.newSize.x;
+        this._canvas.height = e.newSize.y;
+      });
       this._update()
     }
     return this
