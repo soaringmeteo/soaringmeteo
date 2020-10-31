@@ -6,7 +6,26 @@ const mapTilerUrl = 'https://api.maptiler.com/maps/topo/{z}/{x}/{y}.png?key=6hEH
 const smUrl = 'https://tiles.soaringmeteo.org/{z}/{x}/{y}.png';
 const osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
+const locationAndZoomKey = 'location-and-zoom'
+
+const loadLocationAndZoom = (): [L.LatLngTuple, number] => {
+  const storedLocationAndZoom = window.localStorage.getItem(locationAndZoomKey);
+  if (storedLocationAndZoom == null) {
+    return [
+      [45.5, 9.5],
+      7
+    ]
+  } else {
+    return JSON.parse(storedLocationAndZoom); // TODO versioning
+  }
+};
+
+const saveLocationAndZoom = (location: L.LatLng, zoom: number) => {
+  window.localStorage.setItem(locationAndZoomKey, JSON.stringify([[location.lat, location.lng], zoom]));
+};
+
 export const initializeMap = (element: HTMLElement, forecastMetadata: ForecastMetadata): [CanvasLayer, L.Map] => {
+  const [location, zoom] = loadLocationAndZoom();
   const map = L.map(element, {
     layers: [
       L.tileLayer(smUrl, {
@@ -17,9 +36,13 @@ export const initializeMap = (element: HTMLElement, forecastMetadata: ForecastMe
       })
     ],
     zoomControl: false,
-    center: [45.5, 9.5],
-    zoom: 7
+    center: location,
+    zoom: zoom
   });
+
+  map.on('moveend', () => {
+    saveLocationAndZoom(map.getCenter(), map.getZoom());
+  })
   
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
