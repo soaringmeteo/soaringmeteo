@@ -8,7 +8,7 @@ import { App } from './App';
 import { ColorScale } from './ColorScale';
 import { CloudCover, cloudCoverColorScale } from './layers/CloudCover';
 import { boundaryDepthColorScale, BoundaryLayerDepth } from './layers/BoundaryLayerDepth';
-import { Wind } from './layers/Wind';
+import { Wind, windColor } from './layers/Wind';
 import { None } from './layers/None';
 import { drawWindArrow } from './shapes';
 
@@ -56,7 +56,7 @@ const windScaleEl = (): HTMLElement => {
       canvas.height = 30;
       const ctx = canvas.getContext('2d');
       if (ctx == null) { return }
-      drawWindArrow(ctx, canvas.width / 2, canvas.height / 2, canvas.width - 4, `rgba(62, 0, 0, 0.5)`, windSpeed, 0);
+      drawWindArrow(ctx, canvas.width / 2, canvas.height / 2, canvas.width - 4, windColor(0.50), windSpeed, 0);
       return el(
         'div',
         { style: { margin: '5px', textAlign: 'right' } },

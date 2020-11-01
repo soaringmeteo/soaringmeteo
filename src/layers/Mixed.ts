@@ -3,6 +3,7 @@ import { Forecast, ForecastPoint } from "../Forecast";
 import * as L from 'leaflet';
 import { drawCloudCover } from "./CloudCover";
 import { drawBoundaryLayerDepth } from "./BoundaryLayerDepth";
+import { windColor } from "./Wind";
 
 export class Mixed {
 
@@ -13,7 +14,7 @@ export class Mixed {
     const width  = bottomRight.x - topLeft.x;
 
     drawBoundaryLayerDepth(forecastAtPoint, topLeft, bottomRight, ctx);
-    drawWindArrow(ctx, center.x, center.y, width, `rgba(62, 0, 0, 0.25)`, forecastAtPoint.uWind, forecastAtPoint.vWind);
+    drawWindArrow(ctx, center.x, center.y, width, windColor(0.25), forecastAtPoint.uWind, forecastAtPoint.vWind);
     drawCloudCover(forecastAtPoint, topLeft, bottomRight, ctx, 0.35);
   }
 }
