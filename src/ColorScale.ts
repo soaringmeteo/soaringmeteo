@@ -1,8 +1,8 @@
 export class Color {
-  constructor(readonly red: number, readonly green: number, readonly blue: number) {}
+  constructor(readonly red: number, readonly green: number, readonly blue: number, readonly opacity: number) {}
 
   css(): string {
-    return `#${this.red.toString(16).padStart(2, '0')}${this.green.toString(16).padStart(2, '0')}${this.blue.toString(16).padEnd(2, '0')}`
+    return `rgba(${this.red}, ${this.green}, ${this.blue}, ${this.opacity})`
   }
 }
 
@@ -26,7 +26,8 @@ export class ColorScale {
     return new Color(
       start.red + Math.round(k * (end.red - start.red)),
       start.green + Math.round(k * (end.green - start.green)),
-      start.blue + Math.round(k * (end.blue - start.blue))
+      start.blue + Math.round(k * (end.blue - start.blue)),
+      start.opacity + Math.round(k * (end.opacity - start.opacity))
     )
   }
 
