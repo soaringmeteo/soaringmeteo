@@ -45,6 +45,8 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   const temperatureLevels = [0, 12, 24];
   const temperatureStyle  = 'black';
 
+  const skyStyle = '#85c1e9';
+
   const canvasWidth  = columnWidth * forecasts.dayForecasts.reduce((n, forecast) => n + forecast.forecasts.length, 0);
   const canvasHeight = rainDiagramTop + rainDiagramHeight + gutterHeight;
   const canvas = el(
@@ -71,21 +73,28 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       });
     }
 
-    // High air diagram
+    // High altitude air diagram
     const highAirDiagram = new Diagram([0, gutterHeight], highAirDiagramHeight, ctx);
 
     columns((forecast, columnStart, columnEnd) => {
+      // Blue sky
+      highAirDiagram.fillRect(
+        [columnStart, 0],
+        [columnEnd,   highAirDiagramHeight],
+        skyStyle
+      );
+
       // Middle-level clouds
       highAirDiagram.fillRect(
         [columnStart, 0],
         [columnEnd,   highAirDiagramHeight / 2],
-        `rgba(60, 60, 60, ${ (forecast.clouds.middleLevel) / 2 })`
+        `rgba(255, 255, 255, ${ (forecast.clouds.middleLevel) * 0.7 })`
       );
       // High-level clouds
       highAirDiagram.fillRect(
         [columnStart, highAirDiagramHeight / 2],
         [columnEnd,   highAirDiagramHeight],
-        `rgba(60, 60, 60, ${ (forecast.clouds.highLevel) / 2 })`
+        `rgba(255, 255, 255, ${ (forecast.clouds.highLevel) * 0.7 })`
       );
     });
 
@@ -108,6 +117,12 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         [columnEnd,   groundLevelY + boundaryLayerHeight],
         'mediumspringgreen'
       );
+      // Blue sky
+      airDiagram.fillRect(
+        [columnStart, groundLevelY + boundaryLayerHeight],
+        [columnEnd,   airDiagramHeight],
+        skyStyle
+      )
     });
 
     // Clouds
@@ -119,7 +134,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       airDiagram.fillRect(
         [columnStart, groundLevelY],
         [columnEnd,   lowCloudsY],
-        `rgba(60, 60, 60, ${ (forecast.clouds.lowLevel) / 2 })`
+        `rgba(255, 255, 255, ${ (forecast.clouds.lowLevel) * 0.7 })`
       );
 
       // Middle-level clouds (if visible)
@@ -127,7 +142,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         airDiagram.fillRect(
           [columnStart, lowCloudsY],
           [columnEnd,   elevationScale.apply(middleCloudsTop)],
-          `rgba(60, 60, 60, ${ (forecast.clouds.middleLevel) / 2 })`
+          `rgba(255, 255, 255, ${ (forecast.clouds.middleLevel) * 0.7 })`
         );
       }
 
@@ -177,7 +192,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     });
 
     // Isotherm 0°C
-    const isothermZeroStyle = 'cyan';
+    const isothermZeroStyle = 'black';
     forecasts.dayForecasts
       .map(f => f.forecasts).reduce((x, y) => x.concat(y), []) // Alternative to flatMap
       .reduce((previousForecast, forecast, i) => {
