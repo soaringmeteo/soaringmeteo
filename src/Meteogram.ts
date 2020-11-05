@@ -39,7 +39,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
   const pressureScale     = new Scale([990, 1035 /* hPa */], [0, airDiagramHeight], false);
   const pressureLevels    = [990, 999, 1008, 1017, 1026, 1035];
-  const pressureStyle     = 'black'
+  const pressureStyle     = '#CD5C5C'
 
   const temperatureScale  = new Scale([0, 36], [0, rainDiagramHeight], false);
   const temperatureLevels = [0, 12, 24];
@@ -177,18 +177,22 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     });
 
     // Isotherm 0°C
+    const isothermZeroStyle = 'cyan';
     forecasts.dayForecasts
       .map(f => f.forecasts).reduce((x, y) => x.concat(y), []) // Alternative to flatMap
-      .reduce(
-      (previousForecast, forecast, i) => {
+      .reduce((previousForecast, forecast, i) => {
+        const x = columnWidth * (i - 0.5);
+        const y = elevationScale.apply(previousForecast.isothermZero);
         airDiagram.line(
-          [columnWidth * (i - 0.5), elevationScale.apply(previousForecast.isothermZero)],
+          [x, y],
           [columnWidth * (i + 0.5), elevationScale.apply(forecast.isothermZero)],
-          'cyan'
+          isothermZeroStyle
         );
+        if (i == 1) {
+          airDiagram.text('0°C', [x - 10, y + 3], isothermZeroStyle);
+        }
         return forecast
-      }
-    );
+      });
 
     // Elevation levels
     elevationLevels.forEach(elevation => {
