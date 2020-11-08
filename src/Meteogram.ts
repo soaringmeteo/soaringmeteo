@@ -180,15 +180,13 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     // Wind
     columns((forecast, columnStart, _) => {
       const groundLevelY = elevationScale.apply(forecasts.elevation);
-      const boundaryLayerHeight = elevationScale.apply(forecast.boundaryLayer.height);
       const windCenterX = columnStart + columnWidth / 2;
       const windColor = `rgba(62, 0, 0, 0.35)`;
       // Surface wind
       drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth - 6, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
-      // Boundary layer wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY + boundaryLayerHeight / 2), columnWidth - 6, windColor, forecast.boundaryLayer.wind.u, forecast.boundaryLayer.wind.v);
-      // Top wind (just above the top of the boundary layer)
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(elevationScale.apply(forecast.topWind.elevation)), columnWidth - 6, windColor, forecast.topWind.u, forecast.topWind.v);
+      forecast.windsAboveGround.forEach((wind) => {
+        drawWindArrow(ctx, windCenterX, airDiagram.projectY(elevationScale.apply(wind.elevation)), columnWidth - 6, windColor, wind.u, wind.v);
+      });
     });
 
     // Isotherm 0°C

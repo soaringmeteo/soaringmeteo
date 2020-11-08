@@ -84,7 +84,8 @@ export class DetailedForecast {
   readonly rain: DetailedRain;
   readonly meanSeaLevelPressure: number;
   readonly isothermZero: number; // m
-  readonly topWind: TopWind;
+  /** Wind speed and direction at several altitudes, above the ground */
+  readonly windsAboveGround: Array<WindWithElevation>;
 
   constructor(data: DetailedForecastData, elevation: number) {
     this.time = new Date(data.t);
@@ -115,8 +116,17 @@ export class DetailedForecast {
     this.meanSeaLevelPressure = data.mslet;
     this.isothermZero = data.iso;
 
-    const boundaryLayerElevation = elevation + this.boundaryLayer.height;
-    this.topWind = this.findTopWind(data, boundaryLayerElevation, 0, pressureLevels.length - 1);
+    this.windsAboveGround =
+      Object.entries(data.p)
+        // Keep enly the wind values that are above the ground + 150 meters (so that arrows don’t overlap)
+        .filter(([_, entry]) => entry.h > elevation + 150)
+        .map(([_, entry]) => {
+          return {
+            elevation: entry.h,
+            u: entry.u,
+            v: entry.v
+          }
+        });
   }
 
   /**
@@ -133,7 +143,7 @@ export class DetailedForecast {
    * The algorithm terminates when the `lowPressureLevelIndex` is adjacent to the `highPressureLevelIndex`,
    * which means that we can’t reduce further the interval.
    */
-  private findTopWind(data: DetailedForecastData, boundaryLayerTopElevation: number, lowPressureLevelIndex: number, highPressureLevelIndex: number): TopWind {
+  private findTopWind(data: DetailedForecastData, boundaryLayerTopElevation: number, lowPressureLevelIndex: number, highPressureLevelIndex: number): WindWithElevation {
     // Compute the index in the middle of the low and high indices
     const pressureLevelIndex = Math.floor((lowPressureLevelIndex + highPressureLevelIndex) / 2);
     const pressureLevel      = pressureLevels[pressureLevelIndex];
@@ -188,7 +198,7 @@ type Wind = {
   v: number // km/h
 };
 
-type TopWind = {
+type WindWithElevation = {
   u: number // km/h
   v: number // km/h
   elevation: number // m
