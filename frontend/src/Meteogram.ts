@@ -5,6 +5,7 @@ import { Diagram, Scale } from './Diagram';
 
 export const columnWidth = 33;
 export const keyWidth = 40;
+export const airDiagramHeightAboveGroundLevel = 3500; // m
 
 // Pre-compute cloud pattern
 const columnCloud = cloudPattern(columnWidth / 3, 'rgba(255, 255, 255, 0.7)');
@@ -24,10 +25,16 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   const highAirDiagramHeight = 20; // px
 
   const airDiagramHeight = 400; // px
-  // We show only up to 5000m to reduce the height of the diagram
-  const middleCloudsTop  = 5000 // m
-  const elevationScale  = new Scale([0, middleCloudsTop /* m (FIXME dynamic) */], [0, airDiagramHeight], false);
-  const elevationLevels = [0, 1000, 2000, 3000, 4000, 5000];
+  // The main diagram shows the air from the ground level to 3500 m above ground level
+  const middleCloudsTop  = forecasts.elevation + airDiagramHeightAboveGroundLevel // m
+  const elevationScale  = new Scale([forecasts.elevation, middleCloudsTop], [0, airDiagramHeight], false);
+  const firstElevationLevel = (Math.floor((forecasts.elevation + 150) / 500) + 1) * 500;
+  let nextElevationLevel = firstElevationLevel;
+  const elevationLevels = [forecasts.elevation];
+  while (nextElevationLevel < middleCloudsTop) {
+    elevationLevels.push(nextElevationLevel);
+    nextElevationLevel = nextElevationLevel + 500;
+  }
   const airDiagramTop   = gutterHeight + highAirDiagramHeight; // No gutter between high air diagram and air diagram
 
   const rainDiagramHeight   = 100; // px
@@ -103,23 +110,16 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
     // Ground level & Boundary Layer
     columns((forecast, columnStart, columnEnd) => {
-      // Ground level
-      const groundLevelY = elevationScale.apply(forecasts.elevation);
+      // Boundary Layer
+      const boundaryLayerHeight = elevationScale.apply(forecasts.elevation + forecast.boundaryLayer.height);
       airDiagram.fillRect(
         [columnStart, 0],
-        [columnEnd,   groundLevelY],
-        '#FFC972'
-      );
-      // Boundary Layer
-      const boundaryLayerHeight = elevationScale.apply(forecast.boundaryLayer.height);
-      airDiagram.fillRect(
-        [columnStart, groundLevelY],
-        [columnEnd,   groundLevelY + boundaryLayerHeight],
+        [columnEnd,   boundaryLayerHeight],
         'mediumspringgreen'
       );
       // Blue sky
       airDiagram.fillRect(
-        [columnStart, groundLevelY + boundaryLayerHeight],
+        [columnStart, boundaryLayerHeight],
         [columnEnd,   airDiagramHeight],
         skyStyle
       )
@@ -128,11 +128,10 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     // Clouds
     columns((forecast, columnStart, columnEnd) => {
       // Low-level clouds (up to 2 km above ground level)
-      const groundLevelY = elevationScale.apply(forecasts.elevation);
       const lowCloudsTop = Math.min(forecasts.elevation + 2000, middleCloudsTop);
       const lowCloudsY   = elevationScale.apply(lowCloudsTop);
       airDiagram.fillRect(
-        [columnStart, groundLevelY],
+        [columnStart, 0],
         [columnEnd,   lowCloudsY],
         `rgba(255, 255, 255, ${ (forecast.clouds.lowLevel) * 0.7 })`
       );
@@ -179,11 +178,11 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
     // Wind
     columns((forecast, columnStart, _) => {
-      const groundLevelY = elevationScale.apply(forecasts.elevation);
       const windCenterX = columnStart + columnWidth / 2;
       const windColor = `rgba(62, 0, 0, 0.35)`;
       // Surface wind
-      drawWindArrow(ctx, windCenterX, airDiagram.projectY(groundLevelY), columnWidth - 6, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
+      drawWindArrow(ctx, windCenterX, airDiagram.projectY(0), columnWidth - 6, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
+      // Air wind
       forecast.windsAboveGround.forEach((wind) => {
         drawWindArrow(ctx, windCenterX, airDiagram.projectY(elevationScale.apply(wind.elevation)), columnWidth - 6, windColor, wind.u, wind.v);
       });
@@ -266,6 +265,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     columns((forecast, columnStart, columnEnd, date) => {
       const currentDay = date.getDay(); // FIXME Users can’t use a custom timezone
       if (previousDay !== currentDay) {
+        highAirDiagram.line([columnStart, 0], [columnStart, highAirDiagramHeight], 'gray');
         airDiagram.line([columnStart, 0], [columnStart, airDiagramHeight], 'gray');
         rainDiagram.line([columnStart, 0], [columnStart, rainDiagramHeight], 'gray');
       }
@@ -311,7 +311,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
         [keyWidth,     y],
         'black'
       );
-      airDiagram.text(`${elevation}`, [keyWidth - 10, y], 'black');
+      airDiagram.text(`${Math.round(elevation)}`, [keyWidth - 10, y], 'black');
     });
 
     // Rain

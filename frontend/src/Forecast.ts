@@ -1,3 +1,5 @@
+import { airDiagramHeightAboveGroundLevel } from "./Meteogram";
+
 // Note: do we really need to access older forecasts?
 export type ForecastMetadataData = {
   init: string   // e.g., "2020-04-14T06:00:00Z"
@@ -119,7 +121,7 @@ export class DetailedForecast {
     this.windsAboveGround =
       Object.entries(data.p)
         // Keep enly the wind values that are above the ground + 150 meters (so that arrows don’t overlap)
-        .filter(([_, entry]) => entry.h > elevation + 150)
+        .filter(([_, entry]) => entry.h > elevation + 150 && entry.h < elevation + airDiagramHeightAboveGroundLevel)
         .map(([_, entry]) => {
           return {
             elevation: entry.h,
