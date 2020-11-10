@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = merge(common,{
     mode: "development",
     devServer: {
-      contentBase: ['./dist', '../makeGFSJson/target/forecast'],
+      contentBase: ['./dist', '../backend/target/forecast'],
       host: '0.0.0.0'
     },
     devtool: 'inline-source-map'
