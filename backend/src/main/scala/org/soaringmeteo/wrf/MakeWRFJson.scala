@@ -9,10 +9,10 @@ object MakeWRFJson {
   private val logger = LoggerFactory.getLogger(getClass)
 
   def main(args: Array[String]): Unit = {
-    val wrfLocFile      = os.Path(args(0))
-    val gribsDir        = os.Path(args(1))
+    val wrfLocFile      = os.Path(args(0), os.pwd)
+    val gribsDir        = os.Path(args(1), os.pwd)
     val gribFilesSuffix = args(2)
-    val targetDir       = os.Path(args(3))
+    val targetDir       = os.Path(args(3), os.pwd)
     makeJson(wrfLocFile, gribsDir, gribFilesSuffix, targetDir)
   }
 

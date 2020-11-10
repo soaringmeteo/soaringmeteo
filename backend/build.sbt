@@ -53,9 +53,9 @@ TaskKey[Unit]("deploy") := {
 }
 
 TaskKey[Unit]("downloadGribAndMakeJson") := {
-  (Compile / runMain).toTask(" org.soaringmeteo.gfs.Main /home/julien/workspace/dev/Boran/soaringmeteo/gfs/gfs-loc.csv /home/julien/workspace/dev/soaringmeteo/backend/target/grib /home/julien/workspace/dev/soaringmeteo/backend/target/forecast").value
+  (Compile / runMain).toTask(" org.soaringmeteo.gfs.Main ../../Boran/soaringmeteo/gfs/gfs-loc.csv target/grib target/forecast").value
 }
 
 TaskKey[Unit]("makeWrfJson") := {
-  (Compile / runMain).toTask(" org.soaringmeteo.wrf.MakeWRFJson /home/julien/workspace/dev/Boran/soaringmeteo/wrf/wrf-loc.csv /home/julien/workspace/dev/soaringmeteo/backend 2020-09-29_Init2020092700Z+54h.nc /home/julien/workspace/dev/soaringmeteo/backend/target/soarwrf").value
+  (Compile / runMain).toTask(" org.soaringmeteo.wrf.MakeWRFJson ../../Boran/soaringmeteo/wrf/wrf-loc.csv target/grib 2020-09-29_Init2020092700Z+54h.nc target/soarwrf").value
 }
