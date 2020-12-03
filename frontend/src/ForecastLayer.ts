@@ -11,6 +11,7 @@ import { boundaryDepthColorScale, BoundaryLayerDepth } from './layers/BoundaryLa
 import { Wind, windColor } from './layers/Wind';
 import { None } from './layers/None';
 import { drawWindArrow } from './shapes';
+import layersImg from './images/layers.png';
 
 class Renderer {
 
@@ -124,18 +125,43 @@ export class ForecastLayer {
     const cloudCoverEl = this.setupRendererBtn(cloudCoverRenderer);
     const mixedEl = this.setupRendererBtn(mixedRenderer);
 
-    const rootElement = el(
+    const selectEl = el(
       'div',
-      {
-        style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 1000 }
-      },
+      { style: { display: 'none' } },
       noneEl,
       thqEl,
       boundaryLayerHeightEl,
       windEl,
       cloudCoverEl,
       mixedEl
-    )
+    );
+
+    const layersBtn = el(
+      'div',
+      { style: {  } },
+      el(
+        'a',
+        { style: { width: '44px', height: '44px', backgroundImage: `url('${layersImg}')`, display: 'block', backgroundPosition: '50% 50%', backgroundRepeat: 'no-repeat' } }
+      )
+    );
+
+    const rootElement = el(
+      'div',
+      { style: { position: 'absolute', right: '3px', bottom: '100px', zIndex: 1000 /* arbitrary value to be just above the zoom control */, background: 'white', border: '1px solid rgba(0, 0, 0, 0.2)', borderRadius: '5px' } },
+      layersBtn,
+      selectEl
+    );
+
+    rootElement.onmouseenter = _ => {
+      selectEl.style.display = 'unset';
+      layersBtn.style.display = 'none';
+    };
+
+    rootElement.onmouseleave = _ => {
+      selectEl.style.display = 'none';
+      layersBtn.style.display = 'unset';
+    };
+
     L.DomEvent.disableClickPropagation(rootElement);
     L.DomEvent.disableScrollPropagation(rootElement);
     mount(containerElement, rootElement);
