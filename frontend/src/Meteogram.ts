@@ -15,6 +15,9 @@ const columnCloud = cloudPattern(columnWidth / 3, 'rgba(255, 255, 255, 0.7)');
  */
 export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLElement, HTMLElement] => {
 
+  const flatForecasts: Array<DetailedForecast> =
+    forecasts.dayForecasts.map(x => x.forecasts).reduce((x, y) => x.concat(y), []); // Alternative to flatMap
+
   const gutterHeight = 15;
 
   // Our meteogram is made of three diagram stacked on top of each other.
@@ -37,19 +40,33 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   }
   const airDiagramTop   = gutterHeight + highAirDiagramHeight; // No gutter between high air diagram and air diagram
 
+  const rainDiagramResolution = 3; // Number of horizontal lines in the rain diagram
   const rainDiagramHeight   = 100; // px
   const rainStyle           = 'blue';
   const convectiveRainStyle = 'cyan';
-  const rainScale           = new Scale([0, 15 /* mm */], [0, rainDiagramHeight], false);
-  const rainLevels          = [0, 5, 10];
+  const maxRainLevel        = 15; // mm
+  const minRainLevel        = 0;  // mm
+  const rainLevelDelta      = maxRainLevel - minRainLevel;
+  const rainScale           = new Scale([minRainLevel, maxRainLevel], [0, rainDiagramHeight], false);
+  const rainLevels          = Array.from({ length: rainDiagramResolution }, (_, i) => minRainLevel + rainLevelDelta * i / rainDiagramResolution);
   const rainDiagramTop      = airDiagramTop + gutterHeight + airDiagramHeight;
 
   const pressureScale     = new Scale([990, 1035 /* hPa */], [0, airDiagramHeight], false);
   const pressureLevels    = [990, 999, 1008, 1017, 1026, 1035];
   const pressureStyle     = '#CD5C5C'
 
-  const temperatureScale  = new Scale([0, 36], [0, rainDiagramHeight], false);
-  const temperatureLevels = [0, 12, 24];
+  const minTemperature =
+    Math.floor(
+      flatForecasts.reduce((previousMin, forecast) => forecast.surface.dewPoint < previousMin ? forecast.surface.dewPoint : previousMin, Number.MAX_SAFE_INTEGER)
+    );
+  const maxTemperature =
+    Math.ceil(
+      flatForecasts.reduce((previousMax, forecast) => forecast.surface.temperature > previousMax ? forecast.surface.temperature : previousMax, Number.MIN_SAFE_INTEGER)
+    );
+  // Make sure horizontal divisions are whole numbers
+  const temperatureDelta  = Math.ceil((maxTemperature - minTemperature) / rainDiagramResolution) * rainDiagramResolution;
+  const temperatureScale  = new Scale([minTemperature, minTemperature + temperatureDelta], [0, rainDiagramHeight], false);
+  const temperatureLevels = Array.from({ length: rainDiagramResolution }, (_, i) => minTemperature + temperatureDelta * i / 3);
   const temperatureStyle  = 'black';
 
   const skyStyle = '#85c1e9';
@@ -190,8 +207,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
     // Isotherm 0°C
     const isothermZeroStyle = 'black';
-    forecasts.dayForecasts
-      .map(f => f.forecasts).reduce((x, y) => x.concat(y), []) // Alternative to flatMap
+    flatForecasts
       .reduce((previousForecast, forecast, i) => {
         const x = columnWidth * (i - 0.5);
         const y = elevationScale.apply(previousForecast.isothermZero);
@@ -229,8 +245,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     });
 
     // QNH, temperature, and humidity
-    forecasts.dayForecasts
-      .map(f => f.forecasts).reduce((x, y) => x.concat(y), []) // Alternative to flatMap
+    flatForecasts
       .reduce(
         (previousForecast, forecast, i) => {
           const x1 = columnWidth * (i - 0.5);
