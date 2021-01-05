@@ -196,7 +196,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     // Wind
     columns((forecast, columnStart, _) => {
       const windCenterX = columnStart + columnWidth / 2;
-      const windColor = `rgba(62, 0, 0, 0.35)`;
+      const windColor = `rgba(62, 0, 0, 0.25)`;
       // Surface wind
       drawWindArrow(ctx, windCenterX, airDiagram.projectY(0), columnWidth - 6, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
       // Air wind
@@ -206,7 +206,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     });
 
     // Isotherm 0°C
-    const isothermZeroStyle = 'gray';
+    const isothermZeroStyle = 'dimgray';
     flatForecasts
       .reduce((previousForecast, forecast, i) => {
         const x = columnWidth * (i - 0.5);
