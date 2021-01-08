@@ -18,7 +18,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   const flatForecasts: Array<DetailedForecast> =
     forecasts.dayForecasts.map(x => x.forecasts).reduce((x, y) => x.concat(y), []); // Alternative to flatMap
 
-  const gutterHeight = 15;
+  const gutterHeight = 25;
 
   // Our meteogram is made of three diagram stacked on top of each other.
   // The first one only shows the cloud cover for high-level clouds (above 5000 m).
@@ -196,7 +196,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     // Wind
     columns((forecast, columnStart, _) => {
       const windCenterX = columnStart + columnWidth / 2;
-      const windColor = `rgba(62, 0, 0, 0.35)`;
+      const windColor = `rgba(62, 0, 0, 0.25)`;
       // Surface wind
       drawWindArrow(ctx, windCenterX, airDiagram.projectY(0), columnWidth - 6, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
       // Air wind
@@ -206,18 +206,41 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     });
 
     // Isotherm 0°C
-    const isothermZeroStyle = 'black';
+    const isothermZeroStyle = 'dimgray';
     flatForecasts
       .reduce((previousForecast, forecast, i) => {
         const x = columnWidth * (i - 0.5);
         const y = elevationScale.apply(previousForecast.isothermZero);
+        let correctedY: number | undefined = undefined;
+        if (previousForecast.isothermZero < forecasts.elevation) {
+          correctedY = elevationScale.apply(forecasts.elevation) - 15;
+        } else if (previousForecast.isothermZero > forecasts.elevation + airDiagramHeightAboveGroundLevel) {
+          correctedY = elevationScale.apply(forecasts.elevation + airDiagramHeightAboveGroundLevel) + highAirDiagramHeight + 3;
+        }
+        // If first column, print the “0°C” on the left of the line
+        if (i == 1) {
+          airDiagram.text(
+            '0°C',
+            correctedY === undefined ? [x - 10, y + 3] : [x - 10, correctedY - 10],
+            isothermZeroStyle
+          );
+        }
+        // Draw line
         airDiagram.line(
           [x, y],
           [columnWidth * (i + 0.5), elevationScale.apply(forecast.isothermZero)],
-          isothermZeroStyle
+          isothermZeroStyle,
+          undefined,
+          true
         );
-        if (i == 1) {
-          airDiagram.text('0°C', [x - 10, y + 3], isothermZeroStyle);
+        // If line is beyond the diagram, print text value
+        if (correctedY !== undefined) {
+          airDiagram.text(
+            `${previousForecast.isothermZero}`,
+            [x, correctedY],
+            isothermZeroStyle,
+            'center'
+          );
         }
         return forecast
       });
