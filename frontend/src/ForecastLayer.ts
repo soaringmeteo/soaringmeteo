@@ -2,7 +2,7 @@ import { el, mount, setChildren } from 'redom';
 import { DataSource, CanvasLayer } from "./CanvasLayer";
 import * as L from 'leaflet';
 import { Mixed } from './layers/Mixed';
-import { Forecast, ForecastData } from './Forecast';
+import { Forecast, ForecastData, ForecastMetadata } from './Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
 import { App } from './App';
 import { ColorScale } from './ColorScale';
@@ -22,8 +22,8 @@ class Renderer {
     readonly mapKeyEl: () => HTMLElement
   ) {}
 
-  update(hourOffset: number, canvas: CanvasLayer) {
-    fetch(`${hourOffset}.json`)
+  update(forecastMetadata: ForecastMetadata, hourOffset: number, canvas: CanvasLayer) {
+    fetch(`${forecastMetadata.initS}+${hourOffset}.json`)
       .then(response => response.json())
       .then((data: ForecastData) => canvas.setDataSource(this.renderer(new Forecast(data))))
       .catch(error => {
@@ -193,7 +193,7 @@ export class ForecastLayer {
   }
 
   updateForecast(): void {
-    this.renderer.update(this.app.forecastSelect.getHourOffset(), this.app.canvas);
+    this.renderer.update(this.app.forecastSelect.forecastMetadata, this.app.forecastSelect.getHourOffset(), this.app.canvas);
   }
 
 }

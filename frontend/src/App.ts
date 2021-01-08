@@ -11,17 +11,17 @@ export class App {
   forecastLayer: ForecastLayer
   canvas: CanvasLayer
 
-  constructor(latestForecast: ForecastMetadata, containerElement: HTMLElement) {
+  constructor(forecastMetadata: ForecastMetadata, containerElement: HTMLElement) {
     setStyle(containerElement, { display: 'flex', alignIitems: 'stretch', alignContent: 'stretch' });
     // TODO center and zoom
     // The map *must* be initialized before we call the other constructors
     // It *must* also be mounted before we initialize it
     const mapElement = el('div', { style: { flex: 1 } });
     mount(containerElement, mapElement);
-    const [canvas, map] = initializeMap(mapElement, latestForecast);
+    const [canvas, map] = initializeMap(mapElement, forecastMetadata);
     this.canvas = canvas;
 
-    this.forecastSelect = new ForecastSelect(this, latestForecast, mapElement);
+    this.forecastSelect = new ForecastSelect(this, forecastMetadata, mapElement);
     this.forecastLayer = new ForecastLayer(this, mapElement);
     this.forecastLayer.updateForecast();
 
@@ -29,10 +29,10 @@ export class App {
       const longitude = Math.floor(((e.latlng.lng * 100) + modelResolution / 2) / modelResolution) * modelResolution;
       const latitude = Math.floor(((e.latlng.lat * 100) + modelResolution / 2) / modelResolution) * modelResolution;
 
-      fetch(`${longitude}-${latitude}.json`)
+      fetch(`${forecastMetadata.initS}-${longitude}-${latitude}.json`)
         .then(response => response.json())
         .then((data: LocationForecastsData) => {
-          this.forecastSelect.showMeteogram(new LocationForecasts(data, latestForecast));
+          this.forecastSelect.showMeteogram(new LocationForecasts(data, forecastMetadata));
         })
         .catch(_ => {
           // FIMXE Report issue

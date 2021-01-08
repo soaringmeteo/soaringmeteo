@@ -9,10 +9,11 @@ import org.soaringmeteo.gfs.Settings.gfsRootUrl
 import scala.util.chaining._
 
 case class GfsRun(
-  initTimeString: String, // "00", "06", "12", or "18"
   dateDirectory: String, // "gfs.20200529"
   initDateTime: OffsetDateTime
 ) {
+
+  val initTimeString = f"${initDateTime.getHour}%02d" // "00", "06", "12", or "18"
 
   /**
    * Name of the grib file we save on disk.
@@ -73,7 +74,7 @@ object GfsRun {
         ZoneOffset.UTC
       )
 
-    GfsRun(timeString, date, forecastInitDateTime)
+    GfsRun(date, forecastInitDateTime)
   }
 
 }

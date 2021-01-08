@@ -18,14 +18,14 @@ export class ForecastSelect {
 
   private view: ForecastSelectView
 
-  constructor(private readonly app: App, readonly latestForecast: ForecastMetadata, containerElement: HTMLElement) {
+  constructor(private readonly app: App, readonly forecastMetadata: ForecastMetadata, containerElement: HTMLElement) {
     // TODO Compute based on user preferred time zone (currently hard-coded for central Europe)
     this.morningOffset = 9;
     const noonOffset   = 12;
-    this.forecastInitOffset = +latestForecast.init.getUTCHours();
+    this.forecastInitOffset = +forecastMetadata.init.getUTCHours();
     // Tomorrow, noon period
     this.hourOffset = (this.forecastInitOffset === 0 ? 0 : 24) + noonOffset - this.forecastInitOffset;
-    this.view = new ForecastSelectView(this, latestForecast.init, containerElement);
+    this.view = new ForecastSelectView(this, forecastMetadata.init, containerElement);
   }
 
   updateHourOffset(value: number): void {
@@ -37,11 +37,11 @@ export class ForecastSelect {
     }
   }
   nextDay(): void {
-    this.updateHourOffset(Math.min(this.hourOffset + 24, this.latestForecast.latest));
+    this.updateHourOffset(Math.min(this.hourOffset + 24, this.forecastMetadata.latest));
   }
   nextPeriod(): void {
     // TODO jump to next day morning if we are on the afternoon period
-    this.updateHourOffset(Math.min(this.hourOffset + 3, this.latestForecast.latest));
+    this.updateHourOffset(Math.min(this.hourOffset + 3, this.forecastMetadata.latest));
   }
   previousPeriod(): void {
     // TODO jump to previous day afternoon if we are on the morning period
@@ -102,7 +102,7 @@ export class ForecastSelectView {
     nextDayBtn.onclick = () => { forecastSelect.nextDay(); }
 
     this.periodSelectorEl =
-      this.periodSelectorElement(forecastOffsets(forecastInitDateTime, forecastSelect.morningOffset, this.forecastSelect.latestForecast));
+      this.periodSelectorElement(forecastOffsets(forecastInitDateTime, forecastSelect.morningOffset, this.forecastSelect.forecastMetadata));
 
     this.hideMeteogramBtn =
       el(
