@@ -1,13 +1,12 @@
 import 'leaflet/dist/leaflet.css';
 import { App } from './App';
-import { ForecastMetadataData, ForecastMetadata } from './Forecast';
+import { fetchForecasts } from './ForecastMetadata';
 
 const containerElement = document.getElementById('app');
 if (containerElement !== null) {
-  fetch('forecast.json')
-    .then(response => response.json())
-    .then((data: ForecastMetadataData) => {
-      new App(new ForecastMetadata(data), containerElement);
+  fetchForecasts()
+    .then((forecasts) => {
+      new App(forecasts, containerElement);
     })
     .catch(reason => {
       console.error(reason);

@@ -1,6 +1,5 @@
 import * as L from 'leaflet';
 import { CanvasLayer } from './CanvasLayer';
-import { ForecastMetadata } from './Forecast';
 
 const mapTilerUrl = 'https://api.maptiler.com/maps/topo/{z}/{x}/{y}.png?key=6hEH9bUrAyDHR6nLDUf6';
 const smUrl = 'https://tiles.soaringmeteo.org/{z}/{x}/{y}.png';
@@ -24,7 +23,7 @@ const saveLocationAndZoom = (location: L.LatLng, zoom: number) => {
   window.localStorage.setItem(locationAndZoomKey, JSON.stringify([[location.lat, location.lng], zoom]));
 };
 
-export const initializeMap = (element: HTMLElement, forecastMetadata: ForecastMetadata): [CanvasLayer, L.Map] => {
+export const initializeMap = (element: HTMLElement): [CanvasLayer, L.Map] => {
   const [location, zoom] = loadLocationAndZoom();
   const map = L.map(element, {
     layers: [
@@ -46,7 +45,7 @@ export const initializeMap = (element: HTMLElement, forecastMetadata: ForecastMe
   
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-  const canvas = new (CanvasLayer(forecastMetadata));
+  const canvas = new CanvasLayer;
   canvas.addTo(map);
 
   return [canvas as CanvasLayer, map]

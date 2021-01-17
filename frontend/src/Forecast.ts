@@ -1,21 +1,5 @@
+import { ForecastMetadata } from "./ForecastMetadata";
 import { airDiagramHeightAboveGroundLevel } from "./Meteogram";
-
-export type ForecastMetadataData = {
-  initS: string  // e.g., "2020-04-14T06"
-  init: string   // e.g., "2020-04-14T06:00:00Z"
-  latest: number // e.g., 189
-}
-
-export class ForecastMetadata {
-  readonly initS: string
-  readonly init: Date
-  readonly latest: number
-  constructor(data: ForecastMetadataData) {
-    this.initS = data.initS;
-    this.init = new Date(data.init);
-    this.latest = data.latest;
-  }
-}
 
 export type ForecastPoint = {
   boundaryLayerHeight: number

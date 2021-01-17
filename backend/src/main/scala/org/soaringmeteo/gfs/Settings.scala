@@ -2,6 +2,8 @@ package org.soaringmeteo.gfs
 
 import org.soaringmeteo.Point
 
+import java.time.Period
+
 object Settings {
 
   /** Sequence of forecast hour offsets of a GFS run (e.g. 3, 6, 9, 12, etc.) */
@@ -36,7 +38,7 @@ object Settings {
 
   /** The forecast locations we are interested in */
   def gfsForecastLocations(csvFile: os.Path): Seq[Point] = {
-//    val alps = gfsArea(Point(43, 3), Point(49, 17))
+//    (gfsArea(Point(43, 3), Point(49, 17) /* alps */) ++ fromCsvFile(csvFile)).toSeq
     val westernEurope = gfsArea(Point(35, -11), Point(55, 30)) -- gfsArea(Point(44, -11), Point(47, -3)) -- gfsArea(Point(47, -11), Point(51, -6))
     (westernEurope ++ fromCsvFile(csvFile)).toSeq
   }
@@ -78,5 +80,11 @@ object Settings {
   )
 
   val gfsRootUrl = "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl"
+
+  /**
+   * Number of days of old forecasts we keep
+   */
+  val forecastHistoryDays: Int = 2
+  final def forecastHistory: Period = Period.ofDays(forecastHistoryDays)
 
 }

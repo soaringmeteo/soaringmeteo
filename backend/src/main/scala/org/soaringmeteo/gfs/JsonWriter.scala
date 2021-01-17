@@ -1,5 +1,6 @@
 package org.soaringmeteo.gfs
 
+import io.circe
 import io.circe.Json
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.Point
@@ -7,6 +8,7 @@ import org.soaringmeteo.Point
 import java.time.{LocalDate, LocalTime, OffsetDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import scala.collection.immutable.SortedMap
+import scala.util.Try
 
 /**
  * Produce soaring forecast data from the GFS forecast data.
@@ -113,27 +115,40 @@ object JsonWriter {
   }
 
   private def writeMetadata(initDateString: String, gfsRun: GfsRun, targetDir: os.Path): Unit = {
-    val metadata = ForecastMetadata(initDateString, gfsRun.initDateTime, Settings.forecastHours.last)
+    val latestForecastPath = targetDir / "forecast.json"
+    // If a previous forecast is found, rename its metadata file
+    val maybePreviousForecastInitDateTime =
+      for {
+        _        <- Option.when(os.exists(latestForecastPath))(())
+        str      <- Try(os.read(latestForecastPath)).toOption // FIXME Log more errors
+        json     <- circe.parser.parse(str).toOption
+        metadata <- ForecastMetadata.jsonCodec.decodeJson(json).toOption
+        path      = ForecastMetadata.archivedForecastFileName(metadata.initDateTime)
+        _        <- Try(os.move(latestForecastPath, targetDir / path)).toOption
+      } yield metadata.initDateTime
+
+    val metadata =
+      ForecastMetadata(initDateString, gfsRun.initDateTime, Settings.forecastHours.last, maybePreviousForecastInitDateTime)
     os.write.over(
-      targetDir / "forecast.json",
+      latestForecastPath,
       ForecastMetadata.jsonCodec(metadata).noSpaces
     )
   }
 
   private def deleteOldData(gfsRun: GfsRun, targetDir: os.Path): Unit = {
-    val fiveDaysAgo = gfsRun.initDateTime.minusDays(5)
+    val oldestForecastToKeep = gfsRun.initDateTime.minus(Settings.forecastHistory)
     for {
-      file <- os.list(targetDir)
-      date <- InitDateString.parse(file.last)
-      if date.isBefore(fiveDaysAgo)
-    } os.remove(file)
+      path <- os.list(targetDir)
+      date <- InitDateString.parse(path.last)
+      if date.isBefore(oldestForecastToKeep)
+    } os.remove(path)
   }
 
 }
 
 object InitDateString {
 
-  private val dateTimeString = "^(\\d)-(\\d)-(\\d)T(\\d)[+\\-]*.json$".r
+  private val dateTimeString = "^(\\d+)-(\\d+)-(\\d+)T(\\d+)[+\\-].*\\.json$".r
 
   def apply(dateTime: OffsetDateTime): String =
     dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'hh"))
