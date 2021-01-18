@@ -151,7 +151,7 @@ object InitDateString {
   private val dateTimeString = "^(\\d+)-(\\d+)-(\\d+)T(\\d+)[+\\-].*\\.json$".r
 
   def apply(dateTime: OffsetDateTime): String =
-    dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'hh"))
+    dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH"))
 
   def parse(str: String): Option[OffsetDateTime] = str match {
     case dateTimeString(year, month, day, hour) =>
