@@ -18,6 +18,8 @@ libraryDependencies ++= Seq(
   "io.circe"            %% "circe-literal"   % "0.13.0",
   "io.circe"            %% "circe-jawn"      % "0.13.0" % Compile,
   "io.circe"            %% "circe-parser"    % "0.13.0",
+  // Configuration
+  "com.typesafe"         % "config"          % "1.4.1",
   // Testing
   "com.eed3si9n.verify" %% "verify"          % "0.2.0"  % Test
 )

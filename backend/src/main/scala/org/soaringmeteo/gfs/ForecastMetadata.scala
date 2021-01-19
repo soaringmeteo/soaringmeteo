@@ -34,7 +34,7 @@ object ForecastMetadata {
       },
       Encoder.instance { forecastMetadata =>
         Json.obj(
-          "h" -> Json.fromInt(Settings.forecastHistoryDays),
+          "h" -> Json.fromInt(Settings.forecastHistory.getDays),
           "initS"  -> Json.fromString(forecastMetadata.initDateString),
           "init"   -> Encoder[OffsetDateTime].apply(forecastMetadata.initDateTime),
           "latest" -> Json.fromInt(forecastMetadata.latestHourOffset)

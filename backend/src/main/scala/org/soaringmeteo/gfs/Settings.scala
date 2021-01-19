@@ -1,14 +1,17 @@
 package org.soaringmeteo.gfs
 
+import com.typesafe.config.ConfigFactory
 import org.soaringmeteo.Point
 
 import java.time.Period
 
 object Settings {
 
+  val config = ConfigFactory.load().getConfig("soargfs")
+
   /** Sequence of forecast hour offsets of a GFS run (e.g. 3, 6, 9, 12, etc.) */
   val forecastHours: Seq[Int] = (for {
-    day  <- 0 to 8
+    day  <- 0 to config.getInt("forecast_length")
     time <- 0 until 24 by gfsForecastTimeResolution
   } yield day * 24 + time).drop(1) // Drop the first forecast because it doesn't contain the same information as the others
 
@@ -84,7 +87,6 @@ object Settings {
   /**
    * Number of days of old forecasts we keep
    */
-  val forecastHistoryDays: Int = 2
-  final def forecastHistory: Period = Period.ofDays(forecastHistoryDays)
+  val forecastHistory: Period = Period.ofDays(config.getInt("forecast_history"))
 
 }
