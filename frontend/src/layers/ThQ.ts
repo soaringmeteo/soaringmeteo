@@ -1,4 +1,4 @@
-import { Forecast, ForecastData, ForecastPoint } from "../Forecast";
+import { Forecast, ForecastPoint } from "../Forecast";
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
 
@@ -21,23 +21,12 @@ export class ThQ {
 
   renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     if (forecastAtPoint !== undefined) {
-      // Boundary Layer Height
-      const blh = forecastAtPoint.boundaryLayerHeight;
-      const blhCoeff = Math.min(blh / 800, 1); // >800 m = 100%
-
-      // Boundary Layer Wind
-      const u = forecastAtPoint.uWind;
-      const v = forecastAtPoint.vWind;
-      const windForce = Math.sqrt(u * u + v * v);
-      // windForce <= 10 => windCoeff = 1
-      // windForce >  30 => windCoeff ~= 0
-      const windCoeff = Math.exp(-Math.max(windForce - 10, 0) / 10);
-
-      // Cloud cover
-      const cloudCover = forecastAtPoint.cloudCover;
-      const cloudCoverCoeff = (cloudCover === null || cloudCover === undefined) ? 1 : (100 - cloudCover) / 100;
-
-      const thq = blhCoeff * windCoeff * cloudCoverCoeff;
+      const thq = value(
+        forecastAtPoint.boundaryLayerHeight,
+        forecastAtPoint.uWind,
+        forecastAtPoint.vWind,
+        forecastAtPoint.cloudCover
+      );
 
       const color = colorScale.interpolate(thq);
       ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.40)`;
@@ -50,3 +39,23 @@ export class ThQ {
   }
 
 }
+
+export const value = (boundaryLayerHeight: number, uWind: number, vWind: number, totalCloudCover: number): number => {
+  // Boundary Layer Height
+  const blh = boundaryLayerHeight;
+  const blhCoeff = Math.min(blh / 800, 1); // >800 m = 100%
+
+  // Boundary Layer Wind
+  const u = uWind;
+  const v = vWind;
+  const windForce = Math.sqrt(u * u + v * v);
+  // windForce <= 10 => windCoeff = 1
+  // windForce >  30 => windCoeff ~= 0
+  const windCoeff = Math.exp(-Math.max(windForce - 10, 0) / 10);
+
+  // Cloud cover
+  const cloudCover = totalCloudCover;
+  const cloudCoverCoeff = (cloudCover === null || cloudCover === undefined) ? 1 : (100 - cloudCover) / 100;
+
+  return blhCoeff * windCoeff * cloudCoverCoeff
+};

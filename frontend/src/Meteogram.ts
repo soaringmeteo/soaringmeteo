@@ -2,6 +2,7 @@ import { el } from 'redom';
 import { LocationForecasts, DetailedForecast } from './Forecast';
 import { drawWindArrow, lightningShape, cloudPattern } from './shapes';
 import { Diagram, Scale } from './Diagram';
+import { value as thqValue, colorScale as thqColorScale } from './layers/ThQ';
 
 export const columnWidth = 33;
 export const keyWidth = 40;
@@ -18,14 +19,19 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   const flatForecasts: Array<DetailedForecast> =
     forecasts.dayForecasts.map(x => x.forecasts).reduce((x, y) => x.concat(y), []); // Alternative to flatMap
 
-  const gutterHeight = 25;
+  const gutterHeight = 10;
 
-  // Our meteogram is made of three diagram stacked on top of each other.
-  // The first one only shows the cloud cover for high-level clouds (above 5000 m).
-  // The second one shows the boundary layer, wind, and middle-level clouds.
-  // The third one shows rainfalls and ground temperature.
+  // Our meteogram is made of four diagrams stacked on top of each other.
+  // The first one shows the ThQ
+  // The second one shows the cloud cover for high-level clouds (above 5000 m).
+  // The third one shows the boundary layer, wind, and middle-level clouds.
+  // The fourth one shows rainfalls and ground temperature.
+
+  const thqDiagramHeight = 20; // px
+  const thqDiagramTop    = 0; // px
 
   const highAirDiagramHeight = 20; // px
+  const highAirDiagramTop    = thqDiagramTop + thqDiagramHeight + gutterHeight * 2;
 
   const airDiagramHeight = 400; // px
   // The main diagram shows the air from the ground level to 3500 m above ground level
@@ -38,7 +44,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     elevationLevels.push(nextElevationLevel);
     nextElevationLevel = nextElevationLevel + 500;
   }
-  const airDiagramTop   = gutterHeight + highAirDiagramHeight; // No gutter between high air diagram and air diagram
+  const airDiagramTop   = highAirDiagramTop + highAirDiagramHeight; // No gutter between high air diagram and air diagram
 
   const rainDiagramResolution = 3; // Number of horizontal lines in the rain diagram
   const rainDiagramHeight   = 100; // px
@@ -49,7 +55,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   const rainLevelDelta      = maxRainLevel - minRainLevel;
   const rainScale           = new Scale([minRainLevel, maxRainLevel], [0, rainDiagramHeight], false);
   const rainLevels          = Array.from({ length: rainDiagramResolution }, (_, i) => minRainLevel + rainLevelDelta * i / rainDiagramResolution);
-  const rainDiagramTop      = airDiagramTop + gutterHeight + airDiagramHeight;
+  const rainDiagramTop      = airDiagramTop + gutterHeight * 3 + airDiagramHeight;
 
   const pressureScale     = new Scale([990, 1035 /* hPa */], [0, airDiagramHeight], false);
   const pressureLevels    = [990, 999, 1008, 1017, 1026, 1035];
@@ -97,8 +103,31 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
       });
     }
 
+    // ThQ diagram
+    const thqDiagram = new Diagram([0, thqDiagramTop], thqDiagramHeight, ctx);
+
+    columns((forecast, columnStart, columnEnd) => {
+      const thq = thqValue(
+        forecast.boundaryLayer.height,
+        forecast.boundaryLayer.wind.u,
+        forecast.boundaryLayer.wind.v,
+        forecast.clouds.all
+      )
+      thqDiagram.fillRect(
+        [columnStart, 0],
+        [columnEnd, thqDiagramHeight],
+        `${thqColorScale.interpolate(thq).css()}`
+      );
+      thqDiagram.rect(
+        [columnStart, 0],
+        [columnEnd, thqDiagramHeight],
+        'dimgray'
+      )
+      thqDiagram.text(`${Math.round(thq * 100)}`, [columnStart + columnWidth / 2, 6], 'dimgray', 'center');
+    });
+
     // High altitude air diagram
-    const highAirDiagram = new Diagram([0, gutterHeight], highAirDiagramHeight, ctx);
+    const highAirDiagram = new Diagram([0, highAirDiagramTop], highAirDiagramHeight, ctx);
 
     columns((forecast, columnStart, columnEnd) => {
       // Blue sky
@@ -324,8 +353,12 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     leftKeyCtx.textAlign    = 'right';
     leftKeyCtx.textBaseline = 'middle';
 
+    // Thq
+    const thqDiagram = new Diagram([0, thqDiagramTop], thqDiagramHeight, leftKeyCtx);
+    thqDiagram.text('ThQ', [keyWidth / 2, 8], 'black', 'center');
+
     // High air diagram
-    const highAirDiagram = new Diagram([0, gutterHeight], highAirDiagramHeight, leftKeyCtx);
+    const highAirDiagram = new Diagram([0, highAirDiagramTop], highAirDiagramHeight, leftKeyCtx);
     highAirDiagram.line(
       [keyWidth - leftKeyCtx.lineWidth, 0],
       [keyWidth - leftKeyCtx.lineWidth, highAirDiagramHeight],

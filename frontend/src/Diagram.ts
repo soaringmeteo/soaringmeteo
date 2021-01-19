@@ -65,6 +65,7 @@ export class Diagram {
   }
 
   fillRect(from: Point, to: Point, style: string | CanvasPattern): void {
+    this.ctx.save();
     this.ctx.fillStyle = style;
     this.ctx.beginPath();
     this.ctx.moveTo(this.projectX(from[0]), this.projectY(from[1]));
@@ -73,6 +74,20 @@ export class Diagram {
     this.ctx.lineTo(this.projectX(to[0]),   this.projectY(from[1]));
     this.ctx.closePath();
     this.ctx.fill();
+    this.ctx.restore();
+  }
+
+  rect(from: Point, to: Point, style: string): void {
+    this.ctx.save();
+    this.ctx.strokeStyle = style;
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.projectX(from[0]), this.projectY(from[1]));
+    this.ctx.lineTo(this.projectX(from[0]), this.projectY(to[1]));
+    this.ctx.lineTo(this.projectX(to[0]),   this.projectY(to[1]));
+    this.ctx.lineTo(this.projectX(to[0]),   this.projectY(from[1]));
+    this.ctx.closePath();
+    this.ctx.stroke();
+    this.ctx.restore();
   }
 
   /** Projects the local horizontal coordinate x into the target coordinate space */
