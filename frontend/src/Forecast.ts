@@ -1,19 +1,5 @@
+import { ForecastMetadata } from "./ForecastMetadata";
 import { airDiagramHeightAboveGroundLevel } from "./Meteogram";
-
-// Note: do we really need to access older forecasts?
-export type ForecastMetadataData = {
-  init: string   // e.g., "2020-04-14T06:00:00Z"
-  latest: number // e.g., 189
-}
-
-export class ForecastMetadata {
-  readonly init: Date
-  readonly latest: number
-  constructor(data: ForecastMetadataData) {
-    this.init = new Date(data.init);
-    this.latest = data.latest;
-  }
-}
 
 export type ForecastPoint = {
   boundaryLayerHeight: number

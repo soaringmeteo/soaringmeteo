@@ -1,9 +1,9 @@
-import { el, mount, setChildren, setStyle } from 'redom';
+import { el, mount, setChildren, setStyle, unmount } from 'redom';
 import { App } from './App';
-import { ForecastMetadata, LocationForecasts } from './Forecast';
+import { LocationForecasts } from './Forecast';
 import * as L from 'leaflet';
-import { forecastOffsets, periodsPerDay } from './ForecastFilter';
 import { columnWidth as meteogramColumnWidth, meteogram, keyWidth } from './Meteogram';
+import { ForecastMetadata, forecastOffsets, periodsPerDay } from './ForecastMetadata';
 
 export class ForecastSelect {
 
@@ -18,14 +18,14 @@ export class ForecastSelect {
 
   private view: ForecastSelectView
 
-  constructor(private readonly app: App, readonly latestForecast: ForecastMetadata, containerElement: HTMLElement) {
+  constructor(private readonly app: App, readonly forecastMetadata: ForecastMetadata, containerElement: HTMLElement) {
     // TODO Compute based on user preferred time zone (currently hard-coded for central Europe)
     this.morningOffset = 9;
     const noonOffset   = 12;
-    this.forecastInitOffset = +latestForecast.init.getUTCHours();
+    this.forecastInitOffset = +forecastMetadata.init.getUTCHours();
     // Tomorrow, noon period
     this.hourOffset = (this.forecastInitOffset === 0 ? 0 : 24) + noonOffset - this.forecastInitOffset;
-    this.view = new ForecastSelectView(this, latestForecast.init, containerElement);
+    this.view = new ForecastSelectView(this, forecastMetadata.init, containerElement);
   }
 
   updateHourOffset(value: number): void {
@@ -37,11 +37,11 @@ export class ForecastSelect {
     }
   }
   nextDay(): void {
-    this.updateHourOffset(Math.min(this.hourOffset + 24, this.latestForecast.latest));
+    this.updateHourOffset(Math.min(this.hourOffset + 24, this.forecastMetadata.latest));
   }
   nextPeriod(): void {
     // TODO jump to next day morning if we are on the afternoon period
-    this.updateHourOffset(Math.min(this.hourOffset + 3, this.latestForecast.latest));
+    this.updateHourOffset(Math.min(this.hourOffset + 3, this.forecastMetadata.latest));
   }
   previousPeriod(): void {
     // TODO jump to previous day afternoon if we are on the morning period
@@ -69,9 +69,15 @@ export class ForecastSelect {
     this.view.hideMeteogram();
   }
 
+  unmount(): void {
+    this.view.unmount();
+  }
+
 }
 export class ForecastSelectView {
 
+  private periodSelectorContainer: HTMLElement;
+  private currentDayContainer: HTMLElement;
   readonly currentDayEl: HTMLElement
   private periodSelectorEl: HTMLElement;
   private meteogramEl: HTMLElement
@@ -79,7 +85,7 @@ export class ForecastSelectView {
   private hideMeteogramBtn: HTMLElement;
   private readonly marginLeft: number;
 
-  constructor(readonly forecastSelect: ForecastSelect, readonly forecastInitDateTime: Date, containerElement: HTMLElement) {
+  constructor(readonly forecastSelect: ForecastSelect, readonly forecastInitDateTime: Date, private readonly containerElement: HTMLElement) {
 
     this.meteogramEl = el('div'); // Filled later by showMeteogram
     this.marginLeft = keyWidth;
@@ -102,7 +108,7 @@ export class ForecastSelectView {
     nextDayBtn.onclick = () => { forecastSelect.nextDay(); }
 
     this.periodSelectorEl =
-      this.periodSelectorElement(forecastOffsets(forecastInitDateTime, forecastSelect.morningOffset, this.forecastSelect.latestForecast));
+      this.periodSelectorElement(forecastOffsets(forecastInitDateTime, forecastSelect.morningOffset, this.forecastSelect.forecastMetadata));
 
     this.hideMeteogramBtn =
       el(
@@ -123,7 +129,7 @@ export class ForecastSelectView {
     this.hideMeteogramBtn.onclick = () => { forecastSelect.hideMeteogram(); };
 
     // Period selector and close button for the meteogram
-    const periodSelectorContainer =
+    this.periodSelectorContainer =
       el(
         'span',
         { style: { position: 'absolute', top: 0, left: 0, zIndex: 1000, maxWidth: '100%', userSelect: 'none', cursor: 'default' } },
@@ -135,14 +141,14 @@ export class ForecastSelectView {
           this.periodSelectorEl
         )
       );
-    L.DomEvent.disableClickPropagation(periodSelectorContainer);
-    L.DomEvent.disableScrollPropagation(periodSelectorContainer);
+    L.DomEvent.disableClickPropagation(this.periodSelectorContainer);
+    L.DomEvent.disableScrollPropagation(this.periodSelectorContainer);
     this.updateSelectedForecast();
 
-    mount(containerElement, periodSelectorContainer);
+    mount(containerElement, this.periodSelectorContainer);
 
     // Current period
-    const currentDayContainer =
+    this.currentDayContainer =
       el(
         'span',
         { style: { position: 'absolute', bottom: 0, marginLeft: 'auto', marginRight: 'auto', left: 0, right: 0, textAlign: 'center', zIndex: 1050, userSelect: 'none', cursor: 'default' } },
@@ -153,9 +159,14 @@ export class ForecastSelectView {
           el('div', previousDayBtn, previousPeriodBtn, nextPeriodBtn, nextDayBtn)
         )
       );
-    L.DomEvent.disableClickPropagation(currentDayContainer);
-    L.DomEvent.disableScrollPropagation(currentDayContainer);
-    mount(containerElement, currentDayContainer);
+    L.DomEvent.disableClickPropagation(this.currentDayContainer);
+    L.DomEvent.disableScrollPropagation(this.currentDayContainer);
+    mount(containerElement, this.currentDayContainer);
+  }
+
+  unmount(): void {
+    unmount(this.containerElement, this.periodSelectorContainer);
+    unmount(this.containerElement, this.currentDayContainer);
   }
 
   private hover(htmlEl: HTMLElement): HTMLElement {

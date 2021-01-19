@@ -12,6 +12,7 @@ import { Wind, windColor } from './layers/Wind';
 import { None } from './layers/None';
 import { drawWindArrow } from './shapes';
 import layersImg from './images/layers.png';
+import { ForecastMetadata } from './ForecastMetadata';
 
 class Renderer {
 
@@ -22,8 +23,8 @@ class Renderer {
     readonly mapKeyEl: () => HTMLElement
   ) {}
 
-  update(hourOffset: number, canvas: CanvasLayer) {
-    fetch(`${hourOffset}.json`)
+  update(forecastMetadata: ForecastMetadata, hourOffset: number, canvas: CanvasLayer) {
+    fetch(`${forecastMetadata.initS}+${hourOffset}.json`)
       .then(response => response.json())
       .then((data: ForecastData) => canvas.setDataSource(this.renderer(new Forecast(data))))
       .catch(error => {
@@ -75,27 +76,27 @@ const noneRenderer = new Renderer(
   () => el('div')
 );
 const thqRenderer = new Renderer(
-  'ThQ',
+  'Thermal Quality',
   'Thermal Quality',
   forecast => new ThQ(forecast),
   () => colorScaleEl(thQColorScale, value => `${Math.round(value * 100)}% `)
 );
 const boundaryLayerHeightRenderer = new Renderer(
-  'BLD',
+  'Boundary Layer Depth',
   'Boundary layer depth',
   forecast => new BoundaryLayerDepth(forecast),
   // FIXME Maybe implement map key in datasource...
   () => colorScaleEl(boundaryDepthColorScale, value => `${value}m `)
 );
 const windRenderer = new Renderer(
-  'Wind',
-  'Wind force and direction',
+  'Boundary Layer Wind',
+  'Wind force and direction in the boundary layer',
   forecast => new Wind(forecast),
   windScaleEl
 );
 const cloudCoverRenderer = new Renderer(
-  'Clouds',
-  'Cloud cover',
+  'Cloud Cover',
+  'Cloud cover (all altitudes)',
   forecast => new CloudCover(forecast),
   () => colorScaleEl(cloudCoverColorScale, value => `${value}% `)
 );
@@ -125,15 +126,40 @@ export class ForecastLayer {
     const cloudCoverEl = this.setupRendererBtn(cloudCoverRenderer);
     const mixedEl = this.setupRendererBtn(mixedRenderer);
 
-    const selectEl = el(
-      'div',
-      { style: { display: 'none' } },
+    const selectForecastEl = el(
+      'fieldset',
+      el('legend', 'Initialization Time'),
+      this.app.forecasts
+        .map(forecast => {
+          const initTimeString =
+            forecast.init.toLocaleString(undefined, { month: 'short', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
+          const [container, input] = makeRadioBtn(
+            initTimeString,
+            `Show forecast initialized at ${initTimeString}.`,
+            this.app.forecastMetadata === forecast,
+            'init'
+          )
+          input.onchange = () => { this.app.selectForecast(forecast) };
+          return container
+        })
+    );
+
+    const layerEl = el(
+      'fieldset',
+      el('legend', 'Layer'),
       noneEl,
       thqEl,
       boundaryLayerHeightEl,
       windEl,
       cloudCoverEl,
       mixedEl
+    );
+
+    const selectEl = el(
+      'div',
+      { style: { display: 'none' } },
+      selectForecastEl,
+      layerEl
     );
 
     const layersBtn = el(
@@ -147,7 +173,7 @@ export class ForecastLayer {
 
     const rootElement = el(
       'div',
-      { style: { position: 'absolute', right: '3px', bottom: '100px', zIndex: 1000 /* arbitrary value to be just above the zoom control */, background: 'white', border: '1px solid rgba(0, 0, 0, 0.2)', borderRadius: '5px' } },
+      { style: { position: 'absolute', right: '3px', bottom: '100px', zIndex: 1000 /* arbitrary value to be just above the zoom control */, background: 'white', border: '1px solid rgba(0, 0, 0, 0.2)', borderRadius: '5px', userSelect: 'none' } },
       layersBtn,
       selectEl
     );
@@ -172,12 +198,7 @@ export class ForecastLayer {
   }
 
   private setupRendererBtn(renderer: Renderer): HTMLElement {
-    const input = el('input', { name: 'layer', type: 'radio', checked: this.renderer === renderer });
-    const container = el(
-      'div',
-      { style: { backgroundColor: 'rgba(255, 255, 255, 0.5)', userSelect: 'none', border: 'thin solid darkGray', textAlign: 'right' } },
-      el('label', { style: { cursor: 'pointer', padding: '0.3em' }, title: renderer.title }, renderer.name, input)
-    );
+    const [container, input] = makeRadioBtn(renderer.name, renderer.title, this.renderer === renderer, 'layer');
     input.onchange = () => { this.setRenderer(renderer); };
     return container
   }
@@ -193,7 +214,17 @@ export class ForecastLayer {
   }
 
   updateForecast(): void {
-    this.renderer.update(this.app.forecastSelect.getHourOffset(), this.app.canvas);
+    this.renderer.update(this.app.forecastMetadata, this.app.forecastSelect.getHourOffset(), this.app.canvas);
   }
 
+}
+
+const makeRadioBtn = (label: string, title: string, checked: boolean, groupName: string): [HTMLElement, HTMLElement] => {
+  const input = el('input', { name: groupName, type: 'radio', checked: checked });
+  const container = el(
+    'div',
+    { style: { backgroundColor: 'rgba(255, 255, 255, 0.5)', textAlign: 'right' } },
+    el('label', { style: { cursor: 'pointer', padding: '0.3em' }, title: title }, label, input)
+  );
+  return [container, input]
 }
