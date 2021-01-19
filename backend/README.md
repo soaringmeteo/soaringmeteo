@@ -1,7 +1,6 @@
-# makeGFSJson
+# soaringmeteo
 
-Like `makeGFSJs`, but produces JSON documents instead of JavaScript
-files.
+Produces JSON documents containing relevant GFS data for soaring.
 
 ## Requirements
 
@@ -10,17 +9,14 @@ version 8).
 
 Building the program requires a JDK and sbt.
 
-## Deploy
-
-Run the following command from within this directory
-(`soaringmeteo/src/makeGFSJson`):
+## Build
 
 ~~~
-sbt deploy
+sbt universal:packageZipTarball
 ~~~
 
-It should create an executable named `makeGFSJson` in the
-`soaringmeteo/gfs` directory.
+It should create a tarball named `backend-0.1.0-SNAPSHOT.tgz` in the
+`target/universal/` directory.
 
 ## Develop
 
