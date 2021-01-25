@@ -80,7 +80,8 @@ export class DetailedForecast {
     this.clouds = {
       highLevel: data.c.h / 100,
       middleLevel: data.c.m / 100,
-      lowLevel: data.c.l / 100
+      lowLevel: data.c.l / 100,
+      all: data.c.e / 100
     };
     this.boundaryLayer = {
       height: data.bl.h,
@@ -163,6 +164,7 @@ export type DetailedClouds = {
   highLevel: number // %
   middleLevel: number // %
   lowLevel: number // %
+  all: number // %
 };
 
 export type DetailedSurface = {
