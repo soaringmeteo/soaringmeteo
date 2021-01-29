@@ -121,20 +121,23 @@ const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng
       boundaryLayerHeight: 0,
       uWind: 0,
       vWind: 0,
-      cloudCover: 0
+      cloudCover: 0,
+      rain: 0
     };
     points.forEach(point => {
       sumPoint.boundaryLayerHeight += point.boundaryLayerHeight;
       sumPoint.uWind += point.uWind;
       sumPoint.vWind += point.vWind;
       sumPoint.cloudCover += point.cloudCover;
+      sumPoint.rain += point.rain;
     })
     const n = points.length;
     return {
       boundaryLayerHeight: sumPoint.boundaryLayerHeight / n,
       uWind: sumPoint.uWind / n,
       vWind: sumPoint.vWind / n,
-      cloudCover: sumPoint.cloudCover / n
+      cloudCover: sumPoint.cloudCover / n,
+      rain: sumPoint.rain / n
     };          
   } else {
     return

@@ -89,18 +89,4 @@ object GfsForecast {
     }
   }
 
-  /**
-   * JSON representation of the forecast data summary.
-   * WARNING: client must be consistent with this serialization format.
-   */
-  val jsonEncoder: Encoder[GfsForecast] =
-    Encoder.instance { forecast =>
-      Json.arr(
-        Json.fromInt(forecast.boundaryLayerHeight.toMeters.round.toInt),
-        Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
-        Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt),
-        Json.fromBigDecimal(forecast.cloudCover.entire)
-      )
-    }
-
 }

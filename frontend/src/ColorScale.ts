@@ -27,7 +27,7 @@ export class ColorScale {
       start.red + Math.round(k * (end.red - start.red)),
       start.green + Math.round(k * (end.green - start.green)),
       start.blue + Math.round(k * (end.blue - start.blue)),
-      start.opacity + Math.round(k * (end.opacity - start.opacity))
+      start.opacity + k * (end.opacity - start.opacity)
     )
   }
 

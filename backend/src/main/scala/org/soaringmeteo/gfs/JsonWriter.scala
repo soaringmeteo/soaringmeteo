@@ -68,7 +68,7 @@ object JsonWriter {
    */
   private def writeForecastsByHour(
     initDateString: String,
-    forecastsByHour: Map[Int, Map[Point, GfsForecast]],
+    forecastsByHour: ForecastsByHour,
     targetDir: os.Path
   ): Unit = {
     for ((t, forecast) <- forecastsByHour) {
@@ -78,7 +78,7 @@ object JsonWriter {
           // For instance, latitude 0.0 has index 0, latitude 0.25 has index 1, latitude 0.50 has
           // index 2, etc.
           val locationKey = s"${(p.longitude * 100 / Settings.gfsForecastSpaceResolution).intValue},${(p.latitude * 100 / Settings.gfsForecastSpaceResolution).intValue}"
-          locationKey -> GfsForecast.jsonEncoder(forecast)
+          locationKey -> Forecast.jsonEncoder(forecast)
         }.toSeq
 
       val fileName = s"$initDateString+$t.json" // e.g., "2021-01-08T12+3.json", "2021-01-08T12+6.json", etc.
