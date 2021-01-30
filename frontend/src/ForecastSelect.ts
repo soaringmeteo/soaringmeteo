@@ -132,7 +132,7 @@ export class ForecastSelectView {
     this.periodSelectorContainer =
       el(
         'span',
-        { style: { position: 'absolute', top: 0, left: 0, zIndex: 1000, maxWidth: '100%', userSelect: 'none', cursor: 'default' } },
+        { style: { position: 'absolute', top: 0, left: 0, zIndex: 1100, maxWidth: '100%', userSelect: 'none', cursor: 'default' } },
         this.meteogramKeyEl,
         el(
           'div',

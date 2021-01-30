@@ -48,6 +48,13 @@ export class App {
           // FIMXE Report issue
         })
     });
+
+    map.on('keydown', (e: any) => {
+      const event = e.originalEvent as KeyboardEvent;
+      if (event.key === 'Escape') {
+        this.forecastSelect.hideMeteogram();
+      }
+    });
   }
 
   selectForecast(forecastMetadata: ForecastMetadata): void {

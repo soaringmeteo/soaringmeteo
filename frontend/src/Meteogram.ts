@@ -19,7 +19,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   const flatForecasts: Array<DetailedForecast> =
     forecasts.dayForecasts.map(x => x.forecasts).reduce((x, y) => x.concat(y), []); // Alternative to flatMap
 
-  const gutterHeight = 10;
+  const gutterHeight = 5; // px
 
   // Our meteogram is made of four diagrams stacked on top of each other.
   // The first one shows the ThQ
@@ -28,7 +28,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   // The fourth one shows rainfalls and ground temperature.
 
   const thqDiagramHeight = 20; // px
-  const thqDiagramTop    = 0; // px
+  const thqDiagramTop    = gutterHeight;
 
   const highAirDiagramHeight = 20; // px
   const highAirDiagramTop    = thqDiagramTop + thqDiagramHeight + gutterHeight * 2;
@@ -55,7 +55,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   const rainLevelDelta      = maxRainLevel - minRainLevel;
   const rainScale           = new Scale([minRainLevel, maxRainLevel], [0, rainDiagramHeight], false);
   const rainLevels          = Array.from({ length: rainDiagramResolution }, (_, i) => minRainLevel + rainLevelDelta * i / rainDiagramResolution);
-  const rainDiagramTop      = airDiagramTop + gutterHeight * 3 + airDiagramHeight;
+  const rainDiagramTop      = airDiagramTop + airDiagramHeight + gutterHeight * 4;
 
   const pressureScale     = new Scale([990, 1035 /* hPa */], [0, airDiagramHeight], false);
   const pressureLevels    = [990, 999, 1008, 1017, 1026, 1035];
