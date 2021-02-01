@@ -59,7 +59,7 @@ object DownloadAndRead {
       }(fourThreads /* Beware, I’ve been banned for downloading 8 files in parallel */)
 
     // Read the content of a GRIB file as a background task
-    def read(locations: Seq[Point], gribFile: os.Path, hourOffset: Int): Future[Forecast] =
+    def read(locations: Seq[Point], gribFile: os.Path, hourOffset: Int): Future[Map[Point, GfsForecast]] =
       Future {
         concurrent.blocking {
           GfsForecast.fromGribFile(gribFile, gfsRun.initDateTime, hourOffset, locations)
@@ -82,7 +82,11 @@ object DownloadAndRead {
           // We can safely remove this line after we drop support for old soargfs
           writeFilesForOldSoargfs(gribsDir)
 
-          forecastsByHour.groupMapReduce { case (hour, _) => hour } { case (_, forecast) => forecast } { _ ++ _ }
+          Forecast(
+            forecastsByHour
+              // Merge together all the forecasts from the different areas
+              .groupMapReduce { case (hour, _) => hour } { case (_, forecast) => forecast } { _ ++ _ }
+          )
         }
 
     }

@@ -13,6 +13,7 @@ import { None } from './layers/None';
 import { drawWindArrow } from './shapes';
 import layersImg from './images/layers.png';
 import { ForecastMetadata } from './ForecastMetadata';
+import { Rain, rainColorScale } from './layers/Rain';
 
 class Renderer {
 
@@ -86,7 +87,7 @@ const boundaryLayerHeightRenderer = new Renderer(
   'Boundary layer depth',
   forecast => new BoundaryLayerDepth(forecast),
   // FIXME Maybe implement map key in datasource...
-  () => colorScaleEl(boundaryDepthColorScale, value => `${value}m `)
+  () => colorScaleEl(boundaryDepthColorScale, value => `${value} m `)
 );
 const windRenderer = new Renderer(
   'Boundary Layer Wind',
@@ -99,6 +100,12 @@ const cloudCoverRenderer = new Renderer(
   'Cloud cover (all altitudes)',
   forecast => new CloudCover(forecast),
   () => colorScaleEl(cloudCoverColorScale, value => `${value}% `)
+);
+const rainRenderer = new Renderer(
+  'Rain',
+  'Total rain',
+  forecast => new Rain(forecast),
+  () => colorScaleEl(rainColorScale, value => `${value} mm `)
 );
 const mixedRenderer = new Renderer(
   'Mixed',
@@ -124,6 +131,7 @@ export class ForecastLayer {
     const boundaryLayerHeightEl = this.setupRendererBtn(boundaryLayerHeightRenderer);
     const windEl = this.setupRendererBtn(windRenderer);
     const cloudCoverEl = this.setupRendererBtn(cloudCoverRenderer);
+    const rainEl = this.setupRendererBtn(rainRenderer);
     const mixedEl = this.setupRendererBtn(mixedRenderer);
 
     const selectForecastEl = el(
@@ -152,7 +160,8 @@ export class ForecastLayer {
       boundaryLayerHeightEl,
       windEl,
       cloudCoverEl,
-      mixedEl
+      rainEl,
+      mixedEl,
     );
 
     const selectEl = el(

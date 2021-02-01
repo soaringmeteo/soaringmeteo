@@ -5,7 +5,8 @@ export type ForecastPoint = {
   boundaryLayerHeight: number
   uWind: number
   vWind: number
-  cloudCover: number
+  cloudCover: number,
+  rain: number
 }
 
 export class Forecast {
@@ -22,7 +23,8 @@ export class Forecast {
         boundaryLayerHeight: pointData[0],
         uWind: pointData[1],
         vWind: pointData[2],
-        cloudCover: pointData[3]
+        cloudCover: pointData[3],
+        rain: pointData[4]
       }
     } else {
       return
@@ -34,12 +36,13 @@ export type ForecastData = {
   [key: string]: ForecastPointData
 }
 
-// WARN Must be consistent with `GfsForecast` JSON encoder in the backend
+// WARN Must be consistent with `Forecast` JSON encoder in the backend
 type ForecastPointData = [
   number, // Boundary layer height
   number, // Wind: u component
   number, // Wind: v component
-  number  // Cloud cover
+  number, // Cloud cover
+  number  // Total rain
 ]
 
 export class LocationForecasts {

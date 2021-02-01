@@ -17,7 +17,8 @@ import scala.util.chaining._
 /**
  * All the forecast data for one location and several days, with
  * high-level information extracted from the content of each GFS forecast
- * (e.g., thunderstorm risk per day)
+ * (e.g., thunderstorm risk per day).
+ * This forecast data is used to build meteograms.
  */
 case class LocationForecasts(
   elevation: Length,
@@ -53,26 +54,11 @@ case class DetailedForecast(
 
 object LocationForecasts {
 
-  def apply(location: Point, forecasts: Seq[GfsForecast]): LocationForecasts = {
+  def apply(location: Point, forecasts: Seq[Forecast]): LocationForecasts = {
     val isRelevantAtLocation = isRelevant(location)
-    val forecastsWithRainPerPeriod: Seq[DetailedForecast] =
-      forecasts.foldLeft((List.newBuilder[DetailedForecast], Option.empty[GfsForecast])) {
-        case ((builder, maybePreviousForecast), forecast) =>
-          val (totalRain, convectiveRain) =
-            maybePreviousForecast match {
-              case None =>
-                // First forecast (+3h) is special, it contains the accumulated
-                // rain since the forecast initialization time, which is equivalent
-                // to the rain that fell during the forecast period
-                (forecast.accumulatedRain, forecast.accumulatedConvectiveRain)
-              case Some(previousForecast) =>
-                (
-                  forecast.accumulatedRain - previousForecast.accumulatedRain,
-                  forecast.accumulatedConvectiveRain - previousForecast.accumulatedConvectiveRain
-                )
-            }
-
-          builder += DetailedForecast(
+    val detailedForecasts: Seq[DetailedForecast] =
+      forecasts.map { forecast =>
+          DetailedForecast(
             forecast.time,
             forecast.boundaryLayerHeight,
             forecast.boundaryLayerWind,
@@ -83,8 +69,8 @@ object LocationForecasts {
             forecast.surfaceTemperature,
             dewPoint(forecast.surfaceTemperature, forecast.surfaceRelativeHumidity),
             forecast.surfaceWind,
-            totalRain,
-            convectiveRain,
+            forecast.totalRain,
+            forecast.convectiveRain,
             forecast.latentHeatNetFlux,
             forecast.sensibleHeatNetFlux,
             forecast.cape,
@@ -92,12 +78,11 @@ object LocationForecasts {
             forecast.downwardShortWaveRadiationFlux,
             forecast.isothermZero
           )
-          (builder, Some(forecast))
-      }._1.result()
+      }
     LocationForecasts(
       elevation = forecasts.head.elevation,
       dayForecasts =
-        forecastsWithRainPerPeriod
+        detailedForecasts
           .filter(forecast => isRelevantAtLocation(forecast.time)) // Keep only forecasts during the day, and around noon
           .groupBy(_.time.toLocalDate)
           .filter { case (_, forecasts) => forecasts.nonEmpty }
