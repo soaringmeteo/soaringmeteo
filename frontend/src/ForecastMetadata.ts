@@ -1,3 +1,5 @@
+import { LocationForecasts, LocationForecastsData, normalizeCoordinates } from "./Forecast";
+
 type ForecastMetadataData = {
   h: number      // number of days of historic forecast kept (e.g., 4)
   initS: string  // e.g., "2020-04-14T06"
@@ -15,6 +17,19 @@ export class ForecastMetadata {
     this.init = new Date(data.init);
     this.latest = data.latest;
   }
+
+  /** URI of forecast data at the given coordinates */
+  async fetchLocationForecasts(latitude: number, longitude: number): Promise<LocationForecasts> {
+    try {
+      const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(latitude, longitude);
+      const response = await fetch(`${this.initS}-${normalizedLongitude}-${normalizedLatitude}.json`);
+      const data     = await response.json() as LocationForecastsData;
+      return new LocationForecasts(data, this)
+    } catch (err) {
+      throw `Unable to fetch forecast data at ${latitude},${longitude}: ${err}`;
+    }
+  }
+
 }
 
 export const fetchForecasts = async (): Promise<Array<ForecastMetadata>> => {
