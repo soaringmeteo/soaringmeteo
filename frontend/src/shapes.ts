@@ -87,6 +87,7 @@ export const lightningShape = (x: number, y: number, width: number): Array<Point
 export const drawWindArrow = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, color: string, u: number, v: number): void => {
   const windForce = Math.sqrt(u * u + v * v);
   const windDirection = -Math.atan2(u, -v);
+  ctx.save();
   ctx.lineWidth = Math.ceil(width / 20);
   ctx.strokeStyle = color;
   ctx.lineCap = 'round';
@@ -96,6 +97,7 @@ export const drawWindArrow = (ctx: CanvasRenderingContext2D, x: number, y: numbe
     ctx.lineTo(x2, y2);
   });
   ctx.stroke();
+  ctx.restore();
 }
 
 export const cloudPattern = (width: number, style: string): CanvasPattern => {

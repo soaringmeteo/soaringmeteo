@@ -126,13 +126,18 @@ export class ForecastLayer {
   constructor(readonly app: App, containerElement: HTMLElement) {
     this.renderer = mixedRenderer;
 
-    const noneEl = this.setupRendererBtn(noneRenderer);
-    const thqEl = this.setupRendererBtn(thqRenderer);
-    const boundaryLayerHeightEl = this.setupRendererBtn(boundaryLayerHeightRenderer);
-    const windEl = this.setupRendererBtn(windRenderer);
-    const cloudCoverEl = this.setupRendererBtn(cloudCoverRenderer);
-    const rainEl = this.setupRendererBtn(rainRenderer);
-    const mixedEl = this.setupRendererBtn(mixedRenderer);
+    const detailedView = this.app.periodSelector.getDetailedView();
+    const [meteogramEl, meteogramInput] = makeRadioBtn('Meteogram', 'Meteogram', detailedView === 'meteogram', 'detailed-view');
+    meteogramInput.onchange = () => this.app.periodSelector.updateDetailedView('meteogram');
+    const [soundingEl, soundingInput]  = makeRadioBtn('Sounding', 'Sounding', detailedView === 'sounding', 'detailed-view');
+    soundingInput.onchange = () => this.app.periodSelector.updateDetailedView('sounding');
+
+    const detailedViewEl = el(
+      'fieldset',
+      el('legend', 'Detailed View'),
+      meteogramEl,
+      soundingEl
+    );
 
     const selectForecastEl = el(
       'fieldset',
@@ -152,6 +157,14 @@ export class ForecastLayer {
         })
     );
 
+    const noneEl = this.setupRendererBtn(noneRenderer);
+    const thqEl = this.setupRendererBtn(thqRenderer);
+    const boundaryLayerHeightEl = this.setupRendererBtn(boundaryLayerHeightRenderer);
+    const windEl = this.setupRendererBtn(windRenderer);
+    const cloudCoverEl = this.setupRendererBtn(cloudCoverRenderer);
+    const rainEl = this.setupRendererBtn(rainRenderer);
+    const mixedEl = this.setupRendererBtn(mixedRenderer);
+
     const layerEl = el(
       'fieldset',
       el('legend', 'Layer'),
@@ -167,6 +180,7 @@ export class ForecastLayer {
     const selectEl = el(
       'div',
       { style: { display: 'none' } },
+      detailedViewEl,
       selectForecastEl,
       layerEl
     );
@@ -223,7 +237,7 @@ export class ForecastLayer {
   }
 
   updateForecast(): void {
-    this.renderer.update(this.app.forecastMetadata, this.app.forecastSelect.getHourOffset(), this.app.canvas);
+    this.renderer.update(this.app.forecastMetadata, this.app.periodSelector.getHourOffset(), this.app.canvas);
   }
 
 }

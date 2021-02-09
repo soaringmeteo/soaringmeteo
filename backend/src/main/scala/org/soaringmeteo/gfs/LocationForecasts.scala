@@ -240,7 +240,7 @@ object LocationForecasts {
                       (pressure.toPascals.round.toInt / 100).toString -> Json.obj(
                         "h" -> Json.fromInt(variables.geopotentialHeight.toMeters.round.toInt),
                         "t" -> Json.fromBigDecimal(variables.temperature.toCelsiusScale),
-                        "rh" -> Json.fromBigDecimal(variables.relativeHumidity),
+                        "dt" -> Json.fromDoubleOrNull(dewPoint(variables.temperature, variables.relativeHumidity).toCelsiusScale),
                         "u" -> Json.fromInt(variables.wind.u.toKilometersPerHour.round.toInt),
                         "v" -> Json.fromInt(variables.wind.v.toKilometersPerHour.round.toInt)
                       )

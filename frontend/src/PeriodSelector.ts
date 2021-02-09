@@ -1,11 +1,13 @@
 import { el, mount, setChildren, setStyle, unmount } from 'redom';
 import { App } from './App';
-import { LocationForecasts } from './Forecast';
+import { DetailedForecast, LocationForecasts } from './Forecast';
 import * as L from 'leaflet';
-import { columnWidth as meteogramColumnWidth, meteogram, keyWidth } from './Meteogram';
+import { meteogram, keyWidth } from './Meteogram';
 import { ForecastMetadata, forecastOffsets, periodsPerDay } from './ForecastMetadata';
+import { sounding } from './Sounding';
+import { meteogramColumnWidth } from './Diagram';
 
-export class ForecastSelect {
+export class PeriodSelector {
 
   /** Number of hours to add to 00:00Z to be on the morning forecast period (e.g., 9 for Switzerland) */
   readonly morningOffset: number
@@ -16,7 +18,10 @@ export class ForecastSelect {
   private hourOffset: number
   getHourOffset(): number { return this.hourOffset }
 
-  private view: ForecastSelectView
+  private detailedView: 'sounding' | 'meteogram'
+  getDetailedView(): 'sounding' | 'meteogram' { return this.detailedView }
+
+  private view: View
 
   constructor(private readonly app: App, readonly forecastMetadata: ForecastMetadata, containerElement: HTMLElement) {
     // TODO Compute based on user preferred time zone (currently hard-coded for central Europe)
@@ -25,7 +30,8 @@ export class ForecastSelect {
     this.forecastInitOffset = +forecastMetadata.init.getUTCHours();
     // Tomorrow, noon period
     this.hourOffset = (this.forecastInitOffset === 0 ? 0 : 24) + noonOffset - this.forecastInitOffset;
-    this.view = new ForecastSelectView(this, forecastMetadata.init, containerElement);
+    this.detailedView = 'meteogram';
+    this.view = new View(this, forecastMetadata.init, containerElement);
   }
 
   updateHourOffset(value: number): void {
@@ -51,22 +57,43 @@ export class ForecastSelect {
     this.updateHourOffset(Math.max(this.hourOffset - 24, 3));
   }
 
+  updateDetailedView(value: 'meteogram' | 'sounding'): void {
+    this.detailedView = value;
+    // TODO update view
+  }
+
+  showDetailedView(latitude: number, longitude: number): void {
+    this.forecastMetadata
+      .fetchLocationForecasts(latitude, longitude)
+      .then(locationForecasts => {
+        switch(this.detailedView) {
+          case 'meteogram':
+            this.showMeteogram(locationForecasts);
+            break
+          case 'sounding':
+            this.showSounding(locationForecasts);
+            break
+        }
+      })
+  }
+
   showMeteogram(forecasts: LocationForecasts): void {
     const [leftKeyElement, meteogramElement, rightKeyElement] = meteogram(forecasts);
-    const forecastOffsetAndDates: Array<[number, Date]> =
-      forecasts.dayForecasts
-        .map(_ => _.forecasts)
-        .reduce((x, y) => x.concat(y), [])
-        .map(forecast => {
-          const hourOffset =
-            (forecast.time.getTime() - forecasts.initializationTime().getTime()) / 3600000;
-          return [hourOffset, forecast.time]
-        });
+    const forecastOffsetAndDates: Array<[number, Date]> = forecasts.offsetAndDates();
     this.view.showMeteogram(leftKeyElement, meteogramElement, rightKeyElement, forecastOffsetAndDates);
   }
 
   hideMeteogram(): void {
-    this.view.hideMeteogram();
+    this.view.hideDetailedView();
+  }
+
+  showSounding(forecasts: LocationForecasts): void {
+    const maybeDetailedForecast = forecasts.atHourOffset(this.hourOffset);
+    if (maybeDetailedForecast === undefined) {
+      console.error(`Unable to show sounding forecast for this period.`)
+    } else {
+      this.view.showSounding(maybeDetailedForecast, forecasts.elevation, forecasts.offsetAndDates());
+    }
   }
 
   unmount(): void {
@@ -74,23 +101,23 @@ export class ForecastSelect {
   }
 
 }
-export class ForecastSelectView {
+class View {
 
   private periodSelectorContainer: HTMLElement;
   private currentDayContainer: HTMLElement;
   readonly currentDayEl: HTMLElement
   private periodSelectorEl: HTMLElement;
-  private meteogramEl: HTMLElement
-  private meteogramKeyEl: HTMLElement
-  private hideMeteogramBtn: HTMLElement;
+  private detailedViewEl: HTMLElement
+  private detailedViewKeyEl: HTMLElement
+  private hideDetailedViewBtn: HTMLElement;
   private readonly marginLeft: number;
 
-  constructor(readonly forecastSelect: ForecastSelect, readonly forecastInitDateTime: Date, private readonly containerElement: HTMLElement) {
+  constructor(readonly forecastSelect: PeriodSelector, readonly forecastInitDateTime: Date, private readonly containerElement: HTMLElement) {
 
-    this.meteogramEl = el('div'); // Filled later by showMeteogram
+    this.detailedViewEl = el('div'); // Filled later by showMeteogram
     this.marginLeft = keyWidth;
     const marginTop = 35; // Day height + hour height + 2 (wtf)
-    this.meteogramKeyEl = el('div', { style: { position: 'absolute', width: `${this.marginLeft}px`, left: 0, top: `${marginTop}px`, backgroundColor: 'white' } });
+    this.detailedViewKeyEl = el('div', { style: { position: 'absolute', width: `${this.marginLeft}px`, left: 0, top: `${marginTop}px`, backgroundColor: 'white' } });
 
     const buttonStyle = { padding: '0.2em', display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray', boxSizing: 'border-box' };
     this.currentDayEl = el('div'); // Will be filled later by `updateSelectedForecast`
@@ -110,7 +137,7 @@ export class ForecastSelectView {
     this.periodSelectorEl =
       this.periodSelectorElement(forecastOffsets(forecastInitDateTime, forecastSelect.morningOffset, this.forecastSelect.forecastMetadata));
 
-    this.hideMeteogramBtn =
+    this.hideDetailedViewBtn =
       el(
         'div',
         {
@@ -122,22 +149,22 @@ export class ForecastSelectView {
             visibility: 'hidden',
             textAlign: 'center'
           },
-          title: 'Hide meteogram'
+          title: 'Hide'
         },
         'X'
       );
-    this.hideMeteogramBtn.onclick = () => { forecastSelect.hideMeteogram(); };
+    this.hideDetailedViewBtn.onclick = () => { forecastSelect.hideMeteogram(); };
 
     // Period selector and close button for the meteogram
     this.periodSelectorContainer =
       el(
         'span',
         { style: { position: 'absolute', top: 0, left: 0, zIndex: 1100, maxWidth: '100%', userSelect: 'none', cursor: 'default' } },
-        this.meteogramKeyEl,
+        this.detailedViewKeyEl,
         el(
           'div',
           { style: { display: 'flex', alignItems: 'flex-start' } },
-          this.hideMeteogramBtn,
+          this.hideDetailedViewBtn,
           this.periodSelectorEl
         )
       );
@@ -151,7 +178,7 @@ export class ForecastSelectView {
     this.currentDayContainer =
       el(
         'span',
-        { style: { position: 'absolute', bottom: 0, marginLeft: 'auto', marginRight: 'auto', left: 0, right: 0, textAlign: 'center', zIndex: 1050, userSelect: 'none', cursor: 'default' } },
+        { style: { position: 'absolute', bottom: 0, marginLeft: 'auto', marginRight: 'auto', left: 0, right: 0, textAlign: 'center', zIndex: 950, userSelect: 'none', cursor: 'default' } },
         el(
           'div',
           { style: { width: '125px', display: 'inline-block', backgroundColor: 'white' } },
@@ -199,19 +226,36 @@ export class ForecastSelectView {
     }
   }
 
-  showMeteogram(leftKey: HTMLElement, meteogram: HTMLElement, rightKey: HTMLElement, forecastOffsetAndDates: Array<[number, Date]>): void {
+  hideDetailedView(): void {
+    setChildren(this.detailedViewKeyEl, []);
+    setChildren(this.detailedViewEl, []);
+    setStyle(this.hideDetailedViewBtn, { visibility: 'hidden' });
+  }
+
+  private showDetailedView(keyChildren: Array<HTMLElement>, mainChildren: Array<HTMLElement>, forecastOffsetAndDates: Array<[number, Date]>) {
     const updatedPeriodSelectorEl = this.periodSelectorElement(forecastOffsetAndDates);
     mount(this.periodSelectorEl.parentElement as HTMLElement, updatedPeriodSelectorEl, this.periodSelectorEl, /* replace = */ true);
     this.periodSelectorEl = updatedPeriodSelectorEl;
-    setChildren(this.meteogramKeyEl, [leftKey]);
-    setChildren(this.meteogramEl, [meteogram, rightKey /* HACK Temporary... at some point we want to polish the layout... */]);
-    setStyle(this.hideMeteogramBtn, { visibility: 'visible' });
+    setChildren(this.detailedViewKeyEl, keyChildren);
+    setChildren(this.detailedViewEl, mainChildren);
+    setStyle(this.hideDetailedViewBtn, { visibility: 'visible' });
   }
 
-  hideMeteogram(): void {
-    setChildren(this.meteogramKeyEl, []);
-    setChildren(this.meteogramEl, []);
-    setStyle(this.hideMeteogramBtn, { visibility: 'hidden' });
+  showMeteogram(leftKey: HTMLElement, meteogram: HTMLElement, rightKey: HTMLElement, forecastOffsetAndDates: Array<[number, Date]>): void {
+    this.showDetailedView(
+      [leftKey],
+      [meteogram, rightKey /* HACK Temporary... at some point we want to polish the layout... */],
+      forecastOffsetAndDates
+    );
+  }
+
+  showSounding(forecast: DetailedForecast, elevation: number, forecastOffsetAndDates: Array<[number, Date]>): void {
+    const [leftKey, soundingEl] = sounding(forecast, elevation);
+    this.showDetailedView(
+      [leftKey],
+      [soundingEl],
+      forecastOffsetAndDates
+    );
   }
 
   private periodSelectorElement(forecastOffsetAndDates: Array<[number, Date]>): HTMLElement {
@@ -268,7 +312,7 @@ export class ForecastSelectView {
           'div',
           { style: { width: `${length * meteogramColumnWidth + this.marginLeft}px` } },
           el('div', periodSelectors),
-          this.meteogramEl
+          this.detailedViewEl
         )
       );
     return scrollablePeriodSelector

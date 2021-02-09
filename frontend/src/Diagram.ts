@@ -1,3 +1,4 @@
+import { cloudPattern } from "./shapes";
 
 type Point = [/* x */ number, /* y */ number]
 
@@ -25,7 +26,7 @@ export class Diagram {
     this.origX = this.topLeft[0];
   }
 
-  line(from: Point, to: Point, style: string, dash?: Array<number>, clip ?: boolean): void {
+  line(from: Point, to: Point, style: string, dash?: Array<number>, clip ?: boolean, lineWidth?: number): void {
     this.ctx.save();
     if (dash !== undefined) {
       this.ctx.setLineDash(dash);
@@ -35,8 +36,10 @@ export class Diagram {
       this.ctx.rect(this.origX, this.origY - this.height, this.ctx.canvas.width, this.height);
       this.ctx.clip();
     }
+    if (lineWidth !== undefined) {
+      this.ctx.lineWidth = lineWidth;
+    }
     this.ctx.strokeStyle = style;
-    this.ctx.lineWidth = 1;
     this.ctx.beginPath();
     this.ctx.moveTo(this.projectX(from[0]), this.projectY(from[1]));
     this.ctx.lineTo(this.projectX(to[0]), this.projectY(to[1]));
@@ -54,11 +57,14 @@ export class Diagram {
     this.ctx.fill();
   }
 
-  text(content: string, location: Point, style: string, align?: CanvasTextAlign): void {
+  text(content: string, location: Point, style: string, align?: CanvasTextAlign, baseline?: CanvasTextBaseline): void {
     this.ctx.save();
     this.ctx.fillStyle = style;
     if (align !== undefined) {
       this.ctx.textAlign = align;
+    }
+    if (baseline !== undefined) {
+      this.ctx.textBaseline = baseline;
     }
     this.ctx.fillText(content, this.projectX(location[0]), this.projectY(location[1]));
     this.ctx.restore();
@@ -117,3 +123,41 @@ export class Scale {
   }
 
 }
+
+export const nextValue = (currentValue: number, step: number): number =>
+  (Math.floor(currentValue / step) + 1) * step;
+
+export const previousValue = (currentValue: number, step: number): number =>
+  (Math.ceil(currentValue / step) - 1) * step;
+
+export const computeElevationLevels = (startLevel: number, step: number, maxLevel: number) => {
+  const firstElevationLevel = nextValue(startLevel + 150, step);
+  let nextElevationLevel = firstElevationLevel;
+  const elevationLevels = [startLevel];
+  while (nextElevationLevel < maxLevel) {
+    elevationLevels.push(nextElevationLevel);
+    nextElevationLevel = nextElevationLevel + step;
+  }
+  return elevationLevels
+}
+
+export const temperaturesRange =
+  (dewPoints: Array<number>, temperatures: Array<number>): [number, number] => {
+    const minTemperature =
+      Math.floor(
+        dewPoints.reduce((previousMin, dewPoint) => dewPoint < previousMin ? dewPoint : previousMin, Number.MAX_SAFE_INTEGER)
+      );
+    const maxTemperature =
+      Math.ceil(
+        temperatures.reduce((previousMax, temperature) => temperature > previousMax ? temperature : previousMax, Number.MIN_SAFE_INTEGER)
+      );
+    return [minTemperature, maxTemperature]
+  }
+
+export const skyStyle = '#85c1e9';
+export const boundaryLayerStyle = 'mediumspringgreen';
+
+export const meteogramColumnWidth = 33;
+
+// Pre-compute cloud pattern
+export const columnCloud = cloudPattern(meteogramColumnWidth / 3, 'rgba(255, 255, 255, 0.7)');
