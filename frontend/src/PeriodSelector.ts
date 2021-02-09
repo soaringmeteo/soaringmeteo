@@ -178,7 +178,7 @@ class View {
     this.currentDayContainer =
       el(
         'span',
-        { style: { position: 'absolute', bottom: 0, marginLeft: 'auto', marginRight: 'auto', left: 0, right: 0, textAlign: 'center', zIndex: 1050, userSelect: 'none', cursor: 'default' } },
+        { style: { position: 'absolute', bottom: 0, marginLeft: 'auto', marginRight: 'auto', left: 0, right: 0, textAlign: 'center', zIndex: 950, userSelect: 'none', cursor: 'default' } },
         el(
           'div',
           { style: { width: '125px', display: 'inline-block', backgroundColor: 'white' } },
