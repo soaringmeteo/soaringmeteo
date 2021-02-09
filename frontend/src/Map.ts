@@ -44,6 +44,7 @@ export const initializeMap = (element: HTMLElement): [CanvasLayer, L.Map] => {
   })
   
   L.control.zoom({ position: 'bottomright' }).addTo(map);
+  L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
   const canvas = new CanvasLayer;
   canvas.addTo(map);
