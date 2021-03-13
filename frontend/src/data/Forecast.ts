@@ -1,5 +1,4 @@
 import { ForecastMetadata } from "./ForecastMetadata";
-import { airDiagramHeightAboveGroundLevel } from "./Meteogram";
 
 export type ForecastPoint = {
   boundaryLayerHeight: number

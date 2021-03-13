@@ -3,7 +3,7 @@ import { initializeMap } from './Map';
 import { CanvasLayer } from './CanvasLayer';
 import { PeriodSelector } from './PeriodSelector';
 import { ForecastLayer } from './ForecastLayer';
-import { ForecastMetadata } from './ForecastMetadata';
+import { ForecastMetadata } from './data/ForecastMetadata';
 
 export class App {
 

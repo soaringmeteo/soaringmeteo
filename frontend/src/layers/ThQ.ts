@@ -1,4 +1,4 @@
-import { Forecast, ForecastPoint } from "../Forecast";
+import { Forecast, ForecastPoint } from "../data/Forecast";
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
 

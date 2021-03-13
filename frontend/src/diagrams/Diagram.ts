@@ -1,4 +1,4 @@
-import { cloudPattern } from "./shapes";
+import { cloudPattern } from "../shapes";
 
 type Point = [/* x */ number, /* y */ number]
 

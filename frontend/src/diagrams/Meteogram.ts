@@ -1,8 +1,8 @@
 import { el } from 'redom';
-import { LocationForecasts, DetailedForecast } from './Forecast';
-import { drawWindArrow, lightningShape } from './shapes';
+import { LocationForecasts, DetailedForecast } from '../data/Forecast';
+import { drawWindArrow, lightningShape } from '../shapes';
 import { Diagram, Scale, boundaryLayerStyle, columnCloud, computeElevationLevels, skyStyle, temperaturesRange, meteogramColumnWidth } from './Diagram';
-import { value as thqValue, colorScale as thqColorScale } from './layers/ThQ';
+import { value as thqValue, colorScale as thqColorScale } from '../layers/ThQ';
 
 export const keyWidth = 40;
 export const airDiagramHeightAboveGroundLevel = 3500; // m

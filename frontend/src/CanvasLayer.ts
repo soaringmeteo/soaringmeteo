@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import { modelResolution, Forecast, ForecastPoint } from './Forecast';
+import { modelResolution, Forecast, ForecastPoint } from './data/Forecast';
 
 export type CanvasLayer = {
   setDataSource(dataSource: DataSource): void

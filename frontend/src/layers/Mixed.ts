@@ -1,5 +1,5 @@
 import { drawWindArrow } from "../shapes";
-import { Forecast, ForecastPoint } from "../Forecast";
+import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { drawCloudCover } from "./CloudCover";
 import { drawBoundaryLayerDepth } from "./BoundaryLayerDepth";

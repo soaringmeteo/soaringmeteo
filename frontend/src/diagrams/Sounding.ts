@@ -1,8 +1,8 @@
 import { el } from 'redom';
 import { Diagram, Scale, boundaryLayerStyle, columnCloud, computeElevationLevels, nextValue, previousValue, skyStyle, temperaturesRange } from './Diagram';
-import { DetailedForecast } from "./Forecast";
+import { DetailedForecast } from "../data/Forecast";
 import { keyWidth } from './Meteogram';
-import { drawWindArrow } from './shapes';
+import { drawWindArrow } from '../shapes';
 
 const temperatureScaleAndLevels = (forecast: DetailedForecast, pixelRange: [number, number]): [Scale, Array<number>] => {
 

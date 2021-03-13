@@ -1,6 +1,6 @@
 import 'leaflet/dist/leaflet.css';
 import { App } from './App';
-import { fetchForecasts } from './ForecastMetadata';
+import { fetchForecasts } from './data/ForecastMetadata';
 
 const containerElement = document.getElementById('app');
 if (containerElement !== null) {

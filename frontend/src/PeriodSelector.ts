@@ -1,11 +1,11 @@
 import { el, mount, setChildren, setStyle, unmount } from 'redom';
 import { App } from './App';
-import { DetailedForecast, LocationForecasts } from './Forecast';
+import { DetailedForecast, LocationForecasts } from './data/Forecast';
 import * as L from 'leaflet';
-import { meteogram, keyWidth } from './Meteogram';
-import { ForecastMetadata, forecastOffsets, periodsPerDay } from './ForecastMetadata';
-import { sounding } from './Sounding';
-import { meteogramColumnWidth } from './Diagram';
+import { meteogram, keyWidth } from './diagrams/Meteogram';
+import { ForecastMetadata, forecastOffsets, periodsPerDay } from './data/ForecastMetadata';
+import { sounding } from './diagrams/Sounding';
+import { meteogramColumnWidth } from './diagrams/Diagram';
 
 export class PeriodSelector {
 

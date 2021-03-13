@@ -2,7 +2,7 @@ import { el, mount, setChildren } from 'redom';
 import { DataSource, CanvasLayer } from "./CanvasLayer";
 import * as L from 'leaflet';
 import { Mixed } from './layers/Mixed';
-import { Forecast, ForecastData } from './Forecast';
+import { Forecast, ForecastData } from './data/Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
 import { App } from './App';
 import { ColorScale } from './ColorScale';
@@ -12,7 +12,7 @@ import { Wind, windColor } from './layers/Wind';
 import { None } from './layers/None';
 import { drawWindArrow } from './shapes';
 import layersImg from './images/layers.png';
-import { ForecastMetadata } from './ForecastMetadata';
+import { ForecastMetadata } from './data/ForecastMetadata';
 import { Rain, rainColorScale } from './layers/Rain';
 
 class Renderer {
