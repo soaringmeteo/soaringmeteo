@@ -1,5 +1,4 @@
 import { el, mount, setChildren, setStyle, unmount } from 'redom';
-import { App } from './App';
 import { DetailedForecast, LocationForecasts } from './data/Forecast';
 import * as L from 'leaflet';
 import { meteogram, keyWidth } from './diagrams/Meteogram';
@@ -21,9 +20,15 @@ export class PeriodSelector {
   private detailedView: 'sounding' | 'meteogram'
   getDetailedView(): 'sounding' | 'meteogram' { return this.detailedView }
 
-  private view: View
+  private readonly view: View
 
-  constructor(private readonly app: App, readonly forecastMetadata: ForecastMetadata, containerElement: HTMLElement) {
+  constructor(
+    readonly forecastMetadata: ForecastMetadata,
+    containerElement: HTMLElement,
+    readonly notify: {
+      hourOffset: (ho: number) => void
+    }
+  ) {
     // TODO Compute based on user preferred time zone (currently hard-coded for central Europe)
     this.morningOffset = 9;
     const noonOffset   = 12;
@@ -38,7 +43,7 @@ export class PeriodSelector {
     // TODO Guards
     if (value !== this.hourOffset) {
       this.hourOffset = value;
-      this.app.forecastLayer.updateForecast();
+      this.notify.hourOffset(this.hourOffset);
       this.view.updateSelectedForecast();
     }
   }

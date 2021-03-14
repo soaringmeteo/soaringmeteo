@@ -123,14 +123,25 @@ export class ForecastLayer {
   private rendererKeyEl: HTMLElement;
 
   // TODO Take as parameter the pre-selected layer
-  constructor(readonly app: App, containerElement: HTMLElement) {
+  constructor(
+    containerElement: HTMLElement,
+    detailedView: 'sounding' | 'meteogram',
+    forecasts: Array<ForecastMetadata>,
+    currentForecast: ForecastMetadata,
+    hourOffset: number,
+    canvas: CanvasLayer,
+    private readonly notify: {
+      detailedView: (dv: 'sounding' | 'meteogram') => void,
+      forecast: (f: ForecastMetadata) => void,
+      renderer: () => void
+    }
+  ) {
     this.renderer = mixedRenderer;
 
-    const detailedView = this.app.periodSelector.getDetailedView();
     const [meteogramEl, meteogramInput] = makeRadioBtn('Meteogram', 'Meteogram', detailedView === 'meteogram', 'detailed-view');
-    meteogramInput.onchange = () => this.app.periodSelector.updateDetailedView('meteogram');
+    meteogramInput.onchange = () => notify.detailedView('meteogram');
     const [soundingEl, soundingInput]  = makeRadioBtn('Sounding', 'Sounding', detailedView === 'sounding', 'detailed-view');
-    soundingInput.onchange = () => this.app.periodSelector.updateDetailedView('sounding');
+    soundingInput.onchange = () => notify.detailedView('sounding');
 
     const detailedViewEl = el(
       'fieldset',
@@ -142,17 +153,17 @@ export class ForecastLayer {
     const selectForecastEl = el(
       'fieldset',
       el('legend', 'Initialization Time'),
-      this.app.forecasts
+      forecasts
         .map(forecast => {
           const initTimeString =
             forecast.init.toLocaleString(undefined, { month: 'short', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
           const [container, input] = makeRadioBtn(
             initTimeString,
             `Show forecast initialized at ${initTimeString}.`,
-            this.app.forecastMetadata === forecast,
+            currentForecast === forecast,
             'init'
           )
-          input.onchange = () => { this.app.selectForecast(forecast) };
+          input.onchange = () => { notify.forecast(forecast) };
           return container
         })
     );
@@ -218,6 +229,8 @@ export class ForecastLayer {
     this.rendererKeyEl = el('div', { style: { position: 'absolute', bottom: '5px', left: '5px', zIndex: 1000, backgroundColor: 'rgba(255, 255,  255, 0.5' } });
     this.replaceRendererKeyEl();
     mount(containerElement, this.rendererKeyEl);
+
+    this.renderer.update(currentForecast, hourOffset, canvas);
   }
 
   private setupRendererBtn(renderer: Renderer): HTMLElement {
@@ -229,15 +242,15 @@ export class ForecastLayer {
   private setRenderer(renderer: Renderer): void {
     this.renderer = renderer;
     this.replaceRendererKeyEl();
-    this.updateForecast();
+    this.notify.renderer();
   }
 
   private replaceRendererKeyEl(): void {
     setChildren(this.rendererKeyEl, [this.renderer.mapKeyEl()]);
   }
 
-  updateForecast(): void {
-    this.renderer.update(this.app.forecastMetadata, this.app.periodSelector.getHourOffset(), this.app.canvas);
+  updateForecast(forecastMetadata: ForecastMetadata, hourOffset: number, canvas: CanvasLayer): void {
+    this.renderer.update(forecastMetadata, hourOffset, canvas);
   }
 
 }
