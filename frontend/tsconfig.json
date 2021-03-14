@@ -6,5 +6,6 @@
     "strict": true,
     "inlineSourceMap": true
   },
-  "include": ["./pngs.d.ts"]
+  "include": ["./pngs.d.ts"],
+  "exclude": ["node_modules"]
 }

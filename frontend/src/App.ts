@@ -1,4 +1,6 @@
-import { el, mount, setStyle } from 'redom';
+import h from 'solid-js/h'
+import { insert, style } from 'solid-js/web'
+
 import { initializeMap } from './Map';
 import { CanvasLayer } from './CanvasLayer';
 import { PeriodSelector } from './PeriodSelector';
@@ -15,11 +17,11 @@ export class App {
   forecastMetadata: ForecastMetadata
 
   constructor(readonly forecasts: Array<ForecastMetadata>, containerElement: HTMLElement) {
-    setStyle(containerElement, { display: 'flex', alignIitems: 'stretch', alignContent: 'stretch' });
+    style(containerElement, { display: 'flex', 'align-items': 'stretch', 'align-content': 'stretch' });
     // The map *must* be initialized before we call the other constructors
     // It *must* also be mounted before we initialize it
-    this.mapElement = el('div', { style: { flex: 1 } });
-    mount(containerElement, this.mapElement);
+    this.mapElement = h('div', { style: { flex: 1 } });
+    insert(containerElement, this.mapElement);
 
     const [canvas, map] = initializeMap(this.mapElement);
     this.canvas = canvas;

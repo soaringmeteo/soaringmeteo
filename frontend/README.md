@@ -6,7 +6,7 @@ Frontend that consumes the JSON files produced by `makeGFSJson`.
 
 Make sure the npm command is available
 
-## Develop
+## Setup
 
 Run the following command once to download the project dependencies:
 
@@ -14,7 +14,17 @@ Run the following command once to download the project dependencies:
 npm install
 ~~~
 
-You need to run it again each time the dependencies change.
+## Build
+
+Run the following command:
+
+~~~
+npm run bundle
+~~~
+
+## Develop
+
+You need to run `npm install` again each time the dependencies change.
 
 Then, run the following command to start a web server showing the application:
 

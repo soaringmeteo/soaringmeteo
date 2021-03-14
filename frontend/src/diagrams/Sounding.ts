@@ -1,4 +1,5 @@
-import { el } from 'redom';
+import h from 'solid-js/h';
+
 import { Diagram, Scale, boundaryLayerStyle, columnCloud, computeElevationLevels, nextValue, previousValue, skyStyle, temperaturesRange } from './Diagram';
 import { DetailedForecast } from "../data/Forecast";
 import { keyWidth } from './Meteogram';
@@ -32,7 +33,7 @@ export const sounding = (forecast: DetailedForecast, elevation: number): [HTMLEl
 
   // Main canvas contains the sounding diagram
   const canvas =
-    el(
+    h(
       'canvas',
       {
         width: canvasWidth,
@@ -44,7 +45,7 @@ export const sounding = (forecast: DetailedForecast, elevation: number): [HTMLEl
 
   // Left key contains the vertical axis of the sounding diagram
   const canvasLeftKey =
-    el(
+    h(
       'canvas',
       {
         width: keyWidth,

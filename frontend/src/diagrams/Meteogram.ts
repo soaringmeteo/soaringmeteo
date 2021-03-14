@@ -1,4 +1,5 @@
-import { el } from 'redom';
+import h from 'solid-js/h';
+
 import { LocationForecasts, DetailedForecast } from '../data/Forecast';
 import { drawWindArrow, lightningShape } from '../shapes';
 import { Diagram, Scale, boundaryLayerStyle, columnCloud, computeElevationLevels, skyStyle, temperaturesRange, meteogramColumnWidth } from './Diagram';
@@ -63,7 +64,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
   const canvasWidth  = meteogramColumnWidth * forecasts.dayForecasts.reduce((n, forecast) => n + forecast.forecasts.length, 0);
   const canvasHeight = rainDiagramTop + rainDiagramHeight + gutterHeight;
-  const canvas = el(
+  const canvas = h(
     'canvas',
     {
       width: canvasWidth,
@@ -327,7 +328,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     })
   }
 
-  const canvasLeftKey = el(
+  const canvasLeftKey = h(
     'canvas',
     {
       width: keyWidth,
@@ -390,7 +391,7 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
   }
 
-  const canvasRightKey = el(
+  const canvasRightKey = h(
     'canvas',
     {
       width: keyWidth,
