@@ -4,7 +4,7 @@ import { createMemo, JSX } from 'solid-js';
 
 import { LocationForecasts } from './data/Forecast';
 import { keyWidth, meteogram } from './diagrams/Meteogram';
-import { ForecastMetadata, forecastOffsets, periodsPerDay } from './data/ForecastMetadata';
+import { ForecastMetadata, forecastOffsets, periodsPerDay, showDate } from './data/ForecastMetadata';
 import { sounding } from './diagrams/Sounding';
 import { meteogramColumnWidth } from './diagrams/Diagram';
 
@@ -35,7 +35,7 @@ const PeriodSelector = (props: {
               style: { display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray', width: `${meteogramColumnWidth}px`, 'line-height': '20px', 'box-sizing': 'border-box', 'text-align': 'center' },
               onClick: () => props.onClick(gfsOffset)
             },
-            date.toLocaleTimeString(undefined, { hour12: false, hour: 'numeric' })
+            date.toLocaleTimeString(undefined, { hour12: false, hour: '2-digit' })
           );
           hover(htmlEl);
           return [htmlEl, date]
@@ -69,7 +69,7 @@ const PeriodSelector = (props: {
             'div',
             { style: { width: `${periods.length * meteogramColumnWidth}px`, 'text-align': 'center', 'box-sizing': 'border-box', 'border-right': 'thin solid darkGray', 'border-left': 'thin solid darkGray', 'line-height': '13px' } },
             periods.length === periodsPerDay ?
-              date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', weekday: 'short' }) :
+              date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', weekday: 'short' }) :
               '\xa0'
           ),
           // Periods in each day
@@ -95,12 +95,14 @@ const PeriodSelector = (props: {
   return scrollablePeriodSelector
 }
 
+export type DetailedViewType = 'meteogram' | 'sounding'
+
 /**
  * @returns A pair of a reactive element for the detailed view key, and a
  *          reactive element for the detailed view.
  */
 const DetailedView = (props: {
-  detailedView: 'meteogram' | 'sounding'
+  detailedView: DetailedViewType
   locationForecasts: undefined | LocationForecasts
   hourOffset: number
 }): [() => JSX.Element, () => JSX.Element] => {
@@ -133,7 +135,7 @@ const DetailedView = (props: {
  */
 export const PeriodSelectors = (props: {
   forecastMetadata: ForecastMetadata,
-  detailedView: 'meteogram' | 'sounding'
+  detailedView: DetailedViewType
   locationForecasts: undefined | LocationForecasts,
   hourOffset: number,
   morningOffset: number,
@@ -158,11 +160,10 @@ export const PeriodSelectors = (props: {
   const buttonStyle = { padding: '0.2em', display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box' };
   const currentDayEl = h(
     'div',
-    () => {
-      const forecastDateTime = new Date(props.forecastMetadata.init);
-      forecastDateTime.setUTCHours(props.forecastMetadata.init.getUTCHours() + props.hourOffset);
-      return forecastDateTime.toLocaleString(undefined, { month: 'short', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
-    }
+    () => showDate(
+      props.forecastMetadata.dateAtHourOffset(props.hourOffset),
+      { showWeekDay: true }
+    )
   );
 
   const previousDayBtn = hover(h(

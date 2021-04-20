@@ -4,7 +4,8 @@ import h from 'solid-js/h';
 
 import { DataSource, CanvasLayer } from "./CanvasLayer";
 import { Mixed } from './layers/Mixed';
-import { Forecast, ForecastData } from './data/Forecast';
+import { DetailedViewType } from './PeriodSelector';
+import { Forecast } from './data/Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
 import { ColorScale } from './ColorScale';
 import { CloudCover, cloudCoverColorScale } from './layers/CloudCover';
@@ -13,7 +14,7 @@ import { Wind, windColor } from './layers/Wind';
 import { None } from './layers/None';
 import { drawWindArrow } from './shapes';
 import layersImg from './images/layers.png';
-import { ForecastMetadata } from './data/ForecastMetadata';
+import { ForecastMetadata, showDate } from './data/ForecastMetadata';
 import { Rain, rainColorScale } from './layers/Rain';
 
 class Renderer {
@@ -26,9 +27,8 @@ class Renderer {
   ) {}
 
   update(forecastMetadata: ForecastMetadata, hourOffset: number, canvas: CanvasLayer) {
-    fetch(`${forecastMetadata.initS}+${hourOffset}.json`)
-      .then(response => response.json())
-      .then((data: ForecastData) => canvas.setDataSource(this.renderer(new Forecast(data))))
+    forecastMetadata.fetchForecastAtHourOffset(hourOffset)
+      .then(forecast => canvas.setDataSource(this.renderer(forecast)))
       .catch(error => {
         console.error(error);
         alert('Unable to retrieve forecast data');
@@ -59,7 +59,7 @@ const windScaleEl = (): HTMLElement => {
       canvas.width = 40;
       canvas.height = 30;
       const ctx = canvas.getContext('2d');
-      if (ctx == null) { return }
+      if (ctx === null) { return }
       drawWindArrow(ctx, canvas.width / 2, canvas.height / 2, canvas.width - 4, windColor(0.50), windSpeed, 0);
       return h(
         'div',
@@ -120,11 +120,11 @@ const mixedRenderer = new Renderer(
  */
 export const ForecastLayer = (props: {
   hourOffset: number
-  detailedView: 'meteogram' | 'sounding'
+  detailedView: DetailedViewType
   forecasts: Array<ForecastMetadata>
   currentForecast: ForecastMetadata
   canvas: CanvasLayer
-  onChangeDetailedView: (value: 'meteogram' | 'sounding') => void
+  onChangeDetailedView: (value: DetailedViewType) => void
   onChangeForecast: (value: ForecastMetadata) => void
 }): JSX.Element => {
   // TODO Take as parameter the pre-selected layer
@@ -157,8 +157,7 @@ export const ForecastLayer = (props: {
     h('legend', 'Initialization Time'),
     () => props.forecasts
       .map(forecast => {
-        const initTimeString =
-          forecast.init.toLocaleString(undefined, { month: 'short', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
+        const initTimeString = showDate(forecast.init, { showWeekDay: true });
         const container = makeRadioBtn(
           initTimeString,
           `Show forecast initialized at ${initTimeString}.`,

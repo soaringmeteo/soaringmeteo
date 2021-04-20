@@ -1,4 +1,4 @@
-import { LocationForecasts, LocationForecastsData, normalizeCoordinates } from "./Forecast";
+import { Forecast, ForecastData, LocationForecasts, LocationForecastsData, normalizeCoordinates } from "./Forecast";
 
 type ForecastMetadataData = {
   h: number      // number of days of historic forecast kept (e.g., 4)
@@ -7,26 +7,52 @@ type ForecastMetadataData = {
   latest: number // e.g., 189
   prev?: [string, string]  // e.g., ["2020-04-13T18-forecast.json", "2020-04-13T18:00:00Z"]
 }
-
 export class ForecastMetadata {
   readonly initS: string
   readonly init: Date
   readonly latest: number
+
   constructor(data: ForecastMetadataData) {
     this.initS = data.initS;
     this.init = new Date(data.init);
     this.latest = data.latest;
   }
 
-  /** URI of forecast data at the given coordinates */
+  /**
+   * @returns The `Date` at the given “hour offset”
+   */
+  dateAtHourOffset(hourOffset: number): Date {
+    const date = new Date(this.init);
+    date.setUTCHours(this.init.getUTCHours() + hourOffset);
+    return date
+  }
+
+  /**
+   * Fetches the detailed forecast data at the given location.
+   * Fails with an error in case of failure.
+   */
   async fetchLocationForecasts(latitude: number, longitude: number): Promise<LocationForecasts> {
     try {
       const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(latitude, longitude);
       const response = await fetch(`${this.initS}-${normalizedLongitude}-${normalizedLatitude}.json`);
       const data     = await response.json() as LocationForecastsData;
       return new LocationForecasts(data, this)
-    } catch (err) {
-      throw `Unable to fetch forecast data at ${latitude},${longitude}: ${err}`;
+    } catch (error) {
+      throw `Unable to fetch forecast data at ${latitude},${longitude}: ${error}`;
+    }
+  }
+
+  /**
+   * Fetches the forecast data at the given hour offset.
+   * Never completes in case of failure (but logs the error).
+   */
+  async fetchForecastAtHourOffset(hourOffset: number): Promise<Forecast> {
+    try {
+      const response = await fetch(`${this.initS}+${hourOffset}.json`);
+      const data     = await response.json() as ForecastData;
+      return new Forecast(data)
+    } catch (error) {
+      throw `Unable to retrieve forecast data ${hourOffset} hour(s) after the initialization time: ${error}`;
     }
   }
 
@@ -44,6 +70,22 @@ export const fetchForecasts = async (): Promise<Array<ForecastMetadata>> => {
   return previousForecasts.concat([latestForecast]);
 }
 
+/**
+ * @param forecasts  All the available forecasts
+ * @param noonOffset Number of hours to add to 00:00Z
+ * @returns A pair containing the latest forecast in the array, and the initial
+ *          value for the “hour offset” (which models the number of hours to
+ *          add to the forecast initialization time to show a particular period)
+ */
+export const latestForecast = (forecasts: Array<ForecastMetadata>, noonOffset: number): [ForecastMetadata, number] => {
+  const forecastMetadata = forecasts[forecasts.length - 1];
+  // Time (in number of hours since 00:00Z) at which the forecast model was initialized (ie, 0, 6, 12, or 18 for GFS)
+  const forecastInitOffset = +forecastMetadata.init.getUTCHours();
+  // Tomorrow (or today, if forecast model was initialized at midnight), noon period
+  const hourOffset = (forecastInitOffset === 0 ? 0 : 24) + noonOffset - forecastInitOffset;
+  return [forecastMetadata, hourOffset]
+};
+
 const fetchPreviousForecasts = async (oldestForecastInitDate: Date, maybePreviousData?: [string, string]): Promise<Array<ForecastMetadata>> => {
   if (maybePreviousData !== undefined && new Date(maybePreviousData[1]) >= oldestForecastInitDate) {
     const response = await fetch(maybePreviousData[0]);
@@ -54,6 +96,19 @@ const fetchPreviousForecasts = async (oldestForecastInitDate: Date, maybePreviou
     return []
   }
 }
+
+export const showDate = (date: Date, options?: { showWeekDay?: boolean }): string =>
+  date.toLocaleString(
+    undefined,
+    {
+      weekday: (options && options.showWeekDay && 'short') || undefined,
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }
+  )
 
 // We show three forecast periods per day: morning, noon, and afternoon
 export const periodsPerDay = 3;
