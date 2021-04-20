@@ -4,14 +4,15 @@ import { LocationForecasts, DetailedForecast } from '../data/Forecast';
 import { drawWindArrow, lightningShape } from '../shapes';
 import { Diagram, Scale, boundaryLayerStyle, columnCloud, computeElevationLevels, skyStyle, temperaturesRange, meteogramColumnWidth } from './Diagram';
 import { value as thqValue, colorScale as thqColorScale } from '../layers/ThQ';
+import { JSX } from 'solid-js';
 
 export const keyWidth = 40;
 export const airDiagramHeightAboveGroundLevel = 3500; // m
 
 /**
- * @return [left key element, meteogram element, right key element]
+ * @return [left key element, [meteogram element, right key element]]
  */
-export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLElement, HTMLElement] => {
+ export const meteogram = (forecasts: LocationForecasts): [JSX.Element, JSX.Element] => {
 
   const flatForecasts: Array<DetailedForecast> =
     forecasts.dayForecasts.map(x => x.forecasts).reduce((x, y) => x.concat(y), []); // Alternative to flatMap
@@ -62,16 +63,13 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
   const temperatureLevels = Array.from({ length: rainDiagramResolution }, (_, i) => minTemperature + temperatureDelta * i / 3);
   const temperatureStyle  = 'black';
 
-  const canvasWidth  = meteogramColumnWidth * forecasts.dayForecasts.reduce((n, forecast) => n + forecast.forecasts.length, 0);
-  const canvasHeight = rainDiagramTop + rainDiagramHeight + gutterHeight;
-  const canvas = h(
-    'canvas',
-    {
-      width: canvasWidth,
-      height: canvasHeight,
-      style: { width: `${canvasWidth}px`, height: `${canvasHeight}px` }
-    }
-  ) as HTMLCanvasElement;
+  const canvasWidth   = meteogramColumnWidth * forecasts.dayForecasts.reduce((n, forecast) => n + forecast.forecasts.length, 0);
+  const canvasHeight  = rainDiagramTop + rainDiagramHeight + gutterHeight;
+  const canvas = h('canvas', {
+    width: canvasWidth,
+    height: canvasHeight,
+    style: { width: `${canvasWidth}px`, height: `${canvasHeight}px` }
+  }) as HTMLCanvasElement;
   const ctx = canvas.getContext('2d');
 
   if (ctx !== null && forecasts.dayForecasts.length !== 0) {
@@ -328,14 +326,11 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
     })
   }
 
-  const canvasLeftKey = h(
-    'canvas',
-    {
-      width: keyWidth,
-      height: canvasHeight,
-      style: { flex: '0 0 auto', width: `${keyWidth}px`, height: `${canvasHeight}px` }
-    }
-  ) as HTMLCanvasElement;
+  const canvasLeftKey = h('canvas', {
+    width: keyWidth,
+    height: canvasHeight,
+    style: { flex: '0 0 auto', width: `${keyWidth}px`, height: `${canvasHeight}px` }
+  }) as HTMLCanvasElement;
   const leftKeyCtx = canvasLeftKey.getContext('2d');
   if (leftKeyCtx !== null) {
     // Thq
@@ -391,14 +386,15 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
   }
 
-  const canvasRightKey = h(
-    'canvas',
-    {
-      width: keyWidth,
-      height: canvasHeight,
-      style: { flex: '0 0 auto', width: `${keyWidth}px`, height: `${canvasHeight}px` }
+  const canvasRightKey = h('canvas', {
+    width: keyWidth,
+    height: canvasHeight,
+    style: {
+      flex: '0 0 auto',
+      width: `${keyWidth}px`,
+      height: `${canvasHeight}px`
     }
-  ) as HTMLCanvasElement;
+  }) as HTMLCanvasElement;
   const rightKeyCtx = canvasRightKey.getContext('2d');
   if (rightKeyCtx !== null) {
     // Temperature
@@ -440,5 +436,5 @@ export const meteogram = (forecasts: LocationForecasts): [HTMLElement, HTMLEleme
 
   }
 
-  return [canvasLeftKey, canvas, canvasRightKey]
-}
+  return [canvasLeftKey, [canvas, canvasRightKey]]
+};

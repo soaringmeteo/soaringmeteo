@@ -1,12 +1,11 @@
 import * as L from 'leaflet';
+import { createEffect, createState, JSX } from 'solid-js';
 import h from 'solid-js/h';
-import { insert } from 'solid-js/web';
 
 import { DataSource, CanvasLayer } from "./CanvasLayer";
 import { Mixed } from './layers/Mixed';
 import { Forecast, ForecastData } from './data/Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
-import { App } from './App';
 import { ColorScale } from './ColorScale';
 import { CloudCover, cloudCoverColorScale } from './layers/CloudCover';
 import { boundaryDepthColorScale, BoundaryLayerDepth } from './layers/BoundaryLayerDepth';
@@ -119,151 +118,155 @@ const mixedRenderer = new Renderer(
 /**
  * Overlay on the map that displays the soaring forecast.
  */
-export class ForecastLayer {
-
-  private renderer: Renderer;
-  private rendererKeyEl: HTMLElement;
-
+export const ForecastLayer = (props: {
+  hourOffset: number
+  detailedView: 'meteogram' | 'sounding'
+  forecasts: Array<ForecastMetadata>
+  currentForecast: ForecastMetadata
+  canvas: CanvasLayer
+  onChangeDetailedView: (value: 'meteogram' | 'sounding') => void
+  onChangeForecast: (value: ForecastMetadata) => void
+}): JSX.Element => {
   // TODO Take as parameter the pre-selected layer
-  constructor(
-    containerElement: HTMLElement,
-    detailedView: 'sounding' | 'meteogram',
-    forecasts: Array<ForecastMetadata>,
-    currentForecast: ForecastMetadata,
-    hourOffset: number,
-    canvas: CanvasLayer,
-    private readonly notify: {
-      detailedView: (dv: 'sounding' | 'meteogram') => void,
-      forecast: (f: ForecastMetadata) => void,
-      renderer: () => void
-    }
-  ) {
-    this.renderer = mixedRenderer;
+  const [state, setState] = createState({ renderer: mixedRenderer });
 
-    const [meteogramEl, meteogramInput] = makeRadioBtn('Meteogram', 'Meteogram', detailedView === 'meteogram', 'detailed-view');
-    meteogramInput.onchange = () => notify.detailedView('meteogram');
-    const [soundingEl, soundingInput]  = makeRadioBtn('Sounding', 'Sounding', detailedView === 'sounding', 'detailed-view');
-    soundingInput.onchange = () => notify.detailedView('sounding');
+  const meteogramEl = makeRadioBtn(
+    'Meteogram',
+    'Meteogram',
+    () => props.detailedView === 'meteogram',
+    'detailed-view',
+    () => props.onChangeDetailedView('meteogram')
+  );
+  const soundingEl  = makeRadioBtn(
+    'Sounding',
+    'Sounding',
+    () => props.detailedView === 'sounding',
+    'detailed-view',
+    () => props.onChangeDetailedView('sounding')
+  );
 
-    const detailedViewEl = h(
-      'fieldset',
-      h('legend', 'Detailed View'),
-      meteogramEl,
-      soundingEl
+  const detailedViewEl = h(
+    'fieldset',
+    h('legend', 'Detailed View'),
+    meteogramEl,
+    soundingEl
+  );
+
+  const selectForecastEl = h(
+    'fieldset',
+    h('legend', 'Initialization Time'),
+    () => props.forecasts
+      .map(forecast => {
+        const initTimeString =
+          forecast.init.toLocaleString(undefined, { month: 'short', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
+        const container = makeRadioBtn(
+          initTimeString,
+          `Show forecast initialized at ${initTimeString}.`,
+          () => props.currentForecast === forecast,
+          'init',
+          () => props.onChangeForecast(forecast)
+        )
+        return container
+      })
+  );
+
+  function setupRendererBtn(renderer: Renderer): HTMLElement {
+    const container = makeRadioBtn(
+      renderer.name,
+      renderer.title,
+      () => state.renderer === renderer,
+      'layer',
+      () => setState({ renderer })
     );
-
-    const selectForecastEl = h(
-      'fieldset',
-      h('legend', 'Initialization Time'),
-      forecasts
-        .map(forecast => {
-          const initTimeString =
-            forecast.init.toLocaleString(undefined, { month: 'short', weekday: 'short', day: 'numeric', hour12: false, hour: 'numeric', minute: 'numeric' });
-          const [container, input] = makeRadioBtn(
-            initTimeString,
-            `Show forecast initialized at ${initTimeString}.`,
-            currentForecast === forecast,
-            'init'
-          )
-          input.onchange = () => { notify.forecast(forecast) };
-          return container
-        })
-    );
-
-    const noneEl = this.setupRendererBtn(noneRenderer);
-    const thqEl = this.setupRendererBtn(thqRenderer);
-    const boundaryLayerHeightEl = this.setupRendererBtn(boundaryLayerHeightRenderer);
-    const windEl = this.setupRendererBtn(windRenderer);
-    const cloudCoverEl = this.setupRendererBtn(cloudCoverRenderer);
-    const rainEl = this.setupRendererBtn(rainRenderer);
-    const mixedEl = this.setupRendererBtn(mixedRenderer);
-
-    const layerEl = h(
-      'fieldset',
-      h('legend', 'Layer'),
-      noneEl,
-      thqEl,
-      boundaryLayerHeightEl,
-      windEl,
-      cloudCoverEl,
-      rainEl,
-      mixedEl,
-    );
-
-    const selectEl = h(
-      'div',
-      { style: { display: 'none' } },
-      detailedViewEl,
-      selectForecastEl,
-      layerEl
-    );
-
-    const layersBtn = h(
-      'div',
-      { style: {  } },
-      h(
-        'a',
-        { style: { width: '44px', height: '44px', 'background-image': `url('${layersImg}')`, display: 'block', 'background-position': '50% 50%', 'background-repeat': 'no-repeat' } }
-      )
-    );
-
-    const rootElement = h(
-      'div',
-      { style: { position: 'absolute', right: '3px', bottom: '100px', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, background: 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '5px', 'user-select': 'none' } },
-      layersBtn,
-      selectEl
-    ) as HTMLElement;
-
-    rootElement.onmouseenter = _ => {
-      selectEl.style.display = 'unset';
-      layersBtn.style.display = 'none';
-    };
-
-    rootElement.onmouseleave = _ => {
-      selectEl.style.display = 'none';
-      layersBtn.style.display = 'unset';
-    };
-
-    L.DomEvent.disableClickPropagation(rootElement);
-    L.DomEvent.disableScrollPropagation(rootElement);
-    insert(containerElement, rootElement);
-
-    this.rendererKeyEl = h('div', { style: { position: 'absolute', bottom: '5px', left: '5px', 'z-index': 1000, 'background-color': 'rgba(255, 255,  255, 0.5' } });
-    this.replaceRendererKeyEl();
-    insert(containerElement, this.rendererKeyEl);
-
-    this.renderer.update(currentForecast, hourOffset, canvas);
-  }
-
-  private setupRendererBtn(renderer: Renderer): HTMLElement {
-    const [container, input] = makeRadioBtn(renderer.name, renderer.title, this.renderer === renderer, 'layer');
-    input.onchange = () => { this.setRenderer(renderer); };
     return container
   }
 
-  private setRenderer(renderer: Renderer): void {
-    this.renderer = renderer;
-    this.replaceRendererKeyEl();
-    this.notify.renderer();
-  }
+  const noneEl = setupRendererBtn(noneRenderer);
+  const thqEl = setupRendererBtn(thqRenderer);
+  const boundaryLayerHeightEl = setupRendererBtn(boundaryLayerHeightRenderer);
+  const windEl = setupRendererBtn(windRenderer);
+  const cloudCoverEl = setupRendererBtn(cloudCoverRenderer);
+  const rainEl = setupRendererBtn(rainRenderer);
+  const mixedEl = setupRendererBtn(mixedRenderer);
 
-  private replaceRendererKeyEl(): void {
-    if (this.rendererKeyEl.childElementCount === 0) insert(this.rendererKeyEl, this.renderer.mapKeyEl());
-    else this.rendererKeyEl.replaceChild(this.renderer.mapKeyEl(), this.rendererKeyEl.firstChild as ChildNode);
-  }
+  const layerEl = h(
+    'fieldset',
+    h('legend', 'Layer'),
+    noneEl,
+    thqEl,
+    boundaryLayerHeightEl,
+    windEl,
+    cloudCoverEl,
+    rainEl,
+    mixedEl,
+  );
 
-  updateForecast(forecastMetadata: ForecastMetadata, hourOffset: number, canvas: CanvasLayer): void {
-    this.renderer.update(forecastMetadata, hourOffset, canvas);
-  }
+  const selectEl = h(
+    'div',
+    { style: { display: 'none' } },
+    detailedViewEl,
+    selectForecastEl,
+    layerEl
+  );
 
-}
+  const layersBtn = h(
+    'div',
+    { style: {  } },
+    h(
+      'a',
+      { style: { width: '44px', height: '44px', 'background-image': `url('${layersImg}')`, display: 'block', 'background-position': '50% 50%', 'background-repeat': 'no-repeat' } }
+    )
+  );
 
-const makeRadioBtn = (label: string, title: string, checked: boolean, groupName: string): [HTMLElement, HTMLElement] => {
-  const input = h('input', { name: groupName, type: 'radio', checked: checked });
+  const rootElement = h(
+    'div',
+    { style: { position: 'absolute', right: '3px', bottom: '100px', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, background: 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '5px', 'user-select': 'none' } },
+    layersBtn,
+    selectEl
+  ) as HTMLElement;
+
+  rootElement.onmouseenter = _ => {
+    selectEl.style.display = 'unset';
+    layersBtn.style.display = 'none';
+  };
+
+  rootElement.onmouseleave = _ => {
+    selectEl.style.display = 'none';
+    layersBtn.style.display = 'unset';
+  };
+
+  L.DomEvent.disableClickPropagation(rootElement);
+  L.DomEvent.disableScrollPropagation(rootElement);
+
+  const rendererKeyEl = h('div', { style: { position: 'absolute', bottom: '5px', left: '5px', 'z-index': 1000, 'background-color': 'rgba(255, 255,  255, 0.5' } });
+  
+  createEffect(() => {
+    state.renderer.update(props.currentForecast, props.hourOffset, props.canvas);
+  })
+
+  return [rootElement, rendererKeyEl]
+};
+
+const makeRadioBtn = (
+  label: string,
+  title: string,
+  checked: () => boolean,
+  groupName: string,
+  onChange: () => void
+): HTMLElement => {
+  const input = h(
+    'input',
+    {
+      name: groupName,
+      type: 'radio',
+      checked: () => checked(),
+      onChange: () => onChange()
+    }
+  );
   const container = h(
     'div',
     { style: { 'background-color': 'rgba(255, 255, 255, 0.5)', 'text-align': 'right' } },
     h('label', { style: { cursor: 'pointer', padding: '0.3em' }, title: title }, label, input)
   );
-  return [container, input]
+  return container
 }

@@ -6,7 +6,7 @@ const containerElement = document.getElementById('app');
 if (containerElement !== null) {
   fetchForecasts()
     .then((forecasts) => {
-      new App(forecasts, containerElement);
+      App(forecasts, containerElement);
     })
     .catch(reason => {
       console.error(reason);

@@ -1,82 +1,87 @@
+import { createEffect, createState } from 'solid-js';
 import h from 'solid-js/h'
-import { insert, style } from 'solid-js/web'
+import { insert, render, style } from 'solid-js/web'
 
 import { initializeMap } from './Map';
-import { CanvasLayer } from './CanvasLayer';
-import { PeriodSelector } from './PeriodSelector';
+import { PeriodSelectors } from './PeriodSelector';
 import { ForecastLayer } from './ForecastLayer';
 import { ForecastMetadata } from './data/ForecastMetadata';
+import { LocationForecasts } from './data/Forecast';
 
-export class App {
+export const App = (forecasts: Array<ForecastMetadata>, containerElement: HTMLElement): void => {
 
-  periodSelector: PeriodSelector
-  forecastLayer: ForecastLayer
-  readonly canvas: CanvasLayer
-  private readonly map: L.Map
-  private readonly mapElement: HTMLElement
-  forecastMetadata: ForecastMetadata
+  // The map *must* be initialized before we call the other constructors
+  // It *must* also be mounted before we initialize it
+  style(containerElement, { display: 'flex', 'align-items': 'stretch', 'align-content': 'stretch' });
+  const mapElement = h('div', { style: { flex: 1 } });
+  insert(containerElement, mapElement);
 
-  constructor(readonly forecasts: Array<ForecastMetadata>, containerElement: HTMLElement) {
-    style(containerElement, { display: 'flex', 'align-items': 'stretch', 'align-content': 'stretch' });
-    // The map *must* be initialized before we call the other constructors
-    // It *must* also be mounted before we initialize it
-    this.mapElement = h('div', { style: { flex: 1 } });
-    insert(containerElement, this.mapElement);
+  const [canvas, map] = initializeMap(mapElement);
 
-    const [canvas, map] = initializeMap(this.mapElement);
-    this.canvas = canvas;
-    this.map = map;
+  render(() => {
+    // TODO Compute based on user preferred time zone (currently hard-coded for central Europe)
+    // Number of hours to add to 00:00Z to be on the morning forecast period (e.g., 9 for Switzerland)
+    const morningOffset = 9;
+    const noonOffset    = 12;
+    const forecastMetadata = forecasts[forecasts.length - 1];
+    const forecastInitOffset = +forecastMetadata.init.getUTCHours();
+    // Tomorrow, noon period
+    const hourOffset = (forecastInitOffset === 0 ? 0 : 24) + noonOffset - forecastInitOffset;
 
-    this.forecastMetadata = forecasts[forecasts.length - 1];
-    this.map.attributionControl.setPrefix(`Initialization: ${this.forecastMetadata.init.toLocaleString(undefined, { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}`);
+    type State = {
+      // Currently displayed forecast
+      forecastMetadata: ForecastMetadata
+      detailedView: 'meteogram' | 'sounding'
+      // If defined, the detailed forecast data for the selected location
+      locationForecasts: undefined | LocationForecasts
+      // Delta with the forecast initialization time
+      hourOffset: number
+    }
 
-    this.periodSelector = new PeriodSelector(
-      this.forecastMetadata,
-      this.mapElement,
-      {
-        hourOffset: value => this.forecastLayer.updateForecast(this.forecastMetadata, value, this.canvas)
-      }
-    );
-    this.forecastLayer = new ForecastLayer(
-      this.mapElement,
-      this.periodSelector.getDetailedView(),
-      forecasts,
-      this.forecastMetadata,
-      this.periodSelector.getHourOffset(),
-      this.canvas,
-      {
-        detailedView: value => { this.periodSelector.updateDetailedView(value) },
-        forecast: (value) => { this.selectForecast(value) },
-        renderer: () => { this.forecastLayer.updateForecast(this.forecastMetadata, this.periodSelector.getHourOffset(), this.canvas) }
-      }
-    );
-
-    this.selectForecast(this.forecastMetadata);
-
-    map.on('click', (e: L.LeafletMouseEvent) => {
-      this.periodSelector.showDetailedView(e.latlng.lat, e.latlng.lng);
+    const [state, setState] = createState<State>({
+      forecastMetadata: forecasts[forecasts.length - 1],
+      detailedView: 'meteogram',
+      locationForecasts: undefined,
+      hourOffset
     });
 
+    createEffect(() => {
+      map.attributionControl.setPrefix(`Initialization: ${state.forecastMetadata.init.toLocaleString(undefined, { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}`);
+    });
+  
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      state.forecastMetadata
+        .fetchLocationForecasts(e.latlng.lat, e.latlng.lng)
+        .then(locationForecasts => setState({ locationForecasts }))
+    });
+  
     map.on('keydown', (e: any) => {
       const event = e.originalEvent as KeyboardEvent;
       if (event.key === 'Escape') {
-        this.periodSelector.hideMeteogram();
+        setState({ locationForecasts: undefined });
       }
     });
-  }
 
-  selectForecast(forecastMetadata: ForecastMetadata): void {
-    this.forecastMetadata = forecastMetadata;
-    this.map.attributionControl.setPrefix(`Initialization: ${forecastMetadata.init.toLocaleString(undefined, { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}`);
-    this.periodSelector.unmount();
-    this.periodSelector = new PeriodSelector(
-      this.forecastMetadata,
-      this.mapElement,
-      {
-        hourOffset: value => this.forecastLayer.updateForecast(this.forecastMetadata, value, this.canvas)
-      }
-    );
-    this.forecastLayer.updateForecast(this.forecastMetadata, this.periodSelector.getHourOffset(), this.canvas);
-  }
+    return [
+      h(PeriodSelectors, {
+        forecastMetadata: () => state.forecastMetadata,
+        locationForecasts: () => state.locationForecasts,
+        detailedView: () => state.detailedView,
+        hourOffset: () => state.hourOffset,
+        morningOffset: () => morningOffset,
+        onHourOffsetChanged: (value: number) => setState({ hourOffset: value }),
+        onDetailedViewClosed: () => setState({ locationForecasts: undefined })
+      }),
+      h(ForecastLayer, {
+        hourOffset: () => state.hourOffset,
+        detailedView: () => state.detailedView,
+        forecasts: () => forecasts,
+        currentForecast: () => state.forecastMetadata,
+        canvas,
+        onChangeDetailedView: (value: 'meteogram' | 'sounding') => setState({ detailedView: value }),
+        onChangeForecast: (value: ForecastMetadata) => setState({ forecastMetadata: value })
+      })
+    ]
+  }, mapElement);
 
 }

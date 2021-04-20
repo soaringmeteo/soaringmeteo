@@ -4,6 +4,7 @@ import { Diagram, Scale, boundaryLayerStyle, columnCloud, computeElevationLevels
 import { DetailedForecast } from "../data/Forecast";
 import { keyWidth } from './Meteogram';
 import { drawWindArrow } from '../shapes';
+import { JSX } from 'solid-js';
 
 const temperatureScaleAndLevels = (forecast: DetailedForecast, pixelRange: [number, number]): [Scale, Array<number>] => {
 
@@ -27,7 +28,7 @@ const temperatureScaleAndLevels = (forecast: DetailedForecast, pixelRange: [numb
   return [scale, levels]
 }
 
-export const sounding = (forecast: DetailedForecast, elevation: number): [HTMLElement, HTMLElement] => {
+export const sounding = (forecast: DetailedForecast, elevation: number): [JSX.Element, JSX.Element] => {
   const canvasWidth  = 600;
   const canvasHeight = 800; // TODO use as much space as possible
 
