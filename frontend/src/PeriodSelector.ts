@@ -12,46 +12,57 @@ const marginLeft = keyWidth;
 const marginTop = 35; // Day height + hour height + 2 (wtf)
 
 const hover = (htmlEl: HTMLElement): HTMLElement => {
-  htmlEl.onmouseenter = () => htmlEl.style.backgroundColor = 'lightGray';
-  htmlEl.onmouseleave = () => {
-    htmlEl.style.backgroundColor = 'inherit';
-    // this.updateSelectedForecast();
+  let oldValue: string = 'inherit';
+  htmlEl.onmouseenter = () => {
+    oldValue = htmlEl.style.backgroundColor;
+    htmlEl.style.backgroundColor = 'lightGray';
   }
+  htmlEl.onmouseleave = () => htmlEl.style.backgroundColor = oldValue;
   return htmlEl
 }
 
 const PeriodSelector = (props: {
   forecastOffsetAndDates: Array<[number, Date]>
   detailedView: JSX.Element
-  onClick: (gfsOffset: number) => void
+  currentHourOffset: number
+  onClick: (hourOffset: number) => void
 }): HTMLElement => {
-  const flatPeriodSelectors: () => Array<[HTMLElement, Date]> =
+  const flatPeriodSelectors: () => Array<[HTMLElement, number, Date]> =
     createMemo(() => {
       return props.forecastOffsetAndDates
-        .map(([gfsOffset, date]) => {
+        .map(([hourOffset, date]) => {
           const htmlEl = h(
             'span',
             {
-              style: { display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray', width: `${meteogramColumnWidth}px`, 'line-height': '20px', 'box-sizing': 'border-box', 'text-align': 'center' },
-              onClick: () => props.onClick(gfsOffset)
+              style: () => ({
+                display: 'inline-block',
+                cursor: 'pointer',
+                border: 'thin solid darkGray',
+                width: `${meteogramColumnWidth}px`,
+                'line-height': '20px',
+                'box-sizing': 'border-box',
+                'text-align': 'center',
+                'background-color': props.currentHourOffset === hourOffset ? 'lightGray' : 'inherit'
+              }),
+              onClick: () => props.onClick(hourOffset)
             },
             date.toLocaleTimeString(undefined, { hour12: false, hour: '2-digit' })
           );
           hover(htmlEl);
-          return [htmlEl, date]
+          return [htmlEl, hourOffset, date]
         });
     })
 
-  const periodSelectorsByDay: () => Array<[Array<HTMLElement>, Date]> = createMemo(() => {
-    const result: Array<[Array<HTMLElement>, Date]> = [];
+  const periodSelectorsByDay: () => Array<[Array<[HTMLElement, number]>, Date]> = createMemo(() => {
+    const result: Array<[Array<[HTMLElement, number]>, Date]> = [];
     let lastDay: number | null = null;
-    flatPeriodSelectors().forEach(([hourSelector, date]) => {
+    flatPeriodSelectors().forEach(([hourSelector, hourOffset, date]) => {
       if (date.getDay() === lastDay) {
         // Same group as previous
-        result[result.length - 1][0].push(hourSelector);
+        result[result.length - 1][0].push([hourSelector, hourOffset]);
       } else {
         // New group
-        result.push([[hourSelector], date]);
+        result.push([[[hourSelector, hourOffset]], date]);
       }
       lastDay = date.getDay();
     });
@@ -65,15 +76,26 @@ const PeriodSelector = (props: {
           'div',
           { style: { display: 'inline-block' } },
           // Day
-          h(
+          hover(h(
             'div',
-            { style: { width: `${periods.length * meteogramColumnWidth}px`, 'text-align': 'center', 'box-sizing': 'border-box', 'border-right': 'thin solid darkGray', 'border-left': 'thin solid darkGray', 'line-height': '13px' } },
+            {
+              style: {
+                cursor: 'pointer',
+                width: `${periods.length * meteogramColumnWidth}px`,
+                'text-align': 'center',
+                'box-sizing': 'border-box',
+                'border-right': 'thin solid darkGray',
+                'border-left': 'thin solid darkGray',
+                'line-height': '13px'
+              },
+              onClick: () => props.onClick(periods[1 /* because we have three periods per day in total in GFS */][1])
+            },
             periods.length === periodsPerDay ?
               date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', weekday: 'short' }) :
               '\xa0'
-          ),
+          )),
           // Periods in each day
-          h('div', { style: { 'text-align': 'right' } }, periods)
+          h('div', { style: { 'text-align': 'right' } }, periods.map(tuple => tuple[0]))
         )
       });
     })
@@ -218,6 +240,7 @@ export const PeriodSelectors = (props: {
           else
             return props.locationForecasts.offsetAndDates()
         },
+        currentHourOffset: () => props.hourOffset,
         detailedView: reactiveDetailedView,
         onClick: (hourOffset: number) => props.onHourOffsetChanged(hourOffset)
       }
