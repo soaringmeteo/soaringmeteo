@@ -2,9 +2,16 @@
   "compilerOptions": {
     "outDir": "./dist/",
     "target": "es5",
-    "module": "CommonJS",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
     "strict": true,
-    "inlineSourceMap": true
+    "inlineSourceMap": true,
+    "jsx": "preserve",
+    "noEmit": true
   },
   "include": ["./pngs.d.ts"],
   "exclude": ["node_modules"]

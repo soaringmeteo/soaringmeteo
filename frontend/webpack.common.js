@@ -29,7 +29,7 @@ module.exports = {
     ],
 
     resolve: {
-        extensions: [".ts", ".js"],
+        extensions: [".ts", ".js", '.tsx'],
         alias: {
             "./images/layers.png$": path.resolve(
                 __dirname,
@@ -57,15 +57,6 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.ts(x?)$/,
-                exclude: /node_modules/,
-                use: [
-                    {
-                        loader: "ts-loader"
-                    }
-                ]
-            },
-            {
                 test: /\leaflet.css$/,
                 use: [
                     { loader: 'style-loader' },
@@ -86,6 +77,19 @@ module.exports = {
             {
                 test: /\.(gif|svg|jpg|png)$/,
                 loader: "file-loader"
+            },
+            {
+                test: /\.(ts)x?$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        babelrc: false,
+                        configFile: false,
+                        presets: ['@babel/preset-env', 'solid', '@babel/preset-typescript'],
+                        plugins: ['@babel/plugin-transform-runtime', '@babel/plugin-syntax-dynamic-import', '@babel/plugin-proposal-class-properties', '@babel/plugin-proposal-object-rest-spread'],
+                    }
+                }
             }
         ]
     }

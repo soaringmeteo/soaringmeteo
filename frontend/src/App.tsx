@@ -1,6 +1,5 @@
 import { createEffect, createState } from 'solid-js';
-import h from 'solid-js/h'
-import { insert, render, style } from 'solid-js/web'
+import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap } from './Map';
 import { DetailedViewType, PeriodSelectors } from './PeriodSelector';
@@ -26,7 +25,7 @@ export const App = (forecasts: Array<ForecastMetadata>, containerElement: HTMLEl
   // The map *must* be initialized before we call the other constructors
   // It *must* also be mounted before we initialize it
   style(containerElement, { display: 'flex', 'align-items': 'stretch', 'align-content': 'stretch' });
-  const mapElement = h('div', { style: { flex: 1 } });
+  const mapElement = <div style={ { flex: 1 } } />;
   insert(containerElement, mapElement);
 
   const [canvas, map] = initializeMap(mapElement);
@@ -62,26 +61,26 @@ export const App = (forecasts: Array<ForecastMetadata>, containerElement: HTMLEl
       }
     });
 
-    return [
-      h(PeriodSelectors, {
-        forecastMetadata: () => state.forecastMetadata,
-        locationForecasts: () => state.locationForecasts,
-        detailedView: () => state.detailedView,
-        hourOffset: () => state.hourOffset,
-        morningOffset: () => morningOffset,
-        onHourOffsetChanged: (value: number) => setState({ hourOffset: value }),
-        onDetailedViewClosed: () => setState({ locationForecasts: undefined })
-      }),
-      h(ForecastLayer, {
-        hourOffset: () => state.hourOffset,
-        detailedView: () => state.detailedView,
-        forecasts: () => forecasts,
-        currentForecast: () => state.forecastMetadata,
-        canvas,
-        onChangeDetailedView: (value: DetailedViewType) => setState({ detailedView: value }),
-        onChangeForecast: (value: ForecastMetadata) => setState({ forecastMetadata: value })
-      })
-    ]
+    return <>
+      <PeriodSelectors
+        forecastMetadata={state.forecastMetadata}
+        locationForecasts={state.locationForecasts}
+        detailedView={state.detailedView}
+        hourOffset={state.hourOffset}
+        morningOffset={morningOffset}
+        onHourOffsetChanged={(value: number) => setState({ hourOffset: value })}
+        onDetailedViewClosed={() => setState({ locationForecasts: undefined })}
+      />,
+      <ForecastLayer
+        hourOffset={state.hourOffset}
+        detailedView={state.detailedView}
+        forecasts={forecasts}
+        currentForecast={state.forecastMetadata}
+        canvas={canvas}
+        onChangeDetailedView={(value: DetailedViewType) => setState({ detailedView: value })}
+        onChangeForecast={(value: ForecastMetadata) => setState({ forecastMetadata: value })}
+      />
+    </>
   }, mapElement);
 
 }

@@ -54,7 +54,7 @@ export const sounding = (forecast: DetailedForecast, elevation: number): [JSX.El
         style: { flex: '0 0 auto', width: `${keyWidth}px`, height: `${canvasHeight}px` }
       }
     ) as HTMLCanvasElement;
-    const leftCtx = canvasLeftKey.getContext('2d');
+  const leftCtx = canvasLeftKey.getContext('2d');
 
   // Offset between the edge of the canvas and the edge of the diagram
   // This offset let’s us write the axes names

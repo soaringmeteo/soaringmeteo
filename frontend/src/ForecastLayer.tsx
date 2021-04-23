@@ -1,6 +1,5 @@
 import * as L from 'leaflet';
 import { createEffect, createState, JSX } from 'solid-js';
-import h from 'solid-js/h';
 
 import { DataSource, CanvasLayer } from "./CanvasLayer";
 import { Mixed } from './layers/Mixed';
@@ -37,45 +36,43 @@ class Renderer {
 
 }
 
-const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): HTMLElement => {
-  return h(
-    'div',
-    colorScale.points.slice().reverse().map(([value, color]) => {
-      return h(
-        'div',
-        { style: { margin: '5px', 'text-align': 'right' } },
-        h('span', format(value)),
-        h('span', { style: { width: '20px', height: '15px', 'background-color': color.css(), display: 'inline-block', border: 'thin solid black' } })
-      )
-    })
-  )
-};
+const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): HTMLElement =>
+  <div>
+  {
+    colorScale.points.slice().reverse().map(([value, color]) =>
+      <div style={{ margin: '5px', 'text-align': 'right' }}>
+        <span>{format(value)}</span>
+        <span style={{ width: '20px', height: '15px', 'background-color': color.css(), display: 'inline-block', border: 'thin solid black' }} />
+      </div>
+    )
+  }
+  </div>;
 
-const windScaleEl = (): HTMLElement => {
-  return h(
-    'div',
-    [2.5, 5, 10, 17.5, 25].map((windSpeed) => {
-      const canvas = h('canvas', { style: { width: '40px', height: '30px', border: 'thin solid black' } }) as HTMLCanvasElement;
-      canvas.width = 40;
-      canvas.height = 30;
-      const ctx = canvas.getContext('2d');
-      if (ctx === null) { return }
-      drawWindArrow(ctx, canvas.width / 2, canvas.height / 2, canvas.width - 4, windColor(0.50), windSpeed, 0);
-      return h(
-        'div',
-        { style: { margin: '5px', 'text-align': 'right' } },
-        h('span', `${windSpeed} km/h `),
-        canvas
-      )
-    })
-  )
-};
+const windScaleEl = (): HTMLElement =>
+  <div>
+    {
+      [2.5, 5, 10, 17.5, 25].map((windSpeed) => {
+        const canvas = <canvas style={{ width: '40px', height: '30px', border: 'thin solid black' }} /> as HTMLCanvasElement;
+        canvas.width = 40;
+        canvas.height = 30;
+        const ctx = canvas.getContext('2d');
+        if (ctx === null) { return }
+        drawWindArrow(ctx, canvas.width / 2, canvas.height / 2, canvas.width - 4, windColor(0.50), windSpeed, 0);
+        return (
+          <div style={{ margin: '5px', 'text-align': 'right' }}>
+            <span>{`${windSpeed} km/h `}</span>
+            {canvas}
+          </div>
+        )
+      })
+    }
+  </div>;
 
 const noneRenderer = new Renderer(
   'None',
   'Map only',
   forecast => new None(forecast),
-  () => h('div')
+  () => <div />
 );
 const thqRenderer = new Renderer(
   'Thermal Quality',
@@ -112,7 +109,7 @@ const mixedRenderer = new Renderer(
   'Mixed',
   'Boundary layer depth, wind, and cloud cover',
   forecast => new Mixed(forecast),
-  () => h('div')
+  () => <div />
 );
 
 /**
@@ -145,29 +142,29 @@ export const ForecastLayer = (props: {
     () => props.onChangeDetailedView('sounding')
   );
 
-  const detailedViewEl = h(
-    'fieldset',
-    h('legend', 'Detailed View'),
-    meteogramEl,
-    soundingEl
-  );
+  const detailedViewEl =
+    <fieldset>
+      <legend>Detailed View</legend>
+      {meteogramEl}
+      {soundingEl}
+    </fieldset>;
 
-  const selectForecastEl = h(
-    'fieldset',
-    h('legend', 'Initialization Time'),
-    () => props.forecasts
-      .map(forecast => {
-        const initTimeString = showDate(forecast.init, { showWeekDay: true });
-        const container = makeRadioBtn(
-          initTimeString,
-          `Show forecast initialized at ${initTimeString}.`,
-          () => props.currentForecast === forecast,
-          'init',
-          () => props.onChangeForecast(forecast)
-        )
-        return container
-      })
-  );
+  const selectForecastEl =
+    <fieldset>
+      <legend>Initialization Time</legend>
+      {
+        props.forecasts.map(forecast => {
+          const initTimeString = showDate(forecast.init, { showWeekDay: true });
+          return makeRadioBtn(
+            initTimeString,
+            `Show forecast initialized at ${initTimeString}.`,
+            () => props.currentForecast === forecast,
+            'init',
+            () => props.onChangeForecast(forecast)
+          )
+        })
+      }
+    </fieldset>;
 
   function setupRendererBtn(renderer: Renderer): HTMLElement {
     const container = makeRadioBtn(
@@ -188,41 +185,35 @@ export const ForecastLayer = (props: {
   const rainEl = setupRendererBtn(rainRenderer);
   const mixedEl = setupRendererBtn(mixedRenderer);
 
-  const layerEl = h(
-    'fieldset',
-    h('legend', 'Layer'),
-    noneEl,
-    thqEl,
-    boundaryLayerHeightEl,
-    windEl,
-    cloudCoverEl,
-    rainEl,
-    mixedEl,
-  );
+  const layerEl =
+    <fieldset>
+      <legend>Layer</legend>
+      {noneEl}
+      {thqEl}
+      {boundaryLayerHeightEl}
+      {windEl}
+      {cloudCoverEl}
+      {rainEl}
+      {mixedEl}
+    </fieldset>;
 
-  const selectEl = h(
-    'div',
-    { style: { display: 'none' } },
-    detailedViewEl,
-    selectForecastEl,
-    layerEl
-  );
+  const selectEl =
+    <div style={{ display: 'none' }}>
+      {detailedViewEl}
+      {selectForecastEl}
+      {layerEl}
+    </div>;
 
-  const layersBtn = h(
-    'div',
-    { style: {  } },
-    h(
-      'a',
-      { style: { width: '44px', height: '44px', 'background-image': `url('${layersImg}')`, display: 'block', 'background-position': '50% 50%', 'background-repeat': 'no-repeat' } }
-    )
-  );
+  const layersBtn =
+    <div>
+      <a style={{ width: '44px', height: '44px', 'background-image': `url('${layersImg}')`, display: 'block', 'background-position': '50% 50%', 'background-repeat': 'no-repeat' }} />
+    </div>;
 
-  const rootElement = h(
-    'div',
-    { style: { position: 'absolute', right: '3px', bottom: '100px', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, background: 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '5px', 'user-select': 'none' } },
-    layersBtn,
-    selectEl
-  ) as HTMLElement;
+  const rootElement =
+    <div style={{ position: 'absolute', right: '3px', bottom: '100px', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, background: 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '5px', 'user-select': 'none' }}>
+      {layersBtn}
+      {selectEl}
+    </div>;
 
   rootElement.onmouseenter = _ => {
     selectEl.style.display = 'unset';
@@ -237,7 +228,7 @@ export const ForecastLayer = (props: {
   L.DomEvent.disableClickPropagation(rootElement);
   L.DomEvent.disableScrollPropagation(rootElement);
 
-  const rendererKeyEl = h('div', { style: { position: 'absolute', bottom: '5px', left: '5px', 'z-index': 1000, 'background-color': 'rgba(255, 255,  255, 0.5' } });
+  const rendererKeyEl = <div style={{ position: 'absolute', bottom: '5px', left: '5px', 'z-index': 1000, 'background-color': 'rgba(255, 255,  255, 0.5' }} />;
   
   createEffect(() => {
     state.renderer.update(props.currentForecast, props.hourOffset, props.canvas);
@@ -253,19 +244,16 @@ const makeRadioBtn = (
   groupName: string,
   onChange: () => void
 ): HTMLElement => {
-  const input = h(
-    'input',
-    {
-      name: groupName,
-      type: 'radio',
-      checked: () => checked(),
-      onChange: () => onChange()
-    }
-  );
-  const container = h(
-    'div',
-    { style: { 'background-color': 'rgba(255, 255, 255, 0.5)', 'text-align': 'right' } },
-    h('label', { style: { cursor: 'pointer', padding: '0.3em' }, title: title }, label, input)
-  );
-  return container
+  const input =
+    <input
+      name={groupName}
+      type='radio'
+      checked={checked()}
+      onChange={() => onChange()}
+  />;
+  return (
+    <div style={{ 'background-color': 'rgba(255, 255, 255, 0.5)', 'text-align': 'right' }}>
+      <label style={{ cursor: 'pointer', padding: '0.3em' }} title={title}>{label}{input}</label>
+    </div>
+  )
 }

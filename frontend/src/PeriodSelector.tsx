@@ -1,5 +1,4 @@
 import * as L from 'leaflet';
-import h from 'solid-js/h';
 import { createMemo, JSX } from 'solid-js';
 
 import { LocationForecasts } from './data/Forecast';
@@ -31,10 +30,9 @@ const PeriodSelector = (props: {
     createMemo(() => {
       return props.forecastOffsetAndDates
         .map(([hourOffset, date]) => {
-          const htmlEl = h(
-            'span',
-            {
-              style: () => ({
+          const htmlEl =
+            <span
+              style={{
                 display: 'inline-block',
                 cursor: 'pointer',
                 border: 'thin solid darkGray',
@@ -43,11 +41,11 @@ const PeriodSelector = (props: {
                 'box-sizing': 'border-box',
                 'text-align': 'center',
                 'background-color': props.currentHourOffset === hourOffset ? 'lightGray' : 'inherit'
-              }),
-              onClick: () => props.onClick(hourOffset)
-            },
-            date.toLocaleTimeString(undefined, { hour12: false, hour: '2-digit' })
-          );
+              }}
+              onClick={() => props.onClick(hourOffset)}
+            >
+              {date.toLocaleTimeString(undefined, { hour12: false, hour: '2-digit' })}
+            </span>;
           hover(htmlEl);
           return [htmlEl, hourOffset, date]
         });
@@ -72,14 +70,10 @@ const PeriodSelector = (props: {
   const periodSelectors: () => Array<HTMLElement> =
     createMemo(() => {
       return periodSelectorsByDay().map(([periods, date]) => {
-        return h(
-          'div',
-          { style: { display: 'inline-block' } },
-          // Day
-          hover(h(
-            'div',
-            {
-              style: {
+        const dayEl =
+          hover(
+            <div
+              style={{
                 cursor: 'pointer',
                 width: `${periods.length * meteogramColumnWidth}px`,
                 'text-align': 'center',
@@ -87,33 +81,31 @@ const PeriodSelector = (props: {
                 'border-right': 'thin solid darkGray',
                 'border-left': 'thin solid darkGray',
                 'line-height': '13px'
-              },
-              onClick: () => props.onClick(periods[1 /* because we have three periods per day in total in GFS */][1])
-            },
-            periods.length === periodsPerDay ?
-              date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', weekday: 'short' }) :
-              '\xa0'
-          )),
-          // Periods in each day
-          h('div', { style: { 'text-align': 'right' } }, periods.map(tuple => tuple[0]))
-        )
+              }}
+              onClick={() => props.onClick(periods[1 /* because we have three periods per day in total in GFS */][1])}
+            >
+            {
+              periods.length === periodsPerDay ?
+                date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', weekday: 'short' }) :
+                '\xa0'
+            }
+            </div>
+          );
+        return <div style={{ display: 'inline-block' }}>
+          {dayEl}
+          <div style={{ 'text-align': 'right' }}>{periods.map(tuple => tuple[0])}</div>
+        </div>;
       });
     })
 
   const length = () => periodSelectorsByDay().reduce((n, ss) => n + ss[0].length, 0);
   const scrollablePeriodSelector =
-    h(
-      'div',
-      { style: { 'overflow-x': 'auto', 'background-color': 'white' } },
-      h(
-        'div',
-        { style: () => ({ width: `${length() * meteogramColumnWidth + keyWidth}px` }) },
-        h('div', periodSelectors),
-        h('div',
-          () => props.detailedView // For some reason, dynamic nodes can’t have siblings, hence the empty div wrapper.
-        )
-      )
-    );
+    <div style={{ 'overflow-x': 'auto', 'background-color': 'white' }}>
+      <div style={{ width: `${length() * meteogramColumnWidth + keyWidth}px` }}>
+        <div>{periodSelectors}</div>
+        {props.detailedView}
+      </div>
+    </div>;
   return scrollablePeriodSelector
 }
 
@@ -129,7 +121,7 @@ const DetailedView = (props: {
   hourOffset: number
 }): [() => JSX.Element, () => JSX.Element] => {
 
-  const fallback: [JSX.Element, JSX.Element] = [h('div'), h('div')];
+  const fallback: [JSX.Element, JSX.Element] = [<div />, <div />];
 
   const keyAndView: () => [JSX.Element, JSX.Element] = createMemo<[JSX.Element, JSX.Element]>(() => {
     const locationForecasts = props.locationForecasts;
@@ -165,138 +157,131 @@ export const PeriodSelectors = (props: {
   onDetailedViewClosed: () => void
 }): JSX.Element => {
 
-  const [reactiveKey, reactiveDetailedView] = h(DetailedView, {
-    detailedView: () => props.detailedView,
-    locationForecasts: () => props.locationForecasts,
-    hourOffset: () => props.hourOffset
-  });
+  const [reactiveKey, reactiveDetailedView] =
+    <DetailedView
+      detailedView={props.detailedView}
+      locationForecasts={props.locationForecasts}
+      hourOffset={props.hourOffset}
+    />;
 
   const detailedViewKeyEl = 
-    h(
-      'div', { 
-        style: { position: 'absolute', width: `${marginLeft}px`, left: 0, top: `${marginTop}px`, 'background-color': 'white' } 
-      },
-      reactiveKey
-    );
+    <div style={{ position: 'absolute', width: `${marginLeft}px`, left: 0, top: `${marginTop}px`, 'background-color': 'white' }}>
+      {reactiveKey}
+    </div>;
 
   const buttonStyle = { padding: '0.2em', display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box' };
-  const currentDayEl = h(
-    'div',
-    () => showDate(
-      props.forecastMetadata.dateAtHourOffset(props.hourOffset),
-      { showWeekDay: true }
-    )
+  const currentDayEl =
+    <div>
+      {
+        showDate(
+          props.forecastMetadata.dateAtHourOffset(props.hourOffset),
+          { showWeekDay: true }
+        )
+      }
+    </div>;
+
+  const previousDayBtn = hover(
+    <div
+      title='24 hours before'
+      style={{ ...buttonStyle }}
+      onClick={() => props.onHourOffsetChanged(Math.max(props.hourOffset - 24, 3))}
+    >
+      -24
+    </div>
   );
 
-  const previousDayBtn = hover(h(
-    'div',
-    {
-      title: '24 hours before',
-      style: { ...buttonStyle },
-      onClick: () => props.onHourOffsetChanged(Math.max(props.hourOffset - 24, 3))
-    },
-    '-24'
-  ));
-
   // FIXME jump to previous day afternoon if we are on the morning period
-  const previousPeriodBtn = hover(h(
-    'div',
-    {
-      title: 'Previous forecast period',
-      style: { ...buttonStyle },
-      onClick: () => props.onHourOffsetChanged(Math.max(props.hourOffset - 3, 3))
-    },
-    '-3'
-  ));
+  const previousPeriodBtn = hover(
+    <div
+      title='Previous forecast period'
+      style={{ ...buttonStyle }}
+      onClick={() => props.onHourOffsetChanged(Math.max(props.hourOffset - 3, 3))}
+    >
+      -3
+    </div>
+  );
 
   // FIXME jump to next day morning if we are on the afternoon period
-  const nextPeriodBtn = hover(h(
-    'div', {
-      title: 'Next forecast period', 
-      style: { ...buttonStyle },
-      onClick: () => props.onHourOffsetChanged(Math.min(props.hourOffset + 3, props.forecastMetadata.latest))
-    },
-    '+3'
-  ));
+  const nextPeriodBtn = hover(
+    <div
+      title='Next forecast period'
+      style={{ ...buttonStyle }}
+      onClick={() => props.onHourOffsetChanged(Math.min(props.hourOffset + 3, props.forecastMetadata.latest))}
+    >
+      +3
+    </div>
+  );
 
-  const nextDayBtn = hover(h(
-    'div',
-    {
-      title: '24 hours after',
-      style: { ...buttonStyle },
-      onClick: () => props.onHourOffsetChanged(Math.min(props.hourOffset + 24, props.forecastMetadata.latest))
-    },
-    '+24'
-  ));
+  const nextDayBtn = hover(
+    <div
+      title='24 hours after'
+      style={{ ...buttonStyle }}
+      onClick={() => props.onHourOffsetChanged(Math.min(props.hourOffset + 24, props.forecastMetadata.latest))}
+    >
+      +24
+    </div>
+  );
 
   const periodSelectorEl =
-    h(
-      PeriodSelector,
-      {
-        forecastOffsetAndDates: () => {
-          // If there is no selected forecast, infer the available periods from the forecast metadata
-          if (props.locationForecasts === undefined)
-            return forecastOffsets(props.forecastMetadata.init, props.morningOffset, props.forecastMetadata)
-          else
-            return props.locationForecasts.offsetAndDates()
-        },
-        currentHourOffset: () => props.hourOffset,
-        detailedView: reactiveDetailedView,
-        onClick: (hourOffset: number) => props.onHourOffsetChanged(hourOffset)
+    <PeriodSelector
+      forecastOffsetAndDates={
+        // If there is no selected forecast, infer the available periods from the forecast metadata
+        (props.locationForecasts === undefined) ?
+          forecastOffsets(props.forecastMetadata.init, props.morningOffset, props.forecastMetadata)
+        :
+          props.locationForecasts.offsetAndDates()
       }
-    );
+      currentHourOffset={props.hourOffset}
+      detailedView={reactiveDetailedView}
+      onClick={(hourOffset: number) => props.onHourOffsetChanged(hourOffset)}
+    />;
 
   const hideDetailedViewBtn =
-    h(
-      'div',
-      {
-        style: () => ({
-          ...buttonStyle,
-          width: `${marginLeft}px`,
-          'flex-shrink': 0,
-          'background-color': 'white',
-          visibility: (props.locationForecasts !== undefined) ? 'visible' : 'hidden',
-          'text-align': 'center'
-        }),
-        title: 'Hide',
-        onClick: () => props.onDetailedViewClosed()
-      },
-      'X'
-    );
+    <div
+      style={{
+        ...buttonStyle,
+        width: `${marginLeft}px`,
+        'flex-shrink': 0,
+        'background-color': 'white',
+        visibility: (props.locationForecasts !== undefined) ? 'visible' : 'hidden',
+        'text-align': 'center'
+      }}
+      title='Hide'
+      onClick={() => props.onDetailedViewClosed()}
+    >
+      X
+    </div>;
 
   // Period selector and close button for the meteogram
   const periodSelectorContainer =
-    h(
-      'span',
-      { style: { position: 'absolute', top: 0, left: 0, 'z-index': 1100, 'max-width': '100%', 'user-select': 'none', cursor: 'default' } },
-      detailedViewKeyEl,
-      h(
-        'div',
-        { style: { display: 'flex', 'align-items': 'flex-start' } },
-        hideDetailedViewBtn,
-        periodSelectorEl
-      )
-    );
+    <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 1100, 'max-width': '100%', 'user-select': 'none', cursor: 'default' }}>
+      {detailedViewKeyEl}
+      <div style={{ display: 'flex', 'align-items': 'flex-start' }}>
+        {hideDetailedViewBtn}
+        {periodSelectorEl}
+      </div>
+    </span>;
   L.DomEvent.disableClickPropagation(periodSelectorContainer);
   L.DomEvent.disableScrollPropagation(periodSelectorContainer);
 
   // Current period
   const currentDayContainer =
-    h(
-      'span',
-      { style: { position: 'absolute', bottom: 0, 'margin-left': 'auto', 'margin-right': 'auto', left: 0, right: 0, 'text-align': 'center', 'z-index': 950, 'user-select': 'none', cursor: 'default' } },
-      h(
-        'div',
-        { style: { width: '125px', display: 'inline-block', 'background-color': 'white' } },
-        currentDayEl,
-        h('div', previousDayBtn, previousPeriodBtn, nextPeriodBtn, nextDayBtn)
-      )
-    );
+    <span style={{ position: 'absolute', bottom: 0, 'margin-left': 'auto', 'margin-right': 'auto', left: 0, right: 0, 'text-align': 'center', 'z-index': 950, 'user-select': 'none', cursor: 'default' }}>
+      <div style={{ width: '125px', display: 'inline-block', 'background-color': 'white' }}>
+        {currentDayEl}
+        <div>
+          {previousDayBtn}
+          {previousPeriodBtn}
+          {nextPeriodBtn}
+          {nextDayBtn}
+        </div>
+      </div>
+    </span>;
   L.DomEvent.disableClickPropagation(currentDayContainer);
   L.DomEvent.disableScrollPropagation(currentDayContainer);
 
-  return [
-    periodSelectorContainer,
-    currentDayContainer
-  ]
+  return <>
+    {periodSelectorContainer}
+    {currentDayContainer}
+  </>
 };
