@@ -47,7 +47,7 @@ type ForecastPointData = [
 export class LocationForecasts {
   readonly elevation: number;
   readonly dayForecasts: Array<DayForecasts>;
-  constructor(data: LocationForecastsData, private readonly metadata: ForecastMetadata) {
+  constructor(data: LocationForecastsData, private readonly metadata: ForecastMetadata, readonly latitude: number, readonly longitude: number) {
     this.elevation = data.h;
     this.dayForecasts = data.d.map(data => new DayForecasts(data, this.elevation));
   }
