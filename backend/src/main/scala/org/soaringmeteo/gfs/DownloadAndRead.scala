@@ -56,7 +56,7 @@ object DownloadAndRead {
         concurrent.blocking {
           GribDownloader.download(gribsDir, gfsRun, areaAndHour)
         }
-      }(fourThreads /* Beware, I’ve been banned for downloading 8 files in parallel */)
+      }(fourThreads /* NCEP currently limits usage to 120/hits per minute */)
 
     // Read the content of a GRIB file as a background task
     def read(locations: Seq[Point], gribFile: os.Path, hourOffset: Int): Future[Map[Point, GfsForecast]] =
