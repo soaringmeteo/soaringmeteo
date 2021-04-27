@@ -41,9 +41,27 @@ object Settings {
 
   /** The forecast locations we are interested in */
   def gfsForecastLocations(csvFile: os.Path): Seq[Point] = {
-//    (gfsArea(Point(43, 3), Point(49, 17) /* alps */) ++ fromCsvFile(csvFile)).toSeq
-    val westernEurope = gfsArea(Point(35, -11), Point(55, 30)) -- gfsArea(Point(44, -11), Point(47, -3)) -- gfsArea(Point(47, -11), Point(51, -6))
-    (westernEurope ++ fromCsvFile(csvFile)).toSeq
+    val scandinavia =
+      gfsArea(Point(58, 5), Point(69, 28)) --
+        gfsArea(Point(65, 5), Point(69, 11)) --
+        gfsArea(Point(64, 9), Point(BigDecimal("64.75"), 5))
+    val westernEurope =
+      gfsArea(Point(35, -11), Point(55, 30)) --
+        gfsArea(Point(44, -11), Point(47, -3)) --
+        gfsArea(Point(47, -11), Point(51, -6)) --
+        gfsArea(Point(35, BigDecimal("17.5")), Point(39, 20)) --
+        gfsArea(Point(BigDecimal("40.5"), 4), Point(BigDecimal("42.75"), BigDecimal("7.75"))) --
+        gfsArea(Point(BigDecimal("38.5"), BigDecimal("10.25")), Point(BigDecimal("40.5"), 14)) --
+        gfsArea(Point(BigDecimal("37.5"), BigDecimal("2.25")), Point(39, 8)) --
+        gfsArea(Point(BigDecimal("57.5"), BigDecimal("0.25")), Point(54, BigDecimal("7.5"))) --
+        gfsArea(Point(BigDecimal("39.25"), BigDecimal("4.75")), Point(BigDecimal("40.25"), BigDecimal("7.75"))) --
+        gfsArea(Point(BigDecimal("37.5"), BigDecimal("15.75")), Point(35, BigDecimal("17.25"))) --
+        gfsArea(Point(BigDecimal("36.25"), BigDecimal("22.5")), Point(35, BigDecimal("20.25"))) --
+        gfsArea(Point(BigDecimal("39.25"), BigDecimal("4.75")), Point(BigDecimal("40.25"), 8)) --
+        gfsArea(Point(BigDecimal("37.5"), BigDecimal("8.25")), Point(BigDecimal("38.75"), BigDecimal("12.25"))) --
+        gfsArea(Point(35, -11), Point(BigDecimal("36.75"), BigDecimal("-6.75"))) --
+        gfsArea(Point(BigDecimal("43.75"), -11), Point(35, BigDecimal("-9.75")))
+    (westernEurope ++ scandinavia ++ fromCsvFile(csvFile)).toSeq
   }
 
   def fromCsvFile(csvFile: os.Path): Set[Point] = {
@@ -73,7 +91,7 @@ object Settings {
    * Areas defined by old soargfs.
    */
   val gfsDownloadAreas: Seq[Area] = Seq(
-    Area("A",  -26,   57,  27,  65), // Europe
+    Area("A",  -26,   57,  27,  69), // Europe
     Area("B",   71,  141, -10,  56), // Asia
     Area("C",   16,   56, -35,   2), // South Africa
     Area("D",  116,  177, -45, -21), // Australia
