@@ -6,6 +6,8 @@ import { DetailedViewType, PeriodSelectors } from './PeriodSelector';
 import { ForecastLayer } from './ForecastLayer';
 import { ForecastMetadata, latestForecast, showDate } from './data/ForecastMetadata';
 import { LocationForecasts } from './data/Forecast';
+import * as L from 'leaflet';
+import markerImg from './images/marker-icon.png';
 
 /**
  * State managed by the `App` component
@@ -47,7 +49,18 @@ export const App = (forecasts: Array<ForecastMetadata>, containerElement: HTMLEl
     createEffect(() => {
       map.attributionControl.setPrefix(`Initialization: ${showDate(state.forecastMetadata.init)}`);
     });
-  
+
+    const selectedLocationMarker: L.Marker = L.marker([0, 0], { icon: L.icon({ iconUrl: markerImg, iconSize: [25, 41] }) });
+    createEffect(() => {
+      const selectedLocation = state.locationForecasts;
+      if (selectedLocation !== undefined) {
+        selectedLocationMarker.setLatLng([selectedLocation.latitude, selectedLocation.longitude]);
+        selectedLocationMarker.addTo(map);
+      } else {
+        selectedLocationMarker.remove();
+      }
+    });
+
     map.on('click', (e: L.LeafletMouseEvent) => {
       state.forecastMetadata
         .fetchLocationForecasts(e.latlng.lat, e.latlng.lng)

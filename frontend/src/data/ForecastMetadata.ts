@@ -36,7 +36,7 @@ export class ForecastMetadata {
       const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(latitude, longitude);
       const response = await fetch(`${this.initS}-${normalizedLongitude}-${normalizedLatitude}.json`);
       const data     = await response.json() as LocationForecastsData;
-      return new LocationForecasts(data, this)
+      return new LocationForecasts(data, this, normalizedLatitude / 100, normalizedLongitude / 100)
     } catch (error) {
       throw `Unable to fetch forecast data at ${latitude},${longitude}: ${error}`;
     }
