@@ -30,16 +30,16 @@ object GfsGrib {
         .getOrElse(Feature("Total_cloud_cover_entire_atmosphere_6_Hour_Average"))
     val tcdcLow =
       Feature
-        .maybe("Total_cloud_cover_low_cloud_3_Hour_Average")
-        .getOrElse(Feature("Total_cloud_cover_low_cloud_6_Hour_Average"))
+        .maybe("Low_cloud_cover_low_cloud_3_Hour_Average")
+        .getOrElse(Feature("Low_cloud_cover_low_cloud_6_Hour_Average"))
     val tcdcMiddle =
       Feature
-        .maybe("Total_cloud_cover_middle_cloud_3_Hour_Average")
-        .getOrElse(Feature("Total_cloud_cover_middle_cloud_6_Hour_Average"))
+        .maybe("Medium_cloud_cover_middle_cloud_3_Hour_Average")
+        .getOrElse(Feature("Medium_cloud_cover_middle_cloud_6_Hour_Average"))
     val tcdcHigh =
       Feature
-        .maybe("Total_cloud_cover_high_cloud_3_Hour_Average")
-        .getOrElse(Feature("Total_cloud_cover_high_cloud_6_Hour_Average"))
+        .maybe("High_cloud_cover_high_cloud_3_Hour_Average")
+        .getOrElse(Feature("High_cloud_cover_high_cloud_6_Hour_Average"))
     // See also https://github.com/Boran/soaringmeteo/blob/46ba843c2fe22b69c66db30a97679a3d1fb34f35/src/makeGFSJs.pas#L912
     val tcdcConv = Feature("Total_cloud_cover_convective_cloud")
     val tcdcBoundary =
