@@ -1,4 +1,4 @@
-# soaringmeteo
+# SoaringMeteo — Backend
 
 Produces JSON documents containing relevant GFS data for soaring.
 

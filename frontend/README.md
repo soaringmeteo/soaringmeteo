@@ -1,6 +1,6 @@
-# soarGFS Frontend
+# SoaringMeteo — Frontend
 
-Frontend that consumes the JSON files produced by `makeGFSJson`.
+Frontend that consumes the JSON files produced by the backend.
 
 ## Build Requirements
 
