@@ -22,7 +22,7 @@ class Renderer {
     readonly name: string,
     readonly title: string,
     private readonly renderer: (forecast: Forecast) => DataSource,
-    readonly mapKeyEl: () => HTMLElement
+    readonly mapKeyEl: JSX.Element
   ) {}
 
   update(forecastMetadata: ForecastMetadata, hourOffset: number, canvas: CanvasLayer) {
@@ -36,7 +36,7 @@ class Renderer {
 
 }
 
-const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): HTMLElement =>
+const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): JSX.Element =>
   <div>
   {
     colorScale.points.slice().reverse().map(([value, color]) =>
@@ -48,7 +48,7 @@ const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string)
   }
   </div>;
 
-const windScaleEl = (): HTMLElement =>
+const windScaleEl: JSX.Element =
   <div>
     {
       [2.5, 5, 10, 17.5, 25].map((windSpeed) => {
@@ -72,20 +72,20 @@ const noneRenderer = new Renderer(
   'None',
   'Map only',
   forecast => new None(forecast),
-  () => <div />
+  <div />
 );
 const thqRenderer = new Renderer(
   'Thermal Quality',
   'Thermal Quality',
   forecast => new ThQ(forecast),
-  () => colorScaleEl(thQColorScale, value => `${Math.round(value * 100)}% `)
+  colorScaleEl(thQColorScale, value => `${Math.round(value * 100)}% `)
 );
 const boundaryLayerHeightRenderer = new Renderer(
   'Boundary Layer Depth',
   'Boundary layer depth',
   forecast => new BoundaryLayerDepth(forecast),
   // FIXME Maybe implement map key in datasource...
-  () => colorScaleEl(boundaryDepthColorScale, value => `${value} m `)
+  colorScaleEl(boundaryDepthColorScale, value => `${value} m `)
 );
 const windRenderer = new Renderer(
   'Boundary Layer Wind',
@@ -97,19 +97,19 @@ const cloudCoverRenderer = new Renderer(
   'Cloud Cover',
   'Cloud cover (all altitudes)',
   forecast => new CloudCover(forecast),
-  () => colorScaleEl(cloudCoverColorScale, value => `${value}% `)
+  colorScaleEl(cloudCoverColorScale, value => `${value}% `)
 );
 const rainRenderer = new Renderer(
   'Rain',
   'Total rain',
   forecast => new Rain(forecast),
-  () => colorScaleEl(rainColorScale, value => `${value} mm `)
+  colorScaleEl(rainColorScale, value => `${value} mm `)
 );
 const mixedRenderer = new Renderer(
   'Mixed',
   'Boundary layer depth, wind, and cloud cover',
   forecast => new Mixed(forecast),
-  () => <div />
+  <div />
 );
 
 /**
@@ -228,7 +228,10 @@ export const ForecastLayer = (props: {
   L.DomEvent.disableClickPropagation(rootElement);
   L.DomEvent.disableScrollPropagation(rootElement);
 
-  const rendererKeyEl = <div style={{ position: 'absolute', bottom: '5px', left: '5px', 'z-index': 1000, 'background-color': 'rgba(255, 255,  255, 0.5' }} />;
+  const rendererKeyEl =
+    <div style={{ position: 'absolute', bottom: '30px', left: '5px', 'z-index': 1000, 'background-color': 'rgba(255, 255,  255, 0.5' }}>
+      {state.renderer.mapKeyEl}
+    </div>;
   
   createEffect(() => {
     state.renderer.update(props.currentForecast, props.hourOffset, props.canvas);
