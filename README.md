@@ -31,7 +31,7 @@ Pull requests are welcome. See the [open issues].
 
 ## Usage
 
-Go to https://soarwrf1.soaringmeteo.org/new.
+Go to https://soarwrf1.soaringmeteo.org/v2.
 
 ![](images/overview.png)
 
