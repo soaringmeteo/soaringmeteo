@@ -1,5 +1,6 @@
 import * as L from 'leaflet';
-import { createEffect, createState, JSX } from 'solid-js';
+import { createEffect, JSX } from 'solid-js';
+import { createStore } from 'solid-js/store';
 
 import { DataSource, CanvasLayer } from "./CanvasLayer";
 import { Mixed } from './layers/Mixed';
@@ -125,7 +126,7 @@ export const ForecastLayer = (props: {
   onChangeForecast: (value: ForecastMetadata) => void
 }): JSX.Element => {
   // TODO Take as parameter the pre-selected layer
-  const [state, setState] = createState({ renderer: mixedRenderer });
+  const [state, setState] = createStore({ renderer: mixedRenderer });
 
   const meteogramEl = makeRadioBtn(
     'Meteogram',
