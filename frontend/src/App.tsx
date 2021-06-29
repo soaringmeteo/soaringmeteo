@@ -1,4 +1,5 @@
-import { createEffect, createState } from 'solid-js';
+import { createEffect } from 'solid-js';
+import { createStore } from 'solid-js/store';
 import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap } from './Map';
@@ -39,7 +40,7 @@ export const App = (forecasts: Array<ForecastMetadata>, containerElement: HTMLEl
     const noonOffset    = morningOffset + 3 /* hours */; // TODO Abstract over underlying NWP model resolution
     const [forecastMetadata, hourOffset] = latestForecast(forecasts, noonOffset)
 
-    const [state, setState] = createState<State>({
+    const [state, setState] = createStore<State>({
       forecastMetadata: forecastMetadata,
       detailedView: 'meteogram',
       locationForecasts: undefined,
