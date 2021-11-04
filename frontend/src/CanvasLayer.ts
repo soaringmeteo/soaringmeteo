@@ -122,7 +122,13 @@ const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng
       uWind: 0,
       vWind: 0,
       cloudCover: 0,
-      rain: 0
+      rain: 0,
+      uSurfaceWind: 0,
+      vSurfaceWind: 0,
+      u300MWind: 0,
+      v300MWind: 0,
+      uBLTopWind: 0,
+      vBLTopWind: 0
     };
     points.forEach(point => {
       sumPoint.boundaryLayerHeight += point.boundaryLayerHeight;
@@ -130,6 +136,12 @@ const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng
       sumPoint.vWind += point.vWind;
       sumPoint.cloudCover += point.cloudCover;
       sumPoint.rain += point.rain;
+      sumPoint.uSurfaceWind += point.uSurfaceWind;
+      sumPoint.vSurfaceWind += point.vSurfaceWind;
+      sumPoint.u300MWind += point.u300MWind;
+      sumPoint.v300MWind += point.v300MWind;
+      sumPoint.uBLTopWind += point.uBLTopWind;
+      sumPoint.vBLTopWind += point.vBLTopWind;
     })
     const n = points.length;
     return {
@@ -137,7 +149,13 @@ const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng
       uWind: sumPoint.uWind / n,
       vWind: sumPoint.vWind / n,
       cloudCover: sumPoint.cloudCover / n,
-      rain: sumPoint.rain / n
+      rain: sumPoint.rain / n,
+      uSurfaceWind: sumPoint.uSurfaceWind / n,
+      vSurfaceWind: sumPoint.vSurfaceWind / n,
+      u300MWind: sumPoint.u300MWind / n,
+      v300MWind: sumPoint.v300MWind / n,
+      uBLTopWind: sumPoint.uBLTopWind / n,
+      vBLTopWind: sumPoint.vBLTopWind / n
     };          
   } else {
     return

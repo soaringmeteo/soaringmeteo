@@ -12,7 +12,7 @@ object GribDownloader {
 
   def download(
     targetDir: os.Path,
-    gfsRun: GfsRun,
+    gfsRun: in.ForecastRun,
     areaAndHour: AreaAndHour
   ): os.Path = {
     val url = gfsRun.gribUrl(areaAndHour)

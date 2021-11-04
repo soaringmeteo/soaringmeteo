@@ -1,8 +1,8 @@
-package org.soaringmeteo.gfs
+package org.soaringmeteo.gfs.out
 
 import java.time.OffsetDateTime
-
 import io.circe.{Codec, Decoder, Encoder, Json}
+import org.soaringmeteo.gfs.Settings
 
 /**
  * @param initDateString   Formatted initialization time of the forecast (used as a prefix for generated file names)

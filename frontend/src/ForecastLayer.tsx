@@ -88,10 +88,28 @@ const boundaryLayerHeightRenderer = new Renderer(
   // FIXME Maybe implement map key in datasource...
   colorScaleEl(boundaryDepthColorScale, value => `${value} m `)
 );
-const windRenderer = new Renderer(
-  'Boundary Layer Wind',
-  'Wind force and direction in the boundary layer',
-  forecast => new Wind(forecast),
+const surfaceWindRenderer = new Renderer(
+  'Surface',
+  'Wind force and direction on the ground',
+  forecast => new Wind(forecast, (point) => [point.uSurfaceWind, point.vSurfaceWind]),
+  windScaleEl
+);
+const _300MAGLWindRenderer = new Renderer(
+  '300 m AGL',
+  'Wind force and direction at 300 m above the ground level',
+  forecast => new Wind(forecast, (forecast) => [forecast.u300MWind, forecast.v300MWind]),
+  windScaleEl
+);
+const boundaryLayerWindRenderer = new Renderer(
+  'Boundary Layer',
+  'Average wind force and direction in the boundary layer',
+  forecast => new Wind(forecast, (point) => [point.uWind, point.vWind]),
+  windScaleEl
+);
+const boundaryLayerTopWindRenderer = new Renderer(
+  'Boundary Layer Top',
+  'Wind force and direction at the top of the boundary layer',
+  forecast => new Wind(forecast, (point) => [point.uBLTopWind, point.vBLTopWind]),
   windScaleEl
 );
 const cloudCoverRenderer = new Renderer(
@@ -181,7 +199,20 @@ export const ForecastLayer = (props: {
   const noneEl = setupRendererBtn(noneRenderer);
   const thqEl = setupRendererBtn(thqRenderer);
   const boundaryLayerHeightEl = setupRendererBtn(boundaryLayerHeightRenderer);
-  const windEl = setupRendererBtn(windRenderer);
+
+  const blWindEl = setupRendererBtn(boundaryLayerWindRenderer);
+  const blTopWindEl = setupRendererBtn(boundaryLayerTopWindRenderer);
+  const surfaceWindEl = setupRendererBtn(surfaceWindRenderer);
+  const _300MAGLWindEl = setupRendererBtn(_300MAGLWindRenderer);
+  const windLayersEl =
+    <fieldset>
+      <legend>Wind</legend>
+      {surfaceWindEl}
+      {_300MAGLWindEl}
+      {blWindEl}
+      {blTopWindEl}
+    </fieldset>;
+
   const cloudCoverEl = setupRendererBtn(cloudCoverRenderer);
   const rainEl = setupRendererBtn(rainRenderer);
   const mixedEl = setupRendererBtn(mixedRenderer);
@@ -192,7 +223,7 @@ export const ForecastLayer = (props: {
       {noneEl}
       {thqEl}
       {boundaryLayerHeightEl}
-      {windEl}
+      {windLayersEl}
       {cloudCoverEl}
       {rainEl}
       {mixedEl}

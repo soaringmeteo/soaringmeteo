@@ -4,12 +4,13 @@ import * as L from 'leaflet';
 
 export class Wind {
 
-  constructor(readonly forecast: Forecast) {}
+  constructor(readonly forecast: Forecast, readonly wind: ((forecast: ForecastPoint) => [number, number])) {}
 
   renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     const center = L.point((topLeft.x + bottomRight.x) / 2, (topLeft.y + bottomRight.y) / 2);
     const width  = bottomRight.x - topLeft.x;
-    drawWindArrow(ctx, center.x, center.y, width, windColor(0.50), forecastAtPoint.uWind, forecastAtPoint.vWind);
+    const [u, v] = this.wind(forecastAtPoint);
+    drawWindArrow(ctx, center.x, center.y, width, windColor(0.50), u, v);
   }
 }
 

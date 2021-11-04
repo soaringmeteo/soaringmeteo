@@ -31,9 +31,9 @@ object DownloadAndRead {
    */
   def apply(
     gribsDir: os.Path,
-    gfsRun: GfsRun,
+    gfsRun: in.ForecastRun,
     locationsByArea: Map[Area, Seq[Point]]
-  ): ForecastsByHour = {
+  ): out.ForecastsByHour = {
 
     os.remove.all(gribsDir)
     os.makeDir.all(gribsDir)
@@ -59,10 +59,10 @@ object DownloadAndRead {
       }(fourThreads /* NCEP currently limits usage to 120/hits per minute */)
 
     // Read the content of a GRIB file as a background task
-    def read(locations: Seq[Point], gribFile: os.Path, hourOffset: Int): Future[Map[Point, GfsForecast]] =
+    def read(locations: Seq[Point], gribFile: os.Path, hourOffset: Int): Future[Map[Point, in.Forecast]] =
       Future {
         concurrent.blocking {
-          GfsForecast.fromGribFile(gribFile, gfsRun.initDateTime, hourOffset, locations)
+          in.Forecast.fromGribFile(gribFile, gfsRun.initDateTime, hourOffset, locations)
         }
       }(oneThread /* Make sure we don't read multiple GRIB files in parallel */)
 
@@ -82,7 +82,7 @@ object DownloadAndRead {
           // We can safely remove this line after we drop support for old soargfs
           writeFilesForOldSoargfs(gribsDir)
 
-          Forecast(
+          out.Forecast(
             forecastsByHour
               // Merge together all the forecasts from the different areas
               .groupMapReduce { case (hour, _) => hour } { case (_, forecast) => forecast } { _ ++ _ }
