@@ -71,9 +71,9 @@ It uses the folowing color scale:
 
 ![](images/key-bld.png)
 
-The “Boundary Layer Wind” overlay shows the average wind speed and direction within the boundary layer:
+The “Wind” overlays show the wind speed and direction at various elevation levels:
 
-![](images/controls-layers-blw.png)
+![](images/controls-layers-wind.png)
 
 The wind flows in the direction of the arrows, and the number and length of barbells model the wind speed:
 
