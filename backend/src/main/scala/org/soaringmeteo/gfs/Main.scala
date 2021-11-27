@@ -25,7 +25,7 @@ object Main {
             .find(_.contains(point))
             .getOrElse(sys.error(s"${point} is not in the downloaded GFS areas"))
         }
-    val gfsRun = GfsRun.findLatest()
+    val gfsRun = in.ForecastRun.findLatest()
     val forecastsByHour = DownloadAndRead(gribsDir, gfsRun, locationsByArea)
     JsonWriter.writeJsons(jsonDir, gfsRun, forecastsByHour, locationsByArea.values.flatten)
     // Let’s keep the grib files because they are also used by the old soargfs

@@ -5,7 +5,13 @@ export type ForecastPoint = {
   uWind: number
   vWind: number
   cloudCover: number,
-  rain: number
+  rain: number,
+  uSurfaceWind: number,
+  vSurfaceWind: number,
+  u300MWind: number,
+  v300MWind: number,
+  uBLTopWind: number,
+  vBLTopWind: number
 }
 
 export class Forecast {
@@ -23,7 +29,13 @@ export class Forecast {
         uWind: pointData[1],
         vWind: pointData[2],
         cloudCover: pointData[3],
-        rain: pointData[4]
+        rain: pointData[4],
+        uSurfaceWind: pointData[5],
+        vSurfaceWind: pointData[6],
+        u300MWind: pointData[7],
+        v300MWind: pointData[8],
+        uBLTopWind: pointData[9],
+        vBLTopWind: pointData[10]
       }
     } else {
       return
@@ -41,7 +53,13 @@ type ForecastPointData = [
   number, // Wind: u component
   number, // Wind: v component
   number, // Cloud cover
-  number  // Total rain
+  number, // Total rain
+  number, // surface wind u
+  number, // surface wind v
+  number, // 300m AGL wind u
+  number, // 300m AGL wind v
+  number, // boundary layer top wind u
+  number, // boundary layer top wind v
 ]
 
 export class LocationForecasts {
@@ -124,9 +142,9 @@ export class DetailedForecast {
     this.isothermZero = data.iso;
 
     this.aboveGround =
-      Object.entries(data.p)
-        .filter(([_, e]) => e.h > elevation)
-        .map(([_, entry]) => {
+      data.p
+        .filter(e => e.h > elevation)
+        .map(entry => {
           return {
             elevation: entry.h,
             u: entry.u,
@@ -209,17 +227,15 @@ export type DetailedForecastData = {
     c: number,
     b: number
   },
-  // Isobaric variables
-  p: {
-    [P in PressureLevel]: {
-      h: number, // altitude
-      t: number, // temperature
-      dt: number, // dew point temperature
-      // wind
-      u: number,
-      v: number
-    }
-  },
+  // Above ground variables
+  p: Array<{
+    h: number, // altitude
+    t: number, // temperature
+    dt: number, // dew point temperature
+    // wind
+    u: number,
+    v: number
+  }>,
   // Surface
   s: {
     t: number, // temperature
@@ -238,12 +254,6 @@ export type DetailedForecastData = {
   // Mean sea level pressure 
   mslet: number // hPa
 }
-
-type PressureLevel =
-  '200' | '300' | '400' | '450' | '500' | '550' | '600' | '650' | '700' | '750' | '800' | '850' | '900' | '950'
-
-const pressureLevels: Array<PressureLevel> =
-  ['200', '300', '400',  '450', '500', '550', '600', '650', '700', '750', '800', '850', '900', '950'];
 
 export const modelResolution = 25 // Hundredths of degrees
 

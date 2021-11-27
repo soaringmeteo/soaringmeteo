@@ -1,4 +1,4 @@
-package org.soaringmeteo.gfs
+package org.soaringmeteo.gfs.in
 
 import java.time.OffsetDateTime
 
@@ -11,11 +11,11 @@ import squants.space.{Meters, Millimeters}
 import squants.thermal.Kelvin
 
 /**
-  * Extract a [[GfsForecast]] for each of the given `locations`.
+  * Extract a [[Forecast]] for each of the given `locations`.
   */
 object GfsGrib {
 
-  def forecast(grib: Grib, locations: Seq[Point], time: OffsetDateTime): Map[Point, GfsForecast] = {
+  def forecast(grib: Grib, locations: Seq[Point], time: OffsetDateTime): Map[Point, Forecast] = {
     import grib.Feature
 
     // You can see how the following variables were used here:
@@ -76,7 +76,7 @@ object GfsGrib {
     val capeSurface = Feature("Convective_available_potential_energy_surface")
     val cinSurface = Feature("Convective_inhibition_surface")
 
-    val isobaricFeatures = GfsForecast.pressureLevels
+    val isobaricFeatures = Forecast.pressureLevels
       .map { pressureLevel =>
         val hgt = Feature("Geopotential_height_isobaric")
         val tmp = Feature("Temperature_isobaric")
@@ -115,7 +115,7 @@ object GfsGrib {
         )
       }
 
-      val gfsForecast = GfsForecast(
+      val gfsForecast = Forecast(
         time = time,
         elevation = Meters(readXY(hgtSurface)),
         boundaryLayerHeight = Meters(readXY(hpblSurface)),

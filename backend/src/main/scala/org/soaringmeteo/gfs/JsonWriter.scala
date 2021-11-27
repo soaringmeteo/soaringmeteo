@@ -4,9 +4,8 @@ import io.circe
 import io.circe.Json
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.Point
+import org.soaringmeteo.gfs.out.{ ForecastsByHour, Forecast, ForecastMetadata, InitDateString, LocationForecasts }
 
-import java.time.{LocalDate, LocalTime, OffsetDateTime, ZoneOffset}
-import java.time.format.DateTimeFormatter
 import scala.collection.immutable.SortedMap
 import scala.util.Try
 
@@ -39,7 +38,7 @@ object JsonWriter {
    */
   def writeJsons(
     targetDir: os.Path,
-    gfsRun: GfsRun,
+    gfsRun: in.ForecastRun,
     forecastsByHour: ForecastsByHour,
     locations: Iterable[Point]
   ): Unit = {
@@ -71,9 +70,9 @@ object JsonWriter {
     forecastsByHour: ForecastsByHour,
     targetDir: os.Path
   ): Unit = {
-    for ((t, forecast) <- forecastsByHour) {
+    for ((t, forecastsByLocation) <- forecastsByHour) {
       val fields =
-        forecast.iterator.map { case (p, forecast) =>
+        forecastsByLocation.iterator.map { case (p, forecast) =>
           // Coordinates are indexed according to the resolution of the GFS model.
           // For instance, latitude 0.0 has index 0, latitude 0.25 has index 1, latitude 0.50 has
           // index 2, etc.
@@ -103,7 +102,7 @@ object JsonWriter {
     val forecasts = forecastsByHour.to(SortedMap).view.values.toSeq
     for (location <- locations) {
       val point = Point(location.latitude, location.longitude)
-      logger.debug(s"Writing forecast for location ${location.longitude},${location.latitude}")
+      logger.trace(s"Writing forecast for location ${location.longitude},${location.latitude}")
       val locationForecasts = LocationForecasts(point, forecasts.map(_(point)))
       // E.g., "2021-01-08T12-750-4625.json"
       val fileName = s"$initDateString-${(location.longitude * 100).intValue}-${(location.latitude * 100).intValue}.json"
@@ -114,7 +113,7 @@ object JsonWriter {
     }
   }
 
-  private def writeMetadata(initDateString: String, gfsRun: GfsRun, targetDir: os.Path): Unit = {
+  private def writeMetadata(initDateString: String, gfsRun: in.ForecastRun, targetDir: os.Path): Unit = {
     val latestForecastPath = targetDir / "forecast.json"
     // If a previous forecast is found, rename its metadata file
     val maybePreviousForecastInitDateTime =
@@ -135,34 +134,13 @@ object JsonWriter {
     )
   }
 
-  private def deleteOldData(gfsRun: GfsRun, targetDir: os.Path): Unit = {
+  private def deleteOldData(gfsRun: in.ForecastRun, targetDir: os.Path): Unit = {
     val oldestForecastToKeep = gfsRun.initDateTime.minus(Settings.forecastHistory)
     for {
       path <- os.list(targetDir)
       date <- InitDateString.parse(path.last)
       if date.isBefore(oldestForecastToKeep)
     } os.remove(path)
-  }
-
-}
-
-object InitDateString {
-
-  private val dateTimeString = "^(\\d+)-(\\d+)-(\\d+)T(\\d+)[+\\-].*\\.json$".r
-
-  def apply(dateTime: OffsetDateTime): String =
-    dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH"))
-
-  def parse(str: String): Option[OffsetDateTime] = str match {
-    case dateTimeString(year, month, day, hour) =>
-      Some(
-        OffsetDateTime.of(
-          LocalDate.of(year.toInt, month.toInt, day.toInt),
-          LocalTime.of(hour.toInt, 0),
-          ZoneOffset.UTC
-        )
-      )
-    case _ => None
   }
 
 }

@@ -1,17 +1,17 @@
-package org.soaringmeteo.gfs
+package org.soaringmeteo.gfs.out
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, OffsetDateTime}
-
 import io.circe.{Encoder, Json}
-import GfsForecast.pressureLevels
-import org.soaringmeteo.Point
+import org.soaringmeteo.gfs.Settings
+import org.soaringmeteo.{Point, Wind}
 import squants.energy.SpecificEnergy
 import squants.motion.Pressure
 import squants.radio.Irradiance
-import squants.space.Length
+import squants.space.{Length, Meters}
 import squants.thermal.{Celsius, Temperature}
 
+import scala.collection.immutable.SortedMap
 import scala.util.chaining._
 
 /**
@@ -36,7 +36,7 @@ case class DetailedForecast(
   boundaryLayerHeight: Length,
   boundaryLayerWind: Wind,
   cloudCover: CloudCover,
-  atPressure: Map[Pressure, IsobaricVariables],
+  airDataByAltitude: SortedMap[Length, AirData],
   mslet: Pressure,
   snowDepth: Length,
   surfaceTemperature: Temperature,
@@ -63,7 +63,7 @@ object LocationForecasts {
             forecast.boundaryLayerHeight,
             forecast.boundaryLayerWind,
             forecast.cloudCover,
-            forecast.atPressure,
+            forecast.airDataByAltitude,
             forecast.mslet,
             forecast.snowDepth,
             forecast.surfaceTemperature,
@@ -179,26 +179,11 @@ object LocationForecasts {
 
   /** Average “spread” value for altitudes above 3000 m */
   def spreadAlti(forecast: DetailedForecast): Double = {
-    spreadAndTds(forecast)
-      .map { case (pressure, (spread, _)) => (pressure, spread) }
-      .filter { case (pressure, _) => pressure.toPascals <= 70000 }
-      .values
+    forecast.airDataByAltitude
+      .view
+      .filterKeys(_ >= Meters(3000))
+      .map { case (_, aboveGround) => aboveGround.temperature.toCelsiusScale - aboveGround.dewPoint.toCelsiusScale }
       .pipe(spreads => spreads.sum / spreads.size)
-  }
-
-  def spreadAndTds(forecast: DetailedForecast): Map[Pressure, (Double, Double)] = {
-    forecast.atPressure.map { case (pressure, variables) =>
-      val temperature = variables.temperature.toCelsiusScale
-      val exponentBase10 = 7.5 * temperature / (237.7 + temperature) // Computation of the main base 10 power exponent used below from the air temperature in °C
-      val vaporPressSat = 6.11 * math.pow(10, exponentBase10) // Computation of the water vapor pressure at saturation
-      // Computation of the water vapor pressure from relative humidity RH and water vapor pressure at saturation
-      val vaporPress =
-        if (variables.relativeHumidity > 1) (variables.relativeHumidity / 100) * vaporPressSat
-        else 0.01 * vaporPressSat
-      // Computation of dew point from the water vapor pressure. FIXME Why don’t we use log10 here?
-      val td = (-430.22 + 237.7 * math.log(vaporPress) / (-math.log(vaporPress) + 19.08)).max(temperature)
-      (pressure, (temperature - td, td))
-    }
   }
 
   def dewPoint(temperature: Temperature, relativeHumidity: Double): Temperature = {
@@ -235,16 +220,15 @@ object LocationForecasts {
                       "c" -> Json.fromBigDecimal(forecast.cloudCover.conv),
                       "b" -> Json.fromBigDecimal(forecast.cloudCover.boundary)
                     ),
-                    "p" -> Json.obj(pressureLevels.map { pressure =>
-                      val variables = forecast.atPressure(pressure)
-                      (pressure.toPascals.round.toInt / 100).toString -> Json.obj(
-                        "h" -> Json.fromInt(variables.geopotentialHeight.toMeters.round.toInt),
-                        "t" -> Json.fromBigDecimal(variables.temperature.toCelsiusScale),
-                        "dt" -> Json.fromDoubleOrNull(dewPoint(variables.temperature, variables.relativeHumidity).toCelsiusScale),
-                        "u" -> Json.fromInt(variables.wind.u.toKilometersPerHour.round.toInt),
-                        "v" -> Json.fromInt(variables.wind.v.toKilometersPerHour.round.toInt)
+                    "p" -> Json.arr(forecast.airDataByAltitude.map { case (elevation, aboveGround) =>
+                      Json.obj(
+                        "h" -> Json.fromInt(elevation.toMeters.round.toInt),
+                        "t" -> Json.fromBigDecimal(aboveGround.temperature.toCelsiusScale),
+                        "dt" -> Json.fromDoubleOrNull(aboveGround.dewPoint.toCelsiusScale),
+                        "u" -> Json.fromInt(aboveGround.wind.u.toKilometersPerHour.round.toInt),
+                        "v" -> Json.fromInt(aboveGround.wind.v.toKilometersPerHour.round.toInt)
                       )
-                    }: _*),
+                    }.toSeq: _*),
                     "s" -> Json.obj(
                       "t" -> Json.fromBigDecimal(forecast.surfaceTemperature.toCelsiusScale),
                       "dt" -> Json.fromBigDecimal(forecast.surfaceDewPoint.toCelsiusScale),

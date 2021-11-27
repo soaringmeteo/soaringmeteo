@@ -1,14 +1,15 @@
-package org.soaringmeteo.gfs
+package org.soaringmeteo.gfs.in
 
 import java.time.{LocalDate, LocalTime, OffsetDateTime, ZoneOffset}
-
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
+import org.soaringmeteo.gfs.AreaAndHour
 import org.soaringmeteo.gfs.Settings.gfsRootUrl
 
 import scala.util.chaining._
 
-case class GfsRun(
+/** Metadata about a run of GFS */
+case class ForecastRun(
   dateDirectory: String, // "gfs.20200529"
   initDateTime: OffsetDateTime
 ) {
@@ -41,11 +42,11 @@ case class GfsRun(
 
 }
 
-object GfsRun {
+object ForecastRun {
 
-  private val logger = LoggerFactory.getLogger(classOf[GfsRun])
+  private val logger = LoggerFactory.getLogger(classOf[ForecastRun])
 
-  def findLatest(): GfsRun = {
+  def findLatest(): ForecastRun = {
     val item =
       Jsoup.connect(gfsRootUrl).timeout(120000).get()
         .select("a")
@@ -74,7 +75,7 @@ object GfsRun {
         ZoneOffset.UTC
       )
 
-    GfsRun(date, forecastInitDateTime)
+    ForecastRun(date, forecastInitDateTime)
   }
 
 }

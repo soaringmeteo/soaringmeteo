@@ -1,14 +1,12 @@
-package org.soaringmeteo.gfs
+package org.soaringmeteo.gfs.in
 
 import java.time.OffsetDateTime
-
-import io.circe.{Encoder, Json}
 import org.slf4j.LoggerFactory
-import org.soaringmeteo.Point
+import org.soaringmeteo.{Point, Wind}
 import org.soaringmeteo.grib.Grib
 import squants.energy.SpecificEnergy
 import squants.motion
-import squants.motion.{Pascals, Pressure, Velocity}
+import squants.motion.{Pascals, Pressure}
 import squants.radio.Irradiance
 import squants.space.Length
 import squants.thermal.Temperature
@@ -16,7 +14,7 @@ import squants.thermal.Temperature
 /**
  * Forecast data for one point at one time
  */
-case class GfsForecast(
+case class Forecast(
   time: OffsetDateTime,
   elevation: Length,
   boundaryLayerHeight: Length,
@@ -54,15 +52,9 @@ case class IsobaricVariables(
   wind: Wind
 )
 
-/**
- * @param u east-west component (positive value means wind comes from the west)
- * @param v north-south component (positive value means wind comes from the south)
- */
-case class Wind(u: Velocity, v: Velocity)
+object Forecast {
 
-object GfsForecast {
-
-  private val logger = LoggerFactory.getLogger(classOf[GfsForecast])
+  private val logger = LoggerFactory.getLogger(classOf[Forecast])
 
   val pressureLevels: Seq[motion.Pressure] =
     Seq(20000, 30000, 40000, 45000, 50000, 55000, 60000, 65000, 70000, 75000, 80000, 85000, 90000, 95000)
@@ -80,7 +72,7 @@ object GfsForecast {
     forecastInitDateTime: OffsetDateTime,
     forecastHourOffset: Int,
     locations: Seq[Point]
-  ): Map[Point, GfsForecast] = {
+  ): Map[Point, Forecast] = {
     Grib.bracket(gribFile) { grib =>
       val forecastTime = forecastInitDateTime.plusHours(forecastHourOffset)
       val forecast = GfsGrib.forecast(grib, locations, forecastTime)
