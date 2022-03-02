@@ -30,9 +30,12 @@ object GribDownloader {
    */
   def insist(maxAttempts: Int, delay: Duration, url: String): requests.Response = concurrent.blocking {
     val errorOrSucessfulResponse =
-      Try(requests.get(url, readTimeout = 1200000, check = false))
-        .toEither
-        .filterOrElse(_.statusCode == 200, new Exception("Unexpected status code"))
+      Try(requests.get(url, readTimeout = 1200000, check = false)) match {
+        case Failure(exception) => Left(exception)
+        case Success(response) =>
+          if (response.statusCode == 200) Right(response)
+          else Left(new Exception(s"Unexpected status code: ${response.statusCode} (${response.statusMessage})"))
+      }
     errorOrSucessfulResponse match {
       case Right(response) => response
       case Left(error) =>
