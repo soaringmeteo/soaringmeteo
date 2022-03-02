@@ -15,7 +15,6 @@ export const drawCloudCover = (forecastAtPoint: ForecastPoint, topLeft: L.Point,
   const width  = bottomRight.x - topLeft.x;
   const height = bottomRight.y - topLeft.y;
   const cloudCover = forecastAtPoint.cloudCover;
-  const cloudCoverCoeff = cloudCover / 100;
   const ch = 5;
   const hSpace = width / ch;
   const cv = 7;
@@ -24,7 +23,7 @@ export const drawCloudCover = (forecastAtPoint: ForecastPoint, topLeft: L.Point,
     Array.from({ length: cv }, (_, j) => {
       const x = topLeft.x + hSpace * (i + 1 / 2);
       const y = topLeft.y + vSpace * (j + 1 / 2);
-      ctx.fillStyle = cloudCoverColor(cloudCoverCoeff, maxOpacity).css();
+      ctx.fillStyle = cloudCoverColor(cloudCover, maxOpacity).css();
       ctx.beginPath();
       ctx.arc(x, y, hSpace / 2, 0, Math.PI * 2);
       ctx.fill();

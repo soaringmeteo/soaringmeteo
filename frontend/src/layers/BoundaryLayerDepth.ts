@@ -12,7 +12,7 @@ export class BoundaryLayerDepth {
 }
 
 export const drawBoundaryLayerDepth = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => {
-  const blh = forecastAtPoint.boundaryLayerHeight;
+  const blh = forecastAtPoint.boundaryLayerDepth;
   const color = boundaryDepthColorScale.interpolate(blh);
   ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
   ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);

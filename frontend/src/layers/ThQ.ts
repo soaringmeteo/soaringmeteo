@@ -22,7 +22,7 @@ export class ThQ {
   renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     if (forecastAtPoint !== undefined) {
       const thq = value(
-        forecastAtPoint.boundaryLayerHeight,
+        forecastAtPoint.boundaryLayerDepth,
         forecastAtPoint.uWind,
         forecastAtPoint.vWind,
         forecastAtPoint.cloudCover
@@ -42,10 +42,17 @@ export class ThQ {
 
 }
 
-export const value = (boundaryLayerHeight: number, uWind: number, vWind: number, totalCloudCover: number): number => {
-  // Boundary Layer Height
-  const blh = boundaryLayerHeight;
-  const blhCoeff = Math.min(blh / 800, 1); // >800 m = 100%
+/**
+ * @param boundaryLayerDepth Depth of the boundary layer in meters
+ * @param uWind              U part of wind in boundary layer in km/h
+ * @param vWind              V part of wind in boundary layer in km/h
+ * @param totalCloudCover    Total cloud cover between 0 and 1
+ * @returns 
+ */
+export const value = (boundaryLayerDepth: number, uWind: number, vWind: number, totalCloudCover: number): number => {
+  // Boundary Layer Depth
+  const bld = boundaryLayerDepth;
+  const blhCoeff = Math.min(bld / 800, 1); // >800 m = 100%
 
   // Boundary Layer Wind
   const u = uWind;
@@ -57,7 +64,7 @@ export const value = (boundaryLayerHeight: number, uWind: number, vWind: number,
 
   // Cloud cover
   const cloudCover = totalCloudCover;
-  const cloudCoverCoeff = (cloudCover === null || cloudCover === undefined) ? 1 : (100 - cloudCover) / 100;
+  const cloudCoverCoeff = (cloudCover === null || cloudCover === undefined) ? 1 : (1 - cloudCover);
 
   return blhCoeff * windCoeff * cloudCoverCoeff
 };

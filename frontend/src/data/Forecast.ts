@@ -1,18 +1,18 @@
 import { ForecastMetadata } from "./ForecastMetadata";
 
 export type ForecastPoint = {
-  boundaryLayerHeight: number
-  thermalVelocity: number
-  uWind: number
-  vWind: number
-  cloudCover: number,
-  rain: number,
-  uSurfaceWind: number,
-  vSurfaceWind: number,
-  u300MWind: number,
-  v300MWind: number,
-  uBLTopWind: number,
-  vBLTopWind: number
+  boundaryLayerDepth: number // m
+  thermalVelocity: number // m/s
+  uWind: number // km/h
+  vWind: number // km/h
+  cloudCover: number, // %
+  rain: number, // mm
+  uSurfaceWind: number, // km/h
+  vSurfaceWind: number, // km/h
+  u300MWind: number, // km/h
+  v300MWind: number, // km/h
+  uBLTopWind: number, // km/h
+  vBLTopWind: number // km/h
 }
 
 export class Forecast {
@@ -26,10 +26,10 @@ export class Forecast {
     const pointData = this.data[`${longitude / modelResolution},${latitude / modelResolution}`];
     if (pointData !== undefined) {
       return {
-        boundaryLayerHeight: pointData[0],
+        boundaryLayerDepth: pointData[0],
         uWind: pointData[1],
         vWind: pointData[2],
-        cloudCover: pointData[3],
+        cloudCover: pointData[3] / 100,
         rain: pointData[4],
         uSurfaceWind: pointData[5],
         vSurfaceWind: pointData[6],
@@ -54,7 +54,7 @@ type ForecastPointData = [
   number, // Boundary layer height
   number, // Wind: u component
   number, // Wind: v component
-  number, // Cloud cover
+  number, // Cloud cover between 0 and 100
   number, // Total rain
   number, // surface wind u
   number, // surface wind v
