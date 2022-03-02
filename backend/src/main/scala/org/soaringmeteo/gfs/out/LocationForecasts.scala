@@ -11,6 +11,7 @@ import squants.radio.Irradiance
 import squants.space.{Length, Meters}
 import squants.thermal.{Celsius, Temperature}
 
+import java.math.MathContext
 import scala.collection.immutable.SortedMap
 import scala.util.chaining._
 
@@ -213,25 +214,25 @@ object LocationForecasts {
                       "v" -> Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt)
                     ),
                     "c" -> Json.obj(
-                      "e" -> Json.fromBigDecimal(forecast.cloudCover.entire),
-                      "l" -> Json.fromBigDecimal(forecast.cloudCover.low),
-                      "m" -> Json.fromBigDecimal(forecast.cloudCover.middle),
-                      "h" -> Json.fromBigDecimal(forecast.cloudCover.high),
-                      "c" -> Json.fromBigDecimal(forecast.cloudCover.conv),
-                      "b" -> Json.fromBigDecimal(forecast.cloudCover.boundary)
+                      "e" -> Json.fromLong(forecast.cloudCover.entire.round.longValue()),
+                      "l" -> Json.fromLong(forecast.cloudCover.low.round.longValue()),
+                      "m" -> Json.fromLong(forecast.cloudCover.middle.round.longValue()),
+                      "h" -> Json.fromLong(forecast.cloudCover.high.round.longValue()),
+                      "c" -> Json.fromLong(forecast.cloudCover.conv.round.longValue()),
+                      "b" -> Json.fromLong(forecast.cloudCover.boundary.round.longValue())
                     ),
                     "p" -> Json.arr(forecast.airDataByAltitude.map { case (elevation, aboveGround) =>
                       Json.obj(
                         "h" -> Json.fromInt(elevation.toMeters.round.toInt),
-                        "t" -> Json.fromBigDecimal(aboveGround.temperature.toCelsiusScale),
-                        "dt" -> Json.fromDoubleOrNull(aboveGround.dewPoint.toCelsiusScale),
+                        "t" -> encodeRealNumber(aboveGround.temperature.toCelsiusScale, 3),
+                        "dt" -> encodeRealNumber(aboveGround.dewPoint.toCelsiusScale, 3),
                         "u" -> Json.fromInt(aboveGround.wind.u.toKilometersPerHour.round.toInt),
                         "v" -> Json.fromInt(aboveGround.wind.v.toKilometersPerHour.round.toInt)
                       )
                     }.toSeq: _*),
                     "s" -> Json.obj(
-                      "t" -> Json.fromBigDecimal(forecast.surfaceTemperature.toCelsiusScale),
-                      "dt" -> Json.fromBigDecimal(forecast.surfaceDewPoint.toCelsiusScale),
+                      "t" -> encodeRealNumber(forecast.surfaceTemperature.toCelsiusScale, 3),
+                      "dt" -> encodeRealNumber(forecast.surfaceDewPoint.toCelsiusScale, 3),
                       "u" -> Json.fromInt(forecast.surfaceWind.u.toKilometersPerHour.round.toInt),
                       "v" -> Json.fromInt(forecast.surfaceWind.v.toKilometersPerHour.round.toInt)
                     ),
@@ -250,5 +251,9 @@ object LocationForecasts {
         )
       )
     }
+
+  def encodeRealNumber(number: Double, precision: Int): Json =
+    if (java.lang.Double.isFinite(number)) Json.fromBigDecimal(BigDecimal(number).round(new MathContext(precision)))
+    else Json.Null
 
 }

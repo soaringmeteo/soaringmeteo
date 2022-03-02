@@ -150,7 +150,7 @@ object Forecast {
         Json.fromInt(forecast.boundaryLayerHeight.toMeters.round.toInt),
         Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
         Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt),
-        Json.fromBigDecimal(forecast.cloudCover.entire),
+        Json.fromLong(forecast.cloudCover.entire.round.longValue()),
         Json.fromInt(forecast.totalRain.toMillimeters.round.toInt),
         Json.fromInt(forecast.surfaceWind.u.toKilometersPerHour.round.toInt),
         Json.fromInt(forecast.surfaceWind.v.toKilometersPerHour.round.toInt),
