@@ -2,6 +2,7 @@ import { ForecastMetadata } from "./ForecastMetadata";
 
 export type ForecastPoint = {
   boundaryLayerHeight: number
+  thermalVelocity: number
   uWind: number
   vWind: number
   cloudCover: number,
@@ -35,7 +36,8 @@ export class Forecast {
         u300MWind: pointData[7],
         v300MWind: pointData[8],
         uBLTopWind: pointData[9],
-        vBLTopWind: pointData[10]
+        vBLTopWind: pointData[10],
+        thermalVelocity: pointData[11] / 10
       }
     } else {
       return
@@ -60,6 +62,7 @@ type ForecastPointData = [
   number, // 300m AGL wind v
   number, // boundary layer top wind u
   number, // boundary layer top wind v
+  number, // thermal velocity
 ]
 
 export class LocationForecasts {

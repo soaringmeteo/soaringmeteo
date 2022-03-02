@@ -23,7 +23,7 @@ case class Forecast(
   atPressure: Map[Pressure, IsobaricVariables],
   mslet: Pressure,
   snowDepth: Length,
-  surfaceTemperature: Temperature,
+  surfaceTemperature: Temperature, // Air temperature at 2 meters above the ground level
   surfaceRelativeHumidity: Double,
   surfaceWind: Wind,
   accumulatedRain: Length,

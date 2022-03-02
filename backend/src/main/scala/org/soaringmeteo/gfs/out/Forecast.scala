@@ -4,7 +4,7 @@ import io.circe.{Encoder, Json}
 import org.soaringmeteo.gfs.in
 import org.soaringmeteo.{ Point, Wind }
 import squants.energy.SpecificEnergy
-import squants.motion.Pressure
+import squants.motion.{ Pressure, Velocity }
 import squants.radio.Irradiance
 import squants.space.Length
 import squants.thermal.Temperature
@@ -20,6 +20,7 @@ case class Forecast(
   elevation: Length,
   boundaryLayerHeight: Length,
   boundaryLayerWind: Wind,
+  thermalVelocity: Velocity,
   cloudCover: CloudCover,
   airDataByAltitude: SortedMap[Length, AirData],
   mslet: Pressure,
@@ -114,6 +115,7 @@ object Forecast {
                 gfsForecast.elevation,
                 gfsForecast.boundaryLayerHeight,
                 gfsForecast.boundaryLayerWind,
+                Thermals.velocity(gfsForecast),
                 CloudCover(gfsForecast.cloudCover),
                 AirData(gfsForecast.atPressure),
                 gfsForecast.mslet,
@@ -155,7 +157,8 @@ object Forecast {
         Json.fromInt(winds.`300m AGL`.u.toKilometersPerHour.round.toInt),
         Json.fromInt(winds.`300m AGL`.v.toKilometersPerHour.round.toInt),
         Json.fromInt(winds.boundaryLayerTop.u.toKilometersPerHour.round.toInt),
-        Json.fromInt(winds.boundaryLayerTop.v.toKilometersPerHour.round.toInt)
+        Json.fromInt(winds.boundaryLayerTop.v.toKilometersPerHour.round.toInt),
+        Json.fromInt((forecast.thermalVelocity.toMetersPerSecond * 10).round.toInt) // dm/s (to avoid floating point values)
       )
     }
 

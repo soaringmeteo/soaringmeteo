@@ -16,6 +16,7 @@ import { drawWindArrow } from './shapes';
 import layersImg from './images/layers.png';
 import { ForecastMetadata, showDate } from './data/ForecastMetadata';
 import { Rain, rainColorScale } from './layers/Rain';
+import { ThermalVelocity, thermalVelocityColorScale } from './layers/ThermalVelocity';
 
 class Renderer {
 
@@ -87,6 +88,12 @@ const boundaryLayerHeightRenderer = new Renderer(
   forecast => new BoundaryLayerDepth(forecast),
   // FIXME Maybe implement map key in datasource...
   colorScaleEl(boundaryDepthColorScale, value => `${value} m `)
+);
+const thermalVelocityRenderer = new Renderer(
+  'Thermal Velocity',
+  'Thermal updraft velocity',
+  forecast => new ThermalVelocity(forecast),
+  colorScaleEl(thermalVelocityColorScale, value => `${value} m/s `)
 );
 const surfaceWindRenderer = new Renderer(
   'Surface',
@@ -199,6 +206,7 @@ export const ForecastLayer = (props: {
   const noneEl = setupRendererBtn(noneRenderer);
   const thqEl = setupRendererBtn(thqRenderer);
   const boundaryLayerHeightEl = setupRendererBtn(boundaryLayerHeightRenderer);
+  const thermalVelocityEl = setupRendererBtn(thermalVelocityRenderer);
 
   const blWindEl = setupRendererBtn(boundaryLayerWindRenderer);
   const blTopWindEl = setupRendererBtn(boundaryLayerTopWindRenderer);
@@ -223,6 +231,7 @@ export const ForecastLayer = (props: {
       {noneEl}
       {thqEl}
       {boundaryLayerHeightEl}
+      {thermalVelocityEl}
       {windLayersEl}
       {cloudCoverEl}
       {rainEl}
