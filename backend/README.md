@@ -33,3 +33,5 @@ files that can be consumed by the frontend:
 ~~~
 downloadGribAndMakeJson
 ~~~
+
+Look at the file [reference.conf](src/main/resources/reference.conf) for the configuration options.
