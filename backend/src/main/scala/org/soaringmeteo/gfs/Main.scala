@@ -1,6 +1,6 @@
 package org.soaringmeteo.gfs
 
-import cats.implicits._
+import cats.syntax.apply._
 import com.monovore.decline.{CommandApp, Opts}
 import org.slf4j.LoggerFactory
 import PathArgument.pathArgument
@@ -15,15 +15,22 @@ object Main extends CommandApp(
     val csvLocationsFile = Opts.argument[os.Path]("CSV locations file")
     val gribsDir         = Opts.argument[os.Path]("GRIBs directory")
     val jsonDir          = Opts.argument[os.Path]("JSON directory")
+    val gfsRunInitTime   = Opts.option[String](
+      "gfs-run-init-time",
+      "Initialization time of the GFS forecast to download ('00', '06', '12', or '18').",
+      "t"
+    )
+      .validate("Valid values are '00', '06', '12', and '18'")(Set("00", "06", "12", "18"))
+      .orNone
 
-    (csvLocationsFile, gribsDir, jsonDir).mapN(Soaringmeteo.run)
+    (csvLocationsFile, gribsDir, jsonDir, gfsRunInitTime).mapN(Soaringmeteo.run)
   }
 )
 
 object Soaringmeteo {
   private val logger = LoggerFactory.getLogger(getClass)
 
-  def run(csvLocationsFile: os.Path, gribsDir: os.Path, jsonDir: os.Path): Unit = Try {
+  def run(csvLocationsFile: os.Path, gribsDir: os.Path, jsonDir: os.Path, maybeGfsRunInitTime: Option[String]): Unit = Try {
     val locationsByArea =
       Settings.gfsForecastLocations(csvLocationsFile)
         .groupBy { point =>
@@ -31,7 +38,7 @@ object Soaringmeteo {
             .find(_.contains(point))
             .getOrElse(sys.error(s"${point} is not in the downloaded GFS areas"))
         }
-    val gfsRun = in.ForecastRun.findLatest()
+    val gfsRun = in.ForecastRun.findLatest(maybeGfsRunInitTime)
     val forecastsByHour = DownloadAndRead(gribsDir, gfsRun, locationsByArea)
     JsonWriter.writeJsons(jsonDir, gfsRun, forecastsByHour, locationsByArea.values.flatten)
     // Let’s keep the grib files because they are also used by the old soargfs

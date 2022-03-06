@@ -46,18 +46,24 @@ object ForecastRun {
 
   private val logger = LoggerFactory.getLogger(classOf[ForecastRun])
 
-  def findLatest(): ForecastRun = {
+  /** Find the latest available GFS run
+   *
+   * @param maybeGfsRunInitTime Use a specific init time instead of trying to find the latest one.
+   *                            Valid values are "00", "06", "12", and "18".
+   */
+  def findLatest(maybeGfsRunInitTime: Option[String]): ForecastRun = {
     val item =
       Jsoup.connect(gfsRootUrl).timeout(120000).get()
         .select("a")
         .first()
     val date = item.text() // e.g. “gfs.20200529”
     // e.g. “06”
-    val timeString =
+    val timeString = maybeGfsRunInitTime.getOrElse {
       Jsoup.connect(item.attr("href")).timeout(120000).get()
         .select("a")
         .first()
         .text()
+    }
 
     val forecastInitDate =
       date.stripPrefix("gfs.").pipe { s =>

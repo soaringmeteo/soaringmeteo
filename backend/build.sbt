@@ -58,9 +58,18 @@ TaskKey[Unit]("deploy") := {
   )
 }
 
-TaskKey[Unit]("downloadGribAndMakeJson") := {
-  (Compile / runMain).toTask(" org.soaringmeteo.gfs.Main ../../Boran/soaringmeteo/gfs/gfs-loc.csv target/grib target/forecast").value
-}
+InputKey[Unit]("downloadGribAndMakeJson") := Def.inputTaskDyn {
+  import sbt.complete.DefaultParsers._
+  val maybeGfsRunInitTime = (Space ~> (literal("00") | literal("06") | literal("12") | literal("18"))).?.parsed
+  val requiredArgs = List(
+    "../../Boran/soaringmeteo/gfs/gfs-loc.csv",
+    "target/grib",
+    "target/forecast"
+  )
+  val args =
+    maybeGfsRunInitTime.fold(requiredArgs)(t => s"-t ${t}" :: requiredArgs)
+  (Compile / runMain).toTask(s" org.soaringmeteo.gfs.Main ${args.mkString(" ")}")
+}.evaluated
 
 TaskKey[Unit]("makeWrfJson") := {
   (Compile / runMain).toTask(" org.soaringmeteo.wrf.MakeWRFJson ../../Boran/soaringmeteo/wrf/wrf-loc.csv target/grib 2020-09-29_Init2020092700Z+54h.nc target/soarwrf").value
