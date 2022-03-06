@@ -15,7 +15,8 @@ object Main extends CommandApp(
     val csvLocationsFile = Opts.argument[os.Path]("CSV locations file")
     val gribsDir         = Opts.argument[os.Path]("GRIBs directory")
     val jsonDir          = Opts.argument[os.Path]("JSON directory")
-    val gfsRunInitTime   = Opts.option[String](
+
+    val gfsRunInitTime = Opts.option[String](
       "gfs-run-init-time",
       "Initialization time of the GFS forecast to download ('00', '06', '12', or '18').",
       "t"
@@ -23,14 +24,26 @@ object Main extends CommandApp(
       .validate("Valid values are '00', '06', '12', and '18'")(Set("00", "06", "12", "18"))
       .orNone
 
-    (csvLocationsFile, gribsDir, jsonDir, gfsRunInitTime).mapN(Soaringmeteo.run)
+    val reusePreviousGribFiles = Opts.flag(
+      "reuse-previous-grib-files",
+      "Reuse the previously downloaded GRIB files instead of downloading them again.",
+      "r"
+    ).orFalse
+
+    (csvLocationsFile, gribsDir, jsonDir, gfsRunInitTime, reusePreviousGribFiles).mapN(Soaringmeteo.run)
   }
 )
 
 object Soaringmeteo {
   private val logger = LoggerFactory.getLogger(getClass)
 
-  def run(csvLocationsFile: os.Path, gribsDir: os.Path, jsonDir: os.Path, maybeGfsRunInitTime: Option[String]): Unit = Try {
+  def run(
+    csvLocationsFile: os.Path,
+    gribsDir: os.Path,
+    jsonDir: os.Path,
+    maybeGfsRunInitTime: Option[String],
+    reusePreviousGribFiles: Boolean
+  ): Unit = Try {
     val locationsByArea =
       Settings.gfsForecastLocations(csvLocationsFile)
         .groupBy { point =>
@@ -39,13 +52,13 @@ object Soaringmeteo {
             .getOrElse(sys.error(s"${point} is not in the downloaded GFS areas"))
         }
     val gfsRun = in.ForecastRun.findLatest(maybeGfsRunInitTime)
-    val forecastsByHour = DownloadAndRead(gribsDir, gfsRun, locationsByArea)
+    val forecastsByHour = DownloadAndRead(gribsDir, gfsRun, locationsByArea, reusePreviousGribFiles)
     JsonWriter.writeJsons(jsonDir, gfsRun, forecastsByHour, locationsByArea.values.flatten)
     // Let’s keep the grib files because they are also used by the old soargfs
     // We should uncomment this line after we drop support for old soargfs
     // os.remove.all(gribsDir)
   }.recover {
-    case NonFatal(error) => logger.error("Failed to run makegfsjson", error)
+    case NonFatal(error) => logger.error("Failed to run soaringmeteo", error)
   }.get
 
 }

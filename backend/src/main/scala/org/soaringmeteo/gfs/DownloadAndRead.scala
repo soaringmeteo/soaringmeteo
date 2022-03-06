@@ -28,14 +28,20 @@ object DownloadAndRead {
    *                        be completely replaced.
    * @param gfsRun          The GFS run to download
    * @param locationsByArea The locations we want to read forecast for.
+   * @param reusePreviousGribFiles Whether to reuse the previously downloaded GRIB
+   *                               files (for the given `gfsRun`) instead of
+   *                               downloading them again.
    */
   def apply(
     gribsDir: os.Path,
     gfsRun: in.ForecastRun,
-    locationsByArea: Map[Area, Seq[Point]]
+    locationsByArea: Map[Area, Seq[Point]],
+    reusePreviousGribFiles: Boolean
   ): out.ForecastsByHour = {
 
-    os.remove.all(gribsDir)
+    if (!reusePreviousGribFiles) {
+      os.remove.all(gribsDir)
+    }
     os.makeDir.all(gribsDir)
 
     logger.info("Downloading forecast data")
@@ -51,12 +57,20 @@ object DownloadAndRead {
     val oneThread = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor(daemonicThreadFactory))
 
     // Download a GRIB file as a background task
-    def download(areaAndHour: AreaAndHour): Future[os.Path] =
-      Future {
-        concurrent.blocking {
-          GribDownloader.download(gribsDir, gfsRun, areaAndHour)
-        }
-      }(fourThreads /* NCEP currently limits usage to 120/hits per minute */)
+    def download(areaAndHour: AreaAndHour): Future[os.Path] = {
+      val gribFile = gribsDir / gfsRun.fileName(areaAndHour)
+      if (reusePreviousGribFiles && os.exists(gribFile)) {
+        logger.info(s"Not downloading ${areaAndHour} because $gribFile already exists")
+        Future.successful(gribFile)
+      } else {
+        Future {
+          concurrent.blocking {
+            GribDownloader.download(gribsDir, gfsRun, areaAndHour)
+            gribFile
+          }
+        }(fourThreads /* NCEP currently limits usage to 120/hits per minute */)
+      }
+    }
 
     // Read the content of a GRIB file as a background task
     def read(locations: Seq[Point], gribFile: os.Path, hourOffset: Int): Future[Map[Point, in.Forecast]] =
@@ -95,9 +109,9 @@ object DownloadAndRead {
   }
 
   private def writeFilesForOldSoargfs(gribsDir: os.Path): Unit = {
-    os.write(gribsDir / "aDone.txt", "")
-    os.write(gribsDir / "bDone.txt", "")
-    os.write(gribsDir / "cDone.txt", "")
+    os.write.over(gribsDir / "aDone.txt", "")
+    os.write.over(gribsDir / "bDone.txt", "")
+    os.write.over(gribsDir / "cDone.txt", "")
   }
 
 }

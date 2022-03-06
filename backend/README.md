@@ -26,11 +26,17 @@ Unpack the archive `soaringmeteo-0.1.0-SNAPSHOT.tgz` and run the binaries in the
 bin/soaringmeteo <CSV locations file> <GRIBs directory> <JSON directory>
 ~~~
 
-The program takes three arguments:
+The program takes three required arguments:
 
 1. the location of the CSV file that contains the GFS points for which we want to produce a soaring forecast,
 2. the directory where to store the GRIB files downloaded from GFS,
 3. the directory where to write the produced JSON files.
+
+Optional flags and arguments are documented with `--help`:
+
+~~~
+bin/soaringmeteo --help
+~~~
 
 ## Develop
 

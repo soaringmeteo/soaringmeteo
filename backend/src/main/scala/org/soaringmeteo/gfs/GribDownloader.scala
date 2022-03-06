@@ -3,7 +3,7 @@ package org.soaringmeteo.gfs
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration.{Duration, DurationInt}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 object GribDownloader {
@@ -11,18 +11,16 @@ object GribDownloader {
   private val logger = LoggerFactory.getLogger(getClass)
 
   def download(
-    targetDir: os.Path,
+    targetFile: os.Path,
     gfsRun: in.ForecastRun,
     areaAndHour: AreaAndHour
-  ): os.Path = {
+  ): Unit = {
     val url = gfsRun.gribUrl(areaAndHour)
     // In my experience, the `time` directory is created ~3 hours after the run initialization
     // But the grib files that we are interested are only available around 3 hours and 30 min after the run initialization
     val response = insist(maxAttempts = 10, delay = 3.minutes, url)
-    val targetFile = targetDir / gfsRun.fileName(areaAndHour)
     os.write(targetFile, response.data.array)
     logger.debug(s"Downloaded $targetFile")
-    targetFile
   }
 
   /**
