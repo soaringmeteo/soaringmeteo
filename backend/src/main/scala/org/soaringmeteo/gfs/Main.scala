@@ -1,23 +1,29 @@
 package org.soaringmeteo.gfs
 
+import cats.implicits._
+import com.monovore.decline.{CommandApp, Opts}
 import org.slf4j.LoggerFactory
+import PathArgument.pathArgument
 
 import scala.util.Try
 import scala.util.control.NonFatal
 
-object Main {
+object Main extends CommandApp(
+  "soaringmeteo",
+  "Download weather data, extract the relevant information for soaring pilots, and produce JSON data from it",
+  main = {
+    val csvLocationsFile = Opts.argument[os.Path]("CSV locations file")
+    val gribsDir         = Opts.argument[os.Path]("GRIBs directory")
+    val jsonDir          = Opts.argument[os.Path]("JSON directory")
 
+    (csvLocationsFile, gribsDir, jsonDir).mapN(Soaringmeteo.run)
+  }
+)
+
+object Soaringmeteo {
   private val logger = LoggerFactory.getLogger(getClass)
 
-  def main(args: Array[String]): Unit = {
-    val csvLocationsFile = os.Path(args(0), os.pwd)
-    val gribsDir         = os.Path(args(1), os.pwd)
-    val jsonDir          = os.Path(args(2), os.pwd)
-
-    main(csvLocationsFile, gribsDir, jsonDir)
-  }
-
-  def main(csvLocationsFile: os.Path, gribsDir: os.Path, jsonDir: os.Path) = Try {
+  def run(csvLocationsFile: os.Path, gribsDir: os.Path, jsonDir: os.Path): Unit = Try {
     val locationsByArea =
       Settings.gfsForecastLocations(csvLocationsFile)
         .groupBy { point =>

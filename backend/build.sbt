@@ -1,3 +1,5 @@
+name := "soaringmeteo"
+
 scalaVersion := "2.13.1"
 
 libraryDependencies ++= Seq(
@@ -20,6 +22,8 @@ libraryDependencies ++= Seq(
   "io.circe"            %% "circe-parser"    % "0.13.0",
   // Configuration
   "com.typesafe"         % "config"          % "1.4.1",
+  // Command-line arguments parsing
+  "com.monovore"        %% "decline"         % "2.2.0",
   // Testing
   "com.eed3si9n.verify" %% "verify"          % "0.2.0"  % Test
 )
