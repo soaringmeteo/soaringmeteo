@@ -52,14 +52,15 @@ object ForecastRun {
    *                            Valid values are "00", "06", "12", and "18".
    */
   def findLatest(maybeGfsRunInitTime: Option[String]): ForecastRun = {
+    val timeout = 5 * 60 * 1000 // 5 min
     val item =
-      Jsoup.connect(gfsRootUrl).timeout(120000).get()
+      Jsoup.connect(gfsRootUrl).timeout(timeout).get()
         .select("a")
         .first()
     val date = item.text() // e.g. “gfs.20200529”
     // e.g. “06”
     val timeString = maybeGfsRunInitTime.getOrElse {
-      Jsoup.connect(item.attr("href")).timeout(120000).get()
+      Jsoup.connect(item.attr("href")).timeout(timeout).get()
         .select("a")
         .first()
         .text()

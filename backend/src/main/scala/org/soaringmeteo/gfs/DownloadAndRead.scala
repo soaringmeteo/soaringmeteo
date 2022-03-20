@@ -105,7 +105,7 @@ object DownloadAndRead {
 
     }
 
-    Await.result(eventualForecast, 5.hours)
+    Await.result(eventualForecast, 8.hours)
   }
 
   private def writeFilesForOldSoargfs(gribsDir: os.Path): Unit = {
