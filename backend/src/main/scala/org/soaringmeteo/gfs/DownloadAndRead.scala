@@ -65,7 +65,7 @@ object DownloadAndRead {
       } else {
         Future {
           concurrent.blocking {
-            GribDownloader.download(gribsDir, gfsRun, areaAndHour)
+            GribDownloader.download(gribFile, gfsRun, areaAndHour)
             gribFile
           }
         }(fourThreads /* NCEP currently limits usage to 120/hits per minute */)
