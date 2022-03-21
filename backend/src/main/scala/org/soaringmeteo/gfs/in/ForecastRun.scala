@@ -14,7 +14,8 @@ case class ForecastRun(
   initDateTime: OffsetDateTime
 ) {
 
-  val initTimeString = f"${initDateTime.getHour}%02d" // "00", "06", "12", or "18"
+  private val initTimeString = f"${initDateTime.getHour}%02d" // "00", "06", "12", or "18"
+  private val initDateString = dateDirectory.stripPrefix("gfs.").drop(2) // 220301 (for March 1st, 2022)
 
   /**
    * Name of the grib file we save on disk.
@@ -25,7 +26,15 @@ case class ForecastRun(
    *                    initialization time
    */
   def fileName(areaAndHour: AreaAndHour): String =
-    f"GFS${areaAndHour.area.id}-initDate${dateDirectory.stripPrefix("gfs.").drop(2)}-initTime${initTimeString}-forecastTime${areaAndHour.hourOffset}%03d.grib2"
+    f"GFS${areaAndHour.area.id}-initDate${initDateString}-initTime${initTimeString}-forecastTime${areaAndHour.hourOffset}%03d.grib2"
+
+  /**
+   * @param base Base path of the directory containing the grib files.
+   * @return The path of the directory to store the grib files of this run.
+   *         (Currently, returns a path compatible with old soargfs)
+   */
+  def storagePath(base: os.Path): os.Path =
+    base / initDateString / initTimeString
 
   /**
    * This URL has been constructed by going to https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl,
