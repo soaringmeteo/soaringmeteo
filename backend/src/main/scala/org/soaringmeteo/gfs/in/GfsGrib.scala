@@ -9,12 +9,57 @@ import squants.radio.WattsPerSquareMeter
 import squants.space.{Meters, Millimeters}
 import squants.thermal.Kelvin
 
-import scala.collection.SortedMap
-
 /**
   * Extract a [[Forecast]] for each of the given `locations`.
   */
 object GfsGrib {
+
+  val gribFilterParameters = List(
+    "lev_mean_sea_level",
+    "lev_0C_isotherm",
+    "lev_10_m_above_ground",
+    "lev_200_mb",
+    "lev_2_m_above_ground",
+    "lev_300_mb",
+    "lev_400_mb",
+    "lev_450_mb",
+    "lev_500_mb",
+    "lev_550_mb",
+    "lev_600_mb",
+    "lev_650_mb",
+    "lev_700_mb",
+    "lev_750_mb",
+    "lev_800_mb",
+    "lev_850_mb",
+    "lev_900_mb",
+    "lev_950_mb",
+    "lev_convective_cloud_layer",
+    "lev_entire_atmosphere",
+    "lev_high_cloud_layer", // Used only by legacy soarGFS
+    "lev_low_cloud_layer", // Used only by legacy soarGFS
+    "lev_middle_cloud_layer", // Used only by legacy soarGFS
+    "lev_planetary_boundary_layer",
+    "lev_surface",
+    "var_ACPCP",
+    "var_APCP",
+    "var_CAPE",
+    "var_CIN",
+    "var_DSWRF",
+    "var_HGT",
+    "var_HPBL",
+    "var_LHTFL",
+    "var_MSLET",
+    "var_RH",
+    "var_SHTFL",
+    "var_TCDC",
+    "var_LCDC", // Used only by legacy soarGFS
+    "var_MCDC", // Used only by legacy soarGFS
+    "var_HCDC", // Used only by legacy soarGFS
+    "var_TMP",
+    "var_UGRD",
+    "var_VGRD",
+    "var_WEASD"
+  )
 
   def forecast(grib: Grib, locations: Seq[Point], time: OffsetDateTime): Map[Point, Forecast] = {
     import grib.Feature

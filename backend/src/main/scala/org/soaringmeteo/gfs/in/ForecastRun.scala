@@ -46,7 +46,7 @@ case class ForecastRun(
    */
   def gribUrl(areaAndHour: AreaAndHour): String = {
     val file = f"gfs.t${initTimeString}z.pgrb2.0p25.f${areaAndHour.hourOffset}%03d"
-    s"$gfsRootUrl?file=${file}&dir=%2F${dateDirectory}%2F${initTimeString}%2Fatmos&lev_mean_sea_level=on&lev_0C_isotherm=on&lev_10_m_above_ground=on&lev_200_mb=on&lev_2_m_above_ground=on&lev_300_mb=on&lev_400_mb=on&lev_450_mb=on&lev_500_mb=on&lev_550_mb=on&lev_600_mb=on&lev_650_mb=on&lev_700_mb=on&lev_750_mb=on&lev_800_mb=on&lev_850_mb=on&lev_900_mb=on&lev_950_mb=on&lev_boundary_layer_cloud_layer=on&lev_convective_cloud_layer=on&lev_entire_atmosphere=on&lev_high_cloud_layer=on&lev_low_cloud_layer=on&lev_middle_cloud_layer=on&lev_planetary_boundary_layer=on&lev_surface=on&var_ACPCP=on&var_APCP=on&var_CAPE=on&var_CIN=on&var_DSWRF=on&var_HGT=on&var_HPBL=on&var_LHTFL=on&var_MSLET=on&var_RH=on&var_SHTFL=on&var_TCDC=on&var_LCDC=on&var_MCDC=on&var_HCDC=on&var_TMP=on&var_UGRD=on&var_VGRD=on&var_WEASD=on&leftlon=${areaAndHour.area.leftLongitude}&rightlon=${areaAndHour.area.rightLongitude}&toplat=${areaAndHour.area.topLatitude}&bottomlat=${areaAndHour.area.bottomLatitude}&subregion="
+    s"$gfsRootUrl?file=${file}&dir=%2F${dateDirectory}%2F${initTimeString}%2Fatmos&leftlon=${areaAndHour.area.leftLongitude}&rightlon=${areaAndHour.area.rightLongitude}&toplat=${areaAndHour.area.topLatitude}&bottomlat=${areaAndHour.area.bottomLatitude}&subregion=&${GfsGrib.gribFilterParameters.map(p => s"$p=on").mkString("&")}"
   }
 
 }
