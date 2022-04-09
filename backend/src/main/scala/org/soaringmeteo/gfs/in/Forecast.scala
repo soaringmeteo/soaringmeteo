@@ -2,7 +2,8 @@ package org.soaringmeteo.gfs.in
 
 import java.time.OffsetDateTime
 import org.slf4j.LoggerFactory
-import org.soaringmeteo.{Point, Wind}
+import org.soaringmeteo.Temperatures.dewPoint
+import org.soaringmeteo.{Point, Temperatures, Wind}
 import org.soaringmeteo.grib.Grib
 import squants.energy.SpecificEnergy
 import squants.motion
@@ -17,9 +18,10 @@ import squants.thermal.Temperature
 case class Forecast(
   time: OffsetDateTime,
   elevation: Length,
-  boundaryLayerHeight: Length,
+  boundaryLayerDepth: Length, // m AGL
   boundaryLayerWind: Wind,
-  cloudCover: CloudCover,
+  totalCloudCover: Int, // Between 0 and 100
+  convectiveCloudCover: Int, // Between 0 and 100
   atPressure: Map[Pressure, IsobaricVariables],
   mslet: Pressure,
   snowDepth: Length,
@@ -34,7 +36,12 @@ case class Forecast(
   cin: SpecificEnergy,
   downwardShortWaveRadiationFlux: Irradiance,
   isothermZero: Length
-)
+) {
+
+  lazy val surfaceDewPoint: Temperature =
+    dewPoint(surfaceTemperature, surfaceRelativeHumidity)
+
+}
 
 case class CloudCover(
   entire: Double,
@@ -49,8 +56,13 @@ case class IsobaricVariables(
   geopotentialHeight: Length,
   temperature: Temperature,
   relativeHumidity: Double,
-  wind: Wind
-)
+  wind: Wind,
+  cloudCover: Int // Between 0 and 100
+) {
+
+  lazy val dewPoint: Temperature = Temperatures.dewPoint(temperature, relativeHumidity)
+
+}
 
 object Forecast {
 

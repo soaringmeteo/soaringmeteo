@@ -87,9 +87,9 @@ object DownloadAndRead {
         .traverse(AreaAndHour.all) { areaAndHour =>
           val locations = locationsByArea(areaAndHour.area)
           for {
-            gribFile <- download(areaAndHour)
-            forecast <- read(locations, gribFile, areaAndHour.hourOffset)
-          } yield (areaAndHour.hourOffset, forecast)
+            gribFile  <- download(areaAndHour)
+            forecasts <- read(locations, gribFile, areaAndHour.hourOffset)
+          } yield (areaAndHour.hourOffset, forecasts)
         }
         .map { forecastsByHour =>
           // TEMP Simulate old soargfs script for downloading data

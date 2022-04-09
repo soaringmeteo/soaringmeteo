@@ -16,7 +16,7 @@ object Thermals {
     val s = forecast.sensibleHeatNetFlux
     if (s.toWattsPerSquareMeter < 0) MetersPerSecond(0) else {
       val g = squants.motion.StandardEarthGravity
-      val z = forecast.boundaryLayerHeight
+      val z = forecast.boundaryLayerDepth
       val airDensity = KilogramsPerCubicMeter(1.225)
       val airHeatCapacity = 1006 // J K⁻¹ kg ⁻¹ (based on https://en.wikipedia.org/wiki/Table_of_specific_heat_capacities.)
 

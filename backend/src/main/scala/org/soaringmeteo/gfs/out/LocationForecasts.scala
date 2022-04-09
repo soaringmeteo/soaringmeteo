@@ -36,7 +36,9 @@ case class DetailedForecast(
   time: OffsetDateTime,
   boundaryLayerHeight: Length,
   boundaryLayerWind: Wind,
-  cloudCover: CloudCover,
+  totalCloudCover: Int, // Between 0 and 100
+  convectiveCloudCover: Int, // Between 0 and 100
+  convectiveClouds: Option[ConvectiveClouds],
   airDataByAltitude: SortedMap[Length, AirData],
   mslet: Pressure,
   snowDepth: Length,
@@ -61,14 +63,16 @@ object LocationForecasts {
       forecasts.map { forecast =>
           DetailedForecast(
             forecast.time,
-            forecast.boundaryLayerHeight,
+            forecast.boundaryLayerDepth,
             forecast.boundaryLayerWind,
-            forecast.cloudCover,
+            forecast.totalCloudCover,
+            forecast.convectiveCloudCover,
+            forecast.convectiveClouds,
             forecast.airDataByAltitude,
             forecast.mslet,
             forecast.snowDepth,
             forecast.surfaceTemperature,
-            dewPoint(forecast.surfaceTemperature, forecast.surfaceRelativeHumidity),
+            forecast.surfaceDewPoint,
             forecast.surfaceWind,
             forecast.totalRain,
             forecast.convectiveRain,
@@ -160,10 +164,10 @@ object LocationForecasts {
 
     val factorConvection = (
       (
-        forecastMorning.cloudCover.conv +
-        forecastNoon.cloudCover.conv +
-        forecastAfternoon.cloudCover.conv
-      ) / 10 +
+        forecastMorning.convectiveCloudCover +
+        forecastNoon.convectiveCloudCover +
+        forecastAfternoon.convectiveCloudCover
+      ) / 10.0 +
       forecastMorning.convectiveRain.toMillimeters +
       forecastNoon.convectiveRain.toMillimeters +
       forecastAfternoon.convectiveRain.toMillimeters
@@ -187,15 +191,6 @@ object LocationForecasts {
       .pipe(spreads => spreads.sum / spreads.size)
   }
 
-  def dewPoint(temperature: Temperature, relativeHumidity: Double): Temperature = {
-    // Magnus formula: https://en.wikipedia.org/wiki/Dew_point#Calculating_the_dew_point
-    val b = 17.67
-    val c = 243.5
-    val t = temperature.toCelsiusScale
-    val gamma = math.log(relativeHumidity / 100) + b * t / (c + t)
-    Temperature(c * gamma / (b - gamma), Celsius)
-  }
-
   val jsonEncoder: Encoder[LocationForecasts] =
     Encoder.instance { locationForecasts =>
       Json.obj(
@@ -213,21 +208,15 @@ object LocationForecasts {
                       "u" -> Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
                       "v" -> Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt)
                     ),
-                    "c" -> Json.obj(
-                      "e" -> Json.fromLong(forecast.cloudCover.entire.round.longValue()),
-                      "l" -> Json.fromLong(forecast.cloudCover.low.round.longValue()),
-                      "m" -> Json.fromLong(forecast.cloudCover.middle.round.longValue()),
-                      "h" -> Json.fromLong(forecast.cloudCover.high.round.longValue()),
-                      "c" -> Json.fromLong(forecast.cloudCover.conv.round.longValue()),
-                      "b" -> Json.fromLong(forecast.cloudCover.boundary.round.longValue())
-                    ),
+                    "c" -> Json.fromInt(forecast.totalCloudCover),
                     "p" -> Json.arr(forecast.airDataByAltitude.map { case (elevation, aboveGround) =>
                       Json.obj(
                         "h" -> Json.fromInt(elevation.toMeters.round.toInt),
                         "t" -> encodeRealNumber(aboveGround.temperature.toCelsiusScale, 3),
                         "dt" -> encodeRealNumber(aboveGround.dewPoint.toCelsiusScale, 3),
                         "u" -> Json.fromInt(aboveGround.wind.u.toKilometersPerHour.round.toInt),
-                        "v" -> Json.fromInt(aboveGround.wind.v.toKilometersPerHour.round.toInt)
+                        "v" -> Json.fromInt(aboveGround.wind.v.toKilometersPerHour.round.toInt),
+                        "c" -> Json.fromInt(aboveGround.cloudCover)
                       )
                     }.toSeq: _*),
                     "s" -> Json.obj(

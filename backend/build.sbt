@@ -28,6 +28,8 @@ libraryDependencies ++= Seq(
   "com.eed3si9n.verify" %% "verify"          % "0.2.0"  % Test
 )
 
+scalacOptions += "-deprecation"
+
 run / fork := true
 javaOptions ++= Seq("-Xmx8g", "-Xms6g")
 Universal / javaOptions ++= javaOptions.value.map(opt => s"-J$opt")

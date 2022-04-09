@@ -17,6 +17,7 @@ import layersImg from './images/layers.png';
 import { ForecastMetadata, showDate } from './data/ForecastMetadata';
 import { Rain, rainColorScale } from './layers/Rain';
 import { ThermalVelocity, thermalVelocityColorScale } from './layers/ThermalVelocity';
+import { CumuliDepth, colorScale as cumuliDepthColorScale } from './layers/CumuliDepth';
 
 class Renderer {
 
@@ -77,8 +78,8 @@ const noneRenderer = new Renderer(
   <div />
 );
 const thqRenderer = new Renderer(
-  'Thermal Quality',
-  'Thermal Quality',
+  'XC Flying Potential',
+  'XC flying potential',
   forecast => new ThQ(forecast),
   colorScaleEl(thQColorScale, value => `${Math.round(value * 100)}% `)
 );
@@ -124,6 +125,12 @@ const cloudCoverRenderer = new Renderer(
   'Cloud cover (all altitudes)',
   forecast => new CloudCover(forecast),
   colorScaleEl(cloudCoverColorScale, value => `${value}% `)
+);
+const cumuliDepthRenderer = new Renderer(
+  'Convective Clouds',
+  'Convective Clouds Depth',
+  forecast => new CumuliDepth(forecast),
+  colorScaleEl(cumuliDepthColorScale, value => `${value} m `)
 );
 const rainRenderer = new Renderer(
   'Rain',
@@ -204,9 +211,17 @@ export const ForecastLayer = (props: {
   }
 
   const noneEl = setupRendererBtn(noneRenderer);
+  const mixedEl = setupRendererBtn(mixedRenderer);
   const thqEl = setupRendererBtn(thqRenderer);
+
   const boundaryLayerHeightEl = setupRendererBtn(boundaryLayerHeightRenderer);
   const thermalVelocityEl = setupRendererBtn(thermalVelocityRenderer);
+  const thermalLayersEl =
+    <fieldset>
+      <legend>Thermals</legend>
+      {boundaryLayerHeightEl}
+      {thermalVelocityEl}
+    </fieldset>;
 
   const blWindEl = setupRendererBtn(boundaryLayerWindRenderer);
   const blTopWindEl = setupRendererBtn(boundaryLayerTopWindRenderer);
@@ -222,20 +237,25 @@ export const ForecastLayer = (props: {
     </fieldset>;
 
   const cloudCoverEl = setupRendererBtn(cloudCoverRenderer);
+  const cumuliDepthEl = setupRendererBtn(cumuliDepthRenderer);
   const rainEl = setupRendererBtn(rainRenderer);
-  const mixedEl = setupRendererBtn(mixedRenderer);
+  const cloudsLayersEl =
+    <fieldset>
+      <legend>Clouds and Rain</legend>
+      {cloudCoverEl}
+      {cumuliDepthEl}
+      {rainEl}
+    </fieldset>
 
   const layerEl =
     <fieldset>
       <legend>Layer</legend>
       {noneEl}
-      {thqEl}
-      {boundaryLayerHeightEl}
-      {thermalVelocityEl}
-      {windLayersEl}
-      {cloudCoverEl}
-      {rainEl}
       {mixedEl}
+      {thqEl}
+      {thermalLayersEl}
+      {windLayersEl}
+      {cloudsLayersEl}
     </fieldset>;
 
   const selectEl =
