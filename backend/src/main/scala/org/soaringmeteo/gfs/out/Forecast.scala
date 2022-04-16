@@ -1,10 +1,11 @@
 package org.soaringmeteo.gfs.out
 
 import io.circe.{Encoder, Json}
+import org.soaringmeteo.Temperatures.dewPoint
 import org.soaringmeteo.gfs.in
-import org.soaringmeteo.{ Point, Wind }
+import org.soaringmeteo.{Point, Wind}
 import squants.energy.SpecificEnergy
-import squants.motion.{ Pressure, Velocity }
+import squants.motion.{Pressure, Velocity}
 import squants.radio.Irradiance
 import squants.space.Length
 import squants.thermal.Temperature
@@ -18,15 +19,17 @@ import scala.collection.immutable.SortedMap
 case class Forecast(
   time: OffsetDateTime,
   elevation: Length,
-  boundaryLayerHeight: Length,
+  boundaryLayerDepth: Length, // m AGL
   boundaryLayerWind: Wind,
   thermalVelocity: Velocity,
-  cloudCover: CloudCover,
+  totalCloudCover: Int, // Between 0 and 100
+  convectiveCloudCover: Int, // Between 0 and 100
+  convectiveClouds: Option[ConvectiveClouds],
   airDataByAltitude: SortedMap[Length, AirData],
   mslet: Pressure,
   snowDepth: Length,
   surfaceTemperature: Temperature,
-  surfaceRelativeHumidity: Double,
+  surfaceDewPoint: Temperature,
   surfaceWind: Wind,
   totalRain: Length,
   convectiveRain: Length,
@@ -38,27 +41,6 @@ case class Forecast(
   isothermZero: Length
 )
 
-case class CloudCover(
-  entire: Double,
-  low: Double,
-  middle: Double,
-  high: Double,
-  conv: Double,
-  boundary: Double
-)
-
-object CloudCover {
-  def apply(cloudCover: in.CloudCover): CloudCover =
-    CloudCover(
-      cloudCover.entire,
-      cloudCover.low,
-      cloudCover.middle,
-      cloudCover.high,
-      cloudCover.conv,
-      cloudCover.boundary
-    )
-}
-
 /**
  * Various information at some elevation level
  * @param wind        Wind force and direction at the `elevation` level
@@ -68,7 +50,8 @@ object CloudCover {
 case class AirData(
   wind: Wind,
   temperature: Temperature,
-  dewPoint: Temperature
+  dewPoint: Temperature,
+  cloudCover: Int
 )
 
 object AirData {
@@ -79,7 +62,8 @@ object AirData {
         AirData(
           variables.wind,
           variables.temperature,
-          LocationForecasts.dewPoint(variables.temperature, variables.relativeHumidity)
+          variables.dewPoint,
+          variables.cloudCover
         )
       height -> aboveGround
     }.to(SortedMap)
@@ -87,6 +71,7 @@ object AirData {
 
 object Forecast {
 
+  /** Transforms the forecast data into a data structure tailored to our needs */
   def apply(gfsForecastsByHourAndLocation: Map[Int, Map[Point, in.Forecast]]): ForecastsByHour = {
     gfsForecastsByHourAndLocation
       // Make sure we iterate over the forecasts in chronological order
@@ -113,15 +98,17 @@ object Forecast {
               val forecast = Forecast(
                 gfsForecast.time,
                 gfsForecast.elevation,
-                gfsForecast.boundaryLayerHeight,
+                gfsForecast.boundaryLayerDepth,
                 gfsForecast.boundaryLayerWind,
                 Thermals.velocity(gfsForecast),
-                CloudCover(gfsForecast.cloudCover),
+                gfsForecast.totalCloudCover,
+                gfsForecast.convectiveCloudCover,
+                ConvectiveClouds(gfsForecast),
                 AirData(gfsForecast.atPressure),
                 gfsForecast.mslet,
                 gfsForecast.snowDepth,
                 gfsForecast.surfaceTemperature,
-                gfsForecast.surfaceRelativeHumidity,
+                gfsForecast.surfaceDewPoint,
                 gfsForecast.surfaceWind,
                 totalRain,
                 convectiveRain,
@@ -147,10 +134,10 @@ object Forecast {
     Encoder.instance { forecast =>
       val winds = Winds(forecast)
       Json.arr(
-        Json.fromInt(forecast.boundaryLayerHeight.toMeters.round.toInt),
+        Json.fromInt(forecast.boundaryLayerDepth.toMeters.round.toInt),
         Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
         Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt),
-        Json.fromLong(forecast.cloudCover.entire.round.longValue()),
+        Json.fromInt(forecast.totalCloudCover),
         Json.fromInt(forecast.totalRain.toMillimeters.round.toInt),
         Json.fromInt(forecast.surfaceWind.u.toKilometersPerHour.round.toInt),
         Json.fromInt(forecast.surfaceWind.v.toKilometersPerHour.round.toInt),
@@ -158,7 +145,8 @@ object Forecast {
         Json.fromInt(winds.`300m AGL`.v.toKilometersPerHour.round.toInt),
         Json.fromInt(winds.boundaryLayerTop.u.toKilometersPerHour.round.toInt),
         Json.fromInt(winds.boundaryLayerTop.v.toKilometersPerHour.round.toInt),
-        Json.fromInt((forecast.thermalVelocity.toMetersPerSecond * 10).round.toInt) // dm/s (to avoid floating point values)
+        Json.fromInt((forecast.thermalVelocity.toMetersPerSecond * 10).round.toInt), // dm/s (to avoid floating point values)
+        Json.fromInt(forecast.convectiveClouds.fold(0)(clouds => (clouds.top - clouds.bottom).toMeters.round.toInt))
       )
     }
 

@@ -2,8 +2,9 @@ import h from 'solid-js/h';
 
 import { LocationForecasts, DetailedForecast } from '../data/Forecast';
 import { drawWindArrow, lightningShape } from '../shapes';
-import { Diagram, Scale, boundaryLayerStyle, columnCloud, computeElevationLevels, skyStyle, temperaturesRange, meteogramColumnWidth } from './Diagram';
+import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, skyStyle, temperaturesRange, meteogramColumnWidth } from './Diagram';
 import { value as thqValue, colorScale as thqColorScale } from '../layers/ThQ';
+import { cloudsColorScale } from './Clouds';
 import { JSX } from 'solid-js';
 
 export const keyWidth = 40;
@@ -33,7 +34,9 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
 
   const airDiagramHeight = 400; // px
   // The main diagram shows the air from the ground level to 3500 m above ground level
-  const middleCloudsTop  = forecasts.elevation + airDiagramHeightAboveGroundLevel // m
+  const middleCloudsTop  = forecasts.elevation + airDiagramHeightAboveGroundLevel; // m
+  // Thi high air diagram shows the air between 3500 and 5000 m above ground level, and then between 5000 and above
+  const highCloudsBottom = forecasts.elevation + 5000; // m
   const elevationScale  = new Scale([forecasts.elevation, middleCloudsTop], [0, airDiagramHeight], false);
   const elevationLevels = computeElevationLevels(forecasts.elevation, 500 /* m */, middleCloudsTop);
   const airDiagramTop   = highAirDiagramTop + highAirDiagramHeight; // No gutter between high air diagram and air diagram
@@ -94,7 +97,7 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
         forecast.boundaryLayer.height,
         forecast.boundaryLayer.wind.u,
         forecast.boundaryLayer.wind.v,
-        forecast.clouds.all
+        forecast.totalCloudCover
       )
       thqDiagram.fillRect(
         [columnStart, 0],
@@ -120,17 +123,29 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
         skyStyle
       );
 
-      // Middle-level clouds
+      // Clouds above middleCloudsTop
+      const middleCloudCover =
+        Math.max(
+          ...forecast.aboveGround
+            .filter(aboveGround => aboveGround.elevation >= middleCloudsTop && aboveGround.elevation < highCloudsBottom)
+            .map(aboveGround => aboveGround.cloudCover)
+        );
       highAirDiagram.fillRect(
         [columnStart, 0],
         [columnEnd,   highAirDiagramHeight / 2],
-        `rgba(255, 255, 255, ${ (forecast.clouds.middleLevel) * 0.7 })`
+        cloudsColorScale.interpolate(middleCloudCover).css()
       );
+      const highCloudCover =
+        Math.max(
+          ...forecast.aboveGround
+            .filter(aboveGround => aboveGround.elevation >= highCloudsBottom)
+            .map(aboveGround => aboveGround.cloudCover)
+        );
       // High-level clouds
       highAirDiagram.fillRect(
         [columnStart, highAirDiagramHeight / 2],
         [columnEnd,   highAirDiagramHeight],
-        `rgba(255, 255, 255, ${ (forecast.clouds.highLevel) * 0.7 })`
+        cloudsColorScale.interpolate(highCloudCover).css()
       );
     });
 
@@ -156,34 +171,36 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
 
     // Clouds
     columns((forecast, columnStart, columnEnd) => {
-      // Low-level clouds (up to 2 km above ground level)
-      const lowCloudsTop = Math.min(forecasts.elevation + 2000, middleCloudsTop);
-      const lowCloudsY   = elevationScale.apply(lowCloudsTop);
-      airDiagram.fillRect(
-        [columnStart, 0],
-        [columnEnd,   lowCloudsY],
-        `rgba(255, 255, 255, ${ (forecast.clouds.lowLevel) * 0.7 })`
-      );
-
-      // Middle-level clouds (if visible)
-      if (lowCloudsTop < middleCloudsTop) {
+      const [lastCloudBottom, maybeLastElevationAndCloudCover] =
+        forecast.aboveGround
+          // Keep only entries that are below the middle clouds top
+          .filter((aboveGround) => aboveGround.elevation < middleCloudsTop)
+          .reduce<[number, [number, number] | undefined]>(
+            ([cloudBottom, maybePreviousElevationAndCloudCover], aboveGround) => {
+              if (maybePreviousElevationAndCloudCover === undefined) {
+                return [cloudBottom, [aboveGround.elevation, aboveGround.cloudCover]]
+              } else {
+                const [previousElevation, previousCloudCover] = maybePreviousElevationAndCloudCover;
+                const cloudTop = (aboveGround.elevation + previousElevation) / 2;
+                airDiagram.fillRect(
+                  [columnStart, elevationScale.apply(cloudBottom)],
+                  [columnEnd,   elevationScale.apply(cloudTop)],
+                  cloudsColorScale.interpolate(previousCloudCover).css()
+                );
+                return [cloudTop, [aboveGround.elevation, aboveGround.cloudCover]]
+              }
+            },
+            [forecasts.elevation, undefined]
+          );
+      if (maybeLastElevationAndCloudCover !== undefined) {
+        const [_, lastCloudCover] = maybeLastElevationAndCloudCover;
         airDiagram.fillRect(
-          [columnStart, lowCloudsY],
+          [columnStart, elevationScale.apply(lastCloudBottom)],
           [columnEnd,   elevationScale.apply(middleCloudsTop)],
-          `rgba(255, 255, 255, ${ (forecast.clouds.middleLevel) * 0.7 })`
+          cloudsColorScale.interpolate(lastCloudCover).css()
         );
       }
 
-      // Cumuli
-      // Cumuli base height is computed via Hennig formula
-      const cumuliBase = 122.6 * (forecast.surface.temperature - forecast.surface.dewPoint);
-      if (cumuliBase < forecast.boundaryLayer.height) {
-        airDiagram.fillRect(
-          [columnStart, elevationScale.apply(forecasts.elevation + cumuliBase)],
-          [columnEnd, elevationScale.apply(forecasts.elevation + forecast.boundaryLayer.height)],
-          columnCloud
-        );
-      }
     });
 
     // Thunderstorm risk

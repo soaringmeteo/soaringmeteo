@@ -12,7 +12,8 @@ export type ForecastPoint = {
   u300MWind: number, // km/h
   v300MWind: number, // km/h
   uBLTopWind: number, // km/h
-  vBLTopWind: number // km/h
+  vBLTopWind: number, // km/h
+  cumuliDepth: number // m
 }
 
 export class Forecast {
@@ -37,7 +38,8 @@ export class Forecast {
         v300MWind: pointData[8],
         uBLTopWind: pointData[9],
         vBLTopWind: pointData[10],
-        thermalVelocity: pointData[11] / 10
+        thermalVelocity: pointData[11] / 10,
+        cumuliDepth: pointData[12]
       }
     } else {
       return
@@ -63,6 +65,7 @@ type ForecastPointData = [
   number, // boundary layer top wind u
   number, // boundary layer top wind v
   number, // thermal velocity
+  number, // cumuli depth
 ]
 
 export class LocationForecasts {
@@ -106,22 +109,17 @@ export class DayForecasts {
 
 export class DetailedForecast {
   readonly time: Date;
-  readonly clouds: DetailedClouds;
+  readonly totalCloudCover: number; // %
   readonly boundaryLayer: DetailedBoundaryLayer;
   readonly surface: DetailedSurface;
   readonly rain: DetailedRain;
   readonly meanSeaLevelPressure: number;
   readonly isothermZero: number; // m
-  readonly aboveGround: Array<AboveGround>;
+  readonly aboveGround: Array<AboveGround>; // Sorted by ascending elevation
 
   constructor(data: DetailedForecastData, elevation: number) {
     this.time = new Date(data.t);
-    this.clouds = {
-      highLevel: data.c.h / 100,
-      middleLevel: data.c.m / 100,
-      lowLevel: data.c.l / 100,
-      all: data.c.e / 100
-    };
+    this.totalCloudCover = data.c / 100;
     this.boundaryLayer = {
       height: data.bl.h,
       wind: {
@@ -153,7 +151,8 @@ export class DetailedForecast {
             u: entry.u,
             v: entry.v,
             temperature: entry.t,
-            dewPoint: entry.dt
+            dewPoint: entry.dt,
+            cloudCover: entry.c / 100
           }
         });
   }
@@ -163,13 +162,6 @@ export class DetailedForecast {
   }
 
 }
-
-export type DetailedClouds = {
-  highLevel: number // %
-  middleLevel: number // %
-  lowLevel: number // %
-  all: number // %
-};
 
 export type DetailedSurface = {
   temperature: number // °C
@@ -199,6 +191,7 @@ type AboveGround = {
   elevation: number // m
   temperature: number // °C
   dewPoint: number // °C
+  cloudCover: number // %
 };
 
 export type LocationForecastsData = {
@@ -221,15 +214,8 @@ export type DetailedForecastData = {
     u: number,
     v: number,
   }
-  // Clouds
-  c: {
-    e: number,
-    l: number,
-    m: number,
-    h: number,
-    c: number,
-    b: number
-  },
+  // Total cloud cover
+  c: number,
   // Above ground variables
   p: Array<{
     h: number, // altitude
@@ -237,7 +223,8 @@ export type DetailedForecastData = {
     dt: number, // dew point temperature
     // wind
     u: number,
-    v: number
+    v: number,
+    c: number // cloud cover
   }>,
   // Surface
   s: {

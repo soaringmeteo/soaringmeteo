@@ -1,7 +1,8 @@
 import h from 'solid-js/h';
 
-import { Diagram, Scale, boundaryLayerStyle, columnCloud, computeElevationLevels, nextValue, previousValue, skyStyle, temperaturesRange } from './Diagram';
+import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, nextValue, previousValue, skyStyle, temperaturesRange } from './Diagram';
 import { DetailedForecast } from "../data/Forecast";
+import { cloudsColorScale } from './Clouds';
 import { keyWidth } from './Meteogram';
 import { drawWindArrow } from '../shapes';
 import { JSX } from 'solid-js';
@@ -88,34 +89,34 @@ export const sounding = (forecast: DetailedForecast, elevation: number): [JSX.El
       [width, elevationScale.apply(maxElevation)],
       skyStyle
     );
-    // Low-level clouds
-    diagram.fillRect(
-      [0, elevationScale.apply(elevation)],
-      [width, elevationScale.apply(elevation + 2000)],
-      `rgba(255, 255, 255, ${ forecast.clouds.lowLevel * 0.7 })`
-    );
-    // Middle-level clouds (if visible)
-    if (elevation + 2000 < 6000) {
+
+    // Clouds
+    const [lastCloudBottom, maybeLastElevationAndCloudCover] =
+      forecast.aboveGround
+        .filter(aboveGround => aboveGround.elevation > elevation && aboveGround.elevation < maxElevation)
+        .reduce<[number, [number, number] | undefined]>(
+          ([cloudBottom, maybePreviousElevationAndCloudCover], aboveGround) => {
+            if (maybePreviousElevationAndCloudCover === undefined) {
+              return [cloudBottom, [aboveGround.elevation, aboveGround.cloudCover]]
+            } else {
+              const [previousElevation, previousCloudCover] = maybePreviousElevationAndCloudCover;
+              const cloudTop = (aboveGround.elevation + previousElevation) / 2;
+              diagram.fillRect(
+                [0, elevationScale.apply(cloudBottom)],
+                [width, elevationScale.apply(cloudTop)],
+                cloudsColorScale.interpolate(previousCloudCover).css()
+              );
+              return [cloudTop, [aboveGround.elevation, aboveGround.cloudCover]]
+            }
+          },
+          [elevation, undefined]
+        );
+    if (maybeLastElevationAndCloudCover !== undefined) {
+      const [_, lastCloudCover] = maybeLastElevationAndCloudCover;
       diagram.fillRect(
-        [0, elevationScale.apply(elevation + 2000)],
-        [width, elevationScale.apply(6000)],
-        `rgba(255, 255, 255, ${ forecast.clouds.middleLevel * 0.7 })`
-      );
-    }
-    // High-level clouds
-    diagram.fillRect(
-      [0, elevationScale.apply(Math.max(elevation + 2000, 6000))],
-      [width, elevationScale.apply(maxElevation)],
-      `rgba(255, 255, 255, ${ forecast.clouds.highLevel * 0.7 })`
-    );
-    // Cumuli
-    // Cumuli base height is computed via Hennig formula
-    const cumuliBase = 122.6 * (forecast.surface.temperature - forecast.surface.dewPoint);
-    if (cumuliBase < forecast.boundaryLayer.height) {
-      diagram.fillRect(
-        [0, elevationScale.apply(elevation + cumuliBase)],
-        [width, elevationScale.apply(elevation + forecast.boundaryLayer.height)],
-        columnCloud
+        [0, elevationScale.apply(lastCloudBottom)],
+        [width, elevationScale.apply(maxElevation)],
+        cloudsColorScale.interpolate(lastCloudCover).css()
       );
     }
 
@@ -157,7 +158,6 @@ export const sounding = (forecast: DetailedForecast, elevation: number): [JSX.El
     // --- Sounding Diagram
 
     forecast.aboveGround
-      .sort((a, b) => a.elevation - b.elevation)
       .reduce(([previousTemperature, previousDewPoint, previousElevation], entry) => {
         const y0 = elevationScale.apply(previousElevation);
         const y1 = elevationScale.apply(entry.elevation);

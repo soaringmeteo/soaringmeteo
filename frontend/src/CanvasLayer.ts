@@ -118,7 +118,7 @@ const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng
     return points[0]
   } else if (points.length > 1) {
     const sumPoint: ForecastPoint = {
-      boundaryLayerHeight: 0,
+      boundaryLayerDepth: 0,
       thermalVelocity: 0,
       uWind: 0,
       vWind: 0,
@@ -129,10 +129,11 @@ const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng
       u300MWind: 0,
       v300MWind: 0,
       uBLTopWind: 0,
-      vBLTopWind: 0
+      vBLTopWind: 0,
+      cumuliDepth: 0
     };
     points.forEach(point => {
-      sumPoint.boundaryLayerHeight += point.boundaryLayerHeight;
+      sumPoint.boundaryLayerDepth += point.boundaryLayerDepth;
       sumPoint.thermalVelocity += point.thermalVelocity;
       sumPoint.uWind += point.uWind;
       sumPoint.vWind += point.vWind;
@@ -144,10 +145,11 @@ const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng
       sumPoint.v300MWind += point.v300MWind;
       sumPoint.uBLTopWind += point.uBLTopWind;
       sumPoint.vBLTopWind += point.vBLTopWind;
+      sumPoint.cumuliDepth += point.cumuliDepth;
     })
     const n = points.length;
     return {
-      boundaryLayerHeight: sumPoint.boundaryLayerHeight / n,
+      boundaryLayerDepth: sumPoint.boundaryLayerDepth / n,
       thermalVelocity: sumPoint.thermalVelocity / n,
       uWind: sumPoint.uWind / n,
       vWind: sumPoint.vWind / n,
@@ -158,7 +160,8 @@ const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng
       u300MWind: sumPoint.u300MWind / n,
       v300MWind: sumPoint.v300MWind / n,
       uBLTopWind: sumPoint.uBLTopWind / n,
-      vBLTopWind: sumPoint.vBLTopWind / n
+      vBLTopWind: sumPoint.vBLTopWind / n,
+      cumuliDepth: sumPoint.cumuliDepth / n
     };          
   } else {
     return

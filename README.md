@@ -45,6 +45,8 @@ Alternatively, change the forecast period by clicking on the buttons at the bott
 
 ![](images/controls-period2.png)
 
+### Map
+
 At the bottom-right of the window, move the mouse pointer over the layers icon to select the information to display:
 
 ![](images/controls-layers.png)
@@ -55,11 +57,13 @@ The “Detailed View” part is explained below. The “Initialization Time” p
 
 The “None” overlay just displays the map.
 
-The “Thermal Quality” overlay shows an indicator of thermal quality:
+The “Mixed” overlay is explained further below.
+
+The “XC Flying Potentials” overlay shows the potential of the area for XC flying:
 
 ![](images/controls-layers-thq.png)
 
-The thermal quality is a single indicator that takes into account the boundary layer depth, the average wind speed within the boundary layer, and the total cloud cover. It uses the following color scale (100% means a high chance of finding good thermals):
+This single indicator takes into account the boundary layer depth, the average wind speed within the boundary layer, and the total cloud cover. It uses the following color scale (100% means a high chance of XC flying):
 
 ![](images/key-thq.png)
 
@@ -70,6 +74,15 @@ The “Boundary Layer Depth” overlay shows the boundary layer depth:
 It uses the folowing color scale:
 
 ![](images/key-bld.png)
+
+The “Thermal Velocity” overlay shows the estimated velocity of thermal updrafts:
+
+![](images/controls-layers-thermal-velocity.png)
+
+The thermal velocity is computed from the boundary layer height and the sensible heat net flux.
+It uses the following color scale:
+
+![](images/key-thermal-velocity.png)
 
 The “Wind” overlays show the wind speed and direction at various elevation levels:
 
@@ -86,6 +99,15 @@ The “Cloud Cover” overlay shows the total cloud cover:
 The darker the dots, the more important the cloud cover is:
 
 ![](images/key-cc.png)
+
+The “Convective Clouds” overlay shows the depth of the convective clouds (cumuli):
+
+![](images/controls-layers-cumuli.png)
+
+No convective clouds means blue thermals, and high convective clouds means a risk of thunderstorm.
+It uses the following color scale:
+
+![](images/key-cumuli.png)
 
 The “Rain” overlay shows the amount of rainfalls:
 
@@ -105,17 +127,21 @@ It uses the same color scales as the individual overlays:
 
 Look for areas that are white (high boundary layer depth), with a thin wind arrow (little wind), and no dark points (clear sky).
 
+### Meteograms
+
 By clicking on a specific point on the map, you will see a detailed view for this location. You can display either a meteogram, or a sounding.
 
 The meteogram shows the weather forecast for this location, over time:
 
 ![](images/meteogram.png)
 
-The first row shows the “thermal quality” indicator at this location, for each time period.
+The first row shows the “XC flying potential” indicator at this location, for each time period.
 
-Then, there are two diagrams. The first one shows the boundary layer height (green columns, scale on the left in meters), the wind speed and direction at several elevation levels, and the low, middle, and high cloud cover (the whiter, the more covered). The white dots indicate cumuli clouds. The red line shows the atmospheric pressure (scale on the right in hPa), and the black line shows the zero degree isotherm.
+Then, there are two diagrams. The first one shows the boundary layer height (green columns, scale on the left in meters), the wind speed and direction and the cloud cover at several elevation levels. The red line shows the atmospheric pressure (scale on the right in hPa), and the black line shows the zero degree isotherm.
 
 The bottom diagram shows rainfalls (blue bars and cyan bars, scale on the left in millimeters). The red line shows the air temperature at the ground level (scale on the right in Celsius degrees), and the blue line shows the dew point temperature.
+
+### Soundings
 
 Soundings show the air temperature lapse rate at the given location, for the selected forecast period:
 
@@ -125,7 +151,7 @@ The black line shows the evolution of the temperature (horizontal axis) of the a
 
 The blue line shows the evolution of the dew point temperature with altitude.
 
-The green area shows the boundary layer height. The white dots model cumuli clouds.
+The green area shows the boundary layer height. The white or gray areas show the presence of clouds.
 
 On the left, the wind speed and direction is shown at various altitude levels by the wind barbells.
 
