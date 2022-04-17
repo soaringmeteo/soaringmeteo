@@ -352,7 +352,7 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
   if (leftKeyCtx !== null) {
     // Thq
     const thqDiagram = new Diagram([0, thqDiagramTop], thqDiagramHeight, leftKeyCtx);
-    thqDiagram.text('ThQ', [keyWidth / 2, 8], 'black', 'center', 'middle');
+    thqDiagram.text('XC?', [keyWidth / 2, 8], 'black', 'center', 'middle');
 
     // High air diagram
     const highAirDiagram = new Diagram([0, highAirDiagramTop], highAirDiagramHeight, leftKeyCtx);

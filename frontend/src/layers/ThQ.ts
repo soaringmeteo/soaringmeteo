@@ -32,10 +32,6 @@ export class ThQ {
       ctx.save();
       ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.40)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.rect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
-      ctx.stroke();
       ctx.restore();
     }
   }
@@ -52,19 +48,32 @@ export class ThQ {
 export const value = (boundaryLayerDepth: number, uWind: number, vWind: number, totalCloudCover: number): number => {
   // Boundary Layer Depth
   const bld = boundaryLayerDepth;
-  const blhCoeff = Math.min(bld / 800, 1); // >800 m = 100%
+  // coeff is 50% for a boundary layer depth of 400 m
+  const bldCoeff = logistic(bld, 400, 4);
 
   // Boundary Layer Wind
   const u = uWind;
   const v = vWind;
   const windForce = Math.sqrt(u * u + v * v);
-  // windForce <= 10 => windCoeff = 1
-  // windForce >  30 => windCoeff ~= 0
-  const windCoeff = Math.exp(-Math.max(windForce - 10, 0) / 10);
+  // coeff is 50% for a wind force of 14 km/h
+  const windCoeff = 1 - logistic(windForce, 15, 6);
 
   // Cloud cover
   const cloudCover = totalCloudCover;
-  const cloudCoverCoeff = (cloudCover === null || cloudCover === undefined) ? 1 : (1 - cloudCover);
+  // coeff is 50% for a cloud cover of 60%
+  const cloudCoverCoeff = (cloudCover === null || cloudCover === undefined) ? 1 : (1 - logistic(cloudCover, 0.6, 7));
 
-  return blhCoeff * windCoeff * cloudCoverCoeff
+  return bldCoeff * windCoeff * cloudCoverCoeff
+};
+
+/**
+ * Logistic function (see https://en.wikipedia.org/wiki/Logistic_regression#Model)
+ * @param x  input
+ * @param mu “location parameter” (midpoint of the curve, where output = 50%)
+ * @param k  steepness (value like 4 is quite smooth, whereas 7 is quite steep)
+ */
+const logistic = (x: number, mu: number, k: number): number => {
+  const L = 1; // Output max value. In our case we want the output to be a value between 0 and 1
+  const s = mu / k;
+  return L / (1 + Math.exp(-(x - mu) / s))
 };
