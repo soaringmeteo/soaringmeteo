@@ -5,7 +5,7 @@ import * as L from 'leaflet';
 export const colorScale = new ColorScale([
   [0,    new Color(0xff, 0xff, 0xff, 0)],
   [50,   new Color(0xff, 0xff, 0xff, 0.2)],
-  [400,  new Color(0xff, 0xff, 0xff, 1)],
+  [400,  new Color(0xff, 0xff, 0xff, 0.5)],
   [800,  new Color(0xff, 0xff, 0x00, 0.5)],
   [1500, new Color(0xff, 0x00, 0x00, 0.5)]
 ]);
