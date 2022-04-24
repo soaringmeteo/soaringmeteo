@@ -109,7 +109,7 @@ export class DayForecasts {
 
 export class DetailedForecast {
   readonly time: Date;
-  readonly totalCloudCover: number; // %
+  readonly thermalVelocity: number; // m/s
   readonly boundaryLayer: DetailedBoundaryLayer;
   readonly surface: DetailedSurface;
   readonly rain: DetailedRain;
@@ -119,7 +119,7 @@ export class DetailedForecast {
 
   constructor(data: DetailedForecastData, elevation: number) {
     this.time = new Date(data.t);
-    this.totalCloudCover = data.c / 100;
+    this.thermalVelocity = data.v / 10;
     this.boundaryLayer = {
       height: data.bl.h,
       wind: {
@@ -214,8 +214,7 @@ export type DetailedForecastData = {
     u: number,
     v: number,
   }
-  // Total cloud cover
-  c: number,
+  v: number, // Thermal velocity
   // Above ground variables
   p: Array<{
     h: number, // altitude

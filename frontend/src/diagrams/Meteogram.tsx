@@ -94,10 +94,10 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
 
     columns((forecast, columnStart, columnEnd) => {
       const thq = thqValue(
+        forecast.thermalVelocity,
         forecast.boundaryLayer.height,
         forecast.boundaryLayer.wind.u,
-        forecast.boundaryLayer.wind.v,
-        forecast.totalCloudCover
+        forecast.boundaryLayer.wind.v
       )
       thqDiagram.fillRect(
         [columnStart, 0],
