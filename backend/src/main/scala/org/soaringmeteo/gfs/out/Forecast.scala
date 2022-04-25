@@ -1,7 +1,6 @@
 package org.soaringmeteo.gfs.out
 
 import io.circe.{Encoder, Json}
-import org.soaringmeteo.Temperatures.dewPoint
 import org.soaringmeteo.gfs.in
 import org.soaringmeteo.{Point, Wind}
 import squants.energy.SpecificEnergy

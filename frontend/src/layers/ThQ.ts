@@ -22,15 +22,15 @@ export class ThQ {
   renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     if (forecastAtPoint !== undefined) {
       const thq = value(
+        forecastAtPoint.thermalVelocity,
         forecastAtPoint.boundaryLayerDepth,
         forecastAtPoint.uWind,
-        forecastAtPoint.vWind,
-        forecastAtPoint.cloudCover
+        forecastAtPoint.vWind
       );
 
       const color = colorScale.interpolate(thq);
       ctx.save();
-      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.40)`;
+      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.30)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
       ctx.restore();
     }
@@ -39,31 +39,30 @@ export class ThQ {
 }
 
 /**
+ * @param thermalVelocity    Thermals velocity in m/s
  * @param boundaryLayerDepth Depth of the boundary layer in meters
  * @param uWind              U part of wind in boundary layer in km/h
  * @param vWind              V part of wind in boundary layer in km/h
- * @param totalCloudCover    Total cloud cover between 0 and 1
- * @returns 
  */
-export const value = (boundaryLayerDepth: number, uWind: number, vWind: number, totalCloudCover: number): number => {
+export const value = (thermalVelocity: number, boundaryLayerDepth: number, uWind: number, vWind: number): number => {
+  // Thermal velocity
+  // coeff is 50% for a 1.5 m/s
+  const thermalVelocityCoeff = logistic(thermalVelocity, 1.50, 6);
+
   // Boundary Layer Depth
-  const bld = boundaryLayerDepth;
   // coeff is 50% for a boundary layer depth of 400 m
-  const bldCoeff = logistic(bld, 400, 4);
+  const bldCoeff = logistic(boundaryLayerDepth, 400, 4);
+
+  const thermalCoeff = (2 * thermalVelocityCoeff + bldCoeff) / 3;
 
   // Boundary Layer Wind
   const u = uWind;
   const v = vWind;
   const windForce = Math.sqrt(u * u + v * v);
-  // coeff is 50% for a wind force of 14 km/h
+  // coeff is 50% for a wind force of 15 km/h
   const windCoeff = 1 - logistic(windForce, 15, 6);
 
-  // Cloud cover
-  const cloudCover = totalCloudCover;
-  // coeff is 50% for a cloud cover of 60%
-  const cloudCoverCoeff = (cloudCover === null || cloudCover === undefined) ? 1 : (1 - logistic(cloudCover, 0.6, 7));
-
-  return bldCoeff * windCoeff * cloudCoverCoeff
+  return thermalCoeff * windCoeff
 };
 
 /**

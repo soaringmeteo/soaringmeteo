@@ -5,11 +5,12 @@ import java.time.{LocalDate, OffsetDateTime}
 import io.circe.{Encoder, Json}
 import org.soaringmeteo.gfs.Settings
 import org.soaringmeteo.{Point, Wind}
+import squants.Velocity
 import squants.energy.SpecificEnergy
 import squants.motion.Pressure
 import squants.radio.Irradiance
 import squants.space.{Length, Meters}
-import squants.thermal.{Celsius, Temperature}
+import squants.thermal.Temperature
 
 import java.math.MathContext
 import scala.collection.immutable.SortedMap
@@ -36,7 +37,7 @@ case class DetailedForecast(
   time: OffsetDateTime,
   boundaryLayerHeight: Length,
   boundaryLayerWind: Wind,
-  totalCloudCover: Int, // Between 0 and 100
+  thermalVelocity: Velocity,
   convectiveCloudCover: Int, // Between 0 and 100
   convectiveClouds: Option[ConvectiveClouds],
   airDataByAltitude: SortedMap[Length, AirData],
@@ -65,7 +66,7 @@ object LocationForecasts {
             forecast.time,
             forecast.boundaryLayerDepth,
             forecast.boundaryLayerWind,
-            forecast.totalCloudCover,
+            forecast.thermalVelocity,
             forecast.convectiveCloudCover,
             forecast.convectiveClouds,
             forecast.airDataByAltitude,
@@ -208,7 +209,7 @@ object LocationForecasts {
                       "u" -> Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
                       "v" -> Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt)
                     ),
-                    "c" -> Json.fromInt(forecast.totalCloudCover),
+                    "v" -> Json.fromInt((forecast.thermalVelocity.toMetersPerSecond * 10).round.toInt), // dm/s (to avoid floating point values)
                     "p" -> Json.arr(forecast.airDataByAltitude.map { case (elevation, aboveGround) =>
                       Json.obj(
                         "h" -> Json.fromInt(elevation.toMeters.round.toInt),

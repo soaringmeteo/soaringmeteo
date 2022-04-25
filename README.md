@@ -63,7 +63,7 @@ The “XC Flying Potentials” overlay shows the potential of the area for XC fl
 
 ![](images/controls-layers-thq.png)
 
-This single indicator takes into account the boundary layer depth, the average wind speed within the boundary layer, and the total cloud cover. It uses the following color scale (100% means a high chance of XC flying):
+This single indicator takes into account the boundary layer depth, the thermals velocity, and the average wind speed within the boundary layer. It uses the following color scale (100% means a high chance of XC flying):
 
 ![](images/key-thq.png)
 
