@@ -32,6 +32,7 @@ scalacOptions += "-deprecation"
 
 run / fork := true
 javaOptions ++= Seq("-Xmx8g", "-Xms6g")
+Runtime / unmanagedResources += baseDirectory.value / "application.conf"
 Universal / javaOptions ++= javaOptions.value.map(opt => s"-J$opt")
 
 testFrameworks += new TestFramework("verify.runner.Framework")
