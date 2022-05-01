@@ -3,16 +3,11 @@ import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
 
 export const colorScale = new ColorScale([
-  [0.1, new Color(0x99, 0x00, 0x99, 1)],
-  [0.2, new Color(0x99, 0x33, 0x33, 1)],
-  [0.3, new Color(0xff, 0x00, 0x00, 1)],
-  [0.4, new Color(0xff, 0x99, 0x00, 1)],
-  [0.5, new Color(0xff, 0xcc, 0x00, 1)],
-  [0.6, new Color(0xff, 0xff, 0x00, 1)],
-  [0.7, new Color(0x66, 0xff, 0x00, 1)],
-  [0.8, new Color(0x00, 0xff, 0xff, 1)],
-  [0.9, new Color(0x99, 0xff, 0xff, 1)],
-  [1.0, new Color(0xff, 0xff, 0xff, 1)]
+  [0.10, new Color(0x00, 0x00, 0x00, 1)],
+  [0.25, new Color(0xff, 0x00, 0x00, 1)],
+  [0.50, new Color(0x00, 0xff, 0x00, 1)],
+  [0.75, new Color(0x00, 0xff, 0xff, 1)],
+  [1.00, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
 export class ThQ {
@@ -30,7 +25,7 @@ export class ThQ {
 
       const color = colorScale.interpolate(thq);
       ctx.save();
-      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.30)`;
+      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
       ctx.restore();
     }

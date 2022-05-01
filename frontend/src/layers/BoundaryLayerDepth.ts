@@ -19,8 +19,8 @@ export const drawBoundaryLayerDepth = (forecastAtPoint: ForecastPoint, topLeft: 
 }
 
 export const boundaryDepthColorScale = new ColorScale([
-  [0, new Color(0xff, 0x00, 0x00, 1)],
-  [300, new Color(0xff, 0x7f, 0x00, 1)],
+  [0, new Color(0x00, 0x00, 0x00, 1)],
+  [300, new Color(0xff, 0x00, 0x00, 1)],
   [600, new Color(0x00, 0xff, 0x00, 1)],
   [1000, new Color(0x00, 0xff, 0xff, 1)],
   [1500, new Color(0xff, 0xff, 0xff, 1)]
