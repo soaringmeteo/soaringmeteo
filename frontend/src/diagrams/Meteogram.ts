@@ -158,7 +158,7 @@ const airDiagramHeightAboveGroundLevel = 3500; // m
       airDiagram.fillRect(
         [columnStart, 0],
         [columnEnd,   boundaryLayerHeight],
-        boundaryLayerStyle
+        boundaryLayerStyle(forecast.thermalVelocity)
       );
       // Blue sky
       airDiagram.fillRect(

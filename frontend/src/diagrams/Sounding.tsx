@@ -189,7 +189,7 @@ const drawSounding = (
   diagram.fillRect(
     [0, elevationScale.apply(elevation)],
     [width, elevationScale.apply(elevation + forecast.boundaryLayer.height)],
-    boundaryLayerStyle
+    boundaryLayerStyle(forecast.thermalVelocity)
   );
   diagram.fillRect(
     [0, elevationScale.apply(elevation + forecast.boundaryLayer.height)],
