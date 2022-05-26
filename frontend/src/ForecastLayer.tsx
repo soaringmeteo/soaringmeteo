@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import { createEffect, JSX } from 'solid-js';
+import { createEffect, JSX, Match, Show, Switch } from 'solid-js';
 import { createStore } from 'solid-js/store';
 
 import { DataSource, CanvasLayer } from "./CanvasLayer";
@@ -158,7 +158,7 @@ export const ForecastLayer = (props: {
   onChangeForecast: (value: ForecastMetadata) => void
 }): JSX.Element => {
   // TODO Take as parameter the pre-selected layer
-  const [state, setState] = createStore({ renderer: mixedRenderer });
+  const [state, setState] = createStore({ renderer: mixedRenderer, showMenu: false });
 
   const meteogramEl = makeRadioBtn(
     'Meteogram',
@@ -258,33 +258,39 @@ export const ForecastLayer = (props: {
       {cloudsLayersEl}
     </fieldset>;
 
-  const selectEl =
-    <div style={{ display: 'none' }}>
-      {detailedViewEl}
-      {selectForecastEl}
-      {layerEl}
-    </div>;
+  const aboveMapStyle = { position: 'absolute', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, 'user-select': 'none', background: 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '5px' };
 
+  const selectEl =
+    <Show when={ state.showMenu === true }>
+      <div style={{ ...aboveMapStyle, right: '3px', bottom: '150px' }}>
+        {detailedViewEl}
+        {selectForecastEl}
+        {layerEl}
+      </div>
+    </Show>;
+
+  const buttonStyle = { ...aboveMapStyle, right: '3px', bottom: '100px', width: '44px', height: '44px', 'line-height': '44px', color: 'black', display: 'block', cursor: 'pointer' };
   const layersBtn =
-    <div>
-      <a style={{ width: '44px', height: '44px', 'background-image': `url('${layersImg}')`, display: 'block', 'background-position': '50% 50%', 'background-repeat': 'no-repeat' }} />
-    </div>;
+    <Switch>
+      <Match when={ state.showMenu === true }>
+        <a
+          onClick={ () => setState({ showMenu: false }) }
+          style={{ ...buttonStyle, 'text-align': 'center' }}
+        >X</a>
+      </Match>
+      <Match when={ state.showMenu === false }>
+      <a
+        onClick={ () => setState({ showMenu: true }) }
+        style={{ ...buttonStyle, 'background-image': `url('${layersImg}')`, 'background-position': '50% 50%', 'background-repeat': 'no-repeat' }}
+      />
+      </Match>
+    </Switch>;
 
   const rootElement =
-    <div style={{ position: 'absolute', right: '3px', bottom: '100px', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, background: 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '5px', 'user-select': 'none' }}>
-      {layersBtn}
+    <div>
       {selectEl}
+      {layersBtn}
     </div>;
-
-  rootElement.onmouseenter = _ => {
-    selectEl.style.display = 'unset';
-    layersBtn.style.display = 'none';
-  };
-
-  rootElement.onmouseleave = _ => {
-    selectEl.style.display = 'none';
-    layersBtn.style.display = 'unset';
-  };
 
   L.DomEvent.disableClickPropagation(rootElement);
   L.DomEvent.disableScrollPropagation(rootElement);
