@@ -158,7 +158,7 @@ export const ForecastLayer = (props: {
   onChangeForecast: (value: ForecastMetadata) => void
 }): JSX.Element => {
   // TODO Take as parameter the pre-selected layer
-  const [state, setState] = createStore({ renderer: mixedRenderer, showMenu: false });
+  const [state, setState] = createStore({ renderer: thqRenderer, showMenu: false });
 
   const meteogramEl = makeRadioBtn(
     'Meteogram',
@@ -251,8 +251,8 @@ export const ForecastLayer = (props: {
     <fieldset>
       <legend>Layer</legend>
       {noneEl}
-      {mixedEl}
       {thqEl}
+      {mixedEl}
       {thermalLayersEl}
       {windLayersEl}
       {cloudsLayersEl}

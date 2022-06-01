@@ -1,6 +1,8 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
+import { drawWindArrow } from "../shapes";
+import { windColor } from "./Wind";
 
 export const colorScale = new ColorScale([
   [0.1, new Color(0x33, 0x33, 0x33, 1)],
@@ -21,6 +23,9 @@ export class ThQ {
 
   renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     if (forecastAtPoint !== undefined) {
+      const center = L.point((topLeft.x + bottomRight.x) / 2, (topLeft.y + bottomRight.y) / 2);
+      const width  = bottomRight.x - topLeft.x;
+
       const thq = value(
         forecastAtPoint.thermalVelocity,
         forecastAtPoint.boundaryLayerDepth,
@@ -33,6 +38,7 @@ export class ThQ {
       ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
       ctx.restore();
+      drawWindArrow(ctx, center.x, center.y, width, windColor(0.25), forecastAtPoint.uWind, forecastAtPoint.vWind);
     }
   }
 

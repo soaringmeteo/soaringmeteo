@@ -59,13 +59,17 @@ The “None” overlay just displays the map.
 
 The “Mixed” overlay is explained further below.
 
-The “XC Flying Potentials” overlay shows the potential of the area for XC flying:
+The “XC Flying Potentials” overlay (enabled by default) shows the potential of the area for XC flying:
 
 ![](images/controls-layers-thq.png)
 
-This single indicator takes into account the boundary layer depth, the thermals velocity, and the average wind speed within the boundary layer. It uses the following color scale (100% means a high chance of XC flying):
+We compute the XC potential by taking into account the boundary layer depth, the thermals velocity (based on insolation), and the average wind speed within the boundary layer. This produces a value between 0% and 100%. Deep boundary layer and fast thermals increase this value, and wind speeds higher than 15 km/h decrease this value.
+
+We use the following color scale (100% means a high chance of XC flying):
 
 ![](images/key-thq.png)
+
+We also show the wind speed and direction within the boundary layer on every location (see below for interpreting the barbells).
 
 The “Boundary Layer Depth” overlay shows the boundary layer depth:
 
@@ -79,7 +83,7 @@ The “Thermal Velocity” overlay shows the estimated velocity of thermal updra
 
 ![](images/controls-layers-thermal-velocity.png)
 
-The thermal velocity is computed from the boundary layer height and the sensible heat net flux.
+The thermal velocity is computed from the boundary layer depth and the sensible heat net flux.
 It uses the following color scale:
 
 ![](images/key-thermal-velocity.png)
@@ -117,7 +121,7 @@ The more opaque, the more rainfalls:
 
 ![](images/key-rain.png)
 
-By default, the application shows the “Mixed” overlay, which combines three layers: the boundary layer depth, the boundary layer wind, and the cloud cover:
+The “Mixed” overlay combines three layers: the boundary layer depth, the boundary layer wind, and the cloud cover:
 
 ![](images/controls-layers-mixed.png)
 
