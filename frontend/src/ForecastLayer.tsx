@@ -12,7 +12,7 @@ import { CloudCover, cloudCoverColorScale } from './layers/CloudCover';
 import { boundaryDepthColorScale, BoundaryLayerDepth } from './layers/BoundaryLayerDepth';
 import { Wind, windColor } from './layers/Wind';
 import { None } from './layers/None';
-import { drawWindArrow } from './shapes';
+import { closeButtonStyle, drawWindArrow } from './shapes';
 import layersImg from './images/layers.png';
 import { ForecastMetadata, showDate } from './data/ForecastMetadata';
 import { Rain, rainColorScale } from './layers/Rain';
@@ -258,30 +258,29 @@ export const ForecastLayer = (props: {
       {cloudsLayersEl}
     </fieldset>;
 
-  const aboveMapStyle = { position: 'absolute', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, 'user-select': 'none', background: 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '5px' };
+  const aboveMapStyle = { position: 'absolute', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, 'user-select': 'none' };
 
   const selectEl =
     <Show when={ state.showMenu === true }>
-      <div style={{ ...aboveMapStyle, right: '3px', bottom: '150px' }}>
+      <div style={{ ...aboveMapStyle, right: '3px', bottom: '136px', 'background-color': 'white' }}>
         {detailedViewEl}
         {selectForecastEl}
         {layerEl}
       </div>
     </Show>;
 
-  const buttonStyle = { ...aboveMapStyle, right: '3px', bottom: '100px', width: '44px', height: '44px', 'line-height': '44px', color: 'black', display: 'block', cursor: 'pointer' };
   const layersBtn =
     <Switch>
       <Match when={ state.showMenu === true }>
-        <a
+        <div
           onClick={ () => setState({ showMenu: false }) }
-          style={{ ...buttonStyle, 'text-align': 'center' }}
-        >X</a>
+          style={{ ...aboveMapStyle, ...closeButtonStyle, right: '8px', bottom: '100px' }}
+        >X</div>
       </Match>
       <Match when={ state.showMenu === false }>
-      <a
+      <div
         onClick={ () => setState({ showMenu: true }) }
-        style={{ ...buttonStyle, 'background-image': `url('${layersImg}')`, 'background-position': '50% 50%', 'background-repeat': 'no-repeat' }}
+        style={{ ...aboveMapStyle, right: '3px', bottom: '100px', width: '44px', height: '44px', 'line-height': '44px', color: 'black', display: 'block', cursor: 'pointer', 'text-align': 'center', 'background-image': `url('${layersImg}')`, 'background-position': '50% 50%', 'background-repeat': 'no-repeat', 'background-color': 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '5px' }}
       />
       </Match>
     </Switch>;

@@ -117,3 +117,15 @@ export const cloudPattern = (width: number, style: string): CanvasPattern => {
   }
   return pattern
 };
+
+export const closeButtonStyle = {
+  width: '32px',
+  height: '32px',
+  'line-height': '32px',
+  color: 'white',
+  display: 'block',
+  cursor: 'pointer',
+  'background-color': 'darkGray',
+  'text-align': 'center',
+  'border-radius': '16px'
+};
