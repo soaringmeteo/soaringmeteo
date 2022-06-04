@@ -151,11 +151,11 @@ const mixedRenderer = new Renderer(
 export const ForecastLayer = (props: {
   hourOffset: number
   detailedView: DetailedViewType
-  forecasts: Array<ForecastMetadata>
-  currentForecast: ForecastMetadata
+  forecastMetadatas: Array<ForecastMetadata>
+  currentForecastMetadata: ForecastMetadata
   canvas: CanvasLayer
   onChangeDetailedView: (value: DetailedViewType) => void
-  onChangeForecast: (value: ForecastMetadata) => void
+  onChangeForecastMetadata: (value: ForecastMetadata) => void
 }): JSX.Element => {
   // TODO Take as parameter the pre-selected layer
   const [state, setState] = createStore({ renderer: thqRenderer, showMenu: false });
@@ -186,14 +186,14 @@ export const ForecastLayer = (props: {
     <fieldset>
       <legend>Initialization Time</legend>
       {
-        props.forecasts.map(forecast => {
-          const initTimeString = showDate(forecast.init, { showWeekDay: true });
+        props.forecastMetadatas.map(forecastMetadata => {
+          const initTimeString = showDate(forecastMetadata.init, { showWeekDay: true });
           return makeRadioBtn(
             initTimeString,
             `Show forecast initialized at ${initTimeString}.`,
-            () => props.currentForecast === forecast,
+            () => props.currentForecastMetadata === forecastMetadata,
             'init',
-            () => props.onChangeForecast(forecast)
+            () => props.onChangeForecastMetadata(forecastMetadata)
           )
         })
       }
@@ -300,8 +300,8 @@ export const ForecastLayer = (props: {
     </div>;
   
   createEffect(() => {
-    state.renderer.update(props.currentForecast, props.hourOffset, props.canvas);
-  })
+    state.renderer.update(props.currentForecastMetadata, props.hourOffset, props.canvas);
+  });
 
   return [rootElement, rendererKeyEl]
 };

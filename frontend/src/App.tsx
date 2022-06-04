@@ -88,11 +88,11 @@ export const App = (forecasts: Array<ForecastMetadata>, containerElement: HTMLEl
       <ForecastLayer
         hourOffset={state.hourOffset}
         detailedView={state.detailedView}
-        forecasts={forecasts}
-        currentForecast={state.forecastMetadata}
+        forecastMetadatas={forecasts}
+        currentForecastMetadata={state.forecastMetadata}
         canvas={canvas}
         onChangeDetailedView={(value: DetailedViewType) => setState({ detailedView: value })}
-        onChangeForecast={(value: ForecastMetadata) => setState({ forecastMetadata: value })}
+        onChangeForecastMetadata={(value: ForecastMetadata) => setState({ forecastMetadata: value })}
       />
     </>
   }, mapElement);
