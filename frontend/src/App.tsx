@@ -1,11 +1,11 @@
-import { createEffect, createSignal, JSX } from 'solid-js';
+import { createEffect, createSignal, JSX, Show } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap } from './Map';
 import { DetailedViewType, PeriodSelectors } from './PeriodSelector';
 import { ForecastLayer } from './ForecastLayer';
-import { ForecastMetadata, latestRun, showDate } from './data/ForecastMetadata';
+import { fetchDefaultForecast, ForecastMetadata, showDate } from './data/ForecastMetadata';
 import { Forecast, LocationForecasts } from './data/Forecast';
 import * as L from 'leaflet';
 import markerImg from './images/marker-icon.png';
@@ -25,8 +25,7 @@ type State = {
   hourOffset: number
 }
 
-// TODO Load everything within App, and make it lazy
-export const App = (forecastMetadatas: Array<ForecastMetadata>, forecastMetadata: ForecastMetadata, morningOffset: number, hourOffset: number, currentForecast: Forecast, containerElement: HTMLElement): void => {
+export const start = (containerElement: HTMLElement): void => {
 
   // The map *must* be initialized before we call the other constructors
   // It *must* also be mounted before we initialize it
@@ -36,13 +35,20 @@ export const App = (forecastMetadatas: Array<ForecastMetadata>, forecastMetadata
 
   const [canvas, map] = initializeMap(mapElement);
 
-  render(() => {
+  const App = (props: {
+    forecastMetadatas: Array<ForecastMetadata>
+    forecastMetadata: ForecastMetadata
+    morningOffset: number
+    hourOffset: number
+    currentForecast: Forecast 
+  }): JSX.Element => {
+
     const [state, setState] = createStore<State>({
-      forecastMetadata: forecastMetadata,
-      forecast: currentForecast,
+      forecastMetadata: props.forecastMetadata,
+      forecast: props.currentForecast,
       detailedView: 'meteogram',
       locationForecasts: undefined,
-      hourOffset
+      hourOffset: props.hourOffset
     });
 
     createEffect(() => {
@@ -110,21 +116,21 @@ export const App = (forecastMetadatas: Array<ForecastMetadata>, forecastMetadata
     // PeriodSelector displays the buttons to move over time. When we click on those buttons, it
     // calls `onHourOffsetChanged`, which we handle by updating our `state`, which is propagated
     // back to these components.
-    // ForecastLayer displays the map overlay.
+    // ForecastLayer displays the configuration button and manages the canvas overlay.
     return <>
       <PeriodSelectors
         forecastMetadata={state.forecastMetadata}
         locationForecasts={state.locationForecasts}
         detailedView={state.detailedView}
         hourOffset={state.hourOffset}
-        morningOffset={morningOffset}
+        morningOffset={props.morningOffset}
         onHourOffsetChanged={updateHourOffset}
         onDetailedViewClosed={() => setState({ locationForecasts: undefined })}
-      />,
+      />
       <ForecastLayer
         hourOffset={state.hourOffset}
         detailedView={state.detailedView}
-        forecastMetadatas={forecastMetadatas}
+        forecastMetadatas={props.forecastMetadatas}
         currentForecastMetadata={state.forecastMetadata}
         currentForecast={state.forecast}
         canvas={canvas}
@@ -135,6 +141,30 @@ export const App = (forecastMetadatas: Array<ForecastMetadata>, forecastMetadata
         openLocationDetailsPopup={openLocationDetailsPopup}
       />
     </>
-  }, mapElement);
+  }
 
+  const Loader = ((): JSX.Element => {
+    const [loaded, setLoaded] = createSignal<[Array<ForecastMetadata>, ForecastMetadata, number, number, Forecast]>(undefined)
+    fetchDefaultForecast()
+      .then(([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]) => {
+        setLoaded([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]);
+      })
+      .catch(reason => {
+        console.error(reason);
+        alert('Unable to retrieve forecast data');
+      })
+    return <Show when={ loaded() }>
+      { ([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]) =>
+        <App
+          forecastMetadatas={forecastMetadatas}
+          forecastMetadata={forecastMetadata}
+          morningOffset={morningOffset}
+          hourOffset={hourOffset}
+          currentForecast={forecast}
+        />
+      }
+    </Show>
+  });
+
+  render(() => <Loader />, mapElement);
 };

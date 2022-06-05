@@ -5,7 +5,7 @@ import { createStore } from 'solid-js/store';
 import { DataSource, CanvasLayer, viewPoint } from "./CanvasLayer";
 import { Mixed } from './layers/Mixed';
 import { DetailedViewType } from './PeriodSelector';
-import { Forecast, ForecastPoint, normalizeCoordinates } from './data/Forecast';
+import { Forecast, normalizeCoordinates } from './data/Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
 import { ColorScale } from './ColorScale';
 import { CloudCover, cloudCoverColorScale } from './layers/CloudCover';
