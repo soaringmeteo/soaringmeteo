@@ -1,13 +1,18 @@
 import * as L from 'leaflet';
+import { JSX } from 'solid-js';
 import { modelResolution, Forecast, ForecastPoint } from './data/Forecast';
 
 export type CanvasLayer = {
   setDataSource(dataSource: DataSource): void
 }
 
+/** A specific view of the forecast output (e.g., wind, XC flying potential, etc.) */
 export type DataSource = {
   forecast: Forecast
+  /** Render one point of the forecast on the map */
   renderPoint: (forecastPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => void
+  /** Create a sumarry of the point (displayed in popups) */
+  summary: (forecastPoint: ForecastPoint) => JSX.Element
 }
 
 export const CanvasLayer = L.Layer.extend({
@@ -98,7 +103,7 @@ export const CanvasLayer = L.Layer.extend({
  * @param lat             Hundreth of degrees (e.g. 4675)
  * @param lng             Hundreth of degrees (e.g. 7250)
  */
-const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng: number): ForecastPoint | undefined => {
+export const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng: number): ForecastPoint | undefined => {
   // According to the zoom level, users see the actual points, or
   // an average of several points.
   const points: Array<ForecastPoint> = [];

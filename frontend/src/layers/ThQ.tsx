@@ -3,6 +3,8 @@ import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
 import { drawWindArrow } from "../shapes";
 import { windColor } from "./Wind";
+import { DataSource } from "../CanvasLayer";
+import { JSX } from "solid-js";
 
 export const colorScale = new ColorScale([
   [0.1, new Color(0x33, 0x33, 0x33, 1)],
@@ -17,7 +19,7 @@ export const colorScale = new ColorScale([
   [1.0, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
-export class ThQ {
+export class ThQ implements DataSource {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -40,6 +42,28 @@ export class ThQ {
       ctx.restore();
       drawWindArrow(ctx, center.x, center.y, width, windColor(0.25), forecastAtPoint.uWind, forecastAtPoint.vWind);
     }
+  }
+
+  summary(forecastAtPoint: ForecastPoint): JSX.Element {
+    const thq = value(
+      forecastAtPoint.thermalVelocity,
+      forecastAtPoint.boundaryLayerDepth,
+      forecastAtPoint.uWind,
+      forecastAtPoint.vWind
+    );
+
+    const [u, v] = [forecastAtPoint.uWind, forecastAtPoint.vWind];
+    const windSpeed = Math.sqrt(u * u + v * v); 
+
+    return <table>
+      <tbody>
+        <tr><th>XC Flying Potential: </th><td>{ Math.round(thq * 100) }%</td></tr>
+        <tr><th>Boundary layer depth: </th><td>{ forecastAtPoint.boundaryLayerDepth }&nbsp;m</td></tr>
+        <tr><th>Thermals velocity: </th><td>{ forecastAtPoint.thermalVelocity }&nbsp;m/s</td></tr>
+        <tr><th>Boundary layer wind:</th><td>{ Math.round(windSpeed) }&nbsp;km/h</td></tr>
+        <tr><th>Total cloud cover: </th><td>{ Math.round(forecastAtPoint.cloudCover * 100) }%</td></tr>
+      </tbody>
+    </table>;
   }
 
 }

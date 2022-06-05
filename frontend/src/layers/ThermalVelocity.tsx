@@ -1,8 +1,10 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
+import { DataSource } from "../CanvasLayer";
+import { JSX } from "solid-js";
 
-export class ThermalVelocity {
+export class ThermalVelocity implements DataSource {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -11,6 +13,15 @@ export class ThermalVelocity {
     ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
     ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
   }
+
+  summary(forecastPoint: ForecastPoint): JSX.Element {
+    return <table>
+      <tbody>
+        <tr><th>Thermals velocity: </th><td>{ forecastPoint.thermalVelocity }&nbsp;m/s</td></tr>
+      </tbody>
+    </table>;
+  }
+
 }
 
 export const thermalVelocityColorScale = new ColorScale([

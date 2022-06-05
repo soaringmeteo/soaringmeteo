@@ -1,14 +1,25 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
+import { JSX } from "solid-js";
+import { DataSource } from "../CanvasLayer";
 
-export class BoundaryLayerDepth {
+export class BoundaryLayerDepth implements DataSource {
 
   constructor(readonly forecast: Forecast) {}
 
   renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     drawBoundaryLayerDepth(forecastAtPoint, topLeft, bottomRight, ctx);
   }
+
+  summary(forecastAtPoint: ForecastPoint): JSX.Element {
+    return <table>
+      <tbody>
+        <tr><th>Boundary layer depth: </th><td>{ forecastAtPoint.boundaryLayerDepth }&nbsp;m</td></tr>
+      </tbody>
+    </table>
+  }
+
 }
 
 export const drawBoundaryLayerDepth = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => {
