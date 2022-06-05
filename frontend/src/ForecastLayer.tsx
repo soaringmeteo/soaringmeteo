@@ -306,17 +306,20 @@ export const ForecastLayer = (props: {
   createEffect(() => {
     const event = props.popupRequest();
     if (event !== undefined) {
-      const [latitude, longitude] = normalizeCoordinates(event.latlng.lat, event.latlng.lng);
-      const forecastAtPoint = viewPoint(props.currentForecast, 1 /* TODO handle averaging */, latitude, longitude);
+      const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(event.latlng.lat, event.latlng.lng);
+      const [latitude, longitude] = [normalizedLatitude / 100, normalizedLongitude / 100];
+      const forecastAtPoint = viewPoint(props.currentForecast, 1 /* TODO handle averaging */, normalizedLatitude, normalizedLongitude);
       if (forecastAtPoint !== undefined) {
         const content =
           <div>
+            <div>Grid point: {latitude},{longitude}</div>
+            <div>GFS forecast for {showDate(props.currentForecastMetadata.dateAtHourOffset(props.hourOffset), { showWeekDay: true })}</div>
             { dataSource().summary(forecastAtPoint) }
             <button onClick={ () => props.onFetchLocationForecasts(event.latlng.lat, event.latlng.lng) }>
               { props.detailedView == 'meteogram' ? "Meteogram for this location" : "Sounding for this time and location" }
             </button>
           </div>
-        props.openLocationDetailsPopup(latitude / 100, longitude / 100, content);
+        props.openLocationDetailsPopup(latitude, longitude, content);
       }
     }
   });
