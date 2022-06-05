@@ -19,6 +19,11 @@ export const colorScale = new ColorScale([
   [1.0, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
+export const computeColor = (value: number): Color => {
+  // bypass interpolation for now to mimic the behavior of old soaringmeteo
+  const roundedValue = Math.floor(((value * 100) + 9) / 10) / 10;
+  return colorScale.interpolate(roundedValue)
+};
 export class ThQ implements DataSource {
 
   constructor(readonly forecast: Forecast) {}
@@ -35,7 +40,7 @@ export class ThQ implements DataSource {
         forecastAtPoint.vWind
       );
 
-      const color = colorScale.interpolate(thq);
+      const color = computeColor(thq);
       ctx.save();
       ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
