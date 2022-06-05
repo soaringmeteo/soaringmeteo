@@ -64,7 +64,7 @@ export class ThQ implements DataSource {
       <tbody>
         <tr><th>XC Flying Potential: </th><td>{ Math.round(thq * 100) }%</td></tr>
         <tr><th>Boundary layer depth: </th><td>{ forecastAtPoint.boundaryLayerDepth }&nbsp;m</td></tr>
-        <tr><th>Thermals velocity: </th><td>{ forecastAtPoint.thermalVelocity }&nbsp;m/s</td></tr>
+        <tr><th>Thermal velocity: </th><td>{ forecastAtPoint.thermalVelocity }&nbsp;m/s</td></tr>
         <tr><th>Boundary layer wind:</th><td>{ Math.round(windSpeed) }&nbsp;km/h</td></tr>
         <tr><th>Total cloud cover: </th><td>{ Math.round(forecastAtPoint.cloudCover * 100) }%</td></tr>
       </tbody>
@@ -74,7 +74,7 @@ export class ThQ implements DataSource {
 }
 
 /**
- * @param thermalVelocity    Thermals velocity in m/s
+ * @param thermalVelocity    Thermal velocity in m/s
  * @param boundaryLayerDepth Depth of the boundary layer in meters
  * @param uWind              U part of wind in boundary layer in km/h
  * @param vWind              V part of wind in boundary layer in km/h

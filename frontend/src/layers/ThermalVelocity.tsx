@@ -17,7 +17,7 @@ export class ThermalVelocity implements DataSource {
   summary(forecastPoint: ForecastPoint): JSX.Element {
     return <table>
       <tbody>
-        <tr><th>Thermals velocity: </th><td>{ forecastPoint.thermalVelocity }&nbsp;m/s</td></tr>
+        <tr><th>Thermal velocity: </th><td>{ forecastPoint.thermalVelocity }&nbsp;m/s</td></tr>
       </tbody>
     </table>;
   }
