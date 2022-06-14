@@ -3,6 +3,8 @@ import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
 import { drawWindArrow } from "../shapes";
 import { windColor } from "./Wind";
+import { DataSource } from "../CanvasLayer";
+import { JSX } from "solid-js";
 
 export const colorScale = new ColorScale([
   [0.1, new Color(0x33, 0x33, 0x33, 1)],
@@ -17,7 +19,12 @@ export const colorScale = new ColorScale([
   [1.0, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
-export class ThQ {
+export const computeColor = (value: number): Color => {
+  // bypass interpolation for now to mimic the behavior of old soaringmeteo
+  const roundedValue = Math.floor(((value * 100) + 9) / 10) / 10;
+  return colorScale.interpolate(roundedValue)
+};
+export class ThQ implements DataSource {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -33,7 +40,7 @@ export class ThQ {
         forecastAtPoint.vWind
       );
 
-      const color = colorScale.interpolate(thq);
+      const color = computeColor(thq);
       ctx.save();
       ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
@@ -42,10 +49,32 @@ export class ThQ {
     }
   }
 
+  summary(forecastAtPoint: ForecastPoint): JSX.Element {
+    const thq = value(
+      forecastAtPoint.thermalVelocity,
+      forecastAtPoint.boundaryLayerDepth,
+      forecastAtPoint.uWind,
+      forecastAtPoint.vWind
+    );
+
+    const [u, v] = [forecastAtPoint.uWind, forecastAtPoint.vWind];
+    const windSpeed = Math.sqrt(u * u + v * v); 
+
+    return <table>
+      <tbody>
+        <tr><th>XC Flying Potential: </th><td>{ Math.round(thq * 100) }%</td></tr>
+        <tr><th>Boundary layer depth: </th><td>{ forecastAtPoint.boundaryLayerDepth }&nbsp;m</td></tr>
+        <tr><th>Thermal velocity: </th><td>{ forecastAtPoint.thermalVelocity }&nbsp;m/s</td></tr>
+        <tr><th>Boundary layer wind:</th><td>{ Math.round(windSpeed) }&nbsp;km/h</td></tr>
+        <tr><th>Total cloud cover: </th><td>{ Math.round(forecastAtPoint.cloudCover * 100) }%</td></tr>
+      </tbody>
+    </table>;
+  }
+
 }
 
 /**
- * @param thermalVelocity    Thermals velocity in m/s
+ * @param thermalVelocity    Thermal velocity in m/s
  * @param boundaryLayerDepth Depth of the boundary layer in meters
  * @param uWind              U part of wind in boundary layer in km/h
  * @param vWind              V part of wind in boundary layer in km/h

@@ -3,7 +3,7 @@ import h from 'solid-js/h';
 import { LocationForecasts, DetailedForecast } from '../data/Forecast';
 import { drawWindArrow, lightningShape } from '../shapes';
 import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, skyStyle, temperaturesRange, meteogramColumnWidth } from './Diagram';
-import { value as thqValue, colorScale as thqColorScale } from '../layers/ThQ';
+import { value as thqValue, computeColor as thqColorScale } from '../layers/ThQ';
 import { cloudsColorScale } from './Clouds';
 import { JSX } from 'solid-js';
 
@@ -102,7 +102,7 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
       thqDiagram.fillRect(
         [columnStart, 0],
         [columnEnd, thqDiagramHeight],
-        `${thqColorScale.interpolate(thq).css()}`
+        `${thqColorScale(thq).css()}`
       );
       thqDiagram.rect(
         [columnStart, 0],

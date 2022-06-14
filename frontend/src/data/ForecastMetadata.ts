@@ -58,7 +58,26 @@ export class ForecastMetadata {
 
 }
 
-export const fetchForecasts = async (): Promise<Array<ForecastMetadata>> => {
+/**
+ * @returns A tuple with:
+ *   - all the available runs,
+ *   - the selected run (most recent one),
+ *   - the offset that corresponds to noon time (number of hours to add to 00:00 UTC),
+ *   - the offset of the default forecast,
+ *   - the default forecast.
+ */
+ export const fetchDefaultForecast = async (): Promise<[Array<ForecastMetadata>, ForecastMetadata, number, number, Forecast]> => {
+  // TODO Compute based on user preferred time zone (currently hard-coded for central Europe)
+  // Number of hours to add to 00:00Z to be on the morning forecast period (e.g., 9 for Switzerland)
+  const runs              = await fetchForecasts();
+  const morningOffset     = 9;
+  const noonOffset        = morningOffset + 3 /* hours */; // TODO Abstract over underlying NWP model resolution
+  const [run, hourOffset] = latestRun(runs, noonOffset)
+  const forecast          = await run.fetchForecastAtHourOffset(hourOffset);
+  return [runs, run, morningOffset, hourOffset, forecast];
+};
+
+const fetchForecasts = async (): Promise<Array<ForecastMetadata>> => {
   const response       = await fetch('forecast.json');
   const data           = await response.json() as ForecastMetadataData;
   const latestForecast = new ForecastMetadata(data);
@@ -66,36 +85,36 @@ export const fetchForecasts = async (): Promise<Array<ForecastMetadata>> => {
   const oldestForecastInitDate = new Date(data.init);
   oldestForecastInitDate.setDate(oldestForecastInitDate.getDate() - data.h);
   // Fetch the previous forecasts
-  const previousForecasts = await fetchPreviousForecasts(oldestForecastInitDate, data.prev);
+  const previousForecasts = await fetchPreviousRuns(oldestForecastInitDate, data.prev);
   return previousForecasts.concat([latestForecast]);
 }
 
+const fetchPreviousRuns = async (oldestForecastInitDate: Date, maybePreviousData?: [string, string]): Promise<Array<ForecastMetadata>> => {
+  if (maybePreviousData !== undefined && new Date(maybePreviousData[1]) >= oldestForecastInitDate) {
+    const response = await fetch(maybePreviousData[0]);
+    const data     = await response.json() as ForecastMetadataData;
+    const forecast = new ForecastMetadata(data);
+    return (await fetchPreviousRuns(oldestForecastInitDate, data.prev)).concat([forecast]);
+  } else {
+    return []
+  }
+}
+
 /**
- * @param forecasts  All the available forecasts
+ * @param forecastMetadatas  All the available forecast runs
  * @param noonOffset Number of hours to add to 00:00Z
  * @returns A pair containing the latest forecast in the array, and the initial
  *          value for the “hour offset” (which models the number of hours to
  *          add to the forecast initialization time to show a particular period)
  */
-export const latestForecast = (forecasts: Array<ForecastMetadata>, noonOffset: number): [ForecastMetadata, number] => {
-  const forecastMetadata = forecasts[forecasts.length - 1];
+ const latestRun = (forecastMetadatas: Array<ForecastMetadata>, noonOffset: number): [ForecastMetadata, number] => {
+  const forecastMetadata = forecastMetadatas[forecastMetadatas.length - 1];
   // Time (in number of hours since 00:00Z) at which the forecast model was initialized (ie, 0, 6, 12, or 18 for GFS)
   const forecastInitOffset = +forecastMetadata.init.getUTCHours();
   // Tomorrow (or today, if forecast model was initialized at midnight), noon period
   const hourOffset = (forecastInitOffset === 0 ? 0 : 24) + noonOffset - forecastInitOffset;
   return [forecastMetadata, hourOffset]
 };
-
-const fetchPreviousForecasts = async (oldestForecastInitDate: Date, maybePreviousData?: [string, string]): Promise<Array<ForecastMetadata>> => {
-  if (maybePreviousData !== undefined && new Date(maybePreviousData[1]) >= oldestForecastInitDate) {
-    const response = await fetch(maybePreviousData[0]);
-    const data     = await response.json() as ForecastMetadataData;
-    const forecast = new ForecastMetadata(data);
-    return (await fetchPreviousForecasts(oldestForecastInitDate, data.prev)).concat([forecast]);
-  } else {
-    return []
-  }
-}
 
 export const showDate = (date: Date, options?: { showWeekDay?: boolean }): string =>
   date.toLocaleString(

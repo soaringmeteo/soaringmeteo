@@ -1,12 +1,12 @@
-import { createEffect } from 'solid-js';
+import { createEffect, createSignal, JSX, Show } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap } from './Map';
 import { DetailedViewType, PeriodSelectors } from './PeriodSelector';
 import { ForecastLayer } from './ForecastLayer';
-import { ForecastMetadata, latestForecast, showDate } from './data/ForecastMetadata';
-import { LocationForecasts } from './data/Forecast';
+import { fetchDefaultForecast, ForecastMetadata, showDate } from './data/ForecastMetadata';
+import { Forecast, LocationForecasts } from './data/Forecast';
 import * as L from 'leaflet';
 import markerImg from './images/marker-icon.png';
 
@@ -14,8 +14,10 @@ import markerImg from './images/marker-icon.png';
  * State managed by the `App` component
  */
 type State = {
-  // Currently displayed forecast
+  // Currently selected forecast run
   forecastMetadata: ForecastMetadata
+  // Currently displayed forecast
+  forecast: Forecast
   detailedView: DetailedViewType
   // If defined, the detailed forecast data for the selected location
   locationForecasts: undefined | LocationForecasts
@@ -23,7 +25,7 @@ type State = {
   hourOffset: number
 }
 
-export const App = (forecasts: Array<ForecastMetadata>, containerElement: HTMLElement): void => {
+export const start = (containerElement: HTMLElement): void => {
 
   // The map *must* be initialized before we call the other constructors
   // It *must* also be mounted before we initialize it
@@ -33,18 +35,20 @@ export const App = (forecasts: Array<ForecastMetadata>, containerElement: HTMLEl
 
   const [canvas, map] = initializeMap(mapElement);
 
-  render(() => {
-    // TODO Compute based on user preferred time zone (currently hard-coded for central Europe)
-    // Number of hours to add to 00:00Z to be on the morning forecast period (e.g., 9 for Switzerland)
-    const morningOffset = 9;
-    const noonOffset    = morningOffset + 3 /* hours */; // TODO Abstract over underlying NWP model resolution
-    const [forecastMetadata, hourOffset] = latestForecast(forecasts, noonOffset)
+  const App = (props: {
+    forecastMetadatas: Array<ForecastMetadata>
+    forecastMetadata: ForecastMetadata
+    morningOffset: number
+    hourOffset: number
+    currentForecast: Forecast 
+  }): JSX.Element => {
 
     const [state, setState] = createStore<State>({
-      forecastMetadata: forecastMetadata,
+      forecastMetadata: props.forecastMetadata,
+      forecast: props.currentForecast,
       detailedView: 'meteogram',
       locationForecasts: undefined,
-      hourOffset
+      hourOffset: props.hourOffset
     });
 
     createEffect(() => {
@@ -62,12 +66,6 @@ export const App = (forecasts: Array<ForecastMetadata>, containerElement: HTMLEl
       }
     });
 
-    map.on('click', (e: L.LeafletMouseEvent) => {
-      state.forecastMetadata
-        .fetchLocationForecasts(e.latlng.lat, e.latlng.lng)
-        .then(locationForecasts => setState({ locationForecasts }))
-    });
-  
     map.on('keydown', (e: any) => {
       const event = e.originalEvent as KeyboardEvent;
       if (event.key === 'Escape') {
@@ -75,26 +73,98 @@ export const App = (forecasts: Array<ForecastMetadata>, containerElement: HTMLEl
       }
     });
 
+    // Signal of “popup requests”: when the users click on the map, they request a popup
+    // to be displayed with numerical information about the visible layer.
+    const [popupRequest, setPopupRequest] = createSignal<undefined | L.LeafletMouseEvent>(undefined);
+    map.on('click', (event: L.LeafletMouseEvent) => {
+      setPopupRequest(event);
+    });
+    // Clear popup requests when the users close the popup
+    const locationDetailsPopup =
+      L.popup()
+        .on("remove", () => { setPopupRequest(undefined) })
+
+    /**
+     * @param latitude  Latitude of the popup to open
+     * @param longitude Longitude of the popup to open
+     * @param content   Content of the popup (must be a root element)
+     */
+    const openLocationDetailsPopup = (latitude: number, longitude: number, content: JSX.Element): void => {
+      locationDetailsPopup
+        .setLatLng([latitude, longitude])
+        .setContent(content)
+        .openOn(map);
+    };
+
+    const fetchLocationForecasts = (latitude: number, longitude: number): void => {
+      state.forecastMetadata
+        .fetchLocationForecasts(latitude, longitude)
+        .then(locationForecasts => setState({ locationForecasts }))
+    };
+
+    const updateHourOffset = (hourOffset: number): void => {
+      state.forecastMetadata.fetchForecastAtHourOffset(hourOffset)
+        .then(forecast => {
+          setState({ hourOffset, forecast });
+        })
+        .catch(error => {
+          console.error(error);
+          alert('Unable to retrieve forecast data');
+        });
+    };
+
+    // PeriodSelector displays the buttons to move over time. When we click on those buttons, it
+    // calls `onHourOffsetChanged`, which we handle by updating our `state`, which is propagated
+    // back to these components.
+    // ForecastLayer displays the configuration button and manages the canvas overlay.
     return <>
       <PeriodSelectors
         forecastMetadata={state.forecastMetadata}
         locationForecasts={state.locationForecasts}
         detailedView={state.detailedView}
         hourOffset={state.hourOffset}
-        morningOffset={morningOffset}
-        onHourOffsetChanged={(value: number) => setState({ hourOffset: value })}
+        morningOffset={props.morningOffset}
+        onHourOffsetChanged={updateHourOffset}
         onDetailedViewClosed={() => setState({ locationForecasts: undefined })}
-      />,
+      />
       <ForecastLayer
         hourOffset={state.hourOffset}
         detailedView={state.detailedView}
-        forecasts={forecasts}
-        currentForecast={state.forecastMetadata}
+        forecastMetadatas={props.forecastMetadatas}
+        currentForecastMetadata={state.forecastMetadata}
+        currentForecast={state.forecast}
         canvas={canvas}
+        popupRequest={popupRequest}
         onChangeDetailedView={(value: DetailedViewType) => setState({ detailedView: value })}
-        onChangeForecast={(value: ForecastMetadata) => setState({ forecastMetadata: value })}
+        onChangeForecastMetadata={(value: ForecastMetadata) => setState({ forecastMetadata: value })}
+        onFetchLocationForecasts={fetchLocationForecasts}
+        openLocationDetailsPopup={openLocationDetailsPopup}
       />
     </>
-  }, mapElement);
+  }
 
-}
+  const Loader = ((): JSX.Element => {
+    const [loaded, setLoaded] = createSignal<[Array<ForecastMetadata>, ForecastMetadata, number, number, Forecast]>(undefined)
+    fetchDefaultForecast()
+      .then(([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]) => {
+        setLoaded([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]);
+      })
+      .catch(reason => {
+        console.error(reason);
+        alert('Unable to retrieve forecast data');
+      })
+    return <Show when={ loaded() }>
+      { ([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]) =>
+        <App
+          forecastMetadatas={forecastMetadatas}
+          forecastMetadata={forecastMetadata}
+          morningOffset={morningOffset}
+          hourOffset={hourOffset}
+          currentForecast={forecast}
+        />
+      }
+    </Show>
+  });
+
+  render(() => <Loader />, mapElement);
+};

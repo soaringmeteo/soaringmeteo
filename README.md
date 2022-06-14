@@ -47,7 +47,7 @@ Alternatively, change the forecast period by clicking on the buttons at the bott
 
 ### Map
 
-At the bottom-right of the window, move the mouse pointer over the layers icon to select the information to display:
+At the bottom-right of the window, click on the layers icon to select the information to display:
 
 ![](images/controls-layers.png)
 
@@ -131,9 +131,15 @@ It uses the same color scales as the individual overlays:
 
 Look for areas that are white (high boundary layer depth), with a thin wind arrow (little wind), and no dark points (clear sky).
 
-### Meteograms
+### Location Details
 
-By clicking on a specific point on the map, you will see a detailed view for this location. You can display either a meteogram, or a sounding.
+Click on a specific point of the map to show a popup with more detailed information:
+
+![](images/popup.png)
+
+Click on the button “Meteogram for this location”, or “Sounding for this time and location” to show a detailed view about this location (a meteogram or a sounding, respectively). Meteograms and soundings are described in the next sections. Select the type of detailed view to display in the menu on the bottom right corner.
+
+### Meteograms
 
 The meteogram shows the weather forecast for this location, over time:
 

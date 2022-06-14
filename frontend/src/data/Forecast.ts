@@ -246,6 +246,11 @@ export type DetailedForecastData = {
 
 export const modelResolution = 25 // Hundredths of degrees
 
+/**
+ * Return the closest point of the underlying model grid, in hundreths of degrees.
+ * 
+ * E.g., for GFS `normalizeCoordinates(46.1234, 7.5678) == [4600, 750]`.
+ */
 export const normalizeCoordinates =
   (latitude: number, longitude: number): [number, number] => {
     return [

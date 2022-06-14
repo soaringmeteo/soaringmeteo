@@ -4,8 +4,10 @@ import * as L from 'leaflet';
 import { drawCloudCover } from "./CloudCover";
 import { drawBoundaryLayerDepth } from "./BoundaryLayerDepth";
 import { windColor } from "./Wind";
+import { DataSource } from "../CanvasLayer";
+import { JSX } from "solid-js";
 
-export class Mixed {
+export class Mixed implements DataSource {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -17,4 +19,16 @@ export class Mixed {
     drawWindArrow(ctx, center.x, center.y, width, windColor(0.25), forecastAtPoint.uWind, forecastAtPoint.vWind);
     drawCloudCover(forecastAtPoint, topLeft, bottomRight, ctx, 0.35);
   }
+
+  summary(forecastPoint: ForecastPoint): JSX.Element {
+    const windSpeed = Math.sqrt(forecastPoint.uWind * forecastPoint.uWind + forecastPoint.vWind * forecastPoint.vWind);
+    return <table>
+      <tbody>
+        <tr><th>Boundary layer depth: </th><td>{ forecastPoint.boundaryLayerDepth }&nbsp;m</td></tr>
+        <tr><th>Boundary layer wind:</th><td>{ Math.round(windSpeed) }&nbsp;km/h</td></tr>
+        <tr><th>Total cloud cover: </th><td>{ Math.round(forecastPoint.cloudCover * 100) }%</td></tr>
+      </tbody>
+    </table>;
+  }
+
 }

@@ -1,11 +1,11 @@
 import * as L from 'leaflet';
-import { createEffect, JSX, Match, Show, Switch } from 'solid-js';
+import { Accessor, createEffect, createMemo, JSX, Match, Show, Switch } from 'solid-js';
 import { createStore } from 'solid-js/store';
 
-import { DataSource, CanvasLayer } from "./CanvasLayer";
+import { DataSource, CanvasLayer, viewPoint } from "./CanvasLayer";
 import { Mixed } from './layers/Mixed';
 import { DetailedViewType } from './PeriodSelector';
-import { Forecast } from './data/Forecast';
+import { Forecast, normalizeCoordinates } from './data/Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
 import { ColorScale } from './ColorScale';
 import { CloudCover, cloudCoverColorScale } from './layers/CloudCover';
@@ -24,18 +24,9 @@ class Renderer {
   constructor(
     readonly name: string,
     readonly title: string,
-    private readonly renderer: (forecast: Forecast) => DataSource,
+    readonly createDataSource: (forecast: Forecast) => DataSource,
     readonly mapKeyEl: JSX.Element
   ) {}
-
-  update(forecastMetadata: ForecastMetadata, hourOffset: number, canvas: CanvasLayer) {
-    forecastMetadata.fetchForecastAtHourOffset(hourOffset)
-      .then(forecast => canvas.setDataSource(this.renderer(forecast)))
-      .catch(error => {
-        console.error(error);
-        alert('Unable to retrieve forecast data');
-      })
-  }
 
 }
 
@@ -151,11 +142,15 @@ const mixedRenderer = new Renderer(
 export const ForecastLayer = (props: {
   hourOffset: number
   detailedView: DetailedViewType
-  forecasts: Array<ForecastMetadata>
-  currentForecast: ForecastMetadata
+  forecastMetadatas: Array<ForecastMetadata>
+  currentForecastMetadata: ForecastMetadata
+  currentForecast: Forecast
   canvas: CanvasLayer
+  popupRequest: Accessor<undefined | L.LeafletMouseEvent>
   onChangeDetailedView: (value: DetailedViewType) => void
-  onChangeForecast: (value: ForecastMetadata) => void
+  onChangeForecastMetadata: (value: ForecastMetadata) => void
+  onFetchLocationForecasts: (latitude: number, longitude: number) => void
+  openLocationDetailsPopup: (latitude: number, longitude: number, content: JSX.Element) => void
 }): JSX.Element => {
   // TODO Take as parameter the pre-selected layer
   const [state, setState] = createStore({ renderer: thqRenderer, showMenu: false });
@@ -186,14 +181,14 @@ export const ForecastLayer = (props: {
     <fieldset>
       <legend>Initialization Time</legend>
       {
-        props.forecasts.map(forecast => {
-          const initTimeString = showDate(forecast.init, { showWeekDay: true });
+        props.forecastMetadatas.map(forecastMetadata => {
+          const initTimeString = showDate(forecastMetadata.init, { showWeekDay: true });
           return makeRadioBtn(
             initTimeString,
             `Show forecast initialized at ${initTimeString}.`,
-            () => props.currentForecast === forecast,
+            () => props.currentForecastMetadata === forecastMetadata,
             'init',
-            () => props.onChangeForecast(forecast)
+            () => props.onChangeForecastMetadata(forecastMetadata)
           )
         })
       }
@@ -298,10 +293,36 @@ export const ForecastLayer = (props: {
     <div style={{ position: 'absolute', bottom: '30px', left: '5px', 'z-index': 1000, 'background-color': 'rgba(255, 255,  255, 0.5' }}>
       {state.renderer.mapKeyEl}
     </div>;
-  
+
+  // Sync data source (used to display the map overlay and tooltips) with current forecast
+  const dataSource =
+    createMemo(() => state.renderer.createDataSource(props.currentForecast));
+
   createEffect(() => {
-    state.renderer.update(props.currentForecast, props.hourOffset, props.canvas);
-  })
+    props.canvas.setDataSource(dataSource());
+  });
+
+  // Show a popup with a summary when the user clicks on the map
+  createEffect(() => {
+    const event = props.popupRequest();
+    if (event !== undefined) {
+      const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(event.latlng.lat, event.latlng.lng);
+      const [latitude, longitude] = [normalizedLatitude / 100, normalizedLongitude / 100];
+      const forecastAtPoint = viewPoint(props.currentForecast, 1 /* TODO handle averaging */, normalizedLatitude, normalizedLongitude);
+      if (forecastAtPoint !== undefined) {
+        const content =
+          <div>
+            <div>Grid point: {latitude},{longitude}</div>
+            <div>GFS forecast for {showDate(props.currentForecastMetadata.dateAtHourOffset(props.hourOffset), { showWeekDay: true })}</div>
+            { dataSource().summary(forecastAtPoint) }
+            <button onClick={ () => props.onFetchLocationForecasts(event.latlng.lat, event.latlng.lng) }>
+              { props.detailedView == 'meteogram' ? "Meteogram for this location" : "Sounding for this time and location" }
+            </button>
+          </div>
+        props.openLocationDetailsPopup(latitude, longitude, content);
+      }
+    }
+  });
 
   return [rootElement, rendererKeyEl]
 };
