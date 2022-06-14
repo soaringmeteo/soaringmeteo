@@ -94,8 +94,8 @@ export const value = (thermalVelocity: number, boundaryLayerDepth: number, uWind
   const u = uWind;
   const v = vWind;
   const windForce = Math.sqrt(u * u + v * v);
-  // coeff is 50% for a wind force of 15 km/h
-  const windCoeff = 1 - logistic(windForce, 15, 6);
+  // coeff is 50% for a wind force of 18 km/h
+  const windCoeff = 1 - logistic(windForce, 18, 6);
 
   return thermalCoeff * windCoeff
 };
