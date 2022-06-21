@@ -12,6 +12,18 @@ export class ColorScale {
     this.points = unsortedPoints.sort(([x, c1], [y, c2]) => x - y)
   }
 
+  /** The color closest to `x` */
+  closest(x: number): Color {
+    // Find the first point of the scale that is greater than `x`
+    const i = this.points.findIndex(([k, _]) => k > x);
+    if (i === -1) {
+      return this.points[this.points.length - 1][1]
+    } else {
+      return this.points[i][1]
+    }
+  }
+
+  /** A colour interpolated between the bounds of `x` */
   interpolate(x: number): Color {
     const idx = this.points.findIndex(([k, _]) => x <= k)
     let i: number;

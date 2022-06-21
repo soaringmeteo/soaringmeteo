@@ -5,11 +5,11 @@ import { DataSource } from "../CanvasLayer";
 import { JSX } from "solid-js";
 
 export const colorScale = new ColorScale([
-  [0,    new Color(0xff, 0xff, 0xff, 0)],
-  [50,   new Color(0xff, 0xff, 0xff, 0.2)],
-  [400,  new Color(0xff, 0xff, 0xff, 0.5)],
-  [800,  new Color(0xff, 0xff, 0x00, 0.5)],
-  [1500, new Color(0xff, 0x00, 0x00, 0.5)]
+  [50,   new Color(0xff, 0xff, 0xff, 0)],
+  [400,  new Color(0xff, 0xff, 0xff, 0.25)],
+  [800,  new Color(0xff, 0xff, 0xff, 0.5)],
+  [1500, new Color(0xff, 0xff, 0x00, 0.5)],
+  [3000, new Color(0xff, 0x00, 0x00, 0.5)]
 ]);
 
 
@@ -20,7 +20,7 @@ export class CumuliDepth implements DataSource {
 
   renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     if (forecastAtPoint !== undefined) {
-      const color = colorScale.interpolate(forecastAtPoint.cumuliDepth);
+      const color = colorScale.closest(forecastAtPoint.cumuliDepth);
       ctx.save();
       ctx.fillStyle = color.css();
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
