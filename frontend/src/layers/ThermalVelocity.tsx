@@ -9,7 +9,7 @@ export class ThermalVelocity implements DataSource {
   constructor(readonly forecast: Forecast) {}
 
   renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    const color = thermalVelocityColorScale.interpolate(forecastAtPoint.thermalVelocity);
+    const color = thermalVelocityColorScale.closest(forecastAtPoint.thermalVelocity);
     ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
     ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
   }

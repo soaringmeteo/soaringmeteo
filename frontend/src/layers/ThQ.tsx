@@ -7,23 +7,18 @@ import { DataSource } from "../CanvasLayer";
 import { JSX } from "solid-js";
 
 export const colorScale = new ColorScale([
-  [0.1, new Color(0x33, 0x33, 0x33, 1)],
-  [0.2, new Color(0x99, 0x00, 0x99, 1)],
-  [0.3, new Color(0xff, 0x00, 0x00, 1)],
-  [0.4, new Color(0xff, 0x99, 0x00, 1)],
-  [0.5, new Color(0xff, 0xcc, 0x00, 1)],
-  [0.6, new Color(0xff, 0xff, 0x00, 1)],
-  [0.7, new Color(0x66, 0xff, 0x00, 1)],
-  [0.8, new Color(0x00, 0xff, 0xff, 1)],
-  [0.9, new Color(0x99, 0xff, 0xff, 1)],
-  [1.0, new Color(0xff, 0xff, 0xff, 1)]
+  [10, new Color(0x33, 0x33, 0x33, 1)],
+  [20, new Color(0x99, 0x00, 0x99, 1)],
+  [30, new Color(0xff, 0x00, 0x00, 1)],
+  [40, new Color(0xff, 0x99, 0x00, 1)],
+  [50, new Color(0xff, 0xcc, 0x00, 1)],
+  [60, new Color(0xff, 0xff, 0x00, 1)],
+  [70, new Color(0x66, 0xff, 0x00, 1)],
+  [80, new Color(0x00, 0xff, 0xff, 1)],
+  [90, new Color(0x99, 0xff, 0xff, 1)],
+  [100, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
-export const computeColor = (value: number): Color => {
-  // bypass interpolation for now to mimic the behavior of old soaringmeteo
-  const roundedValue = Math.floor(((value * 100) + 9) / 10) / 10;
-  return colorScale.interpolate(roundedValue)
-};
 export class ThQ implements DataSource {
 
   constructor(readonly forecast: Forecast) {}
@@ -40,7 +35,7 @@ export class ThQ implements DataSource {
         forecastAtPoint.vWind
       );
 
-      const color = computeColor(thq);
+      const color = colorScale.closest(thq);
       ctx.save();
       ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
@@ -62,7 +57,7 @@ export class ThQ implements DataSource {
 
     return <table>
       <tbody>
-        <tr><th>XC Flying Potential: </th><td>{ Math.round(thq * 100) }%</td></tr>
+        <tr><th>XC Flying Potential: </th><td>{ thq }%</td></tr>
         <tr><th>Boundary layer depth: </th><td>{ forecastAtPoint.boundaryLayerDepth }&nbsp;m</td></tr>
         <tr><th>Thermal velocity: </th><td>{ forecastAtPoint.thermalVelocity }&nbsp;m/s</td></tr>
         <tr><th>Boundary layer wind:</th><td>{ Math.round(windSpeed) }&nbsp;km/h</td></tr>
@@ -78,6 +73,7 @@ export class ThQ implements DataSource {
  * @param boundaryLayerDepth Depth of the boundary layer in meters
  * @param uWind              U part of wind in boundary layer in km/h
  * @param vWind              V part of wind in boundary layer in km/h
+ * @returns A value between 0 and 100
  */
 export const value = (thermalVelocity: number, boundaryLayerDepth: number, uWind: number, vWind: number): number => {
   // Thermal velocity
@@ -97,7 +93,7 @@ export const value = (thermalVelocity: number, boundaryLayerDepth: number, uWind
   // coeff is 50% for a wind force of 18 km/h
   const windCoeff = 1 - logistic(windForce, 18, 6);
 
-  return thermalCoeff * windCoeff
+  return Math.round(thermalCoeff * windCoeff * 100)
 };
 
 /**

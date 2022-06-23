@@ -7,7 +7,7 @@ import { Mixed } from './layers/Mixed';
 import { DetailedViewType } from './PeriodSelector';
 import { Forecast, normalizeCoordinates } from './data/Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
-import { ColorScale } from './ColorScale';
+import { Color, ColorScale } from './ColorScale';
 import { CloudCover, cloudCoverColorScale } from './layers/CloudCover';
 import { boundaryDepthColorScale, BoundaryLayerDepth } from './layers/BoundaryLayerDepth';
 import { Wind, windColor } from './layers/Wind';
@@ -30,17 +30,19 @@ class Renderer {
 
 }
 
-const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): JSX.Element =>
-  <div>
+const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): JSX.Element => {
+  const colorsAndValues: Array<[Color, string]> = colorScale.points.slice().reverse().map(([value, color]) => [color, format(value)]);
+  const length = colorsAndValues.reduce((n, [_, s]) => s.length > n ? s.length : n, 0);
+  return <div style={{ 'margin': '1em 0.5em 0.5em 0.5em', width: `${length * 2 / 3}em` }}>
   {
-    colorScale.points.slice().reverse().map(([value, color]) =>
-      <div style={{ margin: '5px', 'text-align': 'right' }}>
-        <span>{format(value)}</span>
-        <span style={{ width: '20px', height: '15px', 'background-color': color.css(), display: 'inline-block', border: 'thin solid black' }} />
+    colorsAndValues.map(([color, value]) =>
+      <div style={{ height: '2em', 'background-color': color.css(), position: 'relative' }}>
+        <span style={{ position: 'absolute', top: '-.6em', right: '0.5em', 'text-shadow': 'white 1px 1px 2px' }}>{value}</span>
       </div>
     )
   }
-  </div>;
+  </div>
+  };
 
 const windScaleEl: JSX.Element =
   <div>
@@ -72,7 +74,7 @@ const thqRenderer = new Renderer(
   'XC Flying Potential',
   'XC flying potential',
   forecast => new ThQ(forecast),
-  colorScaleEl(thQColorScale, value => `${Math.round(value * 100)}% `)
+  colorScaleEl(thQColorScale, value => `${value}% `)
 );
 const boundaryLayerHeightRenderer = new Renderer(
   'Boundary Layer Depth',
