@@ -30,8 +30,7 @@ export const initializeMap = (element: HTMLElement): [CanvasLayer, L.Map] => {
       L.tileLayer(smUrl, {
         tileSize: 256,
         minZoom: 4,
-        maxZoom: 14,
-        crossOrigin: true
+        maxZoom: 14
       })
     ],
     zoomControl: false,
