@@ -31,7 +31,10 @@ const temperatureScaleAndLevels = (forecast: DetailedForecast, pixelRange: [numb
 
 export const sounding = (forecast: DetailedForecast, elevation: number): [JSX.Element, JSX.Element] => {
   const canvasWidth  = 600;
-  const canvasHeight = 800; // TODO use as much space as possible
+  const availableHeight = window.innerHeight - 38 /* top time selector */ - 44 /* bottom time selector */;
+  const maxHeight = 800;
+  const canvasHeight = Math.min(maxHeight, availableHeight);
+  const windArrowSize = Math.max(canvasHeight / 28, 1);
 
   // Main canvas contains the sounding diagram
   const canvas =
@@ -165,7 +168,7 @@ export const sounding = (forecast: DetailedForecast, elevation: number): [JSX.El
         // Wind
         if (temperatureLevels.length >= 2 && entry.elevation < maxElevation) {
           const windCenterX = temperatureScale.apply(temperatureLevels[0]);
-          drawWindArrow(ctx, windCenterX, diagram.projectY(y1), 30, `rgba(62, 0, 0, 0.25)`, entry.u, entry.v);
+          drawWindArrow(ctx, windCenterX, diagram.projectY(y1), windArrowSize, `rgba(62, 0, 0, 0.25)`, entry.u, entry.v);
         }
 
         // Temperature
