@@ -155,7 +155,8 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
     // Ground level & Boundary Layer
     columns((forecast, columnStart, columnEnd) => {
       // Boundary Layer
-      const boundaryLayerHeight = elevationScale.apply(forecasts.elevation + forecast.boundaryLayer.height);
+      const cappedHeight = Math.min(forecast.boundaryLayer.height, airDiagramHeightAboveGroundLevel); // Clip boundary layer in case it’s too high
+      const boundaryLayerHeight = elevationScale.apply(forecasts.elevation + cappedHeight);
       airDiagram.fillRect(
         [columnStart, 0],
         [columnEnd,   boundaryLayerHeight],
