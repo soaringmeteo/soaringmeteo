@@ -30,7 +30,7 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
   const thqDiagramTop    = gutterHeight;
 
   const highAirDiagramHeight = 20; // px
-  const highAirDiagramTop    = thqDiagramTop + thqDiagramHeight + gutterHeight * 2;
+  const highAirDiagramTop    = thqDiagramTop + thqDiagramHeight + 11 /* There needs to be enough space in case we display the isotherm 0°C */;
 
   const airDiagramHeight = 400; // px
   // The main diagram shows the air from the ground level to 3500 m above ground level
@@ -245,9 +245,9 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
         const y = elevationScale.apply(previousForecast.isothermZero);
         let correctedY: number | undefined = undefined;
         if (previousForecast.isothermZero < forecasts.elevation) {
-          correctedY = elevationScale.apply(forecasts.elevation) - 15;
+          correctedY = -15;
         } else if (previousForecast.isothermZero > forecasts.elevation + airDiagramHeightAboveGroundLevel) {
-          correctedY = elevationScale.apply(forecasts.elevation + airDiagramHeightAboveGroundLevel) + highAirDiagramHeight + 3;
+          correctedY = airDiagramHeight + highAirDiagramHeight + 1;
         }
         // If first column, print the “0°C” on the left of the line
         if (i == 1) {
