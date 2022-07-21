@@ -77,8 +77,8 @@ export class ThQ implements DataSource {
  */
 export const value = (thermalVelocity: number, boundaryLayerDepth: number, uWind: number, vWind: number): number => {
   // Thermal velocity
-  // coeff is 50% for a 1.5 m/s
-  const thermalVelocityCoeff = logistic(thermalVelocity, 1.50, 6);
+  // coeff is 50% for a 1.55 m/s
+  const thermalVelocityCoeff = logistic(thermalVelocity, 1.55, 5);
 
   // Boundary Layer Depth
   // coeff is 50% for a boundary layer depth of 400 m
