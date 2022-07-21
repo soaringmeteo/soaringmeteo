@@ -42,7 +42,7 @@ object GribDownloader {
           throw new RuntimeException(s"Unable to fetch $url.")
         } else {
           val remainingAttempts = maxAttempts - 1
-          logger.debug(s"Failed to fetch $url: $error. Waiting ${delay.toSeconds} seconds… ($remainingAttempts remaining attempts)")
+          logger.info(s"Failed to fetch $url: $error. Waiting ${delay.toSeconds} seconds… ($remainingAttempts remaining attempts)")
           Thread.sleep(delay.toMillis)
           insist(remainingAttempts, delay, url)
         }
