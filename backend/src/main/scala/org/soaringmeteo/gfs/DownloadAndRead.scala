@@ -50,7 +50,7 @@ object DownloadAndRead {
     val daemonicThreadFactory = new ThreadFactoryBuilder().setDaemon(true).build()
     // We use the following thread-pool to manage the execution of the
     // tasks that download the forecast.
-    val fourThreads = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4, daemonicThreadFactory))
+    val severalThreads = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(3, daemonicThreadFactory))
     // We use the following thread-pool to manage the execution of the
     // tasks that read the forecast data from disk. This task uses
     // the grib library, which is not thread-safe, hence parallelism = 1.
@@ -68,7 +68,7 @@ object DownloadAndRead {
             GribDownloader.download(gribFile, gfsRun, areaAndHour)
             gribFile
           }
-        }(fourThreads /* NCEP currently limits usage to 120/hits per minute */)
+        }(severalThreads /* NCEP currently limits usage to 120/hits per minute */)
       }
     }
 
