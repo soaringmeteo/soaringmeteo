@@ -11,20 +11,27 @@ module.exports = {
     plugins: [
       new HtmlWebpackPlugin({
         inject: 'head',
-        scriptLoading: 'defer'
+        scriptLoading: 'defer',
+        favicon: path.resolve('src/favicoSoaringMeteo.png'),
+        hash: true
       }),
       new WebpackPwaManifest({
         name: 'Soaring Meteo',
         description: 'Meteorology for soaring pilots',
+        short_name: "SoaringMeteoV2",
+        start_url: "/v2/",
         background_color: '#ffffff',
+        display: "fullscreen",
         icons: [
           {
-            src: path.resolve('src/favicoSoaringMeteo.png'),
-            sizes: "28x28"
+            src: path.resolve('src/favicoSoaringMeteo.scaled.png'),
+            size: "192x192",
+            type: "image/png"
           }
         ],
-        // Temporary workaround because the plugin doesn’t support the last version of html-webpack-plugin
-        fingerprints: false
+        publicPath: '.',
+        fingerprints: true,
+        inject: true
       })
     ],
 
@@ -87,7 +94,7 @@ module.exports = {
                         babelrc: false,
                         configFile: false,
                         presets: ['@babel/preset-env', 'solid', '@babel/preset-typescript'],
-                        plugins: ['@babel/plugin-transform-runtime', '@babel/plugin-syntax-dynamic-import', '@babel/plugin-proposal-class-properties', '@babel/plugin-proposal-object-rest-spread'],
+                        plugins: ['@babel/plugin-syntax-dynamic-import', '@babel/plugin-proposal-class-properties', '@babel/plugin-proposal-object-rest-spread'],
                     }
                 }
             }
