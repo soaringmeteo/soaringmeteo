@@ -1,13 +1,13 @@
 package org.soaringmeteo.gfs
 
 import java.util.concurrent.Executors
-
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
-import org.soaringmeteo.Point
+import org.soaringmeteo.{Point, WorkReporter}
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.DurationInt
+import scala.util.chaining.scalaUtilChainingOps
 
 // Downloading is slow, but it seems that by starting several downloads in parallel
 // makes the whole process faster (up to 5x), although we always download from the
@@ -50,11 +50,19 @@ object DownloadAndRead {
     val daemonicThreadFactory = new ThreadFactoryBuilder().setDaemon(true).build()
     // We use the following thread-pool to manage the execution of the
     // tasks that download the forecast.
-    val severalThreads = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(3, daemonicThreadFactory))
+    val severalThreads = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(2, daemonicThreadFactory))
     // We use the following thread-pool to manage the execution of the
     // tasks that read the forecast data from disk. This task uses
     // the grib library, which is not thread-safe, hence parallelism = 1.
     val oneThread = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor(daemonicThreadFactory))
+
+    // Total number of files to download and then load into memory
+    val filesCount = AreaAndHour.all.size
+
+    // Reports the progression of downloads
+    val downloadReporter = new WorkReporter(filesCount, "Downloading forecast data", logger)
+    // Reports the progression of loading into memory
+    val readReporter = new WorkReporter(filesCount, "Loading data into memory", logger)
 
     // Download a GRIB file as a background task
     def download(areaAndHour: AreaAndHour): Future[os.Path] = {
@@ -65,20 +73,23 @@ object DownloadAndRead {
       } else {
         Future {
           concurrent.blocking {
+            logger.debug(s"Downloading GFS data for $areaAndHour")
             GribDownloader.download(gribFile, gfsRun, areaAndHour)
             gribFile
           }
         }(severalThreads /* NCEP currently limits usage to 120/hits per minute */)
       }
-    }
+    }.tap(_.foreach(_ => downloadReporter.notifyCompleted())(ExecutionContext.global))
 
     // Read the content of a GRIB file as a background task
-    def read(locations: Seq[Point], gribFile: os.Path, hourOffset: Int): Future[Map[Point, in.Forecast]] =
+    def read(locations: Seq[Point], gribFile: os.Path, hourOffset: Int): Future[Map[Point, in.Forecast]] = {
       Future {
         concurrent.blocking {
+          logger.debug(s"Reading file $gribFile")
           in.Forecast.fromGribFile(gribFile, gfsRun.initDateTime, hourOffset, locations)
         }
       }(oneThread /* Make sure we don't read multiple GRIB files in parallel */)
+    }.tap(_.foreach(_ => readReporter.notifyCompleted())(ExecutionContext.global))
 
     val eventualForecast = locally {
       // For all the other cases, we just use the default execution context
