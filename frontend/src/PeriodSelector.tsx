@@ -1,11 +1,11 @@
 import * as L from 'leaflet';
 import { createMemo, JSX } from 'solid-js';
 
-import { LocationForecasts } from './data/Forecast';
 import { keyWidth, meteogram } from './diagrams/Meteogram';
-import { ForecastMetadata, forecastOffsets, periodsPerDay, showDate } from './data/ForecastMetadata';
+import { forecastOffsets, periodsPerDay, showDate } from './data/ForecastMetadata';
 import { sounding } from './diagrams/Sounding';
 import { meteogramColumnWidth } from './diagrams/Diagram';
+import { useState } from './State';
 
 const marginLeft = keyWidth;
 const marginTop = 35; // Day height + hour height + 2 (wtf)
@@ -23,9 +23,10 @@ const hover = (htmlEl: HTMLElement): HTMLElement => {
 const PeriodSelector = (props: {
   forecastOffsetAndDates: Array<[number, Date]>
   detailedView: JSX.Element
-  currentHourOffset: number
-  onClick: (hourOffset: number) => void
 }): HTMLElement => {
+
+  const [state, { setHourOffset }] = useState();
+
   const flatPeriodSelectors: () => Array<[HTMLElement, number, Date]> =
     createMemo(() => {
       return props.forecastOffsetAndDates
@@ -40,9 +41,9 @@ const PeriodSelector = (props: {
                 'line-height': '20px',
                 'box-sizing': 'border-box',
                 'text-align': 'center',
-                'background-color': props.currentHourOffset === hourOffset ? 'lightGray' : 'inherit'
+                'background-color': state.hourOffset === hourOffset ? 'lightGray' : 'inherit'
               }}
-              onClick={() => props.onClick(hourOffset)}
+              onClick={() => setHourOffset(hourOffset)}
             >
               {date.toLocaleTimeString(undefined, { hour12: false, hour: '2-digit' })}
             </span>;
@@ -82,7 +83,7 @@ const PeriodSelector = (props: {
                 'border-left': 'thin solid darkGray',
                 'line-height': '13px'
               }}
-              onClick={() => props.onClick(periods[1 /* because we have three periods per day in total in GFS */][1])}
+              onClick={() => setHourOffset(periods[1 /* because we have three periods per day in total in GFS */][1])}
             >
             {
               periods.length === periodsPerDay ?
@@ -109,28 +110,24 @@ const PeriodSelector = (props: {
   return scrollablePeriodSelector
 }
 
-export type DetailedViewType = 'meteogram' | 'sounding'
-
 /**
  * @returns A pair of a reactive element for the detailed view key, and a
  *          reactive element for the detailed view.
  */
-const DetailedView = (props: {
-  detailedView: DetailedViewType
-  locationForecasts: undefined | LocationForecasts
-  hourOffset: number
-}): [() => JSX.Element, () => JSX.Element] => {
+const DetailedView = (): [() => JSX.Element, () => JSX.Element] => {
+
+  const [state] = useState();
 
   const fallback: [JSX.Element, JSX.Element] = [<div />, <div />];
 
   const keyAndView: () => [JSX.Element, JSX.Element] = createMemo<[JSX.Element, JSX.Element]>(() => {
-    const locationForecasts = props.locationForecasts;
+    const locationForecasts = state.locationForecasts;
     if (locationForecasts === undefined) return fallback
-    else if (props.detailedView === 'meteogram') {
+    else if (state.detailedView === 'meteogram') {
       return meteogram(locationForecasts)
     }
     else /*if (props.detailedView === 'sounding')*/ {
-      const forecast = locationForecasts.atHourOffset(props.hourOffset);
+      const forecast = locationForecasts.atHourOffset(state.hourOffset);
       if (forecast === undefined) return fallback
       else return sounding(forecast, locationForecasts.elevation)
     }
@@ -148,21 +145,12 @@ const DetailedView = (props: {
  *          of the screen (which shows the current date).
  */
 export const PeriodSelectors = (props: {
-  forecastMetadata: ForecastMetadata,
-  detailedView: DetailedViewType
-  locationForecasts: undefined | LocationForecasts,
-  hourOffset: number,
   morningOffset: number,
-  onHourOffsetChanged: (hourOffset: number) => void,
-  onDetailedViewClosed: () => void
 }): JSX.Element => {
 
-  const [reactiveKey, reactiveDetailedView] =
-    <DetailedView
-      detailedView={props.detailedView}
-      locationForecasts={props.locationForecasts}
-      hourOffset={props.hourOffset}
-    />;
+  const [state, { setHourOffset, clearLocationForecasts }] = useState();
+
+  const [reactiveKey, reactiveDetailedView] = <DetailedView />;
 
   const detailedViewKeyEl = 
     <div style={{ position: 'absolute', width: `${marginLeft}px`, left: 0, top: `${marginTop}px`, 'background-color': 'white' }}>
@@ -174,7 +162,7 @@ export const PeriodSelectors = (props: {
     <div>
       {
         showDate(
-          props.forecastMetadata.dateAtHourOffset(props.hourOffset),
+          state.forecastMetadata.dateAtHourOffset(state.hourOffset),
           { showWeekDay: true }
         )
       }
@@ -184,7 +172,7 @@ export const PeriodSelectors = (props: {
     <div
       title='24 hours before'
       style={{ ...buttonStyle }}
-      onClick={() => props.onHourOffsetChanged(Math.max(props.hourOffset - 24, 3))}
+      onClick={() => setHourOffset(Math.max(state.hourOffset - 24, 3))}
     >
       -24
     </div>
@@ -195,7 +183,7 @@ export const PeriodSelectors = (props: {
     <div
       title='Previous forecast period'
       style={{ ...buttonStyle }}
-      onClick={() => props.onHourOffsetChanged(Math.max(props.hourOffset - 3, 3))}
+      onClick={() => setHourOffset(Math.max(state.hourOffset - 3, 3))}
     >
       -3
     </div>
@@ -206,7 +194,7 @@ export const PeriodSelectors = (props: {
     <div
       title='Next forecast period'
       style={{ ...buttonStyle }}
-      onClick={() => props.onHourOffsetChanged(Math.min(props.hourOffset + 3, props.forecastMetadata.latest))}
+      onClick={() => setHourOffset(Math.min(state.hourOffset + 3, state.forecastMetadata.latest))}
     >
       +3
     </div>
@@ -216,7 +204,7 @@ export const PeriodSelectors = (props: {
     <div
       title='24 hours after'
       style={{ ...buttonStyle }}
-      onClick={() => props.onHourOffsetChanged(Math.min(props.hourOffset + 24, props.forecastMetadata.latest))}
+      onClick={() => setHourOffset(Math.min(state.hourOffset + 24, state.forecastMetadata.latest))}
     >
       +24
     </div>
@@ -226,14 +214,12 @@ export const PeriodSelectors = (props: {
     <PeriodSelector
       forecastOffsetAndDates={
         // If there is no selected forecast, infer the available periods from the forecast metadata
-        (props.locationForecasts === undefined) ?
-          forecastOffsets(props.forecastMetadata.init, props.morningOffset, props.forecastMetadata)
+        (state.locationForecasts === undefined) ?
+          forecastOffsets(state.forecastMetadata.init, props.morningOffset, state.forecastMetadata)
         :
-          props.locationForecasts.offsetAndDates()
+          state.locationForecasts.offsetAndDates()
       }
-      currentHourOffset={props.hourOffset}
       detailedView={reactiveDetailedView}
-      onClick={(hourOffset: number) => props.onHourOffsetChanged(hourOffset)}
     />;
 
   const hideDetailedViewBtn =
@@ -243,11 +229,11 @@ export const PeriodSelectors = (props: {
         width: `${marginLeft}px`,
         'flex-shrink': 0,
         'background-color': 'white',
-        visibility: (props.locationForecasts !== undefined) ? 'visible' : 'hidden',
+        visibility: (state.locationForecasts !== undefined) ? 'visible' : 'hidden',
         'text-align': 'center'
       }}
       title='Hide'
-      onClick={() => props.onDetailedViewClosed()}
+      onClick={() => clearLocationForecasts() }
     >
       X
     </div>;

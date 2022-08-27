@@ -1,10 +1,8 @@
 import * as L from 'leaflet';
-import { Accessor, createEffect, createMemo, JSX, Match, Show, Switch } from 'solid-js';
-import { createStore } from 'solid-js/store';
+import { Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Switch } from 'solid-js';
 
 import { DataSource, CanvasLayer, viewPoint } from "./CanvasLayer";
 import { Mixed } from './layers/Mixed';
-import { DetailedViewType } from './PeriodSelector';
 import { Forecast, normalizeCoordinates } from './data/Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
 import { Color, ColorScale } from './ColorScale';
@@ -18,6 +16,7 @@ import { ForecastMetadata, showDate } from './data/ForecastMetadata';
 import { Rain, rainColorScale } from './layers/Rain';
 import { ThermalVelocity, thermalVelocityColorScale } from './layers/ThermalVelocity';
 import { CumuliDepth, colorScale as cumuliDepthColorScale } from './layers/CumuliDepth';
+import { useState } from './State';
 
 class Renderer {
 
@@ -142,34 +141,31 @@ const mixedRenderer = new Renderer(
  * Overlay on the map that displays the soaring forecast.
  */
 export const ForecastLayer = (props: {
-  hourOffset: number
-  detailedView: DetailedViewType
   forecastMetadatas: Array<ForecastMetadata>
-  currentForecastMetadata: ForecastMetadata
-  currentForecast: Forecast
   canvas: CanvasLayer
   popupRequest: Accessor<undefined | L.LeafletMouseEvent>
-  onChangeDetailedView: (value: DetailedViewType) => void
-  onChangeForecastMetadata: (value: ForecastMetadata) => void
-  onFetchLocationForecasts: (latitude: number, longitude: number) => void
   openLocationDetailsPopup: (latitude: number, longitude: number, content: JSX.Element) => void
 }): JSX.Element => {
-  // TODO Take as parameter the pre-selected layer
-  const [state, setState] = createStore({ renderer: thqRenderer, showMenu: false });
+
+  const [state, { setDetailedView, setForecastMetadata, fetchLocationForecasts }] = useState();
+
+  const [isMenuShown, showMenu] = createSignal(false);
+  // TODO Move to global state
+  const [selectedRenderer, selectRenderer] = createSignal(thqRenderer);
 
   const meteogramEl = makeRadioBtn(
     'Meteogram',
     'Meteogram',
-    () => props.detailedView === 'meteogram',
+    () => state.detailedView === 'meteogram',
     'detailed-view',
-    () => props.onChangeDetailedView('meteogram')
+    () => setDetailedView('meteogram')
   );
-  const soundingEl  = makeRadioBtn(
+  const soundingEl = makeRadioBtn(
     'Sounding',
     'Sounding',
-    () => props.detailedView === 'sounding',
+    () => state.detailedView === 'sounding',
     'detailed-view',
-    () => props.onChangeDetailedView('sounding')
+    () => setDetailedView('sounding')
   );
 
   const detailedViewEl =
@@ -188,9 +184,9 @@ export const ForecastLayer = (props: {
           return makeRadioBtn(
             initTimeString,
             `Show forecast initialized at ${initTimeString}.`,
-            () => props.currentForecastMetadata === forecastMetadata,
+            () => state.forecastMetadata === forecastMetadata,
             'init',
-            () => props.onChangeForecastMetadata(forecastMetadata)
+            () => setForecastMetadata(forecastMetadata)
           )
         })
       }
@@ -200,9 +196,9 @@ export const ForecastLayer = (props: {
     const container = makeRadioBtn(
       renderer.name,
       renderer.title,
-      () => state.renderer === renderer,
+      () => selectedRenderer() === renderer,
       'layer',
-      () => setState({ renderer })
+      () => selectRenderer(renderer)
     );
     return container
   }
@@ -258,7 +254,7 @@ export const ForecastLayer = (props: {
   const aboveMapStyle = { position: 'absolute', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, 'user-select': 'none' };
 
   const selectEl =
-    <Show when={ state.showMenu === true }>
+    <Show when={ isMenuShown() }>
       <div style={{ ...aboveMapStyle, right: '3px', bottom: '136px', 'background-color': 'white' }}>
         {detailedViewEl}
         {selectForecastEl}
@@ -268,15 +264,15 @@ export const ForecastLayer = (props: {
 
   const layersBtn =
     <Switch>
-      <Match when={ state.showMenu === true }>
+      <Match when={ isMenuShown() }>
         <div
-          onClick={ () => setState({ showMenu: false }) }
+          onClick={ () => showMenu(false) }
           style={{ ...aboveMapStyle, ...closeButtonStyle, right: '8px', bottom: '100px' }}
         >X</div>
       </Match>
-      <Match when={ state.showMenu === false }>
+      <Match when={ !isMenuShown() }>
       <div
-        onClick={ () => setState({ showMenu: true }) }
+        onClick={ () => showMenu(true) }
         style={{ ...aboveMapStyle, right: '3px', bottom: '100px', width: '44px', height: '44px', 'line-height': '44px', color: 'black', display: 'block', cursor: 'pointer', 'text-align': 'center', 'background-image': `url('${layersImg}')`, 'background-position': '50% 50%', 'background-repeat': 'no-repeat', 'background-color': 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '5px' }}
       />
       </Match>
@@ -293,12 +289,12 @@ export const ForecastLayer = (props: {
 
   const rendererKeyEl =
     <div style={{ position: 'absolute', bottom: '30px', left: '5px', 'z-index': 1000, 'background-color': 'rgba(255, 255,  255, 0.5' }}>
-      {state.renderer.mapKeyEl}
+      {selectedRenderer().mapKeyEl}
     </div>;
 
   // Sync data source (used to display the map overlay and tooltips) with current forecast
   const dataSource =
-    createMemo(() => state.renderer.createDataSource(props.currentForecast));
+    createMemo(() => selectedRenderer().createDataSource(state.forecast));
 
   createEffect(() => {
     props.canvas.setDataSource(dataSource());
@@ -310,15 +306,15 @@ export const ForecastLayer = (props: {
     if (event !== undefined) {
       const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(event.latlng.lat, event.latlng.lng);
       const [latitude, longitude] = [normalizedLatitude / 100, normalizedLongitude / 100];
-      const forecastAtPoint = viewPoint(props.currentForecast, 1 /* TODO handle averaging */, normalizedLatitude, normalizedLongitude);
+      const forecastAtPoint = viewPoint(state.forecast, 1 /* TODO handle averaging */, normalizedLatitude, normalizedLongitude);
       if (forecastAtPoint !== undefined) {
         const content =
           <div>
             <div>Grid point: {latitude},{longitude}</div>
-            <div>GFS forecast for {showDate(props.currentForecastMetadata.dateAtHourOffset(props.hourOffset), { showWeekDay: true })}</div>
+            <div>GFS forecast for {showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { showWeekDay: true })}</div>
             { dataSource().summary(forecastAtPoint) }
-            <button onClick={ () => props.onFetchLocationForecasts(event.latlng.lat, event.latlng.lng) }>
-              { props.detailedView == 'meteogram' ? "Meteogram for this location" : "Sounding for this time and location" }
+            <button onClick={ () => fetchLocationForecasts(event.latlng.lat, event.latlng.lng) }>
+              { state.detailedView == 'meteogram' ? "Meteogram for this location" : "Sounding for this time and location" }
             </button>
           </div>
         props.openLocationDetailsPopup(latitude, longitude, content);

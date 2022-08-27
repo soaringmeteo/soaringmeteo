@@ -1,29 +1,14 @@
 import { createEffect, createSignal, JSX, Show } from 'solid-js';
-import { createStore } from 'solid-js/store';
 import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap } from './Map';
-import { DetailedViewType, PeriodSelectors } from './PeriodSelector';
+import { PeriodSelectors } from './PeriodSelector';
 import { ForecastLayer } from './ForecastLayer';
 import { fetchDefaultForecast, ForecastMetadata, showDate } from './data/ForecastMetadata';
-import { Forecast, LocationForecasts } from './data/Forecast';
+import { Forecast } from './data/Forecast';
 import * as L from 'leaflet';
 import markerImg from './images/marker-icon.png';
-
-/**
- * State managed by the `App` component
- */
-type State = {
-  // Currently selected forecast run
-  forecastMetadata: ForecastMetadata
-  // Currently displayed forecast
-  forecast: Forecast
-  detailedView: DetailedViewType
-  // If defined, the detailed forecast data for the selected location
-  locationForecasts: undefined | LocationForecasts
-  // Delta with the forecast initialization time
-  hourOffset: number
-}
+import { StateProvider, useState } from './State';
 
 export const start = (containerElement: HTMLElement): void => {
 
@@ -43,13 +28,7 @@ export const start = (containerElement: HTMLElement): void => {
     currentForecast: Forecast 
   }): JSX.Element => {
 
-    const [state, setState] = createStore<State>({
-      forecastMetadata: props.forecastMetadata,
-      forecast: props.currentForecast,
-      detailedView: 'meteogram',
-      locationForecasts: undefined,
-      hourOffset: props.hourOffset
-    });
+    const [state, { clearLocationForecasts }] = useState();
 
     createEffect(() => {
       map.attributionControl.setPrefix(`Initialization: ${showDate(state.forecastMetadata.init)}`);
@@ -69,7 +48,7 @@ export const start = (containerElement: HTMLElement): void => {
     map.on('keydown', (e: any) => {
       const event = e.originalEvent as KeyboardEvent;
       if (event.key === 'Escape') {
-        setState({ locationForecasts: undefined });
+        clearLocationForecasts();
       }
     });
 
@@ -96,48 +75,16 @@ export const start = (containerElement: HTMLElement): void => {
         .openOn(map);
     };
 
-    const fetchLocationForecasts = (latitude: number, longitude: number): void => {
-      state.forecastMetadata
-        .fetchLocationForecasts(latitude, longitude)
-        .then(locationForecasts => setState({ locationForecasts }))
-    };
-
-    const updateHourOffset = (hourOffset: number): void => {
-      state.forecastMetadata.fetchForecastAtHourOffset(hourOffset)
-        .then(forecast => {
-          setState({ hourOffset, forecast });
-        })
-        .catch(error => {
-          console.error(error);
-          alert('Unable to retrieve forecast data');
-        });
-    };
-
     // PeriodSelector displays the buttons to move over time. When we click on those buttons, it
     // calls `onHourOffsetChanged`, which we handle by updating our `state`, which is propagated
     // back to these components.
     // ForecastLayer displays the configuration button and manages the canvas overlay.
     return <>
-      <PeriodSelectors
-        forecastMetadata={state.forecastMetadata}
-        locationForecasts={state.locationForecasts}
-        detailedView={state.detailedView}
-        hourOffset={state.hourOffset}
-        morningOffset={props.morningOffset}
-        onHourOffsetChanged={updateHourOffset}
-        onDetailedViewClosed={() => setState({ locationForecasts: undefined })}
-      />
+      <PeriodSelectors morningOffset={props.morningOffset} />
       <ForecastLayer
-        hourOffset={state.hourOffset}
-        detailedView={state.detailedView}
         forecastMetadatas={props.forecastMetadatas}
-        currentForecastMetadata={state.forecastMetadata}
-        currentForecast={state.forecast}
         canvas={canvas}
         popupRequest={popupRequest}
-        onChangeDetailedView={(value: DetailedViewType) => setState({ detailedView: value })}
-        onChangeForecastMetadata={(value: ForecastMetadata) => setState({ forecastMetadata: value })}
-        onFetchLocationForecasts={fetchLocationForecasts}
         openLocationDetailsPopup={openLocationDetailsPopup}
       />
     </>
@@ -155,13 +102,16 @@ export const start = (containerElement: HTMLElement): void => {
       })
     return <Show when={ loaded() }>
       { ([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]) =>
-        <App
-          forecastMetadatas={forecastMetadatas}
+        <StateProvider
           forecastMetadata={forecastMetadata}
-          morningOffset={morningOffset}
           hourOffset={hourOffset}
           currentForecast={forecast}
-        />
+        >
+          <App
+            forecastMetadatas={forecastMetadatas}
+            morningOffset={morningOffset}
+          />
+        </StateProvider>
       }
     </Show>
   });
