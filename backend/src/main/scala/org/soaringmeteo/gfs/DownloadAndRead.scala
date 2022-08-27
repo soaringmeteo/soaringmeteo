@@ -39,9 +39,6 @@ object DownloadAndRead {
     reusePreviousGribFiles: Boolean
   ): out.ForecastsByHour = {
 
-    if (!reusePreviousGribFiles) {
-      os.remove.all(gribsDir)
-    }
     os.makeDir.all(gribsDir)
 
     logger.info("Downloading forecast data")
@@ -103,10 +100,6 @@ object DownloadAndRead {
           } yield (areaAndHour.hourOffset, forecasts)
         }
         .map { forecastsByHour =>
-          // TEMP Simulate old soargfs script for downloading data
-          // We can safely remove this line after we drop support for old soargfs
-          writeFilesForOldSoargfs(gribsDir)
-
           out.Forecast(
             forecastsByHour
               // Merge together all the forecasts from the different areas
@@ -117,12 +110,6 @@ object DownloadAndRead {
     }
 
     Await.result(eventualForecast, 8.hours)
-  }
-
-  private def writeFilesForOldSoargfs(gribsDir: os.Path): Unit = {
-    os.write.over(gribsDir / "aDone.txt", "")
-    os.write.over(gribsDir / "bDone.txt", "")
-    os.write.over(gribsDir / "cDone.txt", "")
   }
 
 }

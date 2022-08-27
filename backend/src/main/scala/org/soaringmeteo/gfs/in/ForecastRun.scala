@@ -20,13 +20,11 @@ case class ForecastRun(
   /**
    * Name of the grib file we save on disk.
    *
-   * Currently, we use the same file name as the old soargfs, for compatibility.
-   *
    * @param areaAndHour Downloaded area, and number of hours since
    *                    initialization time
    */
   def fileName(areaAndHour: AreaAndHour): String =
-    f"GFS${areaAndHour.area.id}-initDate${initDateString}-initTime${initTimeString}-forecastTime${areaAndHour.hourOffset}%03d.grib2"
+    f"GFS${areaAndHour.area.id}-forecastTime${areaAndHour.hourOffset}%03d.grib2"
 
   /**
    * @param base Base path of the directory containing the grib files.
