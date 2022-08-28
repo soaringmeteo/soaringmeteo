@@ -52,13 +52,14 @@ object Soaringmeteo {
             .getOrElse(sys.error(s"${point} is not in the downloaded GFS areas"))
         }
     val gfsRun = in.ForecastRun.findLatest(maybeGfsRunInitTime)
+    if (!reusePreviousGribFiles) {
+      logger.info("Removing old GRIB files")
+      os.remove.all(gribsDir)
+    }
     val forecastGribsDir = gfsRun.storagePath(gribsDir)
     val forecastsByHour = DownloadAndRead(forecastGribsDir, gfsRun, locationsByArea, reusePreviousGribFiles)
     JsonWriter.writeJsons(jsonDir, gfsRun, forecastsByHour, locationsByArea.values.flatten)
     logger.info("Done")
-    // Let’s keep the grib files because they are also used by the old soargfs
-    // We should uncomment this line after we drop support for old soargfs
-    // os.remove.all(forecastGribsDir)
   }.recover {
     case NonFatal(error) => logger.error("Failed to run soaringmeteo", error)
   }.get
