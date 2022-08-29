@@ -3,7 +3,8 @@ package org.soaringmeteo.gfs
 import java.util.concurrent.Executors
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
-import org.soaringmeteo.{Point, WorkReporter}
+import org.soaringmeteo.Point
+import org.soaringmeteo.util.WorkReporter
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.DurationInt
@@ -46,12 +47,11 @@ object DownloadAndRead {
     // Daemonic so that it won't prevent the application from shutting down
     val daemonicThreadFactory = new ThreadFactoryBuilder().setDaemon(true).build()
     // We use the following thread-pool to manage the execution of the
-    // tasks that download the forecast.
-    val severalThreads = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(2, daemonicThreadFactory))
-    // We use the following thread-pool to manage the execution of the
     // tasks that read the forecast data from disk. This task uses
     // the grib library, which is not thread-safe, hence parallelism = 1.
     val oneThread = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor(daemonicThreadFactory))
+
+    val gribDownloader = new GribDownloader
 
     // Total number of files to download and then load into memory
     val filesCount = AreaAndHour.all.size
@@ -68,13 +68,7 @@ object DownloadAndRead {
         logger.info(s"Not downloading ${areaAndHour} because $gribFile already exists")
         Future.successful(gribFile)
       } else {
-        Future {
-          concurrent.blocking {
-            logger.debug(s"Downloading GFS data for $areaAndHour")
-            GribDownloader.download(gribFile, gfsRun, areaAndHour)
-            gribFile
-          }
-        }(severalThreads /* NCEP currently limits usage to 120/hits per minute */)
+        gribDownloader.scheduleDownload(gribFile, gfsRun, areaAndHour)
       }
     }.tap(_.foreach(_ => downloadReporter.notifyCompleted())(ExecutionContext.global))
 

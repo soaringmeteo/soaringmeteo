@@ -1,20 +1,45 @@
 package org.soaringmeteo.gfs
 
 import org.slf4j.LoggerFactory
+import org.soaringmeteo.util.RateLimiter
+import squants.time.RevolutionsPerMinute
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
-object GribDownloader {
+/**
+ * Utility to download from the NCEP servers.
+ *
+ * The NCEP servers apply a hit rate limit of 120 requests / second.
+ * Additionally, I noticed that downloading several files in parallel
+ * can be faster than downloading sequentially.
+ *
+ * So, we need a system performing as many parallel downloads as possible
+ * while still staying below the hit rate limit.
+ */
+class GribDownloader {
 
   private val logger = LoggerFactory.getLogger(getClass)
+  private val rateLimiter = new RateLimiter(RevolutionsPerMinute(100))
 
-  def download(
+  def scheduleDownload(
     targetFile: os.Path,
     gfsRun: in.ForecastRun,
     areaAndHour: AreaAndHour
-  ): Unit = {
+  ): Future[os.Path] =
+    rateLimiter.submit(ExecutionContext.global) {
+      logger.debug(s"Downloading GFS data for $areaAndHour")
+      download(targetFile, gfsRun, areaAndHour)
+      targetFile
+    }
+
+  private def download(
+    targetFile: os.Path,
+    gfsRun: in.ForecastRun,
+    areaAndHour: AreaAndHour
+  ): Unit = concurrent.blocking {
     val url = gfsRun.gribUrl(areaAndHour)
     // In my experience, the `time` directory is created ~3 hours after the run initialization
     // But the grib files that we are interested are only available around 3 hours and 30 min after the run initialization
@@ -26,7 +51,7 @@ object GribDownloader {
   /**
    * Try to fetch `url` at most `maxAttempts` times, waiting `delay` between each attempt.
    */
-  def insist(maxAttempts: Int, delay: Duration, url: String): requests.Response = concurrent.blocking {
+  def insist(maxAttempts: Int, delay: Duration, url: String): requests.Response = {
     val errorOrSucessfulResponse =
       Try(requests.get(url, readTimeout = 1200000, check = false)) match {
         case Failure(exception) => Left(exception)

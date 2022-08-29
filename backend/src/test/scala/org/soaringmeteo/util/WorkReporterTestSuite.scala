@@ -1,4 +1,4 @@
-package org.soaringmeteo
+package org.soaringmeteo.util
 
 import org.slf4j.LoggerFactory
 import verify.BasicTestSuite
