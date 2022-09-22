@@ -157,9 +157,9 @@ export const PeriodSelectors = (props: {
       {reactiveKey}
     </div>;
 
-  const buttonStyle = { padding: '0.2em', display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box' };
+  const buttonStyle = { padding: '0.3em', display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box' };
   const currentDayEl =
-    <div>
+    <div style={{ padding: '0.1em' }}>
       {
         showDate(
           state.forecastMetadata.dateAtHourOffset(state.hourOffset),
@@ -253,7 +253,7 @@ export const PeriodSelectors = (props: {
   // Current period
   const currentDayContainer =
     <span style={{ position: 'absolute', bottom: 0, 'margin-left': 'auto', 'margin-right': 'auto', left: 0, right: 0, 'text-align': 'center', 'z-index': 950, 'user-select': 'none', cursor: 'default' }}>
-      <div style={{ width: '125px', display: 'inline-block', 'background-color': 'white' }}>
+      <div style={{ width: '125px', display: 'inline-block', 'background-color': 'white', 'border-radius': '4px 4px 0 0', 'box-shadow': '0 2px 2px 0 rgba(0,0,0,0.14),0 3px 1px -2px rgba(0,0,0,0.12),0 1px 5px 0 rgba(0,0,0,0.2)' }}>
         {currentDayEl}
         <div>
           {previousDayBtn}
