@@ -94,7 +94,7 @@ const fetchForecasts = async (): Promise<Array<ForecastMetadata>> => {
 
 const fetchPreviousRuns = async (oldestForecastInitDate: Date, maybePreviousData?: [string, string]): Promise<Array<ForecastMetadata>> => {
   if (maybePreviousData !== undefined && new Date(maybePreviousData[1]) >= oldestForecastInitDate) {
-    const response = await fetch(maybePreviousData[0]);
+    const response = await fetch(`${dataPath}/${maybePreviousData[0]}`);
     const data     = await response.json() as ForecastMetadataData;
     const forecast = new ForecastMetadata(data);
     return (await fetchPreviousRuns(oldestForecastInitDate, data.prev)).concat([forecast]);
