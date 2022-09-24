@@ -7,6 +7,9 @@ type ForecastMetadataData = {
   latest: number // e.g., 189
   prev?: [string, string]  // e.g., ["2020-04-13T18-forecast.json", "2020-04-13T18:00:00Z"]
 }
+
+// Base path to access forecast data
+const dataPath = "data"
 export class ForecastMetadata {
   readonly initS: string
   readonly init: Date
@@ -34,7 +37,7 @@ export class ForecastMetadata {
   async fetchLocationForecasts(latitude: number, longitude: number): Promise<LocationForecasts> {
     try {
       const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(latitude, longitude);
-      const response = await fetch(`${this.initS}-${normalizedLongitude}-${normalizedLatitude}.json`);
+      const response = await fetch(`${dataPath}/${this.initS}/${normalizedLongitude}-${normalizedLatitude}.json`);
       const data     = await response.json() as LocationForecastsData;
       return new LocationForecasts(data, this, normalizedLatitude / 100, normalizedLongitude / 100)
     } catch (error) {
@@ -48,7 +51,7 @@ export class ForecastMetadata {
    */
   async fetchForecastAtHourOffset(hourOffset: number): Promise<Forecast> {
     try {
-      const response = await fetch(`${this.initS}+${hourOffset}.json`);
+      const response = await fetch(`${dataPath}/${this.initS}/${hourOffset}h.json`);
       const data     = await response.json() as ForecastData;
       return new Forecast(data)
     } catch (error) {
@@ -78,7 +81,7 @@ export class ForecastMetadata {
 };
 
 const fetchForecasts = async (): Promise<Array<ForecastMetadata>> => {
-  const response       = await fetch('forecast.json');
+  const response       = await fetch(`${dataPath}/forecast.json`);
   const data           = await response.json() as ForecastMetadataData;
   const latestForecast = new ForecastMetadata(data);
   // Compute date of the oldest forecast we want to show

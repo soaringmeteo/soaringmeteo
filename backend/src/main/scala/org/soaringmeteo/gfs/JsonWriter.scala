@@ -25,14 +25,6 @@ object JsonWriter {
   /**
    * Extract data from the GFS forecast in the form of JSON documents.
    *
-   * We create one JSON document per forecast time (e.g., `2021-01-08T12+0.json`, `2021-01-08T12+3.json`, etc.),
-   * and each document contains the summary of the forecast for each location listed in
-   * [[Settings.gfsForecastLocations]].
-   *
-   * We also create one JSON document per location (e.g., `2021-01-08T12-700-4650.json`), where each
-   * document contains the detail of the forecast for each period of forecast.
-   *
-   * Finally, we remove files older than five days ago from the target directory.
    *
    * @param targetDir Directory where we write our resulting JSON documents
    */
@@ -42,22 +34,27 @@ object JsonWriter {
     forecastsByHour: ForecastsByHour,
     locations: Iterable[Point]
   ): Unit = {
-    logger.info(s"Writing soaring forecasts in $targetDir")
-    os.makeDir.all(targetDir)
-
     val initDateString = InitDateString(gfsRun.initDateTime)
+    // Write all the JSON documents in a subdirectory named according to the
+    // initialization time of the GFS run (e.g., `2021-01-08T12`).
+    val targetRunDir = targetDir / initDateString
+    logger.info(s"Writing soaring forecasts in $targetRunDir")
+    os.makeDir.all(targetRunDir)
 
-    writeForecastsByHour(initDateString, forecastsByHour, targetDir)
+    // We create one JSON document per forecast time (e.g., `2021-01-08T12/0h.json`, `2021-01-08T12/3h.json`, etc.),
+    // and each document contains the summary of the forecast for each location listed in
+    // Settings.gfsForecastLocations
+    writeForecastsByHour(forecastsByHour, targetRunDir)
 
-    writeDetailedForecasts(
-      initDateString,
-      locations,
-      forecastsByHour,
-      targetDir
-    )
+    // We also create one JSON document per location (e.g., `2021-01-08T12/700-4650.json`), where each
+    // document contains the detail of the forecast for each period of forecast
+    writeDetailedForecasts(locations, forecastsByHour, targetRunDir)
 
-    writeMetadata(initDateString, gfsRun, targetDir)
+    // Update the file `forecast.json` in the root target directory
+    // and rename the old `forecast.json`, if any
+    overwriteLatestForecastMetadata(initDateString, gfsRun, targetDir)
 
+    // Finally, we remove files older than five days ago from the target directory
     deleteOldData(gfsRun, targetDir)
   }
 
@@ -66,7 +63,6 @@ object JsonWriter {
    * for every point defined [[Settings.gfsForecastLocations]].
    */
   private def writeForecastsByHour(
-    initDateString: String,
     forecastsByHour: ForecastsByHour,
     targetDir: os.Path
   ): Unit = {
@@ -80,7 +76,7 @@ object JsonWriter {
           locationKey -> Forecast.jsonEncoder(forecast)
         }.toSeq
 
-      val fileName = s"$initDateString+$t.json" // e.g., "2021-01-08T12+3.json", "2021-01-08T12+6.json", etc.
+      val fileName = s"${t}h.json" // e.g., "3h.json", "6h.json", etc.
       os.write.over(
         targetDir / fileName,
         Json.obj(fields: _*).noSpaces
@@ -93,7 +89,6 @@ object JsonWriter {
    * the next days.
    */
   private def writeDetailedForecasts(
-    initDateString: String,
     locations: Iterable[Point],
     forecastsByHour: ForecastsByHour,
     targetDir: os.Path
@@ -104,8 +99,8 @@ object JsonWriter {
       val point = Point(location.latitude, location.longitude)
       logger.trace(s"Writing forecast for location ${location.longitude},${location.latitude}")
       val locationForecasts = LocationForecasts(point, forecasts.map(_(point)))
-      // E.g., "2021-01-08T12-750-4625.json"
-      val fileName = s"$initDateString-${(location.longitude * 100).intValue}-${(location.latitude * 100).intValue}.json"
+      // E.g., "750-4625.json"
+      val fileName = s"${(location.longitude * 100).intValue}-${(location.latitude * 100).intValue}.json"
       os.write.over(
         targetDir / fileName,
         LocationForecasts.jsonEncoder(locationForecasts).noSpaces
@@ -113,7 +108,14 @@ object JsonWriter {
     }
   }
 
-  private def writeMetadata(initDateString: String, gfsRun: in.ForecastRun, targetDir: os.Path): Unit = {
+  /**
+   * Update file `forecast.json` to point to the latest forecast data.
+   *
+   * @param initDateString Init date prefix
+   * @param gfsRun         GFS run
+   * @param targetDir      Target directory
+   */
+  private def overwriteLatestForecastMetadata(initDateString: String, gfsRun: in.ForecastRun, targetDir: os.Path): Unit = {
     val latestForecastPath = targetDir / "forecast.json"
     // If a previous forecast is found, rename its metadata file
     val maybePreviousForecastInitDateTime =
