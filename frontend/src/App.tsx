@@ -9,6 +9,7 @@ import { Forecast } from './data/Forecast';
 import * as L from 'leaflet';
 import markerImg from './images/marker-icon.png';
 import { StateProvider, useState } from './State';
+import { Burger } from './Burger';
 
 export const start = (containerElement: HTMLElement): void => {
 
@@ -22,10 +23,7 @@ export const start = (containerElement: HTMLElement): void => {
 
   const App = (props: {
     forecastMetadatas: Array<ForecastMetadata>
-    forecastMetadata: ForecastMetadata
     morningOffset: number
-    hourOffset: number
-    currentForecast: Forecast 
   }): JSX.Element => {
 
     const [state, { clearLocationForecasts }] = useState();
@@ -80,6 +78,11 @@ export const start = (containerElement: HTMLElement): void => {
     // back to these components.
     // ForecastLayer displays the configuration button and manages the canvas overlay.
     return <>
+      <span style={{
+        position: 'absolute', top: 0, left: 0, 'z-index': 1200
+      }}>
+        <Burger />
+      </span>
       <PeriodSelectors morningOffset={props.morningOffset} />
       <ForecastLayer
         forecastMetadatas={props.forecastMetadatas}
