@@ -23,7 +23,8 @@ export const Burger = (): JSX.Element => {
         padding: '0.3em',
         border: 'thin solid darkGray',
         'box-sizing': 'border-box',
-        'background-color': 'white',
+        'background-color': '#009688',
+        color: '#fff',
         'text-align': 'center',
         'font-weight': 'bold',
         'font-size': '1.5em',
@@ -38,7 +39,7 @@ export const Burger = (): JSX.Element => {
     'font-size': '15px',
     'line-height': '1.5',
     'font-family': 'sans-serif',
-    'color': 'black'
+    'color': '#fff'
   };
 
   const entries = [
@@ -54,7 +55,8 @@ export const Burger = (): JSX.Element => {
   const options =
     <div
       style={{
-        'background-color': 'white',
+        'background-color': '#009688',
+        color: '#fff',
         'box-shadow': 'rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 3px 1px -2px, rgba(0, 0, 0, 0.2) 0px 1px 5px 0px',
         'border-radius': '0 0 4px 0'
       }}
