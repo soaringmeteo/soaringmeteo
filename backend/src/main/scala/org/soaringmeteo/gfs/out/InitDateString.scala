@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter
 object InitDateString {
 
   // Matches names _starting with_ a date formatted as below
-  private val dateTimeStringPrefix = "^(\\d+)-(\\d+)-(\\d+)T(\\d+)".r
+  private val dateTimeStringPrefix = "^(\\d+)-(\\d+)-(\\d+)T(\\d+).*".r
 
   def apply(dateTime: OffsetDateTime): String =
     dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH"))

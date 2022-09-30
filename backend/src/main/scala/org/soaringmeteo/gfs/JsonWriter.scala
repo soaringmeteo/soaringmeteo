@@ -142,7 +142,7 @@ object JsonWriter {
       path <- os.list(targetDir)
       date <- InitDateString.parse(path.last)
       if date.isBefore(oldestForecastToKeep)
-    } os.remove(path)
+    } os.remove.all(path)
   }
 
 }
