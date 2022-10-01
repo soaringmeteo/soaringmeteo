@@ -9,6 +9,8 @@ object Settings {
 
   val config = ConfigFactory.load().getConfig("soargfs")
 
+  val downloadRateLimit = config.getInt("download_rate_limit")
+
   /** Sequence of forecast hour offsets of a GFS run (e.g. 3, 6, 9, 12, etc.) */
   val forecastHours: Seq[Int] = (for {
     day  <- 0 to config.getInt("forecast_length")

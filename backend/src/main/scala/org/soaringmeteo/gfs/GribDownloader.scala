@@ -22,7 +22,7 @@ import scala.util.control.NonFatal
 class GribDownloader {
 
   private val logger = LoggerFactory.getLogger(getClass)
-  private val rateLimiter = new RateLimiter(RevolutionsPerMinute(100))
+  private val rateLimiter = new RateLimiter(RevolutionsPerMinute(Settings.downloadRateLimit))
 
   def scheduleDownload(
     targetFile: os.Path,
