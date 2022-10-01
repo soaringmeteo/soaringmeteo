@@ -8,7 +8,7 @@ import { meteogramColumnWidth } from './diagrams/Diagram';
 import { useState } from './State';
 
 const marginLeft = keyWidth;
-const marginTop = 35; // Day height + hour height + 2 (wtf)
+export const marginTop = 35; // Day height + hour height + 2 (wtf)
 
 const hover = (htmlEl: HTMLElement): HTMLElement => {
   let oldValue: string = 'inherit';
