@@ -55,9 +55,9 @@ export const CanvasLayer = L.Layer.extend({
     const ctx = this._canvas.getContext('2d') as CanvasRenderingContext2D;
     ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
-    // When the user uses a zoom level lower than 8, we average the data to not
+    // When the user uses a zoom level lower than 7, we average the data to not
     // show lots of small points.
-    const averagingFactor = 1 << Math.max(0, 8 - map.getZoom()); // e.g., 1, 2, 4, 8, etc.
+    const averagingFactor = 1 << Math.max(0, 7 - map.getZoom()); // e.g., 1, 2, 4, 8, etc.
     const viewResolution = modelResolution * averagingFactor; // e.g., 25, 50, 100, 200, etc.
 
     // Find the top-left coordinates that are just _before_ the top-left pixel
