@@ -147,33 +147,11 @@ export const ForecastLayer = (props: {
   openLocationDetailsPopup: (latitude: number, longitude: number, content: JSX.Element) => void
 }): JSX.Element => {
 
-  const [state, { setDetailedView, setForecastMetadata, fetchLocationForecasts }] = useState();
+  const [state, { setForecastMetadata, showLocationForecast }] = useState();
 
   const [isMenuShown, showMenu] = createSignal(false);
   // TODO Move to global state
   const [selectedRenderer, selectRenderer] = createSignal(thqRenderer);
-
-  const meteogramEl = makeRadioBtn(
-    'Meteogram',
-    'Meteogram',
-    () => state.detailedView === 'meteogram',
-    'detailed-view',
-    () => setDetailedView('meteogram')
-  );
-  const soundingEl = makeRadioBtn(
-    'Sounding',
-    'Sounding',
-    () => state.detailedView === 'sounding',
-    'detailed-view',
-    () => setDetailedView('sounding')
-  );
-
-  const detailedViewEl =
-    <fieldset>
-      <legend>Detailed View</legend>
-      {meteogramEl}
-      {soundingEl}
-    </fieldset>;
 
   const selectForecastEl =
     <fieldset>
@@ -256,7 +234,6 @@ export const ForecastLayer = (props: {
   const selectEl =
     <Show when={ isMenuShown() }>
       <div style={{ ...aboveMapStyle, right: '3px', bottom: '136px', 'background-color': 'white' }}>
-        {detailedViewEl}
         {selectForecastEl}
         {layerEl}
       </div>
@@ -313,9 +290,20 @@ export const ForecastLayer = (props: {
             <div>Grid point: {latitude},{longitude}</div>
             <div>GFS forecast for {showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { showWeekDay: true })}</div>
             { dataSource().summary(forecastAtPoint) }
-            <button onClick={ () => fetchLocationForecasts(event.latlng.lat, event.latlng.lng) }>
-              { state.detailedView == 'meteogram' ? "Meteogram for this location" : "Sounding for this time and location" }
-            </button>
+            <div style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-around' }}>
+              <button
+                onClick={ () => showLocationForecast(event.latlng.lat, event.latlng.lng, 'meteogram') }
+                title="Meteogram for this location"
+              >
+                Meteogram
+              </button>
+              <button
+                onClick={ () => showLocationForecast(event.latlng.lat, event.latlng.lng, 'sounding') }
+                title="Sounding for this time and location"
+              >
+                Sounding
+              </button>
+            </div>
           </div>
         props.openLocationDetailsPopup(latitude, longitude, content);
       }

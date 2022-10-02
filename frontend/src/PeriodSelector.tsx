@@ -121,15 +121,19 @@ const DetailedView = (): [() => JSX.Element, () => JSX.Element] => {
   const fallback: [JSX.Element, JSX.Element] = [<div />, <div />];
 
   const keyAndView: () => [JSX.Element, JSX.Element] = createMemo<[JSX.Element, JSX.Element]>(() => {
-    const locationForecasts = state.locationForecasts;
-    if (locationForecasts === undefined) return fallback
-    else if (state.detailedView === 'meteogram') {
-      return meteogram(locationForecasts)
-    }
-    else /*if (props.detailedView === 'sounding')*/ {
-      const forecast = locationForecasts.atHourOffset(state.hourOffset);
-      if (forecast === undefined) return fallback
-      else return sounding(forecast, locationForecasts.elevation)
+    const detailedView = state.detailedView;
+    if (detailedView === undefined) {
+      return fallback
+    } else {
+      const [locationForecasts, viewType] = detailedView;
+      if (viewType === 'meteogram') {
+        return meteogram(locationForecasts)
+      }
+      else /*if (viewType === 'sounding')*/ {
+        const forecast = locationForecasts.atHourOffset(state.hourOffset);
+        if (forecast === undefined) return fallback
+        else return sounding(forecast, locationForecasts.elevation)
+      }
     }
   });
   return [
@@ -148,7 +152,7 @@ export const PeriodSelectors = (props: {
   morningOffset: number,
 }): JSX.Element => {
 
-  const [state, { setHourOffset, clearLocationForecasts }] = useState();
+  const [state, { setHourOffset, hideLocationForecast }] = useState();
 
   const [reactiveKey, reactiveDetailedView] = <DetailedView />;
 
@@ -214,10 +218,10 @@ export const PeriodSelectors = (props: {
     <PeriodSelector
       forecastOffsetAndDates={
         // If there is no selected forecast, infer the available periods from the forecast metadata
-        (state.locationForecasts === undefined) ?
+        (state.detailedView === undefined) ?
           forecastOffsets(state.forecastMetadata.init, props.morningOffset, state.forecastMetadata)
         :
-          state.locationForecasts.offsetAndDates()
+          state.detailedView[0].offsetAndDates()
       }
       detailedView={reactiveDetailedView}
     />;
@@ -229,11 +233,11 @@ export const PeriodSelectors = (props: {
         width: `${marginLeft}px`,
         'flex-shrink': 0,
         'background-color': 'white',
-        visibility: (state.locationForecasts !== undefined) ? 'visible' : 'hidden',
+        visibility: (state.detailedView !== undefined) ? 'visible' : 'hidden',
         'text-align': 'center'
       }}
       title='Hide'
-      onClick={() => clearLocationForecasts() }
+      onClick={() => hideLocationForecast() }
     >
       X
     </div>;

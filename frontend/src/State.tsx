@@ -10,9 +10,8 @@ type State = {
   forecast: Forecast
   // Delta with the forecast initialization time
   hourOffset: number
-  detailedView: DetailedViewType
-  // If defined, the detailed forecast data for the selected location
-  locationForecasts: undefined | LocationForecasts
+  // If defined, the detailed forecast data for the selected location, and the type of detailed view to display
+  detailedView: undefined | [LocationForecasts, DetailedViewType]
 }
 
 type DetailedViewType = 'meteogram' | 'sounding'
@@ -22,9 +21,8 @@ type ContextType = [
   {
     setForecastMetadata: (forecastMetadata: ForecastMetadata) => void
     setHourOffset: (hourOffset: number) => void
-    setDetailedView: (detailedView: DetailedViewType) => void
-    fetchLocationForecasts: (latitude: number, longitude: number) => void
-    clearLocationForecasts: () => void
+    showLocationForecast: (latitude: number, longitude: number, viewType: DetailedViewType) => void
+    hideLocationForecast: () => void
   }
 ]
 
@@ -44,8 +42,7 @@ export const StateProvider = (props: {
     forecastMetadata: props.forecastMetadata,
     forecast: props.currentForecast,
     hourOffset: props.hourOffset,
-    detailedView: 'meteogram',
-    locationForecasts: undefined
+    detailedView: undefined
   });
 
   const context = [
@@ -64,16 +61,13 @@ export const StateProvider = (props: {
             alert('Unable to retrieve forecast data');
           });
       },
-      setDetailedView: (detailedView: DetailedViewType) => {
-        setState({ detailedView })
-      },
-      fetchLocationForecasts: (latitude: number, longitude: number): void => {
+      showLocationForecast: (latitude: number, longitude: number, viewType: DetailedViewType): void => {
         state.forecastMetadata
           .fetchLocationForecasts(latitude, longitude)
-          .then(locationForecasts => setState({ locationForecasts }))
+          .then(locationForecasts => setState({ detailedView: [locationForecasts, viewType] }))
       },
-      clearLocationForecasts: () => {
-        setState({ locationForecasts: undefined })
+      hideLocationForecast: () => {
+        setState({ detailedView: undefined })
       }
     }
   ]

@@ -69,7 +69,7 @@ export const Burger = (): JSX.Element => {
     </div>;
   L.DomEvent.disableClickPropagation(options);
 
-  return <Show when={ state.locationForecasts === undefined }>
+  return <Show when={ state.detailedView === undefined }>
     {menu}
     <Show when={expanded()}>
       {options}

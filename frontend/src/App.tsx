@@ -26,7 +26,7 @@ export const start = (containerElement: HTMLElement): void => {
     morningOffset: number
   }): JSX.Element => {
 
-    const [state, { clearLocationForecasts }] = useState();
+    const [state, { hideLocationForecast }] = useState();
 
     createEffect(() => {
       map.attributionControl.setPrefix(`Initialization: ${showDate(state.forecastMetadata.init)}`);
@@ -34,8 +34,9 @@ export const start = (containerElement: HTMLElement): void => {
 
     const selectedLocationMarker: L.Marker = L.marker([0, 0], { icon: L.icon({ iconUrl: markerImg, iconSize: [25, 41] }) });
     createEffect(() => {
-      const selectedLocation = state.locationForecasts;
-      if (selectedLocation !== undefined) {
+      const detailedView = state.detailedView;
+      if (detailedView !== undefined) {
+        const selectedLocation = detailedView[0];
         selectedLocationMarker.setLatLng([selectedLocation.latitude, selectedLocation.longitude]);
         selectedLocationMarker.addTo(map);
       } else {
@@ -46,7 +47,7 @@ export const start = (containerElement: HTMLElement): void => {
     map.on('keydown', (e: any) => {
       const event = e.originalEvent as KeyboardEvent;
       if (event.key === 'Escape') {
-        clearLocationForecasts();
+        hideLocationForecast();
       }
     });
 
