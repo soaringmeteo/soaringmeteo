@@ -2,6 +2,7 @@ import { Context, createContext, JSX, useContext } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { Forecast, LocationForecasts } from './data/Forecast';
 import { ForecastMetadata } from './data/ForecastMetadata';
+import { Layer, xcFlyingPotentialLayer } from './ForecastLayer';
 
 type State = {
   // Currently selected forecast run
@@ -10,6 +11,8 @@ type State = {
   forecast: Forecast
   // Delta with the forecast initialization time
   hourOffset: number
+  // Selected layer on the map (XC flying potential, thermal velocity, etc.)
+  layer: Layer
   // If defined, the detailed forecast data for the selected location, and the type of detailed view to display
   detailedView: undefined | [LocationForecasts, DetailedViewType]
 }
@@ -21,6 +24,7 @@ type ContextType = [
   {
     setForecastMetadata: (forecastMetadata: ForecastMetadata) => void
     setHourOffset: (hourOffset: number) => void
+    setLayer: (layer: Layer) => void
     showLocationForecast: (latitude: number, longitude: number, viewType: DetailedViewType) => void
     hideLocationForecast: () => void
   }
@@ -36,12 +40,12 @@ export const StateProvider = (props: {
 }): JSX.Element => {
 
   // TODO load/save to local storage or indexeddb
-  // TODO handle map location and zoom here?
-  // TODO store preselected layer
+  // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
   const [state, setState] = createStore<State>({
     forecastMetadata: props.forecastMetadata,
     forecast: props.currentForecast,
     hourOffset: props.hourOffset,
+    layer: xcFlyingPotentialLayer,
     detailedView: undefined
   });
 
@@ -60,6 +64,9 @@ export const StateProvider = (props: {
             console.error(error);
             alert('Unable to retrieve forecast data');
           });
+      },
+      setLayer: (layer: Layer): void => {
+        setState({ layer })
       },
       showLocationForecast: (latitude: number, longitude: number, viewType: DetailedViewType): void => {
         state.forecastMetadata

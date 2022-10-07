@@ -21,7 +21,7 @@ import { useState } from './State';
 /**
  * A layer shown over the map (boundary layer height, cloud cover, etc.)
  */
-class Layer {
+export class Layer {
 
   constructor(
     readonly name: string,
@@ -72,7 +72,7 @@ const noLayer = new Layer(
   forecast => new None(forecast),
   <div />
 );
-const xcFlyingPotentialLayer = new Layer(
+export const xcFlyingPotentialLayer = new Layer(
   'XC Flying Potential',
   'XC flying potential',
   forecast => new ThQ(forecast),
@@ -149,11 +149,9 @@ export const ForecastLayer = (props: {
   openLocationDetailsPopup: (latitude: number, longitude: number, content: JSX.Element) => void
 }): JSX.Element => {
 
-  const [state, { setForecastMetadata, showLocationForecast }] = useState();
+  const [state, { setForecastMetadata, setLayer, showLocationForecast }] = useState();
 
   const [isMenuShown, showMenu] = createSignal(false);
-  // TODO Move to global state
-  const [selectedLayer, setLayer] = createSignal(xcFlyingPotentialLayer);
 
   const selectForecastEl =
     <fieldset>
@@ -176,7 +174,7 @@ export const ForecastLayer = (props: {
     const container = makeRadioBtn(
       layer.name,
       layer.title,
-      () => selectedLayer() === layer,
+      () => state.layer === layer,
       'layer',
       () => setLayer(layer)
     );
@@ -268,12 +266,12 @@ export const ForecastLayer = (props: {
 
   const layerKeyEl =
     <div style={{ position: 'absolute', bottom: '30px', left: '5px', 'z-index': 1000, 'background-color': 'rgba(255, 255,  255, 0.5' }}>
-      {selectedLayer().mapKeyEl}
+      {state.layer.mapKeyEl}
     </div>;
 
   // Sync renderer (used to display the map overlay and tooltips) with current forecast
   const renderer =
-    createMemo(() => selectedLayer().createRenderer(state.forecast));
+    createMemo(() => state.layer.createRenderer(state.forecast));
 
   createEffect(() => {
     props.canvas.setRenderer(renderer());
