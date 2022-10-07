@@ -18,7 +18,10 @@ import { ThermalVelocity, thermalVelocityColorScale } from './layers/ThermalVelo
 import { CumuliDepth, colorScale as cumuliDepthColorScale } from './layers/CumuliDepth';
 import { useState } from './State';
 
-class Renderer {
+/**
+ * A layer shown over the map (boundary layer height, cloud cover, etc.)
+ */
+class Layer {
 
   constructor(
     readonly name: string,
@@ -63,74 +66,74 @@ const windScaleEl: JSX.Element =
     }
   </div>;
 
-const noneRenderer = new Renderer(
+const noLayer = new Layer(
   'None',
   'Map only',
   forecast => new None(forecast),
   <div />
 );
-const thqRenderer = new Renderer(
+const xcFlyingPotentialLayer = new Layer(
   'XC Flying Potential',
   'XC flying potential',
   forecast => new ThQ(forecast),
   colorScaleEl(thQColorScale, value => `${value}% `)
 );
-const boundaryLayerHeightRenderer = new Renderer(
+const boundaryLayerDepthLayer = new Layer(
   'Boundary Layer Depth',
   'Boundary layer depth',
   forecast => new BoundaryLayerDepth(forecast),
   // FIXME Maybe implement map key in datasource...
   colorScaleEl(boundaryDepthColorScale, value => `${value} m `)
 );
-const thermalVelocityRenderer = new Renderer(
+const thermalVelocityLayer = new Layer(
   'Thermal Velocity',
   'Thermal updraft velocity',
   forecast => new ThermalVelocity(forecast),
   colorScaleEl(thermalVelocityColorScale, value => `${value} m/s `)
 );
-const surfaceWindRenderer = new Renderer(
+const surfaceWindLayer = new Layer(
   'Surface',
   'Wind force and direction on the ground',
   forecast => new Wind(forecast, (point) => [point.uSurfaceWind, point.vSurfaceWind]),
   windScaleEl
 );
-const _300MAGLWindRenderer = new Renderer(
+const _300MAGLWindLayer = new Layer(
   '300 m AGL',
   'Wind force and direction at 300 m above the ground level',
   forecast => new Wind(forecast, (forecast) => [forecast.u300MWind, forecast.v300MWind]),
   windScaleEl
 );
-const boundaryLayerWindRenderer = new Renderer(
+const boundaryLayerWindLayer = new Layer(
   'Boundary Layer',
   'Average wind force and direction in the boundary layer',
   forecast => new Wind(forecast, (point) => [point.uWind, point.vWind]),
   windScaleEl
 );
-const boundaryLayerTopWindRenderer = new Renderer(
+const boundaryLayerTopWindLayer = new Layer(
   'Boundary Layer Top',
   'Wind force and direction at the top of the boundary layer',
   forecast => new Wind(forecast, (point) => [point.uBLTopWind, point.vBLTopWind]),
   windScaleEl
 );
-const cloudCoverRenderer = new Renderer(
+const cloudCoverLayer = new Layer(
   'Cloud Cover',
   'Cloud cover (all altitudes)',
   forecast => new CloudCover(forecast),
   colorScaleEl(cloudCoverColorScale, value => `${value}% `)
 );
-const cumuliDepthRenderer = new Renderer(
+const cumuliDepthLayer = new Layer(
   'Convective Clouds',
   'Convective Clouds Depth',
   forecast => new CumuliDepth(forecast),
   colorScaleEl(cumuliDepthColorScale, value => `${value} m `)
 );
-const rainRenderer = new Renderer(
+const rainLayer = new Layer(
   'Rain',
   'Total rain',
   forecast => new Rain(forecast),
   colorScaleEl(rainColorScale, value => `${value} mm `)
 );
-const mixedRenderer = new Renderer(
+const mixedLayer = new Layer(
   'Mixed',
   'Boundary layer depth, wind, and cloud cover',
   forecast => new Mixed(forecast),
@@ -151,7 +154,7 @@ export const ForecastLayer = (props: {
 
   const [isMenuShown, showMenu] = createSignal(false);
   // TODO Move to global state
-  const [selectedRenderer, selectRenderer] = createSignal(thqRenderer);
+  const [selectedRenderer, selectRenderer] = createSignal(xcFlyingPotentialLayer);
 
   const selectForecastEl =
     <fieldset>
@@ -170,23 +173,23 @@ export const ForecastLayer = (props: {
       }
     </fieldset>;
 
-  function setupRendererBtn(renderer: Renderer): HTMLElement {
+  function setupLayerBtn(layer: Layer): HTMLElement {
     const container = makeRadioBtn(
-      renderer.name,
-      renderer.title,
-      () => selectedRenderer() === renderer,
+      layer.name,
+      layer.title,
+      () => selectedRenderer() === layer,
       'layer',
-      () => selectRenderer(renderer)
+      () => selectRenderer(layer)
     );
     return container
   }
 
-  const noneEl = setupRendererBtn(noneRenderer);
-  const mixedEl = setupRendererBtn(mixedRenderer);
-  const thqEl = setupRendererBtn(thqRenderer);
+  const noneEl = setupLayerBtn(noLayer);
+  const mixedEl = setupLayerBtn(mixedLayer);
+  const thqEl = setupLayerBtn(xcFlyingPotentialLayer);
 
-  const boundaryLayerHeightEl = setupRendererBtn(boundaryLayerHeightRenderer);
-  const thermalVelocityEl = setupRendererBtn(thermalVelocityRenderer);
+  const boundaryLayerHeightEl = setupLayerBtn(boundaryLayerDepthLayer);
+  const thermalVelocityEl = setupLayerBtn(thermalVelocityLayer);
   const thermalLayersEl =
     <fieldset>
       <legend>Thermals</legend>
@@ -194,10 +197,10 @@ export const ForecastLayer = (props: {
       {thermalVelocityEl}
     </fieldset>;
 
-  const blWindEl = setupRendererBtn(boundaryLayerWindRenderer);
-  const blTopWindEl = setupRendererBtn(boundaryLayerTopWindRenderer);
-  const surfaceWindEl = setupRendererBtn(surfaceWindRenderer);
-  const _300MAGLWindEl = setupRendererBtn(_300MAGLWindRenderer);
+  const blWindEl = setupLayerBtn(boundaryLayerWindLayer);
+  const blTopWindEl = setupLayerBtn(boundaryLayerTopWindLayer);
+  const surfaceWindEl = setupLayerBtn(surfaceWindLayer);
+  const _300MAGLWindEl = setupLayerBtn(_300MAGLWindLayer);
   const windLayersEl =
     <fieldset>
       <legend>Wind</legend>
@@ -207,9 +210,9 @@ export const ForecastLayer = (props: {
       {blTopWindEl}
     </fieldset>;
 
-  const cloudCoverEl = setupRendererBtn(cloudCoverRenderer);
-  const cumuliDepthEl = setupRendererBtn(cumuliDepthRenderer);
-  const rainEl = setupRendererBtn(rainRenderer);
+  const cloudCoverEl = setupLayerBtn(cloudCoverLayer);
+  const cumuliDepthEl = setupLayerBtn(cumuliDepthLayer);
+  const rainEl = setupLayerBtn(rainLayer);
   const cloudsLayersEl =
     <fieldset>
       <legend>Clouds and Rain</legend>
