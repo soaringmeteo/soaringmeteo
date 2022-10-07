@@ -1,10 +1,10 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
-import { DataSource } from "../map/CanvasLayer";
+import { Renderer } from "../map/CanvasLayer";
 import { JSX } from "solid-js";
 
-export class CloudCover implements DataSource {
+export class CloudCover implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 

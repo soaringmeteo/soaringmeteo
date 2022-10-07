@@ -2,9 +2,9 @@ import { drawWindArrow } from "../shapes";
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { JSX } from "solid-js";
-import { DataSource } from "../map/CanvasLayer";
+import { Renderer } from "../map/CanvasLayer";
 
-export class Wind implements DataSource {
+export class Wind implements Renderer {
 
   constructor(readonly forecast: Forecast, readonly wind: ((forecast: ForecastPoint) => [number, number])) {}
 

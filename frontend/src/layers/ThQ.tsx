@@ -3,7 +3,7 @@ import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
 import { drawWindArrow } from "../shapes";
 import { windColor } from "./Wind";
-import { DataSource } from "../map/CanvasLayer";
+import { Renderer } from "../map/CanvasLayer";
 import { JSX } from "solid-js";
 
 export const colorScale = new ColorScale([
@@ -19,7 +19,7 @@ export const colorScale = new ColorScale([
   [100, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
-export class ThQ implements DataSource {
+export class ThQ implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 

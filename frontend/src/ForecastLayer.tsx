@@ -1,7 +1,7 @@
 import * as L from 'leaflet';
 import { Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Switch } from 'solid-js';
 
-import { DataSource, CanvasLayer, viewPoint } from "./map/CanvasLayer";
+import { Renderer, CanvasLayer, viewPoint } from "./map/CanvasLayer";
 import { Mixed } from './layers/Mixed';
 import { Forecast, normalizeCoordinates } from './data/Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
@@ -26,7 +26,7 @@ class Layer {
   constructor(
     readonly name: string,
     readonly title: string,
-    readonly createDataSource: (forecast: Forecast) => DataSource,
+    readonly createRenderer: (forecast: Forecast) => Renderer,
     readonly mapKeyEl: JSX.Element
   ) {}
 
@@ -82,7 +82,6 @@ const boundaryLayerDepthLayer = new Layer(
   'Boundary Layer Depth',
   'Boundary layer depth',
   forecast => new BoundaryLayerDepth(forecast),
-  // FIXME Maybe implement map key in datasource...
   colorScaleEl(boundaryDepthColorScale, value => `${value} m `)
 );
 const thermalVelocityLayer = new Layer(
@@ -154,7 +153,7 @@ export const ForecastLayer = (props: {
 
   const [isMenuShown, showMenu] = createSignal(false);
   // TODO Move to global state
-  const [selectedRenderer, selectRenderer] = createSignal(xcFlyingPotentialLayer);
+  const [selectedLayer, setLayer] = createSignal(xcFlyingPotentialLayer);
 
   const selectForecastEl =
     <fieldset>
@@ -177,9 +176,9 @@ export const ForecastLayer = (props: {
     const container = makeRadioBtn(
       layer.name,
       layer.title,
-      () => selectedRenderer() === layer,
+      () => selectedLayer() === layer,
       'layer',
-      () => selectRenderer(layer)
+      () => setLayer(layer)
     );
     return container
   }
@@ -267,17 +266,17 @@ export const ForecastLayer = (props: {
   L.DomEvent.disableClickPropagation(rootElement);
   L.DomEvent.disableScrollPropagation(rootElement);
 
-  const rendererKeyEl =
+  const layerKeyEl =
     <div style={{ position: 'absolute', bottom: '30px', left: '5px', 'z-index': 1000, 'background-color': 'rgba(255, 255,  255, 0.5' }}>
-      {selectedRenderer().mapKeyEl}
+      {selectedLayer().mapKeyEl}
     </div>;
 
-  // Sync data source (used to display the map overlay and tooltips) with current forecast
-  const dataSource =
-    createMemo(() => selectedRenderer().createDataSource(state.forecast));
+  // Sync renderer (used to display the map overlay and tooltips) with current forecast
+  const renderer =
+    createMemo(() => selectedLayer().createRenderer(state.forecast));
 
   createEffect(() => {
-    props.canvas.setDataSource(dataSource());
+    props.canvas.setRenderer(renderer());
   });
 
   // Show a popup with a summary when the user clicks on the map
@@ -292,7 +291,7 @@ export const ForecastLayer = (props: {
           <div>
             <div>Grid point: {latitude},{longitude}</div>
             <div>GFS forecast for {showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { showWeekDay: true })}</div>
-            { dataSource().summary(forecastAtPoint) }
+            { renderer().summary(forecastAtPoint) }
             <div style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-around' }}>
               <button
                 onClick={ () => showLocationForecast(event.latlng.lat, event.latlng.lng, 'meteogram') }
@@ -313,7 +312,7 @@ export const ForecastLayer = (props: {
     }
   });
 
-  return [rootElement, rendererKeyEl]
+  return [rootElement, layerKeyEl]
 };
 
 const makeRadioBtn = (

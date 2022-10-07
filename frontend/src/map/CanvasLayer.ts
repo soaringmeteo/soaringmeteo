@@ -3,11 +3,11 @@ import { JSX } from 'solid-js';
 import { modelResolution, Forecast, ForecastPoint } from '../data/Forecast';
 
 export type CanvasLayer = {
-  setDataSource(dataSource: DataSource): void
+  setRenderer(renderer: Renderer): void
 }
 
 /** A specific view of the forecast output (e.g., wind, XC flying potential, etc.) */
-export type DataSource = {
+export type Renderer = {
   forecast: Forecast
   /** Render one point of the forecast on the map */
   renderPoint: (forecastPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => void
@@ -44,7 +44,7 @@ export const CanvasLayer = L.Layer.extend({
   },
 
   _update: function () {
-    if (this._dataSource === undefined || this._canvas === undefined) {
+    if (this._renderer === undefined || this._canvas === undefined) {
       return
     }
     const map: L.Map = this._map as L.Map;
@@ -79,11 +79,11 @@ export const CanvasLayer = L.Layer.extend({
     while (lng <= maxLng) {
       let lat = minLat;
       while (lat <= maxLat) {
-        const point = viewPoint(this._dataSource.forecast, averagingFactor, lat, lng);
+        const point = viewPoint(this._renderer.forecast, averagingFactor, lat, lng);
         if (point !== undefined) {
           const topLeft = map.latLngToContainerPoint([(lat + viewResolution / 2) / 100, (lng - viewResolution / 2) / 100]);
           const bottomRight = map.latLngToContainerPoint([(lat - viewResolution / 2) / 100, (lng + viewResolution / 2) / 100]);
-          this._dataSource.renderPoint(point, topLeft, bottomRight, ctx);
+          this._renderer.renderPoint(point, topLeft, bottomRight, ctx);
         }
         lat = lat + viewResolution;
       }
@@ -91,8 +91,8 @@ export const CanvasLayer = L.Layer.extend({
     }
   },
 
-  setDataSource: function (dataSource: DataSource): void {
-    this._dataSource = dataSource;
+  setRenderer: function (renderer: Renderer): void {
+    this._renderer = renderer;
     this._update();
   }
 

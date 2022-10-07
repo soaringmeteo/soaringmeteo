@@ -1,7 +1,7 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
-import { DataSource } from "../map/CanvasLayer";
+import { Renderer } from "../map/CanvasLayer";
 import { JSX } from "solid-js";
 
 export const colorScale = new ColorScale([
@@ -14,7 +14,7 @@ export const colorScale = new ColorScale([
 
 
 
-export class CumuliDepth implements DataSource {
+export class CumuliDepth implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 

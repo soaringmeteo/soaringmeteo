@@ -4,10 +4,10 @@ import * as L from 'leaflet';
 import { drawCloudCover } from "./CloudCover";
 import { drawBoundaryLayerDepth } from "./BoundaryLayerDepth";
 import { windColor } from "./Wind";
-import { DataSource } from "../map/CanvasLayer";
+import { Renderer } from "../map/CanvasLayer";
 import { JSX } from "solid-js";
 
-export class Mixed implements DataSource {
+export class Mixed implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 
