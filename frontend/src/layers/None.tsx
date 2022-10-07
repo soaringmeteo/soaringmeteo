@@ -1,6 +1,6 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
-import { DataSource } from "../CanvasLayer";
+import { DataSource } from "../map/CanvasLayer";
 import { JSX } from "solid-js";
 
 export class None implements DataSource {

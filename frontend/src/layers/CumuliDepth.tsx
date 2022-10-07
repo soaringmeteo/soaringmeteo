@@ -1,7 +1,7 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
-import { DataSource } from "../CanvasLayer";
+import { DataSource } from "../map/CanvasLayer";
 import { JSX } from "solid-js";
 
 export const colorScale = new ColorScale([

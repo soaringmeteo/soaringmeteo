@@ -1,7 +1,7 @@
 import { createEffect, createSignal, JSX, Show } from 'solid-js';
 import { insert, render, style } from 'solid-js/web';
 
-import { initializeMap } from './Map';
+import { initializeMap } from './map/Map';
 import { PeriodSelectors } from './PeriodSelector';
 import { ForecastLayer } from './ForecastLayer';
 import { fetchDefaultForecast, ForecastMetadata, showDate } from './data/ForecastMetadata';

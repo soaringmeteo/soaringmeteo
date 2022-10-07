@@ -1,7 +1,7 @@
 import * as L from 'leaflet';
 import { Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Switch } from 'solid-js';
 
-import { DataSource, CanvasLayer, viewPoint } from "./CanvasLayer";
+import { DataSource, CanvasLayer, viewPoint } from "./map/CanvasLayer";
 import { Mixed } from './layers/Mixed';
 import { Forecast, normalizeCoordinates } from './data/Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';

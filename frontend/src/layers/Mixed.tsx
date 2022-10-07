@@ -4,7 +4,7 @@ import * as L from 'leaflet';
 import { drawCloudCover } from "./CloudCover";
 import { drawBoundaryLayerDepth } from "./BoundaryLayerDepth";
 import { windColor } from "./Wind";
-import { DataSource } from "../CanvasLayer";
+import { DataSource } from "../map/CanvasLayer";
 import { JSX } from "solid-js";
 
 export class Mixed implements DataSource {

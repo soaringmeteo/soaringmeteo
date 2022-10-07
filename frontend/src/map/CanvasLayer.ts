@@ -1,6 +1,6 @@
 import * as L from 'leaflet';
 import { JSX } from 'solid-js';
-import { modelResolution, Forecast, ForecastPoint } from './data/Forecast';
+import { modelResolution, Forecast, ForecastPoint } from '../data/Forecast';
 
 export type CanvasLayer = {
   setDataSource(dataSource: DataSource): void
