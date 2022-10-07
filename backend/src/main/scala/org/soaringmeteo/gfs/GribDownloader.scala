@@ -1,9 +1,10 @@
 package org.soaringmeteo.gfs
 
 import org.slf4j.LoggerFactory
-import org.soaringmeteo.util.RateLimiter
+import org.soaringmeteo.util.{RateLimiter, daemonicThreadFactory}
 import squants.time.RevolutionsPerMinute
 
+import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.{Failure, Success, Try}
@@ -23,13 +24,19 @@ class GribDownloader {
 
   private val logger = LoggerFactory.getLogger(getClass)
   private val rateLimiter = new RateLimiter(RevolutionsPerMinute(Settings.downloadRateLimit))
+  // We use a dedicated thread pool with a fixed number of threads to avoid trying to download
+  // all the file at the same time. If one of them is not yet available, we want to wait for it
+  // to be available before even trying to get the next ones. With the default ExecutionContext, we
+  // would create as many threads as the number of files to download and we would try to resolve
+  // them all (as long as we stay under the rate limit).
+  private val severalThreads = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(3, daemonicThreadFactory))
 
   def scheduleDownload(
     targetFile: os.Path,
     gfsRun: in.ForecastRun,
     areaAndHour: AreaAndHour
   ): Future[os.Path] =
-    rateLimiter.submit(ExecutionContext.global) {
+    rateLimiter.submit(severalThreads) {
       logger.debug(s"Downloading GFS data for $areaAndHour")
       download(targetFile, gfsRun, areaAndHour)
       targetFile
