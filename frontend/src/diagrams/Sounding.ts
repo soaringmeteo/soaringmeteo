@@ -1,5 +1,3 @@
-import h from 'solid-js/h';
-
 import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, nextValue, previousValue, skyStyle, temperaturesRange } from './Diagram';
 import { DetailedForecast } from "../data/Forecast";
 import { cloudsColorScale } from './Clouds';
@@ -37,27 +35,20 @@ export const sounding = (forecast: DetailedForecast, elevation: number): [JSX.El
   const windArrowSize = Math.max(canvasHeight / 28, 1);
 
   // Main canvas contains the sounding diagram
-  const canvas =
-    h(
-      'canvas',
-      {
-        width: canvasWidth,
-        height: canvasHeight,
-        style: { width: `${canvasWidth}px`, height: `${canvasHeight}px` }
-      }
-    ) as HTMLCanvasElement;
+  const canvas = document.createElement('canvas');
+  canvas.setAttribute('width', `${canvasWidth}`);
+  canvas.setAttribute('height', `${canvasHeight}`);
+  canvas.style.width = `${canvasWidth}px`;
+  canvas.style.height = `${canvasHeight}px`;
   const ctx = canvas.getContext('2d');
 
   // Left key contains the vertical axis of the sounding diagram
-  const canvasLeftKey =
-    h(
-      'canvas',
-      {
-        width: keyWidth,
-        height: canvasHeight,
-        style: { flex: '0 0 auto', width: `${keyWidth}px`, height: `${canvasHeight}px` }
-      }
-    ) as HTMLCanvasElement;
+  const canvasLeftKey = document.createElement('canvas');
+  canvasLeftKey.setAttribute('width', `${keyWidth}`);
+  canvasLeftKey.setAttribute('height', `${canvasHeight}`);
+  canvasLeftKey.style.width = `${keyWidth}px`;
+  canvasLeftKey.style.height = `${canvasHeight}px`;
+  canvasLeftKey.style.flex = '0 0 auto';
   const leftCtx = canvasLeftKey.getContext('2d');
 
   // Offset between the edge of the canvas and the edge of the diagram
