@@ -2,7 +2,6 @@ import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
 import { Renderer } from "../map/CanvasLayer";
-import { JSX } from "solid-js";
 
 export class Rain implements Renderer {
 
@@ -12,12 +11,10 @@ export class Rain implements Renderer {
     drawRain(forecastAtPoint, topLeft, bottomRight, ctx);
   }
 
-  summary(forecastPoint: ForecastPoint): JSX.Element {
-    return <table>
-      <tbody>
-        <tr><th>Rainfall: </th><td>{ forecastPoint.rain }&nbsp;mm</td></tr>
-      </tbody>
-    </table>;
+  summary(forecastPoint: ForecastPoint): Array<[string, string]> {
+    return [
+      ["Rainfall", `${ forecastPoint.rain } mm`]
+    ]
   }
 
 }

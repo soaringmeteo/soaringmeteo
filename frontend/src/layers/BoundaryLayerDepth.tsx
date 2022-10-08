@@ -1,7 +1,6 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
-import { JSX } from "solid-js";
 import { Renderer } from "../map/CanvasLayer";
 
 export class BoundaryLayerDepth implements Renderer {
@@ -12,12 +11,10 @@ export class BoundaryLayerDepth implements Renderer {
     drawBoundaryLayerDepth(forecastAtPoint, topLeft, bottomRight, ctx);
   }
 
-  summary(forecastAtPoint: ForecastPoint): JSX.Element {
-    return <table>
-      <tbody>
-        <tr><th>Boundary layer depth: </th><td>{ forecastAtPoint.boundaryLayerDepth }&nbsp;m</td></tr>
-      </tbody>
-    </table>
+  summary(forecastAtPoint: ForecastPoint): Array<[string, string]> {
+    return [
+      ["Boundary layer depth", `${ forecastAtPoint.boundaryLayerDepth } m`]
+    ]
   }
 
 }

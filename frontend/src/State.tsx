@@ -2,7 +2,7 @@ import { Context, createContext, JSX, useContext } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { Forecast, LocationForecasts } from './data/Forecast';
 import { ForecastMetadata } from './data/ForecastMetadata';
-import { Layer, xcFlyingPotentialLayer } from './ForecastLayer';
+import { boundaryLayerWindLayer, Layer, xcFlyingPotentialLayer } from './ForecastLayer';
 
 type State = {
   // Currently selected forecast run
@@ -12,7 +12,10 @@ type State = {
   // Delta with the forecast initialization time
   hourOffset: number
   // Selected layer on the map (XC flying potential, thermal velocity, etc.)
-  layer: Layer
+  primaryLayer: Layer
+  // It is possible to also show a wind layer as an overlay
+  windLayer: Layer
+  windLayerEnabled: boolean
   // If defined, the detailed forecast data for the selected location, and the type of detailed view to display
   detailedView: undefined | [LocationForecasts, DetailedViewType]
 }
@@ -24,7 +27,9 @@ type ContextType = [
   {
     setForecastMetadata: (forecastMetadata: ForecastMetadata) => void
     setHourOffset: (hourOffset: number) => void
-    setLayer: (layer: Layer) => void
+    setPrimaryLayer: (layer: Layer) => void
+    setWindLayer: (layer: Layer) => void
+    enableWindLayer: (enabled: boolean) => void
     showLocationForecast: (latitude: number, longitude: number, viewType: DetailedViewType) => void
     hideLocationForecast: () => void
   }
@@ -45,7 +50,9 @@ export const StateProvider = (props: {
     forecastMetadata: props.forecastMetadata,
     forecast: props.currentForecast,
     hourOffset: props.hourOffset,
-    layer: xcFlyingPotentialLayer,
+    primaryLayer: xcFlyingPotentialLayer,
+    windLayer: boundaryLayerWindLayer,
+    windLayerEnabled: true,
     detailedView: undefined
   });
 
@@ -65,8 +72,14 @@ export const StateProvider = (props: {
             alert('Unable to retrieve forecast data');
           });
       },
-      setLayer: (layer: Layer): void => {
-        setState({ layer })
+      setPrimaryLayer: (layer: Layer): void => {
+        setState({ primaryLayer: layer })
+      },
+      setWindLayer: (layer: Layer): void => {
+        setState({ windLayer: layer })
+      },
+      enableWindLayer: (enabled: boolean): void => {
+        setState({ windLayerEnabled: enabled })
       },
       showLocationForecast: (latitude: number, longitude: number, viewType: DetailedViewType): void => {
         state.forecastMetadata

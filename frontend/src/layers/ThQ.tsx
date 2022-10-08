@@ -1,10 +1,7 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
-import { drawWindArrow } from "../shapes";
-import { windColor } from "./Wind";
 import { Renderer } from "../map/CanvasLayer";
-import { JSX } from "solid-js";
 
 export const colorScale = new ColorScale([
   [10, new Color(0x33, 0x33, 0x33, 1)],
@@ -25,9 +22,6 @@ export class ThQ implements Renderer {
 
   renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     if (forecastAtPoint !== undefined) {
-      const center = L.point((topLeft.x + bottomRight.x) / 2, (topLeft.y + bottomRight.y) / 2);
-      const width  = bottomRight.x - topLeft.x;
-
       const thq = value(
         forecastAtPoint.thermalVelocity,
         forecastAtPoint.boundaryLayerDepth,
@@ -40,11 +34,10 @@ export class ThQ implements Renderer {
       ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
       ctx.restore();
-      drawWindArrow(ctx, center.x, center.y, width, windColor(0.25), forecastAtPoint.uWind, forecastAtPoint.vWind);
     }
   }
 
-  summary(forecastAtPoint: ForecastPoint): JSX.Element {
+  summary(forecastAtPoint: ForecastPoint): Array<[string, string]> {
     const thq = value(
       forecastAtPoint.thermalVelocity,
       forecastAtPoint.boundaryLayerDepth,
@@ -52,18 +45,12 @@ export class ThQ implements Renderer {
       forecastAtPoint.vWind
     );
 
-    const [u, v] = [forecastAtPoint.uWind, forecastAtPoint.vWind];
-    const windSpeed = Math.sqrt(u * u + v * v); 
-
-    return <table>
-      <tbody>
-        <tr><th>XC Flying Potential: </th><td>{ thq }%</td></tr>
-        <tr><th>Boundary layer depth: </th><td>{ forecastAtPoint.boundaryLayerDepth }&nbsp;m</td></tr>
-        <tr><th>Thermal velocity: </th><td>{ forecastAtPoint.thermalVelocity }&nbsp;m/s</td></tr>
-        <tr><th>Boundary layer wind:</th><td>{ Math.round(windSpeed) }&nbsp;km/h</td></tr>
-        <tr><th>Total cloud cover: </th><td>{ Math.round(forecastAtPoint.cloudCover * 100) }%</td></tr>
-      </tbody>
-    </table>;
+    return [
+      ["XC Flying Potential",  `${thq}%`],
+      ["Boundary layer depth", `${forecastAtPoint.boundaryLayerDepth} m`],
+      ["Thermal velocity",     `${forecastAtPoint.thermalVelocity} m/s`],
+      ["Total cloud cover",    `${Math.round(forecastAtPoint.cloudCover * 100)}%`]
+    ]
   }
 
 }

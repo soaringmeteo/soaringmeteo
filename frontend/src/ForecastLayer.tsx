@@ -2,7 +2,6 @@ import * as L from 'leaflet';
 import { Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Switch } from 'solid-js';
 
 import { Renderer, CanvasLayer, viewPoint } from "./map/CanvasLayer";
-import { Mixed } from './layers/Mixed';
 import { Forecast, normalizeCoordinates } from './data/Forecast';
 import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
 import { Color, ColorScale } from './ColorScale';
@@ -35,7 +34,7 @@ export class Layer {
 const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): JSX.Element => {
   const colorsAndValues: Array<[Color, string]> = colorScale.points.slice().reverse().map(([value, color]) => [color, format(value)]);
   const length = colorsAndValues.reduce((n, [_, s]) => s.length > n ? s.length : n, 0);
-  return <div style={{ 'margin': '1em 0.5em 0.5em 0.5em', width: `${length * 2 / 3}em` }}>
+  return <div style={{ width: `${length * 2 / 3}em`, 'padding-top': '0.3em' /* because text overflows */, margin: 'auto' }}>
   {
     colorsAndValues.map(([color, value]) =>
       <div style={{ height: '2em', 'background-color': color.css(), position: 'relative' }}>
@@ -50,15 +49,15 @@ const windScaleEl: JSX.Element =
   <div>
     {
       [2.5, 5, 10, 17.5, 25].map((windSpeed) => {
-        const canvas = <canvas style={{ width: '40px', height: '30px', border: 'thin solid black' }} /> as HTMLCanvasElement;
-        canvas.width = 40;
-        canvas.height = 30;
+        const canvas = <canvas style={{ width: '30px', height: '20px', border: 'thin solid black' }} /> as HTMLCanvasElement;
+        canvas.width = 30;
+        canvas.height = 20;
         const ctx = canvas.getContext('2d');
         if (ctx === null) { return }
         drawWindArrow(ctx, canvas.width / 2, canvas.height / 2, canvas.width - 4, windColor(0.50), windSpeed, 0);
         return (
-          <div style={{ margin: '5px', 'text-align': 'right' }}>
-            <span>{`${windSpeed} km/h `}</span>
+          <div style={{ 'margin-bottom': '2px' }}>
+            <div>{`${windSpeed} km/h `}</div>
             {canvas}
           </div>
         )
@@ -102,7 +101,7 @@ const _300MAGLWindLayer = new Layer(
   forecast => new Wind(forecast, (forecast) => [forecast.u300MWind, forecast.v300MWind]),
   windScaleEl
 );
-const boundaryLayerWindLayer = new Layer(
+export const boundaryLayerWindLayer = new Layer(
   'Boundary Layer',
   'Average wind force and direction in the boundary layer',
   forecast => new Wind(forecast, (point) => [point.uWind, point.vWind]),
@@ -132,12 +131,6 @@ const rainLayer = new Layer(
   forecast => new Rain(forecast),
   colorScaleEl(rainColorScale, value => `${value} mm `)
 );
-const mixedLayer = new Layer(
-  'Mixed',
-  'Boundary layer depth, wind, and cloud cover',
-  forecast => new Mixed(forecast),
-  <div />
-);
 
 /**
  * Overlay on the map that displays the soaring forecast.
@@ -149,7 +142,7 @@ export const ForecastLayer = (props: {
   openLocationDetailsPopup: (latitude: number, longitude: number, content: JSX.Element) => void
 }): JSX.Element => {
 
-  const [state, { setForecastMetadata, setLayer, showLocationForecast }] = useState();
+  const [state, { setForecastMetadata, setPrimaryLayer, setWindLayer, enableWindLayer, showLocationForecast }] = useState();
 
   const [isMenuShown, showMenu] = createSignal(false);
 
@@ -170,23 +163,31 @@ export const ForecastLayer = (props: {
       }
     </fieldset>;
 
-  function setupLayerBtn(layer: Layer): HTMLElement {
+  function setupLayerBtn(layer: Layer, layerType: 'primary-layer' | 'wind-layer'): JSX.Element {
     const container = makeRadioBtn(
       layer.name,
       layer.title,
-      () => state.layer === layer,
-      'layer',
-      () => setLayer(layer)
+      () => state.primaryLayer === layer || state.windLayer === layer,
+      layerType,
+      () => {
+        switch(layerType) {
+          case 'primary-layer':
+            setPrimaryLayer(layer);
+            break;
+          case 'wind-layer':
+            setWindLayer(layer);
+            break;
+        }
+      }
     );
     return container
   }
 
-  const noneEl = setupLayerBtn(noLayer);
-  const mixedEl = setupLayerBtn(mixedLayer);
-  const thqEl = setupLayerBtn(xcFlyingPotentialLayer);
+  const noneEl = setupLayerBtn(noLayer, 'primary-layer');
+  const thqEl = setupLayerBtn(xcFlyingPotentialLayer, 'primary-layer');
 
-  const boundaryLayerHeightEl = setupLayerBtn(boundaryLayerDepthLayer);
-  const thermalVelocityEl = setupLayerBtn(thermalVelocityLayer);
+  const boundaryLayerHeightEl = setupLayerBtn(boundaryLayerDepthLayer, 'primary-layer');
+  const thermalVelocityEl = setupLayerBtn(thermalVelocityLayer, 'primary-layer');
   const thermalLayersEl =
     <fieldset>
       <legend>Thermals</legend>
@@ -194,22 +195,31 @@ export const ForecastLayer = (props: {
       {thermalVelocityEl}
     </fieldset>;
 
-  const blWindEl = setupLayerBtn(boundaryLayerWindLayer);
-  const blTopWindEl = setupLayerBtn(boundaryLayerTopWindLayer);
-  const surfaceWindEl = setupLayerBtn(surfaceWindLayer);
-  const _300MAGLWindEl = setupLayerBtn(_300MAGLWindLayer);
+  const blWindEl = setupLayerBtn(boundaryLayerWindLayer, 'wind-layer');
+  const blTopWindEl = setupLayerBtn(boundaryLayerTopWindLayer, 'wind-layer');
+  const surfaceWindEl = setupLayerBtn(surfaceWindLayer, 'wind-layer');
+  const _300MAGLWindEl = setupLayerBtn(_300MAGLWindLayer, 'wind-layer');
+  const windCheckBox = inputWithLabel(
+    'Wind',
+    'Show wind force and direction at various elevation levels',
+    <input
+      type='checkbox'
+      checked={state.windLayerEnabled}
+      onChange={() => enableWindLayer(!state.windLayerEnabled)}
+    />
+  );
   const windLayersEl =
     <fieldset>
-      <legend>Wind</legend>
+      <legend>{windCheckBox}</legend>
       {surfaceWindEl}
       {_300MAGLWindEl}
       {blWindEl}
       {blTopWindEl}
     </fieldset>;
 
-  const cloudCoverEl = setupLayerBtn(cloudCoverLayer);
-  const cumuliDepthEl = setupLayerBtn(cumuliDepthLayer);
-  const rainEl = setupLayerBtn(rainLayer);
+  const cloudCoverEl = setupLayerBtn(cloudCoverLayer, 'primary-layer');
+  const cumuliDepthEl = setupLayerBtn(cumuliDepthLayer, 'primary-layer');
+  const rainEl = setupLayerBtn(rainLayer, 'primary-layer');
   const cloudsLayersEl =
     <fieldset>
       <legend>Clouds and Rain</legend>
@@ -223,10 +233,9 @@ export const ForecastLayer = (props: {
       <legend>Layer</legend>
       {noneEl}
       {thqEl}
-      {mixedEl}
       {thermalLayersEl}
-      {windLayersEl}
       {cloudsLayersEl}
+      {windLayersEl}
     </fieldset>;
 
   const aboveMapStyle = { position: 'absolute', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, 'user-select': 'none' };
@@ -265,16 +274,36 @@ export const ForecastLayer = (props: {
   L.DomEvent.disableScrollPropagation(rootElement);
 
   const layerKeyEl =
-    <div style={{ position: 'absolute', bottom: '30px', left: '5px', 'z-index': 1000, 'background-color': 'rgba(255, 255,  255, 0.5' }}>
-      {state.layer.mapKeyEl}
+    <div style={{
+      position: 'absolute',
+      bottom: '30px',
+      left: '5px',
+      'z-index': 1000,
+      'background-color': 'rgba(255, 255,  255, 0.5',
+      'font-size': '11px',
+      'padding': '5px',
+      'text-align': 'center'
+    }}>
+      <Show when={state.windLayerEnabled}>
+        {state.windLayer.mapKeyEl}
+      </Show>
+      {state.primaryLayer.mapKeyEl}
     </div>;
 
-  // Sync renderer (used to display the map overlay and tooltips) with current forecast
-  const renderer =
-    createMemo(() => state.layer.createRenderer(state.forecast));
+  // Sync renderers (used to display the map overlay and tooltips) with current forecast
+  const primaryRenderer =
+    createMemo(() => state.primaryLayer.createRenderer(state.forecast));
+  const windRenderer =
+    createMemo<undefined | Renderer>(() => {
+      if (state.windLayerEnabled) {
+        return state.windLayer.createRenderer(state.forecast)
+      } else {
+        return undefined
+      }
+    });
 
   createEffect(() => {
-    props.canvas.setRenderer(renderer());
+    props.canvas.setRenderers(primaryRenderer(), windRenderer());
   });
 
   // Show a popup with a summary when the user clicks on the map
@@ -285,11 +314,15 @@ export const ForecastLayer = (props: {
       const [latitude, longitude] = [normalizedLatitude / 100, normalizedLongitude / 100];
       const forecastAtPoint = viewPoint(state.forecast, 1 /* TODO handle averaging */, normalizedLatitude, normalizedLongitude);
       if (forecastAtPoint !== undefined) {
+        const primaryRendererSummary = primaryRenderer().summary(forecastAtPoint);
+        const windRendererSummary = windRenderer()?.summary(forecastAtPoint);
+        const summary =
+          windRendererSummary === undefined ? primaryRendererSummary : primaryRendererSummary.concat(windRendererSummary);
         const content =
           <div>
             <div>Grid point: {latitude},{longitude}</div>
             <div>GFS forecast for {showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { showWeekDay: true })}</div>
-            { renderer().summary(forecastAtPoint) }
+            { table(summary) }
             <div style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-around' }}>
               <button
                 onClick={ () => showLocationForecast(event.latlng.lat, event.latlng.lng, 'meteogram') }
@@ -319,17 +352,39 @@ const makeRadioBtn = (
   checked: () => boolean,
   groupName: string,
   onChange: () => void
-): HTMLElement => {
-  const input =
+): JSX.Element =>
+  inputWithLabel(
+    label,
+    title,
     <input
       name={groupName}
       type='radio'
       checked={checked()}
       onChange={() => onChange()}
-  />;
-  return (
-    <div style={{ 'background-color': 'rgba(255, 255, 255, 0.5)', 'text-align': 'right' }}>
-      <label style={{ cursor: 'pointer', padding: '0.3em' }} title={title}>{label}{input}</label>
-    </div>
-  )
-}
+    />
+  );
+
+const inputWithLabel = (
+  label: string,
+  title: string,
+  input: JSX.Element
+): JSX.Element =>
+  <div style={{ 'background-color': 'rgba(255, 255, 255, 0.5)', 'text-align': 'right' }}>
+    <label style={{ cursor: 'pointer', padding: '0.3em' }} title={title}>{label}{input}</label>
+  </div>;
+
+const table = (data: Array<[string, string]>): JSX.Element => {
+  const rows =
+    data.map(([label, value]) => {
+      return <tr><th>{label}:</th><td>{value}</td></tr>
+    });
+  if (rows.length === 0) {
+    return <div></div>
+  } else {
+    return <table>
+      <tbody>
+        { rows }
+      </tbody>
+    </table>;
+  }
+};

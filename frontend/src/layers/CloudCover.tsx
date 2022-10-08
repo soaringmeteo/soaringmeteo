@@ -2,7 +2,6 @@ import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
 import { Renderer } from "../map/CanvasLayer";
-import { JSX } from "solid-js";
 
 export class CloudCover implements Renderer {
 
@@ -12,12 +11,10 @@ export class CloudCover implements Renderer {
     drawCloudCover(forecastAtPoint, topLeft, bottomRight, ctx, cloudCoverMaxOpacity);
   }
 
-  summary(forecastPoint: ForecastPoint): JSX.Element {
-    return <table>
-      <tbody>
-        <tr><th>Total cloud cover: </th><td>{ Math.round(forecastPoint.cloudCover * 100) }%</td></tr>
-      </tbody>
-    </table>;
+  summary(forecastPoint: ForecastPoint): Array<[string, string]> {
+    return [
+      ["Total cloud cover", `${ Math.round(forecastPoint.cloudCover * 100) }%`]
+    ]
   }
 
 }

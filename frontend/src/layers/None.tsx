@@ -1,7 +1,6 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { Renderer } from "../map/CanvasLayer";
-import { JSX } from "solid-js";
 
 export class None implements Renderer {
 
@@ -10,8 +9,8 @@ export class None implements Renderer {
   renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
   }
 
-  summary(forecastPoint: ForecastPoint): JSX.Element {
-    return <div></div>;
+  summary(forecastPoint: ForecastPoint) {
+    return [];
   }
 
 }
