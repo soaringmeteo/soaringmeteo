@@ -7,16 +7,7 @@ import { closeButtonStyle } from './shapes';
 import layersImg from './images/layers.png';
 import { ForecastMetadata, showDate } from './data/ForecastMetadata';
 import { useState } from './State';
-import { Layer } from './layers/Layer';
-import { noLayer } from './layers/None';
-import { xcFlyingPotentialLayer } from './layers/ThQ';
-import { boundaryLayerDepthLayer } from './layers/BoundaryLayerDepth';
-import { thermalVelocityLayer } from './layers/ThermalVelocity';
-import { boundaryLayerTopWindLayer, boundaryLayerWindLayer, surfaceWindLayer, _300MAGLWindLayer } from './layers/Wind';
-import { cloudCoverLayer } from './layers/CloudCover';
-import { rainLayer } from './layers/Rain';
-import { cumuliDepthLayer } from './layers/CumuliDepth';
-
+import { boundaryLayerDepthKey, boundaryLayerTopWindKey, boundaryLayerWindKey, cloudCoverKey, cumuliDepthKey, layerByKey, noneKey, rainKey, surfaceWindKey, thermalVelocityKey, xcFlyingPotentialKey, _300MAGLWindKey } from './layers/Layers';
 
 /**
  * Overlay on the map that displays the soaring forecast.
@@ -49,7 +40,11 @@ export const ForecastLayer = (props: {
       }
     </fieldset>;
 
-  function setupLayerBtn(layer: Layer, layerType: 'primary-layer' | 'wind-layer'): JSX.Element {
+  function setupLayerBtn(key: string, layerType: 'primary-layer' | 'wind-layer'): JSX.Element {
+    const layer = layerByKey(key);
+    if (layer === undefined) {
+      throw new Error(`Invalid layer key: ${key}`);
+    }
     const container = makeRadioBtn(
       layer.name,
       layer.title,
@@ -58,10 +53,10 @@ export const ForecastLayer = (props: {
       () => {
         switch(layerType) {
           case 'primary-layer':
-            setPrimaryLayer(layer);
+            setPrimaryLayer(key, layer);
             break;
           case 'wind-layer':
-            setWindLayer(layer);
+            setWindLayer(key, layer);
             break;
         }
       }
@@ -69,11 +64,11 @@ export const ForecastLayer = (props: {
     return container
   }
 
-  const noneEl = setupLayerBtn(noLayer, 'primary-layer');
-  const thqEl = setupLayerBtn(xcFlyingPotentialLayer, 'primary-layer');
+  const noneEl = setupLayerBtn(noneKey, 'primary-layer');
+  const thqEl = setupLayerBtn(xcFlyingPotentialKey, 'primary-layer');
 
-  const boundaryLayerHeightEl = setupLayerBtn(boundaryLayerDepthLayer, 'primary-layer');
-  const thermalVelocityEl = setupLayerBtn(thermalVelocityLayer, 'primary-layer');
+  const boundaryLayerHeightEl = setupLayerBtn(boundaryLayerDepthKey, 'primary-layer');
+  const thermalVelocityEl = setupLayerBtn(thermalVelocityKey, 'primary-layer');
   const thermalLayersEl =
     <fieldset>
       <legend>Thermals</legend>
@@ -81,10 +76,10 @@ export const ForecastLayer = (props: {
       {thermalVelocityEl}
     </fieldset>;
 
-  const blWindEl = setupLayerBtn(boundaryLayerWindLayer, 'wind-layer');
-  const blTopWindEl = setupLayerBtn(boundaryLayerTopWindLayer, 'wind-layer');
-  const surfaceWindEl = setupLayerBtn(surfaceWindLayer, 'wind-layer');
-  const _300MAGLWindEl = setupLayerBtn(_300MAGLWindLayer, 'wind-layer');
+  const blWindEl = setupLayerBtn(boundaryLayerWindKey, 'wind-layer');
+  const blTopWindEl = setupLayerBtn(boundaryLayerTopWindKey, 'wind-layer');
+  const surfaceWindEl = setupLayerBtn(surfaceWindKey, 'wind-layer');
+  const _300MAGLWindEl = setupLayerBtn(_300MAGLWindKey, 'wind-layer');
   const windCheckBox = inputWithLabel(
     'Wind',
     'Show wind force and direction at various elevation levels',
@@ -103,9 +98,9 @@ export const ForecastLayer = (props: {
       {blTopWindEl}
     </fieldset>;
 
-  const cloudCoverEl = setupLayerBtn(cloudCoverLayer, 'primary-layer');
-  const cumuliDepthEl = setupLayerBtn(cumuliDepthLayer, 'primary-layer');
-  const rainEl = setupLayerBtn(rainLayer, 'primary-layer');
+  const cloudCoverEl = setupLayerBtn(cloudCoverKey, 'primary-layer');
+  const cumuliDepthEl = setupLayerBtn(cumuliDepthKey, 'primary-layer');
+  const rainEl = setupLayerBtn(rainKey, 'primary-layer');
   const cloudsLayersEl =
     <fieldset>
       <legend>Clouds and Rain</legend>
