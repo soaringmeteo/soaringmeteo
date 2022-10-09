@@ -12,7 +12,7 @@ import { boundaryLayerDepthKey, boundaryLayerTopWindKey, boundaryLayerWindKey, c
 /**
  * Overlay on the map that displays the soaring forecast.
  */
-export const ForecastLayer = (props: {
+export const LayersSelector = (props: {
   forecastMetadatas: Array<ForecastMetadata>
   canvas: CanvasLayer
   popupRequest: Accessor<undefined | L.LeafletMouseEvent>

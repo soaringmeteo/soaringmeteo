@@ -3,7 +3,7 @@ import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap } from './map/Map';
 import { PeriodSelectors } from './PeriodSelector';
-import { ForecastLayer } from './ForecastLayer';
+import { LayersSelector } from './LayersSelector';
 import { fetchDefaultForecast, ForecastMetadata, showDate } from './data/ForecastMetadata';
 import { Forecast } from './data/Forecast';
 import * as L from 'leaflet';
@@ -74,10 +74,10 @@ export const start = (containerElement: HTMLElement): void => {
         .openOn(map);
     };
 
-    // PeriodSelector displays the buttons to move over time. When we click on those buttons, it
+    // PeriodSelectors displays the buttons to move over time. When we click on those buttons, it
     // calls `onHourOffsetChanged`, which we handle by updating our `state`, which is propagated
     // back to these components.
-    // ForecastLayer displays the configuration button and manages the canvas overlay.
+    // LayersSelector displays the configuration button and manages the canvas overlay.
     return <>
       <span style={{
         position: 'absolute', top: 0, left: 0, 'z-index': 1200
@@ -85,7 +85,7 @@ export const start = (containerElement: HTMLElement): void => {
         <Burger />
       </span>
       <PeriodSelectors morningOffset={props.morningOffset} />
-      <ForecastLayer
+      <LayersSelector
         forecastMetadatas={props.forecastMetadatas}
         canvas={canvas}
         popupRequest={popupRequest}
