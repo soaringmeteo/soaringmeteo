@@ -2,135 +2,21 @@ import * as L from 'leaflet';
 import { Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Switch } from 'solid-js';
 
 import { Renderer, CanvasLayer, viewPoint } from "./map/CanvasLayer";
-import { Forecast, normalizeCoordinates } from './data/Forecast';
-import { ThQ, colorScale as thQColorScale } from './layers/ThQ';
-import { Color, ColorScale } from './ColorScale';
-import { CloudCover, cloudCoverColorScale } from './layers/CloudCover';
-import { boundaryDepthColorScale, BoundaryLayerDepth } from './layers/BoundaryLayerDepth';
-import { Wind, windColor } from './layers/Wind';
-import { None } from './layers/None';
-import { closeButtonStyle, drawWindArrow } from './shapes';
+import { normalizeCoordinates } from './data/Forecast';
+import { closeButtonStyle } from './shapes';
 import layersImg from './images/layers.png';
 import { ForecastMetadata, showDate } from './data/ForecastMetadata';
-import { Rain, rainColorScale } from './layers/Rain';
-import { ThermalVelocity, thermalVelocityColorScale } from './layers/ThermalVelocity';
-import { CumuliDepth, colorScale as cumuliDepthColorScale } from './layers/CumuliDepth';
 import { useState } from './State';
+import { Layer } from './layers/Layer';
+import { noLayer } from './layers/None';
+import { xcFlyingPotentialLayer } from './layers/ThQ';
+import { boundaryLayerDepthLayer } from './layers/BoundaryLayerDepth';
+import { thermalVelocityLayer } from './layers/ThermalVelocity';
+import { boundaryLayerTopWindLayer, boundaryLayerWindLayer, surfaceWindLayer, _300MAGLWindLayer } from './layers/Wind';
+import { cloudCoverLayer } from './layers/CloudCover';
+import { rainLayer } from './layers/Rain';
+import { cumuliDepthLayer } from './layers/CumuliDepth';
 
-/**
- * A layer shown over the map (boundary layer height, cloud cover, etc.)
- */
-export class Layer {
-
-  constructor(
-    readonly name: string,
-    readonly title: string,
-    readonly createRenderer: (forecast: Forecast) => Renderer,
-    readonly mapKeyEl: JSX.Element
-  ) {}
-
-}
-
-const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): JSX.Element => {
-  const colorsAndValues: Array<[Color, string]> = colorScale.points.slice().reverse().map(([value, color]) => [color, format(value)]);
-  const length = colorsAndValues.reduce((n, [_, s]) => s.length > n ? s.length : n, 0);
-  return <div style={{ width: `${length * 2 / 3}em`, 'padding-top': '0.3em' /* because text overflows */, margin: 'auto' }}>
-  {
-    colorsAndValues.map(([color, value]) =>
-      <div style={{ height: '2em', 'background-color': color.css(), position: 'relative' }}>
-        <span style={{ position: 'absolute', top: '-.6em', right: '0.5em', 'text-shadow': 'white 1px 1px 2px' }}>{value}</span>
-      </div>
-    )
-  }
-  </div>
-  };
-
-const windScaleEl: JSX.Element =
-  <div>
-    {
-      [2.5, 5, 10, 17.5, 25].map((windSpeed) => {
-        const canvas = <canvas style={{ width: '30px', height: '20px', border: 'thin solid black' }} /> as HTMLCanvasElement;
-        canvas.width = 30;
-        canvas.height = 20;
-        const ctx = canvas.getContext('2d');
-        if (ctx === null) { return }
-        drawWindArrow(ctx, canvas.width / 2, canvas.height / 2, canvas.width - 4, windColor(0.50), windSpeed, 0);
-        return (
-          <div style={{ 'margin-bottom': '2px' }}>
-            <div>{`${windSpeed} km/h `}</div>
-            {canvas}
-          </div>
-        )
-      })
-    }
-  </div>;
-
-const noLayer = new Layer(
-  'None',
-  'Map only',
-  forecast => new None(forecast),
-  <div />
-);
-export const xcFlyingPotentialLayer = new Layer(
-  'XC Flying Potential',
-  'XC flying potential',
-  forecast => new ThQ(forecast),
-  colorScaleEl(thQColorScale, value => `${value}% `)
-);
-const boundaryLayerDepthLayer = new Layer(
-  'Boundary Layer Depth',
-  'Boundary layer depth',
-  forecast => new BoundaryLayerDepth(forecast),
-  colorScaleEl(boundaryDepthColorScale, value => `${value} m `)
-);
-const thermalVelocityLayer = new Layer(
-  'Thermal Velocity',
-  'Thermal updraft velocity',
-  forecast => new ThermalVelocity(forecast),
-  colorScaleEl(thermalVelocityColorScale, value => `${value} m/s `)
-);
-const surfaceWindLayer = new Layer(
-  'Surface',
-  'Wind force and direction on the ground',
-  forecast => new Wind(forecast, (point) => [point.uSurfaceWind, point.vSurfaceWind]),
-  windScaleEl
-);
-const _300MAGLWindLayer = new Layer(
-  '300 m AGL',
-  'Wind force and direction at 300 m above the ground level',
-  forecast => new Wind(forecast, (forecast) => [forecast.u300MWind, forecast.v300MWind]),
-  windScaleEl
-);
-export const boundaryLayerWindLayer = new Layer(
-  'Boundary Layer',
-  'Average wind force and direction in the boundary layer',
-  forecast => new Wind(forecast, (point) => [point.uWind, point.vWind]),
-  windScaleEl
-);
-const boundaryLayerTopWindLayer = new Layer(
-  'Boundary Layer Top',
-  'Wind force and direction at the top of the boundary layer',
-  forecast => new Wind(forecast, (point) => [point.uBLTopWind, point.vBLTopWind]),
-  windScaleEl
-);
-const cloudCoverLayer = new Layer(
-  'Cloud Cover',
-  'Cloud cover (all altitudes)',
-  forecast => new CloudCover(forecast),
-  colorScaleEl(cloudCoverColorScale, value => `${value}% `)
-);
-const cumuliDepthLayer = new Layer(
-  'Convective Clouds',
-  'Convective Clouds Depth',
-  forecast => new CumuliDepth(forecast),
-  colorScaleEl(cumuliDepthColorScale, value => `${value} m `)
-);
-const rainLayer = new Layer(
-  'Rain',
-  'Total rain',
-  forecast => new Rain(forecast),
-  colorScaleEl(rainColorScale, value => `${value} mm `)
-);
 
 /**
  * Overlay on the map that displays the soaring forecast.

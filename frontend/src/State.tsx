@@ -2,7 +2,9 @@ import { Context, createContext, JSX, useContext } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { Forecast, LocationForecasts } from './data/Forecast';
 import { ForecastMetadata } from './data/ForecastMetadata';
-import { boundaryLayerWindLayer, Layer, xcFlyingPotentialLayer } from './ForecastLayer';
+import { Layer } from './layers/Layer';
+import { xcFlyingPotentialLayer } from './layers/ThQ';
+import { boundaryLayerWindLayer } from './layers/Wind';
 
 type State = {
   // Currently selected forecast run
