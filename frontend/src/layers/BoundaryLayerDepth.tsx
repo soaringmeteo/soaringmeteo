@@ -2,8 +2,9 @@ import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
 import { Renderer } from "../map/CanvasLayer";
+import { colorScaleEl, Layer } from "./Layer";
 
-export class BoundaryLayerDepth implements Renderer {
+class BoundaryLayerDepth implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -19,14 +20,14 @@ export class BoundaryLayerDepth implements Renderer {
 
 }
 
-export const drawBoundaryLayerDepth = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => {
+const drawBoundaryLayerDepth = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => {
   const blh = forecastAtPoint.boundaryLayerDepth;
   const color = boundaryDepthColorScale.closest(blh);
   ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
   ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
 }
 
-export const boundaryDepthColorScale = new ColorScale([
+const boundaryDepthColorScale = new ColorScale([
   [250,  new Color(0x33, 0x33, 0x33, 1)],
   [500,  new Color(0x99, 0x00, 0x99, 1)],
   [750,  new Color(0xff, 0x00, 0x00, 1)],
@@ -38,3 +39,10 @@ export const boundaryDepthColorScale = new ColorScale([
   [2250, new Color(0x99, 0xff, 0xff, 1)],
   [2500, new Color(0xff, 0xff, 0xff, 1)]
 ]);
+
+export const boundaryLayerDepthLayer = new Layer(
+  'Boundary Layer Depth',
+  'Boundary layer depth',
+  forecast => new BoundaryLayerDepth(forecast),
+  colorScaleEl(boundaryDepthColorScale, value => `${value} m `)
+);

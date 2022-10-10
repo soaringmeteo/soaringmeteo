@@ -2,7 +2,8 @@ import { Context, createContext, JSX, useContext } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { Forecast, LocationForecasts } from './data/Forecast';
 import { ForecastMetadata } from './data/ForecastMetadata';
-import { boundaryLayerWindLayer, Layer, xcFlyingPotentialLayer } from './ForecastLayer';
+import { Layer } from './layers/Layer';
+import { boundaryLayerWindKey, layerByKey, xcFlyingPotentialKey } from './layers/Layers';
 
 type State = {
   // Currently selected forecast run
@@ -27,8 +28,8 @@ type ContextType = [
   {
     setForecastMetadata: (forecastMetadata: ForecastMetadata) => void
     setHourOffset: (hourOffset: number) => void
-    setPrimaryLayer: (layer: Layer) => void
-    setWindLayer: (layer: Layer) => void
+    setPrimaryLayer: (key: string, layer: Layer) => void
+    setWindLayer: (key: string, layer: Layer) => void
     enableWindLayer: (enabled: boolean) => void
     showLocationForecast: (latitude: number, longitude: number, viewType: DetailedViewType) => void
     hideLocationForecast: () => void
@@ -37,6 +38,54 @@ type ContextType = [
 
 const SoarContext: Context<ContextType | undefined> = createContext<ContextType>();
 
+// Keys used to store the selected layers in the local storage
+const selectedPrimaryLayerKey = 'selected-primary-layer';
+const selectedWindLayerKey    = 'selected-wind-layer';
+const windLayerEnabledKey     = 'wind-layer-enabled';
+
+const loadLayer = (key: string, fallback: Layer): Layer => {
+  const maybeItem = window.localStorage.getItem(key);
+  if (maybeItem === null) {
+    return fallback
+  } else {
+    return layerByKey(maybeItem) ?? fallback
+  }
+};
+
+const loadPrimaryLayer = (): Layer => 
+  loadLayer(
+    selectedPrimaryLayerKey,
+    layerByKey(xcFlyingPotentialKey) as Layer // We know we are safe here
+  );
+
+
+const savePrimaryLayer = (key: string): void => {
+  window.localStorage.setItem(selectedPrimaryLayerKey, key);
+};
+
+const loadWindLayer = (): Layer => 
+  loadLayer(
+    selectedWindLayerKey,
+    layerByKey(boundaryLayerWindKey) as Layer // We know we are safe here
+  );
+
+const saveWindLayer = (key: string): void => {
+  window.localStorage.setItem(selectedWindLayerKey, key);
+};
+
+const loadWindLayerEnabled = (): boolean => {
+  const maybeItem = window.localStorage.getItem(windLayerEnabledKey);
+  if (maybeItem === null) {
+    return true
+  } else {
+    return JSON.parse(maybeItem);
+  }
+};
+
+const saveWindLayerEnabled = (value: boolean): void => {
+  window.localStorage.setItem(windLayerEnabledKey, JSON.stringify(value));
+};
+
 export const StateProvider = (props: {
   forecastMetadata: ForecastMetadata
   hourOffset: number
@@ -44,15 +93,18 @@ export const StateProvider = (props: {
   children: JSX.Element 
 }): JSX.Element => {
 
-  // TODO load/save to local storage or indexeddb
+  const primaryLayer     = loadPrimaryLayer();
+  const windLayer        = loadWindLayer();
+  const windLayerEnabled = loadWindLayerEnabled();
+
   // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
   const [state, setState] = createStore<State>({
     forecastMetadata: props.forecastMetadata,
     forecast: props.currentForecast,
     hourOffset: props.hourOffset,
-    primaryLayer: xcFlyingPotentialLayer,
-    windLayer: boundaryLayerWindLayer,
-    windLayerEnabled: true,
+    primaryLayer,
+    windLayer,
+    windLayerEnabled,
     detailedView: undefined
   });
 
@@ -72,13 +124,16 @@ export const StateProvider = (props: {
             alert('Unable to retrieve forecast data');
           });
       },
-      setPrimaryLayer: (layer: Layer): void => {
+      setPrimaryLayer: (key: string, layer: Layer): void => {
+        savePrimaryLayer(key);
         setState({ primaryLayer: layer })
       },
-      setWindLayer: (layer: Layer): void => {
+      setWindLayer: (key: string, layer: Layer): void => {
+        saveWindLayer(key);
         setState({ windLayer: layer })
       },
       enableWindLayer: (enabled: boolean): void => {
+        saveWindLayerEnabled(enabled);
         setState({ windLayerEnabled: enabled })
       },
       showLocationForecast: (latitude: number, longitude: number, viewType: DetailedViewType): void => {

@@ -2,6 +2,7 @@ import { Forecast, ForecastPoint } from "../data/Forecast";
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
 import { Renderer } from "../map/CanvasLayer";
+import { colorScaleEl, Layer } from "./Layer";
 
 export const colorScale = new ColorScale([
   [10, new Color(0x33, 0x33, 0x33, 1)],
@@ -16,7 +17,7 @@ export const colorScale = new ColorScale([
   [100, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
-export class ThQ implements Renderer {
+class ThQ implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -94,3 +95,10 @@ const logistic = (x: number, mu: number, k: number): number => {
   const s = mu / k;
   return L / (1 + Math.exp(-(x - mu) / s))
 };
+
+export const xcFlyingPotentialLayer = new Layer(
+  'XC Flying Potential',
+  'XC flying potential',
+  forecast => new ThQ(forecast),
+  colorScaleEl(colorScale, value => `${value}% `)
+);

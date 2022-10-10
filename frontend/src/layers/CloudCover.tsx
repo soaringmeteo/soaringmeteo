@@ -2,8 +2,9 @@ import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
 import { Renderer } from "../map/CanvasLayer";
+import { colorScaleEl, Layer } from "./Layer";
 
-export class CloudCover implements Renderer {
+class CloudCover implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -19,7 +20,7 @@ export class CloudCover implements Renderer {
 
 }
 
-export const drawCloudCover = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D, maxOpacity: number): void => {
+const drawCloudCover = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D, maxOpacity: number): void => {
   const width  = bottomRight.x - topLeft.x;
   const height = bottomRight.y - topLeft.y;
   const cloudCover = forecastAtPoint.cloudCover;
@@ -41,10 +42,17 @@ export const drawCloudCover = (forecastAtPoint: ForecastPoint, topLeft: L.Point,
 
 const cloudCoverMaxOpacity = 0.35;
 
-export const cloudCoverColorScale = new ColorScale([
+const cloudCoverColorScale = new ColorScale([
   [20,  new Color(0, 0, 0, 0.00 * cloudCoverMaxOpacity)],
   [40,  new Color(0, 0, 0, 0.25 * cloudCoverMaxOpacity)],
   [60,  new Color(0, 0, 0, 0.50 * cloudCoverMaxOpacity)],
   [80,  new Color(0, 0, 0, 0.75 * cloudCoverMaxOpacity)],
   [100, new Color(0, 0, 0, 1.00 * cloudCoverMaxOpacity)]
 ]);
+
+export const cloudCoverLayer = new Layer(
+  'Cloud Cover',
+  'Cloud cover (all altitudes)',
+  forecast => new CloudCover(forecast),
+  colorScaleEl(cloudCoverColorScale, value => `${value}% `)
+);
