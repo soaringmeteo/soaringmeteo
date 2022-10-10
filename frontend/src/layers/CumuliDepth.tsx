@@ -1,8 +1,7 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
-import { DataSource } from "../CanvasLayer";
-import { JSX } from "solid-js";
+import { Renderer } from "../map/CanvasLayer";
 
 export const colorScale = new ColorScale([
   [50,   new Color(0xff, 0xff, 0xff, 0)],
@@ -14,7 +13,7 @@ export const colorScale = new ColorScale([
 
 
 
-export class CumuliDepth implements DataSource {
+export class CumuliDepth implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -28,12 +27,10 @@ export class CumuliDepth implements DataSource {
     }
   }
 
-  summary(forecastPoint: ForecastPoint): JSX.Element {
-    return <table>
-      <tbody>
-        <tr><th>Cumuli depth: </th><td>{ forecastPoint.cumuliDepth }&nbsp;m</td></tr>
-      </tbody>
-    </table>;
+  summary(forecastPoint: ForecastPoint): Array<[string, string]> {
+    return [
+      ["Cumuli depth", `${ forecastPoint.cumuliDepth } m`]
+    ]
   }
 
 }

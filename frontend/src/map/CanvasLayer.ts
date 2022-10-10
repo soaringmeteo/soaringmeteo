@@ -1,18 +1,17 @@
 import * as L from 'leaflet';
-import { JSX } from 'solid-js';
-import { modelResolution, Forecast, ForecastPoint } from './data/Forecast';
+import { modelResolution, Forecast, ForecastPoint } from '../data/Forecast';
 
 export type CanvasLayer = {
-  setDataSource(dataSource: DataSource): void
+  setRenderers(primaryRenderer: Renderer, windRenderer: undefined | Renderer): void
 }
 
 /** A specific view of the forecast output (e.g., wind, XC flying potential, etc.) */
-export type DataSource = {
+export type Renderer = {
   forecast: Forecast
   /** Render one point of the forecast on the map */
   renderPoint: (forecastPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => void
-  /** Create a sumarry of the point (displayed in popups) */
-  summary: (forecastPoint: ForecastPoint) => JSX.Element
+  /** Create a summary of the forecast data on the point (displayed in popups) */
+  summary: (forecastPoint: ForecastPoint) => Array<[string, string]>
 }
 
 export const CanvasLayer = L.Layer.extend({
@@ -44,7 +43,7 @@ export const CanvasLayer = L.Layer.extend({
   },
 
   _update: function () {
-    if (this._dataSource === undefined || this._canvas === undefined) {
+    if (this._renderers === undefined || this._canvas === undefined) {
       return
     }
     const map: L.Map = this._map as L.Map;
@@ -75,15 +74,20 @@ export const CanvasLayer = L.Layer.extend({
     const bottomLat = Math.round(bottomRightCoordinates.lat * 100);
     const minLat = (Math.round(bottomLat / viewResolution) + (bottomLat < 0 ? -1 : 0)) * viewResolution;
 
+    const [primaryRenderer, maybeWindRenderer] = this._renderers;
+
     let lng = minLng;
     while (lng <= maxLng) {
       let lat = minLat;
       while (lat <= maxLat) {
-        const point = viewPoint(this._dataSource.forecast, averagingFactor, lat, lng);
+        const point = viewPoint(primaryRenderer.forecast /* HACK forecast should be passed separately from the renderers */, averagingFactor, lat, lng);
         if (point !== undefined) {
           const topLeft = map.latLngToContainerPoint([(lat + viewResolution / 2) / 100, (lng - viewResolution / 2) / 100]);
           const bottomRight = map.latLngToContainerPoint([(lat - viewResolution / 2) / 100, (lng + viewResolution / 2) / 100]);
-          this._dataSource.renderPoint(point, topLeft, bottomRight, ctx);
+          primaryRenderer.renderPoint(point, topLeft, bottomRight, ctx);
+          if (maybeWindRenderer !== undefined) {
+            maybeWindRenderer.renderPoint(point, topLeft, bottomRight, ctx);
+          }
         }
         lat = lat + viewResolution;
       }
@@ -91,8 +95,8 @@ export const CanvasLayer = L.Layer.extend({
     }
   },
 
-  setDataSource: function (dataSource: DataSource): void {
-    this._dataSource = dataSource;
+  setRenderers: function (primaryRenderer: Renderer, windRenderer: undefined | Renderer): void {
+    this._renderers = [primaryRenderer, windRenderer];
     this._update();
   }
 
