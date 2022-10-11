@@ -54,18 +54,21 @@ case class AirData(
 )
 
 object AirData {
-  def apply(atPressure: Map[Pressure, in.IsobaricVariables]): SortedMap[Length, AirData] =
-    atPressure.view.map { case (_, variables) =>
-      val height = variables.geopotentialHeight
-      val aboveGround =
-        AirData(
-          variables.wind,
-          variables.temperature,
-          variables.dewPoint,
-          variables.cloudCover
-        )
-      height -> aboveGround
-    }.to(SortedMap)
+  def apply(atPressure: Map[Pressure, in.IsobaricVariables], groundLevel: Length): SortedMap[Length, AirData] =
+    atPressure.values
+      .view
+      .filter(_.geopotentialHeight >= groundLevel)
+      .map { variables =>
+        val height = variables.geopotentialHeight
+        val aboveGround =
+          AirData(
+            variables.wind,
+            variables.temperature,
+            variables.dewPoint,
+            variables.cloudCover
+          )
+        height -> aboveGround
+      }.to(SortedMap)
 }
 
 object Forecast {
@@ -103,7 +106,7 @@ object Forecast {
                 gfsForecast.totalCloudCover,
                 gfsForecast.convectiveCloudCover,
                 ConvectiveClouds(gfsForecast),
-                AirData(gfsForecast.atPressure),
+                AirData(gfsForecast.atPressure, gfsForecast.elevation),
                 gfsForecast.mslet,
                 gfsForecast.snowDepth,
                 gfsForecast.surfaceTemperature,
