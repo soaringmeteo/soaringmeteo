@@ -32,7 +32,10 @@ object GfsGrib {
     "lev_800_mb",
     "lev_850_mb",
     "lev_900_mb",
+    "lev_925_mb",
     "lev_950_mb",
+    "lev_975_mb",
+    "lev_1000_mb",
     "lev_convective_cloud_layer",
     "lev_entire_atmosphere",
     "lev_high_cloud_layer", // Used only by legacy soarGFS
