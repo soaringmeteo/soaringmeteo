@@ -229,8 +229,8 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
       drawWindArrow(ctx, windCenterX, airDiagram.projectY(0), meteogramColumnWidth - 6, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
       // Air wind
       forecast.aboveGround
-        // Keep enly the wind values that are above the ground + 150 meters (so that arrows don’t overlap)
-        .filter((entry) => entry.elevation > forecasts.elevation + 150 && entry.elevation < forecasts.elevation + airDiagramHeightAboveGroundLevel)
+        // Keep enly the wind values that are above the ground + 100 meters (so that arrows don’t overlap)
+        .filter((entry) => entry.elevation > forecasts.elevation + 100 && entry.elevation < forecasts.elevation + airDiagramHeightAboveGroundLevel)
         .forEach((wind) => {
           drawWindArrow(ctx, windCenterX, airDiagram.projectY(elevationScale.apply(wind.elevation)), meteogramColumnWidth - 6, windColor, wind.u, wind.v);
         });
