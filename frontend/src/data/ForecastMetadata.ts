@@ -14,11 +14,13 @@ export class ForecastMetadata {
   readonly initS: string
   readonly init: Date
   readonly latest: number
+  readonly model: string
 
   constructor(data: ForecastMetadataData) {
     this.initS = data.initS;
     this.init = new Date(data.init);
     this.latest = data.latest;
+    this.model = 'GFS (NOAA)' // Hardcoded for now
   }
 
   /**

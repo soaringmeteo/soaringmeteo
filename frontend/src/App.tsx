@@ -4,12 +4,13 @@ import { insert, render, style } from 'solid-js/web';
 import { initializeMap } from './map/Map';
 import { PeriodSelectors } from './PeriodSelector';
 import { LayersSelector } from './LayersSelector';
-import { fetchDefaultForecast, ForecastMetadata, showDate } from './data/ForecastMetadata';
+import { fetchDefaultForecast, ForecastMetadata } from './data/ForecastMetadata';
 import { Forecast } from './data/Forecast';
 import * as L from 'leaflet';
 import markerImg from './images/marker-icon.png';
 import { StateProvider, useState } from './State';
 import { Burger } from './Burger';
+import { Attribution } from './map/Attribution';
 
 export const start = (containerElement: HTMLElement): void => {
 
@@ -27,10 +28,6 @@ export const start = (containerElement: HTMLElement): void => {
   }): JSX.Element => {
 
     const [state, { hideLocationForecast }] = useState();
-
-    createEffect(() => {
-      map.attributionControl.setPrefix(`Initialization: ${showDate(state.forecastMetadata.init)}`);
-    });
 
     const selectedLocationMarker: L.Marker = L.marker([0, 0], { icon: L.icon({ iconUrl: markerImg, iconSize: [25, 41] }) });
     createEffect(() => {
@@ -91,6 +88,11 @@ export const start = (containerElement: HTMLElement): void => {
         popupRequest={popupRequest}
         openLocationDetailsPopup={openLocationDetailsPopup}
       />
+      <span style={{
+        position: 'absolute', right: '56px', bottom: '10px', 'z-index': 1300
+      }}>
+        <Attribution />
+      </span>
     </>
   }
 
