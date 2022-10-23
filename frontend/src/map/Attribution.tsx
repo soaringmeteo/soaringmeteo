@@ -2,6 +2,7 @@ import { createSignal, JSX, Show } from 'solid-js'
 import * as L from 'leaflet'
 import { showDate } from '../data/ForecastMetadata'
 import { useState } from '../State'
+import { surfaceOverMap } from '../styles/Styles';
 
 export const Attribution = (): JSX.Element => {
 
@@ -14,6 +15,7 @@ export const Attribution = (): JSX.Element => {
   const expandButton =
     <div
       style={{
+        ...surfaceOverMap,
         'cursor': 'pointer',
         display: 'inline-block',
         width: `${size}px`,
@@ -22,8 +24,7 @@ export const Attribution = (): JSX.Element => {
         'text-align': 'center',
         'font-size': '20px',
         'border-radius': `${size / 2}px`,
-        'background-color': 'white',
-        'box-shadow': 'rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 3px 1px -2px, rgba(0, 0, 0, 0.2) 0px 1px 5px 0px'
+        'background-color': 'white'
       }}
       onClick={ () => expand(true) }
     >
@@ -39,14 +40,14 @@ export const Attribution = (): JSX.Element => {
         <div
           onClick={ () => expand(false) }
           style={{
+            ...surfaceOverMap,
             'cursor': 'pointer',
             display: 'inline-block',
             height: `${size}px`,
             'line-height': `${size}px`,
             padding: '0 0.5em',
             'border-radius': '4px',
-            'background-color': 'white',
-            'box-shadow': 'rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 3px 1px -2px, rgba(0, 0, 0, 0.2) 0px 1px 5px 0px'
+            'background-color': 'white'
           }}
         >
           Model: { state.forecastMetadata.model }. Initialization: { showDate(state.forecastMetadata.init) }

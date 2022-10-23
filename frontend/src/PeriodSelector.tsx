@@ -6,6 +6,7 @@ import { forecastOffsets, periodsPerDay, showDate } from './data/ForecastMetadat
 import { sounding } from './diagrams/Sounding';
 import { meteogramColumnWidth } from './diagrams/Diagram';
 import { useState } from './State';
+import { closeButton, closeButtonSize, surfaceOverMap } from './styles/Styles';
 
 const marginLeft = keyWidth;
 export const marginTop = 35; // Day height + hour height + 2 (wtf)
@@ -229,12 +230,11 @@ export const PeriodSelectors = (props: {
   const hideDetailedViewBtn =
     <div
       style={{
-        ...buttonStyle,
-        width: `${marginLeft}px`,
+        ...closeButton,
+        ...surfaceOverMap,
+        'margin-right': `${marginLeft - closeButtonSize}px`,
         'flex-shrink': 0,
-        'background-color': 'white',
-        visibility: (state.detailedView !== undefined) ? 'visible' : 'hidden',
-        'text-align': 'center'
+        visibility: (state.detailedView !== undefined) ? 'visible' : 'hidden'
       }}
       title='Hide'
       onClick={() => hideLocationForecast() }
@@ -257,7 +257,7 @@ export const PeriodSelectors = (props: {
   // Current period
   const currentDayContainer =
     <span style={{ position: 'absolute', bottom: 0, 'margin-left': 'auto', 'margin-right': 'auto', left: 0, right: 0, 'text-align': 'center', 'z-index': 950, 'user-select': 'none', cursor: 'default' }}>
-      <div style={{ width: '125px', display: 'inline-block', 'background-color': 'white', 'border-radius': '4px 4px 0 0', 'box-shadow': '0 2px 2px 0 rgba(0,0,0,0.14),0 3px 1px -2px rgba(0,0,0,0.12),0 1px 5px 0 rgba(0,0,0,0.2)' }}>
+      <div style={{ ...surfaceOverMap, width: '125px', display: 'inline-block', 'background-color': 'white', 'border-radius': '4px 4px 0 0' }}>
         {currentDayEl}
         <div>
           {previousDayBtn}
