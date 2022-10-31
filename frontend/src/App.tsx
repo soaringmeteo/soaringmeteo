@@ -1,8 +1,7 @@
-import { createEffect, createSignal, JSX, Show } from 'solid-js';
+import { createEffect, createSignal, JSX, lazy, Show } from 'solid-js';
 import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap } from './map/Map';
-import { PeriodSelectors } from './PeriodSelector';
 import { LayersSelector } from './LayersSelector';
 import { fetchDefaultForecast, ForecastMetadata } from './data/ForecastMetadata';
 import { Forecast } from './data/Forecast';
@@ -11,7 +10,9 @@ import markerImg from './images/marker-icon.png';
 import { StateProvider, useState } from './State';
 import { Burger } from './Burger';
 import { Attribution } from './map/Attribution';
-import { Help } from './help/Help';
+
+const Help = lazy(() => import(/* webpackPrefetch: true */ './help/Help').then(module => ({ default: module.Help })));
+const PeriodSelectors = lazy(() => import(/* webpackPrefetch: true */ './PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
 
 export const start = (containerElement: HTMLElement): void => {
 

@@ -29,6 +29,6 @@
   },
   "scripts": {
     "start": "webpack-dev-server --open --config webpack.dev.js",
-    "bundle": "rm dist/* && webpack --config webpack.prod.js"
+    "bundle": "rm dist/* && webpack --config webpack.prod.js && rm dist/*.LICENSE.txt"
   }
 }

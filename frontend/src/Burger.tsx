@@ -1,6 +1,6 @@
 import * as L from "leaflet";
 import { createSignal, JSX, Show } from "solid-js";
-import { marginTop as periodSelectorHeight } from "./PeriodSelector";
+import { periodSelectorHeight } from "./styles/Styles";
 import { useState } from './State';
 import { surfaceOverMap } from "./styles/Styles";
 

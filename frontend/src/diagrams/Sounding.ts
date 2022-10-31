@@ -1,9 +1,9 @@
 import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, nextValue, previousValue, skyStyle, temperaturesRange } from './Diagram';
 import { DetailedForecast } from "../data/Forecast";
 import { cloudsColorScale } from './Clouds';
-import { keyWidth } from './Meteogram';
 import { drawWindArrow } from '../shapes';
 import { JSX } from 'solid-js';
+import { keyWidth, soundingWidth } from '../styles/Styles';
 
 const temperatureScaleAndLevels = (forecast: DetailedForecast, pixelRange: [number, number]): [Scale, Array<number>] => {
 
@@ -27,9 +27,7 @@ const temperatureScaleAndLevels = (forecast: DetailedForecast, pixelRange: [numb
   return [scale, levels]
 }
 
-export const soundingWidth = 600;
-
-export const sounding = (forecast: DetailedForecast, elevation: number): [JSX.Element, JSX.Element] => {
+export const sounding = (forecast: DetailedForecast, elevation: number): { key: JSX.Element, view: JSX.Element } => {
   const availableHeight = window.innerHeight - 38 /* top time selector */ - 50 /* bottom time selector */;
   const maxHeight = 800;
   const canvasHeight = Math.min(maxHeight, availableHeight);
@@ -193,5 +191,5 @@ export const sounding = (forecast: DetailedForecast, elevation: number): [JSX.El
       );
 
   }
-  return [canvasLeftKey, canvas]
+  return { key: canvasLeftKey, view: canvas }
 }

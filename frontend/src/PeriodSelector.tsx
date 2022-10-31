@@ -1,15 +1,12 @@
 import * as L from 'leaflet';
-import { createMemo, JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, JSX } from 'solid-js';
 
-import { keyWidth, meteogram } from './diagrams/Meteogram';
 import { forecastOffsets, periodsPerDay, showDate } from './data/ForecastMetadata';
-import { sounding } from './diagrams/Sounding';
-import { meteogramColumnWidth } from './diagrams/Diagram';
 import { useState } from './State';
-import { closeButton, closeButtonSize, surfaceOverMap } from './styles/Styles';
+import { closeButton, closeButtonSize, keyWidth, meteogramColumnWidth, periodSelectorHeight, surfaceOverMap } from './styles/Styles';
 
 const marginLeft = keyWidth;
-export const marginTop = 35; // Day height + hour height + 2 (wtf)
+const marginTop = periodSelectorHeight;
 
 const hover = (htmlEl: HTMLElement): HTMLElement => {
   let oldValue: string = 'inherit';
@@ -112,35 +109,43 @@ const PeriodSelector = (props: {
 }
 
 /**
+ * Note: this function has to be invoked _after_ the state has been initialized and registered.
  * @returns A pair of a reactive element for the detailed view key, and a
  *          reactive element for the detailed view.
  */
-const DetailedView = (): [() => JSX.Element, () => JSX.Element] => {
+const detailedView = (): (() => { key: JSX.Element, view: JSX.Element }) => {
 
   const [state] = useState();
 
-  const fallback: [JSX.Element, JSX.Element] = [<div />, <div />];
+  const noDetailedView: { key: JSX.Element, view: JSX.Element } = { key: <div />, view: <div /> };
 
-  const keyAndView: () => [JSX.Element, JSX.Element] = createMemo<[JSX.Element, JSX.Element]>(() => {
+  // dynamically generate new elements depending on state
+  const [accessor, set] = createSignal(noDetailedView);
+
+  createEffect(() => {
     const detailedView = state.detailedView;
     if (detailedView === undefined) {
-      return fallback
+      set(noDetailedView);
     } else {
       const [locationForecasts, viewType] = detailedView;
       if (viewType === 'meteogram') {
-        return meteogram(locationForecasts)
+        import(/* webpackPrefetch: true */ './diagrams/Meteogram').then(module => {
+          set(module.meteogram(locationForecasts));
+        });
       }
       else /*if (viewType === 'sounding')*/ {
         const forecast = locationForecasts.atHourOffset(state.hourOffset);
-        if (forecast === undefined) return fallback
-        else return sounding(forecast, locationForecasts.elevation)
+        if (forecast === undefined) set(noDetailedView);
+        else {
+          import(/* webpackPrefetch: true */ './diagrams/Sounding').then(module => {
+            set(module.sounding(forecast, locationForecasts.elevation));
+          });
+        }
       }
     }
   });
-  return [
-    () => keyAndView()[0],
-    () => keyAndView()[1]
-  ]
+
+  return accessor
 }
 
 /**
@@ -155,11 +160,11 @@ export const PeriodSelectors = (props: {
 
   const [state, { setHourOffset, hideLocationForecast }] = useState();
 
-  const [reactiveKey, reactiveDetailedView] = <DetailedView />;
+  const getDetailedView = detailedView();
 
   const detailedViewKeyEl = 
     <div style={{ position: 'absolute', width: `${marginLeft}px`, left: 0, top: `${marginTop}px`, 'background-color': 'white' }}>
-      {reactiveKey}
+      { getDetailedView().key }
     </div>;
 
   const buttonStyle = { padding: '0.3em', display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box' };
@@ -224,7 +229,7 @@ export const PeriodSelectors = (props: {
         :
           state.detailedView[0].offsetAndDates()
       }
-      detailedView={reactiveDetailedView}
+      detailedView={ getDetailedView().view }
     />;
 
   const hideDetailedViewBtn =

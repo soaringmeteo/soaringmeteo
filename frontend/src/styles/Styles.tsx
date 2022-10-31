@@ -7,6 +7,14 @@ export const surfaceOverMap = {
 export const bottomButtonsSize = 24;
 // size of the button used for closing panels
 export const closeButtonSize = 32;
+// width of the left key shown on the diagrams
+export const keyWidth = 40;
+// width of the sounding diagrams
+export const soundingWidth = 600;
+// height of the period selector shown at the top of the screen
+export const periodSelectorHeight = 35; // Day height + hour height + 2 (wtf)
+// width of one time period in meteograms
+export const meteogramColumnWidth = 33;
 
 export const closeButton = {
   width: `${closeButtonSize}px`,

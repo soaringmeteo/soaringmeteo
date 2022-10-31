@@ -1,11 +1,9 @@
-import { createSignal, JSX, Match, Show, Switch } from 'solid-js'
+import { createSignal, JSX, lazy, Match, Show, Switch } from 'solid-js'
 import * as L from 'leaflet'
 import { useState } from '../State';
-import { bottomButtonsSize, surfaceOverMap } from '../styles/Styles';
+import { bottomButtonsSize, keyWidth, soundingWidth, surfaceOverMap } from '../styles/Styles';
 import { xcFlyingPotentialLayer } from '../layers/ThQ';
-import { keyWidth, meteogram } from '../diagrams/Meteogram';
 import * as fakeData from './data';
-import { sounding, soundingWidth } from '../diagrams/Sounding';
 import { showDate } from '../data/ForecastMetadata';
 
 export const Help = (): JSX.Element => {
@@ -113,13 +111,21 @@ const MapHelp = (): JSX.Element => {
   </>
 };
 
+const lazyMeteogram =
+  lazy<() => JSX.Element>(() =>
+    import(/* webpackPrefetch: true */ '../diagrams/Meteogram').then(module => {
+      const { key, view } = module.meteogram(fakeData.locationForecasts);
+      return { default: () => <>{ key }{ view }</> }
+    })
+  );
+
 const MeteogramHelp = (): JSX.Element => <>
   <p>
     Meteograms show the weather forecast for the selected location over time. Here is an
     example of three days meteogram that we made up for documentation purpose:
   </p>
   <div style={{ float: 'left', 'margin-right': '1em' }}>
-    { meteogram(fakeData.locationForecasts) }
+    { lazyMeteogram() }
   </div>
   <p>
     The top row (“XC?”) shows the estimated cross-country flying potential (between 0% and 100%).
@@ -169,13 +175,21 @@ const MeteogramHelp = (): JSX.Element => <>
   </p>
 </>;
 
+const lazySounding =
+  lazy<() => JSX.Element>(() =>
+    import(/* webpackPrefetch: true */ '../diagrams/Sounding').then(module => {
+      const { key, view } = module.sounding(fakeData.detailedForecast, fakeData.groundLevel);
+      return { default: () => <>{ key }{ view }</> }
+    })
+  );
+
 const SoundingHelp = (): JSX.Element => <>
   <p>
     Sounding diagrams show the evolution of the temperature of the air with altitude. Here is
     an example:
   </p>
   <div style={{ float: 'left', 'margin-right': '1em', 'min-width': `${ keyWidth + soundingWidth }px` }}>
-    { sounding(fakeData.detailedForecast, fakeData.groundLevel) }
+    { lazySounding() }
   </div>
   <p>
     The horizontal axis shows the temperature, whereas the vertical axis shows the altitude. The
