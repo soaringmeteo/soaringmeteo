@@ -54,5 +54,10 @@ export const cloudCoverLayer = new Layer(
   'Cloud Cover',
   'Cloud cover (all altitudes)',
   forecast => new CloudCover(forecast),
-  colorScaleEl(cloudCoverColorScale, value => `${value}% `)
+  colorScaleEl(cloudCoverColorScale, value => `${value}% `),
+  <p>
+    The cloud cover is a value between 0% and 100% that tells us how much of the
+    sunlight will be blocked by the clouds. A low value means a blue sky, and a
+    high value means a dark sky.
+  </p>
 );

@@ -11,6 +11,7 @@ import markerImg from './images/marker-icon.png';
 import { StateProvider, useState } from './State';
 import { Burger } from './Burger';
 import { Attribution } from './map/Attribution';
+import { Help } from './help/Help';
 
 export const start = (containerElement: HTMLElement): void => {
 
@@ -76,9 +77,7 @@ export const start = (containerElement: HTMLElement): void => {
     // back to these components.
     // LayersSelector displays the configuration button and manages the canvas overlay.
     return <>
-      <span style={{
-        position: 'absolute', top: 0, left: 0, 'z-index': 1200
-      }}>
+      <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 1200 }}>
         <Burger />
       </span>
       <PeriodSelectors morningOffset={props.morningOffset} />
@@ -88,10 +87,10 @@ export const start = (containerElement: HTMLElement): void => {
         popupRequest={popupRequest}
         openLocationDetailsPopup={openLocationDetailsPopup}
       />
-      <span style={{
-        position: 'absolute', right: '56px', bottom: '10px', 'z-index': 1300
-      }}>
+      <span style={{ position: 'absolute', right: '54px', bottom: '10px', 'z-index': 1300 }}>
         <Attribution />
+        <span style={{ display: 'inline-block', width: '6px' }} />
+        <Help />
       </span>
     </>
   }

@@ -35,8 +35,16 @@ class CumuliDepth implements Renderer {
 }
 
 export const cumuliDepthLayer = new Layer(
-  'Convective Clouds',
-  'Convective Clouds Depth',
+  'Cumulus Clouds',
+  'Cumulus clouds depth',
   forecast => new CumuliDepth(forecast),
-  colorScaleEl(colorScale, value => `${value} m `)
+  colorScaleEl(colorScale, value => `${value} m `),
+  <>
+    <p>
+      Cumulus clouds are clouds caused by thermal activity. No cumulus clouds
+      means no thermals or blue thermals. Deep cumulus clouds means there is
+      risk of overdevelopment.
+    </p>
+    <p>The color scale is shown on the bottom left of the screen.</p>
+  </>
 );

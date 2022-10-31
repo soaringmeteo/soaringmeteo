@@ -39,5 +39,10 @@ export const thermalVelocityLayer = new Layer(
   'Thermal Velocity',
   'Thermal updraft velocity',
   forecast => new ThermalVelocity(forecast),
-  colorScaleEl(thermalVelocityColorScale, value => `${value} m/s `)
+  colorScaleEl(thermalVelocityColorScale, value => `${value} m/s `),
+  <p>
+    The thermal updraft velocity is estimated from the depth of the boundary
+    layer and the sunshine. The color scale is show on the bottom left of the
+    screen.
+  </p>
 );

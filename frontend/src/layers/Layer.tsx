@@ -13,7 +13,8 @@ import { drawWindArrow } from "../shapes";
     readonly name: string,
     readonly title: string,
     readonly createRenderer: (forecast: Forecast) => Renderer,
-    readonly mapKeyEl: JSX.Element
+    readonly mapKeyEl: JSX.Element,
+    readonly help: JSX.Element
   ) {}
 
 }

@@ -2,7 +2,7 @@ import { createSignal, JSX, Show } from 'solid-js'
 import * as L from 'leaflet'
 import { showDate } from '../data/ForecastMetadata'
 import { useState } from '../State'
-import { surfaceOverMap } from '../styles/Styles';
+import { bottomButtonsSize, surfaceOverMap } from '../styles/Styles';
 
 export const Attribution = (): JSX.Element => {
 
@@ -10,21 +10,20 @@ export const Attribution = (): JSX.Element => {
 
   const [isExpanded, expand] = createSignal(false);
 
-  const size = 24;
-
   const expandButton =
     <div
       style={{
         ...surfaceOverMap,
         'cursor': 'pointer',
         display: 'inline-block',
-        width: `${size}px`,
-        height: `${size}px`,
-        'line-height': `${size}px`,
+        width: `${bottomButtonsSize}px`,
+        height: `${bottomButtonsSize}px`,
+        'line-height': `${bottomButtonsSize}px`,
         'text-align': 'center',
-        'font-size': '20px',
-        'border-radius': `${size / 2}px`,
-        'background-color': 'white'
+        'font-size': '18px',
+        'border-radius': `${bottomButtonsSize / 2}px`,
+        'background-color': 'white',
+        'font-family': 'serif'
       }}
       onClick={ () => expand(true) }
     >
@@ -32,7 +31,7 @@ export const Attribution = (): JSX.Element => {
     </div>;
 
   const attribution =
-    <div>
+    <span>
       <Show
         when={ isExpanded() }
         fallback={ expandButton }
@@ -43,8 +42,8 @@ export const Attribution = (): JSX.Element => {
             ...surfaceOverMap,
             'cursor': 'pointer',
             display: 'inline-block',
-            height: `${size}px`,
-            'line-height': `${size}px`,
+            height: `${bottomButtonsSize}px`,
+            'line-height': `${bottomButtonsSize}px`,
             padding: '0 0.5em',
             'border-radius': '4px',
             'background-color': 'white'
@@ -53,7 +52,7 @@ export const Attribution = (): JSX.Element => {
           Model: { state.forecastMetadata.model }. Initialization: { showDate(state.forecastMetadata.init) }
         </div>
       </Show>
-    </div>;
+    </span>;
 
   L.DomEvent.disableClickPropagation(attribution);
 

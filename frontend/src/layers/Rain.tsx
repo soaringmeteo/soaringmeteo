@@ -37,5 +37,6 @@ export const rainLayer = new Layer(
   'Rain',
   'Total rain',
   forecast => new Rain(forecast),
-  colorScaleEl(rainColorScale, value => `${value} mm `)
+  colorScaleEl(rainColorScale, value => `${value} mm `),
+  <p>The color scale is shown on the bottom left of the screen.</p>
 );

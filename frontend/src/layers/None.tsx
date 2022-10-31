@@ -20,5 +20,6 @@ export const noLayer = new Layer(
   'None',
   'Map only',
   forecast => new None(forecast),
-  <div />
+  <div />,
+  <p>This layer just shows the map.</p>
 );
