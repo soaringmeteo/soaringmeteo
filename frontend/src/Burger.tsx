@@ -44,7 +44,6 @@ export const Burger = (): JSX.Element => {
   };
 
   const entries = [
-    ['ⓘ Help',              'https://github.com/soaringmeteo/soaringmeteo/blob/main/README.md#usage'],
     ['⌂ Soaringmeteo',       'https://soaringmeteo.org/'],
     ['soarGFS',              'https://soaringmeteo.org/GFSw/googleMap.html'],
     ['soarWRF',              'https://soaringmeteo.org/soarWRF'],
