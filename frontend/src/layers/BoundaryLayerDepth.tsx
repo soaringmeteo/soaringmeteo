@@ -44,5 +44,15 @@ export const boundaryLayerDepthLayer = new Layer(
   'Boundary Layer Depth',
   'Boundary layer depth',
   forecast => new BoundaryLayerDepth(forecast),
-  colorScaleEl(boundaryDepthColorScale, value => `${value} m `)
+  colorScaleEl(boundaryDepthColorScale, value => `${value} m `),
+  <>
+    <p>
+      The <a href="https://wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
+      boundary layer</a> tells us how high the thermals will be at a given location and time.
+      Deep boundary layers are great for flying cross-country.
+    </p>
+    <p>
+      The color scale is shown on the bottom left of the screen.
+    </p>
+  </>
 );

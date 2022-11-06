@@ -3,7 +3,7 @@ import { Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Swi
 
 import { Renderer, CanvasLayer, viewPoint } from "./map/CanvasLayer";
 import { normalizeCoordinates } from './data/Forecast';
-import { closeButtonStyle } from './shapes';
+import { closeButton, surfaceOverMap } from './styles/Styles';
 import layersImg from './images/layers.png';
 import { ForecastMetadata, showDate } from './data/ForecastMetadata';
 import { useState } from './State';
@@ -119,35 +119,31 @@ export const LayersSelector = (props: {
       {windLayersEl}
     </fieldset>;
 
-  const aboveMapStyle = { position: 'absolute', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, 'user-select': 'none' };
-
-  const selectEl =
-    <Show when={ isMenuShown() }>
-      <div style={{ ...aboveMapStyle, right: '3px', bottom: '136px', 'background-color': 'white' }}>
-        {selectForecastEl}
-        {layerEl}
-      </div>
-    </Show>;
+  const aboveMapStyle = { ...surfaceOverMap, position: 'absolute', 'z-index': 1000 /* arbitrary value to be just above the zoom control */, 'user-select': 'none' };
 
   const layersBtn =
     <Switch>
       <Match when={ isMenuShown() }>
+        <div style={{ ...aboveMapStyle, right: '3px', bottom: '128px', 'background-color': 'white' }}>
+          {selectForecastEl}
+          {layerEl}
+        </div>
         <div
           onClick={ () => showMenu(false) }
-          style={{ ...aboveMapStyle, ...closeButtonStyle, right: '8px', bottom: '100px' }}
+          style={{ ...aboveMapStyle, ...closeButton, right: '12px', bottom: '90px' }}
         >X</div>
       </Match>
       <Match when={ !isMenuShown() }>
-      <div
-        onClick={ () => showMenu(true) }
-        style={{ ...aboveMapStyle, right: '3px', bottom: '100px', width: '44px', height: '44px', 'line-height': '44px', color: 'black', display: 'block', cursor: 'pointer', 'text-align': 'center', 'background-image': `url('${layersImg}')`, 'background-position': '50% 50%', 'background-repeat': 'no-repeat', 'background-color': 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '4px', 'box-shadow': '0 2px 2px 0 rgba(0,0,0,0.14),0 3px 1px -2px rgba(0,0,0,0.12),0 1px 5px 0 rgba(0,0,0,0.2)' }}
-      />
+        <div
+          onClick={ () => showMenu(true) }
+          style={{ ...aboveMapStyle, right: '5px', bottom: '86px', width: '44px', height: '44px', 'line-height': '44px', color: 'black', display: 'block', cursor: 'pointer', 'text-align': 'center', 'background-image': `url('${layersImg}')`, 'background-position': '50% 50%', 'background-repeat': 'no-repeat', 'background-color': 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '4px' }}
+        />
       </Match>
     </Switch>;
 
+  // Wrapper element so that we can disable event propagation below
   const rootElement =
     <div>
-      {selectEl}
       {layersBtn}
     </div>;
 

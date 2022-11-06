@@ -1,17 +1,17 @@
 import { LocationForecasts, DetailedForecast } from '../data/Forecast';
 import { drawWindArrow, lightningShape } from '../shapes';
-import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, skyStyle, temperaturesRange, meteogramColumnWidth } from './Diagram';
+import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, skyStyle, temperaturesRange } from './Diagram';
 import { value as thqValue, colorScale as thqColorScale } from '../layers/ThQ';
 import { cloudsColorScale } from './Clouds';
 import { JSX } from 'solid-js';
+import { keyWidth, meteogramColumnWidth } from '../styles/Styles';
 
-export const keyWidth = 40;
-export const airDiagramHeightAboveGroundLevel = 3500; // m
+const airDiagramHeightAboveGroundLevel = 3500; // m
 
 /**
  * @return [left key element, [meteogram element, right key element]]
  */
- export const meteogram = (forecasts: LocationForecasts): [JSX.Element, JSX.Element] => {
+ export const meteogram = (forecasts: LocationForecasts): { key: JSX.Element, view: JSX.Element } => {
 
   const flatForecasts: Array<DetailedForecast> =
     forecasts.dayForecasts.map(x => x.forecasts).reduce((x, y) => x.concat(y), []); // Alternative to flatMap
@@ -229,8 +229,8 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
       drawWindArrow(ctx, windCenterX, airDiagram.projectY(0), meteogramColumnWidth - 6, windColor, forecast.surface.wind.u, forecast.surface.wind.v);
       // Air wind
       forecast.aboveGround
-        // Keep enly the wind values that are above the ground + 100 meters (so that arrows don’t overlap)
-        .filter((entry) => entry.elevation > forecasts.elevation + 100 && entry.elevation < forecasts.elevation + airDiagramHeightAboveGroundLevel)
+        // Keep enly the wind values that are above the ground + 125 meters (so that arrows don’t overlap)
+        .filter((entry) => entry.elevation > forecasts.elevation + 125 && entry.elevation < forecasts.elevation + airDiagramHeightAboveGroundLevel)
         .forEach((wind) => {
           drawWindArrow(ctx, windCenterX, airDiagram.projectY(elevationScale.apply(wind.elevation)), meteogramColumnWidth - 6, windColor, wind.u, wind.v);
         });
@@ -450,5 +450,5 @@ export const airDiagramHeightAboveGroundLevel = 3500; // m
 
   }
 
-  return [canvasLeftKey, [canvas, canvasRightKey]]
+  return { key: canvasLeftKey, view: [canvas, canvasRightKey] }
 };

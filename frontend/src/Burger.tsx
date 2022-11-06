@@ -1,7 +1,8 @@
 import * as L from "leaflet";
 import { createSignal, JSX, Show } from "solid-js";
-import { marginTop as periodSelectorHeight } from "./PeriodSelector";
+import { periodSelectorHeight } from "./styles/Styles";
 import { useState } from './State';
+import { surfaceOverMap } from "./styles/Styles";
 
 /**
  * Burger menu with links to the other parts of the website.
@@ -17,6 +18,7 @@ export const Burger = (): JSX.Element => {
   const menu =
     <div
       style={{
+        ...surfaceOverMap,
         width: `${periodSelectorHeight}px`,
         height: `${periodSelectorHeight}px`,
         cursor: 'pointer',
@@ -27,8 +29,7 @@ export const Burger = (): JSX.Element => {
         color: '#fff',
         'text-align': 'center',
         'font-weight': 'bold',
-        'font-size': '1.5em',
-        'box-shadow': 'rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 3px 1px -2px, rgba(0, 0, 0, 0.2) 0px 1px 5px 0px',
+        'font-size': '1.5em'
       }}
       onClick={() => { setExpanded(!expanded()); }}
     >☰</div>;
@@ -43,7 +44,6 @@ export const Burger = (): JSX.Element => {
   };
 
   const entries = [
-    ['ⓘ Help',              'https://github.com/soaringmeteo/soaringmeteo/blob/main/README.md#usage'],
     ['⌂ Soaringmeteo',       'https://soaringmeteo.org/'],
     ['soarGFS',              'https://soaringmeteo.org/GFSw/googleMap.html'],
     ['soarWRF',              'https://soaringmeteo.org/soarWRF'],
@@ -55,9 +55,9 @@ export const Burger = (): JSX.Element => {
   const options =
     <div
       style={{
+        ...surfaceOverMap,
         'background-color': '#009688',
         color: '#fff',
-        'box-shadow': 'rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 3px 1px -2px, rgba(0, 0, 0, 0.2) 0px 1px 5px 0px',
         'border-radius': '0 0 4px 0'
       }}
     >

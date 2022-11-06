@@ -33,7 +33,8 @@ export const initializeMap = (element: HTMLElement): [CanvasLayer, L.Map] => {
         maxZoom: 14
       })
     ],
-    zoomControl: false,
+    zoomControl: false, // set up below
+    attributionControl: false, // set up in Attribution.tsx
     center: location,
     zoom: zoom
   });
@@ -43,7 +44,7 @@ export const initializeMap = (element: HTMLElement): [CanvasLayer, L.Map] => {
   })
   
   L.control.zoom({ position: 'bottomright' }).addTo(map);
-  L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
+  L.control.scale({ position: 'bottomleft', imperial: false, maxWidth: 100 }).addTo(map);
 
   const canvas = new CanvasLayer;
   canvas.addTo(map);
