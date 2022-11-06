@@ -131,7 +131,7 @@ export const LayersSelector = (props: {
         <div
           onClick={ () => showMenu(false) }
           style={{ ...aboveMapStyle, ...closeButton, right: '12px', bottom: '90px' }}
-        >X</div>
+        >⨯</div>
       </Match>
       <Match when={ !isMenuShown() }>
         <div

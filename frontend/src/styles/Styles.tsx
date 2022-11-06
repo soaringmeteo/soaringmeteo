@@ -25,5 +25,6 @@ export const closeButton = {
   cursor: 'pointer',
   'background-color': 'darkGray',
   'text-align': 'center',
-  'border-radius': `${closeButtonSize / 2}px`
+  'border-radius': `${closeButtonSize / 2}px`,
+  'font-size': '18px'
 };

@@ -178,7 +178,7 @@ const MeteogramHelp = (): JSX.Element => <>
 const lazySounding =
   lazy<() => JSX.Element>(() =>
     import(/* webpackPrefetch: true */ '../diagrams/Sounding').then(module => {
-      const { key, view } = module.sounding(fakeData.detailedForecast, fakeData.groundLevel);
+      const { key, view } = module.sounding(fakeData.detailedForecast, fakeData.groundLevel, true);
       return { default: () => <>{ key }{ view }</> }
     })
   );
@@ -201,5 +201,10 @@ const SoundingHelp = (): JSX.Element => <>
     The green area shows the boundary layer height. The white or gray areas show the presence of
     clouds. On the left, the wind speed and direction is shown at various altitude levels by the
     wind barbells.
+  </p>
+  <p>
+    By default, the diagram shows only the airmass within the boundary layer and a couple of thousand
+    meters above it. You can expand the diagram to see the whole troposphere by clicking to the button
+    on the top right corner.
   </p>
 </>;

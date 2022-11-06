@@ -185,7 +185,7 @@ type Wind = {
 };
 
 /** Various information at some elevation value */
-type AboveGround = {
+export type AboveGround = {
   u: number // km/h
   v: number // km/h
   elevation: number // m
