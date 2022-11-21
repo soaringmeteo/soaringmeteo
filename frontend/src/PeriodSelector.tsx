@@ -138,7 +138,7 @@ const detailedView = (): (() => { key: JSX.Element, view: JSX.Element }) => {
         if (forecast === undefined) set(noDetailedView);
         else {
           import(/* webpackPrefetch: true */ './diagrams/Sounding').then(module => {
-            set(module.sounding(forecast, locationForecasts.elevation));
+            set(module.sounding(forecast, locationForecasts.elevation, true));
           });
         }
       }
@@ -244,7 +244,7 @@ export const PeriodSelectors = (props: {
       title='Hide'
       onClick={() => hideLocationForecast() }
     >
-      X
+      ⨯
     </div>;
 
   // Period selector and close button for the meteogram
