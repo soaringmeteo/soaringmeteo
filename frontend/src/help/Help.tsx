@@ -185,17 +185,19 @@ const lazySounding =
 
 const SoundingHelp = (): JSX.Element => <>
   <p>
-    Sounding diagrams show the evolution of the temperature of the air with altitude. Here is
-    an example:
+    Sounding diagrams show the evolution of the temperature of the air with altitude (learn more
+    about sounding diagrams <a href="https://soaringmeteo.org/profilEN.pdf" target="_blank">here</a>).
+    Here is an example:
   </p>
   <div style={{ float: 'left', 'margin-right': '1em', 'min-width': `${ keyWidth + soundingWidth }px` }}>
     { lazySounding() }
   </div>
   <p>
     The horizontal axis shows the temperature, whereas the vertical axis shows the altitude. The
-    black line shows the evolution of the temperature of the air with altitude. A thin line means
-    a stable air mass. The thicker the line, the more buoyant the air mass is. The blue line shows
-    the evolution of the dew point temperature with altitude.
+    rightmost line shows the evolution of the temperature of the air with altitude. A black thin line
+    means a stable air mass, an orange line means a conditionally unstable air mass, and a yellow line
+    means an absolutely unstable air mass. The blue line shows the evolution of the dew point
+    temperature with altitude.
   </p>
   <p>
     The green area shows the boundary layer height. The white or gray areas show the presence of
