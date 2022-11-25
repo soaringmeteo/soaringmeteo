@@ -34,16 +34,22 @@ const temperatureScaleAndLevels = (
 
 export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDefaultValue: boolean): { key: JSX.Element, view: JSX.Element } => {
 
+  const [canvasHeight, _] = computeSoundingHeightAndMaxElevation(zoomedDefaultValue, elevation, forecast);
+
   // Main canvas contains the sounding diagram
   const canvas = document.createElement('canvas');
   canvas.style.width = `100%`;
   canvas.style.height = `100%`;
+  canvas.setAttribute('width', `${soundingWidth}`);
+  canvas.setAttribute('height', `${canvasHeight}`);
   const ctx = canvas.getContext('2d');
 
   // Left key contains the vertical axis of the sounding diagram
   const canvasLeftKey = document.createElement('canvas');
   canvasLeftKey.setAttribute('width', `${keyWidth}`);
+  canvasLeftKey.setAttribute('height', `${canvasHeight}`);
   canvasLeftKey.style.width = `${keyWidth}px`;
+  canvasLeftKey.style.height = `${canvasHeight}px`;
   canvasLeftKey.style.flex = '0 0 auto';
   const leftCtx = canvasLeftKey.getContext('2d');
 
@@ -54,21 +60,27 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
       position: 'absolute',
       top: `10px`,
       right: `5px`,
-      display: `inline-block`,
       width: `32px`,
       height: `32px`,
       cursor: `pointer`,
       'text-align': `center`,
       'background-color': 'lightGray',
       ...surfaceOverMap,
-      'border-radius': '16px',
-      'line-height': '36px',
-      'font-size': '24px'
+      'border-radius': '16px'
     }}
     onClick={ () => zoom(!zoomed()) }
     title={ zoomed() ? 'Zoom out' : 'Zoom in' }
   >
-    <div>{ zoomed() ? "⭱" : "⭳" }</div>
+    <div style={{
+      display: 'inline-block',
+      width: '10px',
+      height: '10px',
+      'margin-top': '16px',
+      'margin-bottom': '16px',
+      'border-top': '2px solid black',
+      'border-right': '2px solid black',
+      transform: zoomed() ? 'translateY(-50%) rotate(-45deg)' : 'translateY(-50%) rotate(135deg)'
+      }} />
   </div>;
 
   const view = <div
@@ -83,18 +95,24 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
 
   if (ctx !== null && leftCtx !== null) {
 
-    createEffect(() => {
-      drawSounding(
-        view,
-        canvas,
-        ctx,
-        canvasLeftKey,
-        leftCtx,
-        forecast,
-        elevation,
-        zoomed()
-      );
-    })
+    // Necessary to avoid NS_ERROR_FAILURE on some devices
+    setTimeout(
+      () => {
+        createEffect(() => {
+          drawSounding(
+            view,
+            canvas,
+            ctx,
+            canvasLeftKey,
+            leftCtx,
+            forecast,
+            elevation,
+            zoomed()
+          );
+        })
+      },
+      0
+    );
 
   }
   return { key: canvasLeftKey, view }
@@ -110,11 +128,8 @@ const drawSounding = (
   elevation: number,
   zoomed: boolean
 ): void => {
-  const maxElevation = zoomed ? (elevation + forecast.boundaryLayer.height + 2000) : 12000; // m
-
-  const availableHeight = window.innerHeight - 38 /* top time selector */ - 50 /* bottom time selector */;
-  const preferredHeight = (maxElevation - elevation) / 10; // Arbitrary factor to make the diagram visually nice
-  const canvasHeight = Math.min(preferredHeight, availableHeight);
+  const [canvasHeight, maxElevation] =
+    computeSoundingHeightAndMaxElevation(zoomed, elevation, forecast);
 
   rootView.style.width = `${soundingWidth}px`;
   rootView.style.height = `${canvasHeight}px`;
@@ -299,3 +314,12 @@ const drawSounding = (
     );
 
 };
+
+const computeSoundingHeightAndMaxElevation = (zoomed: boolean, elevation: number, forecast: DetailedForecast): [number, number] => {
+  const maxElevation = zoomed ? (elevation + forecast.boundaryLayer.height + 2000) : 12000; // m
+
+  const availableHeight = window.innerHeight - 38 /* top time selector */ - 50 /* bottom time selector */;
+  const preferredHeight = (maxElevation - elevation) / 10; // Arbitrary factor to make the diagram visually nice
+  const canvasHeight = Math.min(preferredHeight, availableHeight);
+  return [canvasHeight, maxElevation];
+}
