@@ -264,14 +264,23 @@ const drawSounding = (
       // Note: this is approximate, see https://en.wikipedia.org/wiki/Lapse_rate
       // We should consider applying the most precise formulas
       const lapseRate = (entry.temperature - previousTemperature) / ((entry.elevation - previousElevation) / 100);
+      const [color, width] =
+        lapseRate <= -1 ?
+          ['yellow', 4] :     // absolutely unstable air
+          (lapseRate <= -0.5 ?
+            ['orange', 3] :   // conditionally unstable air
+            (lapseRate < 0 ?
+              ['black', 2] :  // stable air
+              ['black', 1]    // inversion
+            )
+          );
       diagram.line(
         [temperatureScale.apply(previousTemperature), y0],
         [temperatureScale.apply(entry.temperature), y1],
-        'black',
+        color,
         undefined,
         true,
-        // Decrease line width according to the stability of the air mass
-        lapseRate <= -1 ? 4 : (lapseRate <= -0.6 ? 3 : (lapseRate < 0 ? 2 : 1))
+        width
       );
 
       // Dew point
