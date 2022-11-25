@@ -90,6 +90,10 @@ const MapHelp = (): JSX.Element => {
 
   return <>
     <p>
+      Soaringmeteo is a free weather forecast website developped by passionate pilots. Please consider making
+      a <a href='https://soaringmeteo.org/don.html'>donation</a> to help us cover our cost.
+    </p>
+    <p>
       You are looking at the weather forecast for { showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset)) },
       from the model { state.forecastMetadata.model }. Select the information to display on the map
       by clicking on the “layers” button to the bottom right of the screen.
@@ -107,6 +111,10 @@ const MapHelp = (): JSX.Element => {
     <p>
       Click on the map to see meteograms and sounding diagrams for that location. <strong>At any
       point, click on the help button again to get an explanation about you currently see.</strong>
+    </p>
+    <p>
+      Something is not working as expected? Please file an <a href='https://github.com/soaringmeteo/soaringmeteo/issues'>issue</a>.
+      For other questions, send us an <a href='mailto:equipe@soaringmeteo.org'>email</a>.
     </p>
   </>
 };
