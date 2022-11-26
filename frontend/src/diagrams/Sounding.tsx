@@ -261,6 +261,13 @@ const drawSounding = (
     );
   });
 
+  // Print boundary layer height
+  diagram.text(
+    `${elevation + forecast.boundaryLayer.height}`,
+    [2, elevationScale.apply(elevation + forecast.boundaryLayer.height) - 4],
+    'black'
+  );
+
   // --- Sounding Diagram
 
   const windArrowSize = Math.max(Math.min(canvasHeight / (relevantData.length * 1.2), 35), 1);
