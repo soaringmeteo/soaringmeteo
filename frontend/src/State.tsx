@@ -106,7 +106,7 @@ export const StateProvider = (props: {
     windLayer,
     windLayerEnabled,
     detailedView: undefined
-  });
+  }, { name: 'state' }); // See https://github.com/solidjs/solid/discussions/1414
 
   const context = [
     state,
