@@ -1,4 +1,5 @@
 import { Color, ColorScale } from "../ColorScale";
+import { thermalVelocityColorScale } from "../layers/ThermalVelocity";
 import { cloudPattern } from "../shapes";
 
 type Point = [/* x */ number, /* y */ number]
@@ -156,11 +157,9 @@ export const temperaturesRange =
   }
 
 export const skyStyle = '#85c1e9';
-const thermalsVelocityColorScale = new ColorScale([
-  [0, new Color(173, 255, 47, 1)],
-  [3, new Color(0, 254, 154, 1)]
-]);
-export const boundaryLayerStyle = (thermalsVelocity: number): string => thermalsVelocityColorScale.interpolate(thermalsVelocity).css();
+
+export const boundaryLayerStyle = (thermalsVelocity: number): string =>
+  thermalVelocityColorScale.closest(thermalsVelocity).css();
 
 export const meteogramColumnWidth = 33;
 
