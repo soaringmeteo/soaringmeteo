@@ -5,6 +5,7 @@ import { value as thqValue, colorScale as thqColorScale } from '../layers/ThQ';
 import { cloudsColorScale } from './Clouds';
 import { JSX } from 'solid-js';
 import { keyWidth, meteogramColumnWidth } from '../styles/Styles';
+import { thermalVelocityColorScale } from '../layers/ThermalVelocity';
 
 const airDiagramHeightAboveGroundLevel = 3500; // m
 
@@ -18,17 +19,21 @@ const airDiagramHeightAboveGroundLevel = 3500; // m
 
   const gutterHeight = 5; // px
 
-  // Our meteogram is made of four diagrams stacked on top of each other.
+  // Our meteogram is made of five diagrams stacked on top of each other.
   // The first one shows the ThQ
-  // The second one shows the cloud cover for high-level clouds (above 5000 m).
-  // The third one shows the boundary layer, wind, and middle-level clouds.
-  // The fourth one shows rainfalls and ground temperature.
+  // The second one shows the thermal velocity
+  // The third one shows the cloud cover for high-level clouds (above 5000 m).
+  // The fourth one shows the boundary layer, wind, and middle-level clouds.
+  // The fifth one shows rainfalls and ground temperature.
 
   const thqDiagramHeight = 20; // px
   const thqDiagramTop    = gutterHeight;
 
+  const thermalVelocityDiagramHeight = 20; // px
+  const thermalVelocityDiagramTop    = thqDiagramTop + thqDiagramHeight + gutterHeight;
+
   const highAirDiagramHeight = 20; // px
-  const highAirDiagramTop    = thqDiagramTop + thqDiagramHeight + 11 /* There needs to be enough space in case we display the isotherm 0°C */;
+  const highAirDiagramTop    = thermalVelocityDiagramTop + thermalVelocityDiagramHeight + 11 /* There needs to be enough space in case we display the isotherm 0°C */;
 
   const airDiagramHeight = 400; // px
   // The main diagram shows the air from the ground level to 3500 m above ground level
@@ -108,6 +113,23 @@ const airDiagramHeightAboveGroundLevel = 3500; // m
         'dimgray'
       )
       thqDiagram.text(`${thq}`, [columnStart + meteogramColumnWidth / 2, 6], 'dimgray', 'center');
+    });
+
+    // Thermal velocity diagram
+    const thermalVelocityDiagram = new Diagram([0, thermalVelocityDiagramTop], thermalVelocityDiagramHeight, ctx);
+
+    columns((forecast, columnStart, columnEnd) => {
+      thermalVelocityDiagram.fillRect(
+        [columnStart, 0],
+        [columnEnd, thermalVelocityDiagramHeight],
+        `${thermalVelocityColorScale.closest(forecast.thermalVelocity).css()}`
+      );
+      thermalVelocityDiagram.rect(
+        [columnStart, 0],
+        [columnEnd, thermalVelocityDiagramHeight],
+        'dimgray'
+      );
+      thermalVelocityDiagram.text(`${forecast.thermalVelocity.toFixed(1)}`, [columnStart + meteogramColumnWidth / 2, 6], 'dimgray', 'center');
     });
 
     // High altitude air diagram
@@ -353,6 +375,10 @@ const airDiagramHeightAboveGroundLevel = 3500; // m
     // Thq
     const thqDiagram = new Diagram([0, thqDiagramTop], thqDiagramHeight, leftKeyCtx);
     thqDiagram.text('XC?', [keyWidth / 2, 8], 'black', 'center', 'middle');
+
+    // Thermal velocity
+    const thermalVelocityDiagram = new Diagram([0, thermalVelocityDiagramTop], thermalVelocityDiagramHeight, leftKeyCtx);
+    thermalVelocityDiagram.text('m/s', [keyWidth / 2, 8], 'black', 'center', 'middle');
 
     // High air diagram
     const highAirDiagram = new Diagram([0, highAirDiagramTop], highAirDiagramHeight, leftKeyCtx);

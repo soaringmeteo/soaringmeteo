@@ -141,7 +141,12 @@ const MeteogramHelp = (): JSX.Element => <>
     layer “{ xcFlyingPotentialLayer.name }” in the map view to learn more about how it works.
   </p>
   <p>
-    Below that number, the “airgram” shows various properties of the air at the selected location
+    The second row (“m/s”) shows the estimated average thermal velocity (in m/s). Values above 1 m/s
+    usually mean that thermals should be just strong enough to stay in the air. Values above 2 m/s
+    mean good thermals.
+  </p>
+  <p>
+    Below those numbers, the “airgram” shows various properties of the air at the selected location
     over time. The scale on the left shows the altitude. In this example, it starts at { fakeData.groundLevel } m,
     which is the altitude of the selected location as seen by the current forecast model.
   </p>
