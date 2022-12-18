@@ -218,6 +218,11 @@ const SoundingHelp = (): JSX.Element => <>
     wind barbells.
   </p>
   <p>
+    The text “2.5 m/s” (in the middle of the green area, on the right of the diagram) tells you the
+    estimated average thermal velocity. Values above 1 m/s usually mean that thermals should be just
+    strong enough to stay in the air. Values above 2 m/s mean good thermals.
+  </p>
+  <p>
     By default, the diagram shows only the airmass within the boundary layer and a couple of thousand
     meters above it. You can expand the diagram to see the whole troposphere by clicking to the button
     on the top right corner.
