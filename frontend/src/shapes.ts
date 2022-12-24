@@ -84,9 +84,17 @@ export const lightningShape = (x: number, y: number, width: number): Array<Point
   ]
 };
 
-export const drawWindArrow = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, color: string, u: number, v: number): void => {
+export const drawWindArrow = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, color: string, u: number, v: number, showNumericValues: boolean): void => {
   const windForce = Math.sqrt(u * u + v * v);
   const windDirection = -Math.atan2(u, -v);
+  if (showNumericValues) {
+    drawWindArrowAndNumericalValue(ctx, x, y, width, color, windForce, windDirection);
+  } else {
+    drawWindBarbell(ctx, x, y, width - 4, color, windForce, windDirection);
+  }
+}
+
+const drawWindBarbell = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, color: string, windForce: number, windDirection: number): void => {
   ctx.save();
   ctx.lineWidth = Math.ceil(width / 20);
   ctx.strokeStyle = color;
@@ -98,7 +106,54 @@ export const drawWindArrow = (ctx: CanvasRenderingContext2D, x: number, y: numbe
   });
   ctx.stroke();
   ctx.restore();
-}
+};
+
+const basicWindArrowShape = (x: number, y: number, width: number, direction: number): Array<Line> => {
+  const center: Point = [x, y];
+  const tail: Point   = rotatePoint([x - width / 2, y], center, direction);
+  const head: Point   = rotatePoint([x + width / 2, y], center, direction);
+  const up: Point     = rotatePoint([x + width / 4, y - width / 4], center, direction);
+  const down: Point   = rotatePoint([x + width / 4, y + width / 4], center, direction);
+  return [
+    [tail, head],
+    [head, up],
+    [head, down]
+  ]
+};
+
+const drawWindArrowAndNumericalValue = (
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  width: number,
+  color: string,
+  windVelocity: number,
+  windDirection: number
+): void => {
+  ctx.save();
+  const maxWindVelocity = 25; /* km/h */
+  const boundedWindVelocity = Math.min(windVelocity, maxWindVelocity);
+  const length = 8 + boundedWindVelocity * width / (3 * maxWindVelocity);
+  const x = centerX - width / 4;
+  const y = centerY;
+  const segments = basicWindArrowShape(x, y, length, windDirection);
+  ctx.lineWidth = Math.ceil(windVelocity / 15);
+  ctx.strokeStyle = color;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  segments.forEach(([[x1, y1], [x2, y2]]) => {
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+  })
+  ctx.stroke();
+  const textX = centerX + width / 4;
+  const textY = centerY;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`${Math.round(windVelocity)}`, textX, textY);
+  ctx.restore();
+};
 
 export const cloudPattern = (width: number, style: string): CanvasPattern => {
   const canvas = document.createElement('canvas');

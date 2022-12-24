@@ -120,12 +120,13 @@ const MapHelp = (): JSX.Element => {
 };
 
 const lazyMeteogram =
-  lazy<() => JSX.Element>(() =>
-    import(/* webpackPrefetch: true */ '../diagrams/Meteogram').then(module => {
-      const { key, view } = module.meteogram(fakeData.locationForecasts);
+  lazy<() => JSX.Element>(() => {
+    const [state] = useState();
+    return import(/* webpackPrefetch: true */ '../diagrams/Meteogram').then(module => {
+      const { key, view } = module.meteogram(fakeData.locationForecasts, state);
       return { default: () => <>{ key }{ view }</> }
     })
-  );
+  });
 
 const MeteogramHelp = (): JSX.Element => <>
   <p>
@@ -184,12 +185,13 @@ const MeteogramHelp = (): JSX.Element => <>
 </>;
 
 const lazySounding =
-  lazy<() => JSX.Element>(() =>
-    import(/* webpackPrefetch: true */ '../diagrams/Sounding').then(module => {
-      const { key, view } = module.sounding(fakeData.detailedForecast, fakeData.groundLevel, true);
+  lazy<() => JSX.Element>(() => {
+    const [state] = useState();
+    return import(/* webpackPrefetch: true */ '../diagrams/Sounding').then(module => {
+      const { key, view } = module.sounding(fakeData.detailedForecast, fakeData.groundLevel, true, state);
       return { default: () => <>{ key }{ view }</> }
     })
-  );
+  });
 
 const SoundingHelp = (): JSX.Element => <>
   <p>

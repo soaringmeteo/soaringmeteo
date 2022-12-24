@@ -130,7 +130,7 @@ const detailedView = (): (() => { key: JSX.Element, view: JSX.Element }) => {
       const [locationForecasts, viewType] = detailedView;
       if (viewType === 'meteogram') {
         import(/* webpackPrefetch: true */ './diagrams/Meteogram').then(module => {
-          set(module.meteogram(locationForecasts));
+          set(module.meteogram(locationForecasts, state));
         });
       }
       else /*if (viewType === 'sounding')*/ {
@@ -138,7 +138,7 @@ const detailedView = (): (() => { key: JSX.Element, view: JSX.Element }) => {
         if (forecast === undefined) set(noDetailedView);
         else {
           import(/* webpackPrefetch: true */ './diagrams/Sounding').then(module => {
-            set(module.sounding(forecast, locationForecasts.elevation, true));
+            set(module.sounding(forecast, locationForecasts.elevation, true, state));
           });
         }
       }

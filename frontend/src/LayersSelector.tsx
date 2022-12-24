@@ -19,7 +19,7 @@ export const LayersSelector = (props: {
   openLocationDetailsPopup: (latitude: number, longitude: number, content: JSX.Element) => void
 }): JSX.Element => {
 
-  const [state, { setForecastMetadata, setPrimaryLayer, setWindLayer, enableWindLayer, showLocationForecast }] = useState();
+  const [state, { setForecastMetadata, setPrimaryLayer, setWindLayer, enableWindLayer, showWindNumericValues, showLocationForecast }] = useState();
 
   const [isMenuShown, showMenu] = createSignal(false);
 
@@ -89,6 +89,15 @@ export const LayersSelector = (props: {
       onChange={() => enableWindLayer(!state.windLayerEnabled)}
     />
   );
+  const windNumericValuesCheckBox = inputWithLabel(
+    'Numeric values',
+    'Show numeric values instead of barbells',
+    <input
+      type='checkbox'
+      checked={state.windNumericValuesShown}
+      onChange={() => showWindNumericValues(!state.windNumericValuesShown)}
+    />
+  );
   const windLayersEl =
     <fieldset>
       <legend>{windCheckBox}</legend>
@@ -96,6 +105,7 @@ export const LayersSelector = (props: {
       {_300MAGLWindEl}
       {blWindEl}
       {blTopWindEl}
+      {windNumericValuesCheckBox}
     </fieldset>;
 
   const cloudCoverEl = setupLayerBtn(cloudCoverKey, 'primary-layer');
