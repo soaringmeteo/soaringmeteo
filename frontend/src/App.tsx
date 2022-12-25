@@ -7,9 +7,10 @@ import { fetchDefaultForecast, ForecastMetadata } from './data/ForecastMetadata'
 import { Forecast } from './data/Forecast';
 import * as L from 'leaflet';
 import markerImg from './images/marker-icon.png';
-import { StateProvider, useState } from './State';
+import { Domain } from './State';
 import { Burger } from './Burger';
 import { Attribution } from './map/Attribution';
+import { Layers } from './layers/Layers';
 
 const Help = lazy(() => import(/* webpackPrefetch: true */ './help/Help').then(module => ({ default: module.Help })));
 const PeriodSelectors = lazy(() => import(/* webpackPrefetch: true */ './PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
@@ -25,15 +26,16 @@ export const start = (containerElement: HTMLElement): void => {
   const [canvas, map] = initializeMap(mapElement);
 
   const App = (props: {
+    domain: Domain
     forecastMetadatas: Array<ForecastMetadata>
     morningOffset: number
   }): JSX.Element => {
 
-    const [state, { hideLocationForecast }] = useState();
+    const layers = new Layers(props.domain);
 
     const selectedLocationMarker: L.Marker = L.marker([0, 0], { icon: L.icon({ iconUrl: markerImg, iconSize: [25, 41] }) });
     createEffect(() => {
-      const detailedView = state.detailedView;
+      const detailedView = props.domain.state.detailedView;
       if (detailedView !== undefined) {
         const selectedLocation = detailedView[0];
         selectedLocationMarker.setLatLng([selectedLocation.latitude, selectedLocation.longitude]);
@@ -46,7 +48,7 @@ export const start = (containerElement: HTMLElement): void => {
     map.on('keydown', (e: any) => {
       const event = e.originalEvent as KeyboardEvent;
       if (event.key === 'Escape') {
-        hideLocationForecast();
+        props.domain.hideLocationForecast();
       }
     });
 
@@ -79,19 +81,24 @@ export const start = (containerElement: HTMLElement): void => {
     // LayersSelector displays the configuration button and manages the canvas overlay.
     return <>
       <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 1200 }}>
-        <Burger />
+        <Burger domain={props.domain} />
       </span>
-      <PeriodSelectors morningOffset={props.morningOffset} />
+      <PeriodSelectors
+        morningOffset={props.morningOffset}
+        domain={props.domain}
+      />
       <LayersSelector
         forecastMetadatas={props.forecastMetadatas}
         canvas={canvas}
         popupRequest={popupRequest}
         openLocationDetailsPopup={openLocationDetailsPopup}
+        domain={props.domain}
+        layers={layers}
       />
       <span style={{ position: 'absolute', right: '54px', bottom: '10px', 'z-index': 1300 }}>
-        <Attribution />
+        <Attribution domain={props.domain} />
         <span style={{ display: 'inline-block', width: '6px' }} />
-        <Help />
+        <Help domain={props.domain} layers={layers} />
       </span>
     </>
   }
@@ -107,17 +114,14 @@ export const start = (containerElement: HTMLElement): void => {
         alert('Unable to retrieve forecast data');
       })
     return <Show when={ loaded() }>
-      { ([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]) =>
-        <StateProvider
-          forecastMetadata={forecastMetadata}
-          hourOffset={hourOffset}
-          currentForecast={forecast}
-        >
-          <App
-            forecastMetadatas={forecastMetadatas}
-            morningOffset={morningOffset}
-          />
-        </StateProvider>
+      { ([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]) => {
+        const domain = new Domain(forecastMetadata, hourOffset, forecast);
+        return <App
+          domain={domain}
+          forecastMetadatas={forecastMetadatas}
+          morningOffset={morningOffset}
+        />
+      }
       }
     </Show>
   });

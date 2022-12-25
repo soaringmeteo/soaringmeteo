@@ -2,33 +2,35 @@ import * as L from 'leaflet';
 import { createEffect, createMemo, createSignal, JSX } from 'solid-js';
 
 import { forecastOffsets, periodsPerDay, showDate } from './data/ForecastMetadata';
-import { useState } from './State';
+import { Domain } from './State';
 import { closeButton, closeButtonSize, keyWidth, meteogramColumnWidth, periodSelectorHeight, surfaceOverMap } from './styles/Styles';
 
 const marginLeft = keyWidth;
 const marginTop = periodSelectorHeight;
 
-const hover = (htmlEl: HTMLElement): HTMLElement => {
+const hover = (elm: JSX.Element): JSX.Element => {
+  const htmlEl = elm as HTMLElement;
   let oldValue: string = 'inherit';
   htmlEl.onmouseenter = () => {
     oldValue = htmlEl.style.backgroundColor;
     htmlEl.style.backgroundColor = 'lightGray';
   }
   htmlEl.onmouseleave = () => htmlEl.style.backgroundColor = oldValue;
-  return htmlEl
+  return elm
 }
 
 const PeriodSelector = (props: {
   forecastOffsetAndDates: Array<[number, Date]>
   detailedView: JSX.Element
-}): HTMLElement => {
+  domain: Domain
+}): JSX.Element => {
 
-  const [state, { setHourOffset }] = useState();
+  const state = props.domain.state;
 
-  const flatPeriodSelectors: () => Array<[HTMLElement, number, Date]> =
+  const flatPeriodSelectors: () => Array<[JSX.Element, number, Date]> =
     createMemo(() => {
       return props.forecastOffsetAndDates
-        .map(([hourOffset, date]) => {
+        .map<[JSX.Element, number, Date]>(([hourOffset, date]) => {
           const htmlEl =
             <span
               style={{
@@ -41,7 +43,7 @@ const PeriodSelector = (props: {
                 'text-align': 'center',
                 'background-color': state.hourOffset === hourOffset ? 'lightGray' : 'inherit'
               }}
-              onClick={() => setHourOffset(hourOffset)}
+              onClick={() => props.domain.setHourOffset(hourOffset)}
             >
               {date.toLocaleTimeString(undefined, { hour12: false, hour: '2-digit' })}
             </span>;
@@ -50,8 +52,8 @@ const PeriodSelector = (props: {
         });
     })
 
-  const periodSelectorsByDay: () => Array<[Array<[HTMLElement, number]>, Date]> = createMemo(() => {
-    const result: Array<[Array<[HTMLElement, number]>, Date]> = [];
+  const periodSelectorsByDay: () => Array<[Array<[JSX.Element, number]>, Date]> = createMemo(() => {
+    const result: Array<[Array<[JSX.Element, number]>, Date]> = [];
     let lastDay: number | null = null;
     flatPeriodSelectors().forEach(([hourSelector, hourOffset, date]) => {
       if (date.getDay() === lastDay) {
@@ -66,7 +68,7 @@ const PeriodSelector = (props: {
     return result
   });
 
-  const periodSelectors: () => Array<HTMLElement> =
+  const periodSelectors: () => Array<JSX.Element> =
     createMemo(() => {
       return periodSelectorsByDay().map(([periods, date]) => {
         const dayEl =
@@ -81,7 +83,7 @@ const PeriodSelector = (props: {
                 'border-left': 'thin solid darkGray',
                 'line-height': '13px'
               }}
-              onClick={() => setHourOffset(periods[1 /* because we have three periods per day in total in GFS */][1])}
+              onClick={() => props.domain.setHourOffset(periods[1 /* because we have three periods per day in total in GFS */][1])}
             >
             {
               periods.length === periodsPerDay ?
@@ -113,9 +115,9 @@ const PeriodSelector = (props: {
  * @returns A pair of a reactive element for the detailed view key, and a
  *          reactive element for the detailed view.
  */
-const detailedView = (): (() => { key: JSX.Element, view: JSX.Element }) => {
+const detailedView = (props: { domain: Domain }): (() => { key: JSX.Element, view: JSX.Element }) => {
 
-  const [state] = useState();
+  const state = props.domain.state;
 
   const noDetailedView: { key: JSX.Element, view: JSX.Element } = { key: <div />, view: <div /> };
 
@@ -155,12 +157,13 @@ const detailedView = (): (() => { key: JSX.Element, view: JSX.Element }) => {
  *          of the screen (which shows the current date).
  */
 export const PeriodSelectors = (props: {
-  morningOffset: number,
+  morningOffset: number
+  domain: Domain
 }): JSX.Element => {
 
-  const [state, { setHourOffset, hideLocationForecast }] = useState();
+  const state = props.domain.state;
 
-  const getDetailedView = detailedView();
+  const getDetailedView = detailedView({ domain: props.domain });
 
   const detailedViewKeyEl = 
     <div style={{ position: 'absolute', width: `${marginLeft}px`, left: 0, top: `${marginTop}px`, 'background-color': 'white' }}>
@@ -182,7 +185,7 @@ export const PeriodSelectors = (props: {
     <div
       title='24 hours before'
       style={{ ...buttonStyle }}
-      onClick={() => setHourOffset(Math.max(state.hourOffset - 24, 3))}
+      onClick={() => props.domain.setHourOffset(Math.max(state.hourOffset - 24, 3))}
     >
       -24
     </div>
@@ -193,7 +196,7 @@ export const PeriodSelectors = (props: {
     <div
       title='Previous forecast period'
       style={{ ...buttonStyle }}
-      onClick={() => setHourOffset(Math.max(state.hourOffset - 3, 3))}
+      onClick={() => props.domain.setHourOffset(Math.max(state.hourOffset - 3, 3))}
     >
       -3
     </div>
@@ -204,7 +207,7 @@ export const PeriodSelectors = (props: {
     <div
       title='Next forecast period'
       style={{ ...buttonStyle }}
-      onClick={() => setHourOffset(Math.min(state.hourOffset + 3, state.forecastMetadata.latest))}
+      onClick={() => props.domain.setHourOffset(Math.min(state.hourOffset + 3, state.forecastMetadata.latest))}
     >
       +3
     </div>
@@ -214,7 +217,7 @@ export const PeriodSelectors = (props: {
     <div
       title='24 hours after'
       style={{ ...buttonStyle }}
-      onClick={() => setHourOffset(Math.min(state.hourOffset + 24, state.forecastMetadata.latest))}
+      onClick={() => props.domain.setHourOffset(Math.min(state.hourOffset + 24, state.forecastMetadata.latest))}
     >
       +24
     </div>
@@ -230,6 +233,7 @@ export const PeriodSelectors = (props: {
           state.detailedView[0].offsetAndDates()
       }
       detailedView={ getDetailedView().view }
+      domain={ props.domain }
     />;
 
   const hideDetailedViewBtn =
@@ -242,7 +246,7 @@ export const PeriodSelectors = (props: {
         visibility: (state.detailedView !== undefined) ? 'visible' : 'hidden'
       }}
       title='Hide'
-      onClick={() => hideLocationForecast() }
+      onClick={() => props.domain.hideLocationForecast() }
     >
       ⨯
     </div>;

@@ -1,9 +1,8 @@
 import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { Renderer } from "../map/CanvasLayer";
-import { Layer } from "./Layer";
 
-class None implements Renderer {
+export class None implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -15,11 +14,3 @@ class None implements Renderer {
   }
 
 }
-
-export const noLayer = new Layer(
-  'None',
-  'Map only',
-  forecast => new None(forecast),
-  <div />,
-  <p>This layer just shows the map.</p>
-);

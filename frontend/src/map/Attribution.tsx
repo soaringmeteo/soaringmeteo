@@ -1,12 +1,10 @@
 import { createSignal, JSX, Show } from 'solid-js'
 import * as L from 'leaflet'
 import { showDate } from '../data/ForecastMetadata'
-import { useState } from '../State'
 import { bottomButtonsSize, surfaceOverMap } from '../styles/Styles';
+import { Domain } from '../State';
 
-export const Attribution = (): JSX.Element => {
-
-  const [state] = useState();
+export const Attribution = (props: { domain: Domain }): JSX.Element => {
 
   const [isExpanded, expand] = createSignal(false);
 
@@ -49,7 +47,7 @@ export const Attribution = (): JSX.Element => {
             'background-color': 'white'
           }}
         >
-          Model: { state.forecastMetadata.model }. Initialization: { showDate(state.forecastMetadata.init) }
+          Model: { props.domain.state.forecastMetadata.model }. Initialization: { showDate(props.domain.state.forecastMetadata.init) }
         </div>
       </Show>
     </span>;

@@ -96,7 +96,7 @@ export const drawWindArrow = (ctx: CanvasRenderingContext2D, x: number, y: numbe
 
 const drawWindBarbell = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, color: string, windForce: number, windDirection: number): void => {
   ctx.save();
-  ctx.lineWidth = Math.ceil(width / 20);
+  ctx.lineWidth = Math.ceil(width / 15);
   ctx.strokeStyle = color;
   ctx.lineCap = 'round';
   ctx.beginPath();
