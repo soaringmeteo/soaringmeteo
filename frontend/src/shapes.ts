@@ -133,7 +133,7 @@ const drawWindArrowAndNumericalValue = (
   ctx.save();
   const maxWindVelocity = 25; /* km/h */
   const boundedWindVelocity = Math.min(windVelocity, maxWindVelocity);
-  const length = 8 + boundedWindVelocity * width / (3 * maxWindVelocity);
+  const length = 9 + boundedWindVelocity * width / (3 * maxWindVelocity);
   const x = centerX - width / 4;
   const y = centerY;
   const segments = basicWindArrowShape(x, y, length, windDirection);

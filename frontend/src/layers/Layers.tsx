@@ -90,7 +90,7 @@ export class Layers {
               )
             })
           }
-        </div>;
+        </div>
       </Show>;
 
     const reactiveWindHelp = windHelp(() => stateProvider.state.windNumericValuesShown);

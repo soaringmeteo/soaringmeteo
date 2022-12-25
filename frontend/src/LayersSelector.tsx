@@ -92,8 +92,8 @@ export const LayersSelector = (props: {
     />
   );
   const windNumericValuesCheckBox = inputWithLabel(
-    'Numeric values',
-    'Show numeric values instead of barbells',
+    'Numerical values',
+    'Show numerical values instead of barbells',
     <input
       type='checkbox'
       checked={state.windNumericValuesShown}
@@ -174,7 +174,7 @@ export const LayersSelector = (props: {
       'text-align': 'center'
     }}>
       <Show when={state.windLayerEnabled && props.layers.layerByKey(state.windLayerKey)}>
-        { windLayer => windLayer.mapKeyEl}
+        { windLayer => windLayer.mapKeyEl }
       </Show>
       <Show when={props.layers.layerByKey(state.primaryLayerKey)}>
         { primaryLayer => primaryLayer.mapKeyEl }
