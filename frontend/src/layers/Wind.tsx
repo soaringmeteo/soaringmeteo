@@ -50,11 +50,11 @@ export const help = (windNumericValuesShown: () => boolean): JSX.Element =>
     <p>
       The wind speed and direction are shown with an arrow. The wind flows in the
       direction of the arrow. For instance, an arrow that points to the right means
-      that the wind comes from west and goes to east. The number of barbells, in the
-      arrow, indicate the speed with a precision of 2.5 km/h. For instance, an arrow
-      with a single short arm indicate a speed between 0 and 2.5 km/h. If it has two
-      short arms, it means a speed between 2.5 and 5 km/h. Two long arms mean a speed
-      between 7.5 and 10 km/h. Four long arms mean a speed between 17.5 and 20 km/h,
+      that the wind comes from west and goes to east. The number of barb “flags”, in the
+      arrow, indicates the speed with a precision of 2.5 km/h. For instance, an arrow
+      with a single short flag indicate a speed between 0 and 2.5 km/h. If it has two
+      short flags, it means a speed between 2.5 and 5 km/h. Two long flags mean a speed
+      between 7.5 and 10 km/h. Four long flags mean a speed between 17.5 and 20 km/h,
       and so on. You can see some examples on the left of the screen.
     </p>
   </Show>;

@@ -166,7 +166,7 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     The wind and clouds are also shown in that diagram at various elevation levels. For
     instance, within the boundary layer, there is moderate wind the first two days (between 15 km/h
     and 30 km/h), and light wind the third day (5 to 15 km/h). The wind comes from the south the
-    second day. You can learn more about wind barbells by showing the help from within the map view,
+    second day. You can learn more about the wind barb by showing the help from within the map view,
     if there is a wind layer enabled.
   </p>
   <p>
@@ -221,7 +221,7 @@ const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
   <p>
     The green area shows the boundary layer height. The white or gray areas show the presence of
     clouds. On the left, the wind speed and direction is shown at various altitude levels by the
-    wind barbells.
+    wind barb.
   </p>
   <p>
     By default, the diagram shows only the airmass within the boundary layer and a couple of thousand

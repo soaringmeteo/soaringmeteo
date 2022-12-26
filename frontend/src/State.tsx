@@ -14,7 +14,7 @@ export type State = {
   // It is possible to also show a wind layer as an overlay
   windLayerKey: string
   windLayerEnabled: boolean
-  // Whether to show numerical values instead of barbells
+  // Whether to show numerical values instead of showing a barb
   windNumericValuesShown: boolean
   // If defined, the detailed forecast data for the selected location, and the type of detailed view to display
   detailedView: undefined | [LocationForecasts, DetailedViewType]
@@ -159,7 +159,7 @@ export class Domain {
     this.setState({ windLayerEnabled: enabled })
   }
 
-  /** Whether or not numerical values should be displayed instead of wind barbells */
+  /** Whether or not numerical values should be displayed instead of wind barb */
   showWindNumericValues(windNumericValuesShown: boolean): void {
     saveWindNumericValuesShown(windNumericValuesShown);
     this.setState({ windNumericValuesShown })

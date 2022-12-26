@@ -93,7 +93,7 @@ export const LayersSelector = (props: {
   );
   const windNumericValuesCheckBox = inputWithLabel(
     'Numerical values',
-    'Show numerical values instead of barbells',
+    'Show numerical values instead of showing a wind barb',
     <input
       type='checkbox'
       checked={state.windNumericValuesShown}
