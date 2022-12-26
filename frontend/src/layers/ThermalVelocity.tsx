@@ -22,7 +22,7 @@ class ThermalVelocity implements Renderer {
 
 }
 
-const thermalVelocityColorScale = new ColorScale([
+export const thermalVelocityColorScale = new ColorScale([
   [0.25, new Color(0x33, 0x33, 0x33, 1)],
   [0.50, new Color(0x99, 0x00, 0x99, 1)],
   [0.75, new Color(0xff, 0x00, 0x00, 1)],
