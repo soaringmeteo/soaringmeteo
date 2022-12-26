@@ -2,9 +2,8 @@ import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
 import { Renderer } from "../map/CanvasLayer";
-import { colorScaleEl, Layer } from "./Layer";
 
-class CloudCover implements Renderer {
+export class CloudCover implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -42,22 +41,10 @@ const drawCloudCover = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottom
 
 const cloudCoverMaxOpacity = 0.35;
 
-const cloudCoverColorScale = new ColorScale([
+export const cloudCoverColorScale = new ColorScale([
   [20,  new Color(0, 0, 0, 0.00 * cloudCoverMaxOpacity)],
   [40,  new Color(0, 0, 0, 0.25 * cloudCoverMaxOpacity)],
   [60,  new Color(0, 0, 0, 0.50 * cloudCoverMaxOpacity)],
   [80,  new Color(0, 0, 0, 0.75 * cloudCoverMaxOpacity)],
   [100, new Color(0, 0, 0, 1.00 * cloudCoverMaxOpacity)]
 ]);
-
-export const cloudCoverLayer = new Layer(
-  'Cloud Cover',
-  'Cloud cover (all altitudes)',
-  forecast => new CloudCover(forecast),
-  colorScaleEl(cloudCoverColorScale, value => `${value}% `),
-  <p>
-    The cloud cover is a value between 0% and 100% that tells us how much of the
-    sunlight will be blocked by the clouds. A low value means a blue sky, and a
-    high value means a dark sky.
-  </p>
-);

@@ -4,6 +4,7 @@ import { cloudsColorScale } from './Clouds';
 import { drawWindArrow } from '../shapes';
 import { createEffect, createSignal, JSX } from 'solid-js';
 import { keyWidth, soundingWidth, surfaceOverMap } from '../styles/Styles';
+import { State } from '../State';
 
 const temperatureScaleAndLevels = (
   aboveGround: Array<AboveGround>,
@@ -32,7 +33,7 @@ const temperatureScaleAndLevels = (
   return [scale, levels]
 }
 
-export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDefaultValue: boolean): { key: JSX.Element, view: JSX.Element } => {
+export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDefaultValue: boolean, state: State): { key: JSX.Element, view: JSX.Element } => {
 
   const [canvasHeight, _] = computeSoundingHeightAndMaxElevation(zoomedDefaultValue, elevation, forecast);
 
@@ -52,6 +53,9 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
   canvasLeftKey.style.height = `${canvasHeight}px`;
   canvasLeftKey.style.flex = '0 0 auto';
   const leftCtx = canvasLeftKey.getContext('2d');
+
+  // For some reason, accessing the state from a separate module does not work, I have to pass it from the parent module
+  // const [state] = useState();
 
   const [zoomed, zoom] = createSignal(zoomedDefaultValue);
 
@@ -107,6 +111,7 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
             leftCtx,
             forecast,
             elevation,
+            state.windNumericValuesShown,
             zoomed()
           );
         })
@@ -126,6 +131,7 @@ const drawSounding = (
   leftCtx: CanvasRenderingContext2D,
   forecast: DetailedForecast,
   elevation: number,
+  windNumericValuesShown: boolean,
   zoomed: boolean
 ): void => {
   const [canvasHeight, maxElevation] =
@@ -270,7 +276,8 @@ const drawSounding = (
 
   // --- Sounding Diagram
 
-  const windArrowSize = Math.max(Math.min(canvasHeight / (relevantData.length * 1.2), 35), 1);
+  const windArrowSize = Math.max(Math.min(canvasHeight / (relevantData.length * 1.15), 35), 1);
+  const windColor = `rgba(62, 0, 0, ${ windNumericValuesShown ? 0.5 : 0.3 })`
   relevantData
     .reduce(([previousTemperature, previousDewPoint, previousElevation], entry) => {
       const y0 = elevationScale.apply(previousElevation);
@@ -278,8 +285,8 @@ const drawSounding = (
 
       // Wind
       if (temperatureLevels.length >= 2 && entry.elevation < maxElevation) {
-        const windCenterX = temperatureScale.apply(temperatureLevels[0]);
-        drawWindArrow(ctx, windCenterX, diagram.projectY(y1), windArrowSize, `rgba(62, 0, 0, 0.30)`, entry.u, entry.v);
+        const windCenterX = temperatureScale.apply(temperatureLevels[0] - 5 /* 5 because step is 10 */);
+        drawWindArrow(ctx, windCenterX, diagram.projectY(y1), windArrowSize, windColor, entry.u, entry.v, windNumericValuesShown);
       }
 
       // Temperature

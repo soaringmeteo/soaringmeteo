@@ -1,14 +1,15 @@
 import { createSignal, JSX, lazy, Match, Show, Switch } from 'solid-js'
 import * as L from 'leaflet'
-import { useState } from '../State';
 import { bottomButtonsSize, keyWidth, soundingWidth, surfaceOverMap } from '../styles/Styles';
-import { xcFlyingPotentialLayer } from '../layers/ThQ';
 import * as fakeData from './data';
 import { showDate } from '../data/ForecastMetadata';
+import { Domain } from '../State';
+import { Layers, xcFlyingPotentialName } from '../layers/Layers';
+import { Layer } from '../layers/Layer';
 
-export const Help = (): JSX.Element => {
+export const Help = (props: { domain: Domain, layers: Layers }): JSX.Element => {
 
-  const [state] = useState();
+  const state = props.domain.state;
   const [isVisible, makeVisible] = createSignal(false);
 
   const expandButton =
@@ -64,13 +65,13 @@ export const Help = (): JSX.Element => {
         >
           <Switch>
             <Match when={ state.detailedView === undefined }>
-              <MapHelp />
+              <MapHelp domain={props.domain} layers={props.layers} />
             </Match>
             <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'meteogram' }>
-              <MeteogramHelp />
+              <MeteogramHelp domain={props.domain} />
             </Match>
             <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'sounding' }>
-              <SoundingHelp />
+              <SoundingHelp domain={props.domain} />
             </Match>
           </Switch>
         </div>
@@ -84,9 +85,9 @@ export const Help = (): JSX.Element => {
   return help
 };
 
-const MapHelp = (): JSX.Element => {
+const MapHelp = (props: { domain: Domain, layers: Layers }): JSX.Element => {
 
-  const [state] = useState();
+  const state =  props.domain.state;
 
   return <>
     <p>
@@ -98,15 +99,25 @@ const MapHelp = (): JSX.Element => {
       from the model { state.forecastMetadata.model }. Select the information to display on the map
       by clicking on the “layers” button to the bottom right of the screen.
     </p>
-    <p>
-      Currently, you see the <strong>{ state.primaryLayer.title }</strong>.
-    </p>
-    { state.primaryLayer.help }
-    <Show when={ state.windLayerEnabled }>
-      <p>
-        You also see the <strong>{ state.windLayer.title }</strong>.
-      </p>
-      { state.windLayer.help }
+    <Show when={ props.layers.layerByKey(state.primaryLayerKey) }>
+      {
+        (primaryLayer: Layer) => <>
+          <p>
+            Currently, you see the <strong>{ primaryLayer.title }</strong>.
+          </p>
+          { primaryLayer.help }
+        </>
+      }
+    </Show>
+    <Show when={ state.windLayerEnabled && props.layers.layerByKey(state.windLayerKey) }>
+      {
+        (windLayer: Layer) => <>
+          <p>
+            You also see the <strong>{ windLayer.title }</strong>.
+          </p>
+          { windLayer.help }
+        </>
+      }
     </Show>
     <p>
       Click on the map to see meteograms and sounding diagrams for that location. <strong>At any
@@ -119,27 +130,27 @@ const MapHelp = (): JSX.Element => {
   </>
 };
 
-const lazyMeteogram =
-  lazy<() => JSX.Element>(() =>
-    import(/* webpackPrefetch: true */ '../diagrams/Meteogram').then(module => {
-      const { key, view } = module.meteogram(fakeData.locationForecasts);
+const lazyMeteogram = (props: { domain: Domain }): JSX.Element =>
+  lazy<() => JSX.Element>(() => {
+    return import(/* webpackPrefetch: true */ '../diagrams/Meteogram').then(module => {
+      const { key, view } = module.meteogram(fakeData.locationForecasts, props.domain.state);
       return { default: () => <>{ key }{ view }</> }
     })
-  );
+  });
 
-const MeteogramHelp = (): JSX.Element => <>
+const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
   <p>
     Meteograms show the weather forecast for the selected location over time. Here is an
     example of three days meteogram that we made up for documentation purpose:
   </p>
   <div style={{ float: 'left', 'margin-right': '1em' }}>
-    { lazyMeteogram() }
+    { lazyMeteogram({ domain: props.domain }) }
   </div>
   <p>
     The top row (“XC?”) shows the estimated cross-country flying potential (between 0% and 100%).
     The higher the number, the higher the chances to fly long distances. It takes into account the
     boundary layer depth, the average thermal velocity, the wind speed, and the sunshine. Select the
-    layer “{ xcFlyingPotentialLayer.name }” in the map view to learn more about how it works.
+    layer “{ xcFlyingPotentialName }” in the map view to learn more about how it works.
   </p>
   <p>
     The second row (“m/s”) shows the estimated average thermal velocity (in m/s) within the boundary layer.
@@ -161,7 +172,7 @@ const MeteogramHelp = (): JSX.Element => <>
     The wind and clouds are also shown in that diagram at various elevation levels. For
     instance, within the boundary layer, there is moderate wind the first two days (between 15 km/h
     and 30 km/h), and light wind the third day (5 to 15 km/h). The wind comes from the south the
-    second day. You can learn more about wind barbells by showing the help from within the map view,
+    second day. You can learn more about the wind barb by showing the help from within the map view,
     if there is a wind layer enabled.
   </p>
   <p>
@@ -189,22 +200,22 @@ const MeteogramHelp = (): JSX.Element => <>
   </p>
 </>;
 
-const lazySounding =
-  lazy<() => JSX.Element>(() =>
-    import(/* webpackPrefetch: true */ '../diagrams/Sounding').then(module => {
-      const { key, view } = module.sounding(fakeData.detailedForecast, fakeData.groundLevel, true);
+const lazySounding = (props: { domain: Domain }): JSX.Element =>
+  lazy<() => JSX.Element>(() => {
+    return import(/* webpackPrefetch: true */ '../diagrams/Sounding').then(module => {
+      const { key, view } = module.sounding(fakeData.detailedForecast, fakeData.groundLevel, true, props.domain.state);
       return { default: () => <>{ key }{ view }</> }
     })
-  );
+  });
 
-const SoundingHelp = (): JSX.Element => <>
+const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
   <p>
     Sounding diagrams show the evolution of the temperature of the air with altitude (learn more
     about sounding diagrams <a href="https://soaringmeteo.org/profilEN.pdf" target="_blank">here</a>).
     Here is an example:
   </p>
   <div style={{ float: 'left', 'margin-right': '1em', 'min-width': `${ keyWidth + soundingWidth }px` }}>
-    { lazySounding() }
+    { lazySounding({ domain: props.domain }) }
   </div>
   <p>
     The horizontal axis shows the temperature, whereas the vertical axis shows the altitude. The
@@ -216,7 +227,7 @@ const SoundingHelp = (): JSX.Element => <>
   <p>
     The green area shows the boundary layer height. The white or gray areas show the presence of
     clouds. On the left, the wind speed and direction is shown at various altitude levels by the
-    wind barbells.
+    wind barb.
   </p>
   <p>
     The text “2.5 m/s” (in the middle of the green area, on the right of the diagram) tells you the

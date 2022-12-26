@@ -1,7 +1,7 @@
 import * as L from "leaflet";
 import { createSignal, JSX, Show } from "solid-js";
+import { Domain } from "./State";
 import { periodSelectorHeight } from "./styles/Styles";
-import { useState } from './State';
 import { surfaceOverMap } from "./styles/Styles";
 
 /**
@@ -10,9 +10,9 @@ import { surfaceOverMap } from "./styles/Styles";
  * The menu is hidden when a detailed view (meteogram or sounding)
  * is displayed.
  */
-export const Burger = (): JSX.Element => {
+export const Burger = (props: { domain: Domain }): JSX.Element => {
 
-  const [state] = useState();
+  const state = props.domain.state;
   const [expanded, setExpanded] = createSignal(false);
 
   const menu =

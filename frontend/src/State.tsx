@@ -1,11 +1,8 @@
-import { Context, createContext, JSX, useContext } from 'solid-js';
-import { createStore } from 'solid-js/store';
+import { createStore, SetStoreFunction, Store } from 'solid-js/store';
 import { Forecast, LocationForecasts } from './data/Forecast';
 import { ForecastMetadata } from './data/ForecastMetadata';
-import { Layer } from './layers/Layer';
-import { boundaryLayerWindKey, layerByKey, xcFlyingPotentialKey } from './layers/Layers';
 
-type State = {
+export type State = {
   // Currently selected forecast run
   forecastMetadata: ForecastMetadata
   // Currently displayed forecast
@@ -13,147 +10,171 @@ type State = {
   // Delta with the forecast initialization time
   hourOffset: number
   // Selected layer on the map (XC flying potential, thermal velocity, etc.)
-  primaryLayer: Layer
+  primaryLayerKey: string
   // It is possible to also show a wind layer as an overlay
-  windLayer: Layer
+  windLayerKey: string
   windLayerEnabled: boolean
+  // Whether to show numerical values instead of showing a barb
+  windNumericValuesShown: boolean
   // If defined, the detailed forecast data for the selected location, and the type of detailed view to display
   detailedView: undefined | [LocationForecasts, DetailedViewType]
 }
 
 type DetailedViewType = 'meteogram' | 'sounding'
 
-type ContextType = [
-  State,
-  {
-    setForecastMetadata: (forecastMetadata: ForecastMetadata) => void
-    setHourOffset: (hourOffset: number) => void
-    setPrimaryLayer: (key: string, layer: Layer) => void
-    setWindLayer: (key: string, layer: Layer) => void
-    enableWindLayer: (enabled: boolean) => void
-    showLocationForecast: (latitude: number, longitude: number, viewType: DetailedViewType) => void
-    hideLocationForecast: () => void
-  }
-]
+// Keys used to store the current display settings in the local storage
+const selectedPrimaryLayerKey   = 'selected-primary-layer';
+const selectedWindLayerKey      = 'selected-wind-layer';
+const windLayerEnabledKey       = 'wind-layer-enabled';
+const windNumericValuesShownKey = 'wind-numeric-values-shown';
 
-const SoarContext: Context<ContextType | undefined> = createContext<ContextType>();
+// Keys used to model the layers in the state
+export const boundaryLayerDepthKey   = 'boundary-layer-depth';
+export const cloudCoverKey           = 'cloud-cover';
+export const cumuliDepthKey          = 'cumuli-depth';
+export const noneKey                 = 'none';
+export const rainKey                 = 'rain';
+export const thermalVelocityKey      = 'thermal-velocity';
+export const xcFlyingPotentialKey    = 'xc-flying-potential';
+export const surfaceWindKey          = 'surface-wind';
+export const _300MAGLWindKey         = '300m-agl-wind';
+export const boundaryLayerWindKey    = 'boundary-layer-wind';
+export const boundaryLayerTopWindKey = 'boundary-layer-top-wind';
 
-// Keys used to store the selected layers in the local storage
-const selectedPrimaryLayerKey = 'selected-primary-layer';
-const selectedWindLayerKey    = 'selected-wind-layer';
-const windLayerEnabledKey     = 'wind-layer-enabled';
-
-const loadLayer = (key: string, fallback: Layer): Layer => {
+const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValue: A): A => {
   const maybeItem = window.localStorage.getItem(key);
   if (maybeItem === null) {
-    return fallback
+    return defaultValue
   } else {
-    return layerByKey(maybeItem) ?? fallback
+    return parse(maybeItem);
   }
 };
 
-const loadPrimaryLayer = (): Layer => 
+const loadLayer = (key: string, fallback: string): string =>
+  loadStoredState(key, layerKey => layerKey, fallback);
+
+const loadPrimaryLayer = (): string => 
   loadLayer(
     selectedPrimaryLayerKey,
-    layerByKey(xcFlyingPotentialKey) as Layer // We know we are safe here
+    xcFlyingPotentialKey
   );
-
 
 const savePrimaryLayer = (key: string): void => {
   window.localStorage.setItem(selectedPrimaryLayerKey, key);
 };
 
-const loadWindLayer = (): Layer => 
+const loadWindLayer = (): string => 
   loadLayer(
     selectedWindLayerKey,
-    layerByKey(boundaryLayerWindKey) as Layer // We know we are safe here
+    boundaryLayerWindKey
   );
 
 const saveWindLayer = (key: string): void => {
   window.localStorage.setItem(selectedWindLayerKey, key);
 };
 
-const loadWindLayerEnabled = (): boolean => {
-  const maybeItem = window.localStorage.getItem(windLayerEnabledKey);
-  if (maybeItem === null) {
-    return true
-  } else {
-    return JSON.parse(maybeItem);
-  }
-};
+const loadWindLayerEnabled = (): boolean =>
+  loadStoredState(windLayerEnabledKey, raw => JSON.parse(raw), true);
 
 const saveWindLayerEnabled = (value: boolean): void => {
   window.localStorage.setItem(windLayerEnabledKey, JSON.stringify(value));
 };
 
-export const StateProvider = (props: {
-  forecastMetadata: ForecastMetadata
-  hourOffset: number
-  currentForecast: Forecast 
-  children: JSX.Element 
-}): JSX.Element => {
+const loadWindNumericValuesShown = (): boolean =>
+  loadStoredState(windNumericValuesShownKey, raw => JSON.parse(raw), false);
 
-  const primaryLayer     = loadPrimaryLayer();
-  const windLayer        = loadWindLayer();
-  const windLayerEnabled = loadWindLayerEnabled();
-
-  // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
-  const [state, setState] = createStore<State>({
-    forecastMetadata: props.forecastMetadata,
-    forecast: props.currentForecast,
-    hourOffset: props.hourOffset,
-    primaryLayer,
-    windLayer,
-    windLayerEnabled,
-    detailedView: undefined
-  }, { name: 'state' }); // See https://github.com/solidjs/solid/discussions/1414
-
-  const context = [
-    state,
-    {
-      setForecastMetadata: (forecastMetadata: ForecastMetadata) => {
-        setState({ forecastMetadata })
-      },
-      setHourOffset: (hourOffset: number) => {
-        state.forecastMetadata.fetchForecastAtHourOffset(hourOffset)
-          .then(forecast => {
-            setState({ hourOffset, forecast });
-          })
-          .catch(error => {
-            console.error(error);
-            alert('Unable to retrieve forecast data');
-          });
-      },
-      setPrimaryLayer: (key: string, layer: Layer): void => {
-        savePrimaryLayer(key);
-        setState({ primaryLayer: layer })
-      },
-      setWindLayer: (key: string, layer: Layer): void => {
-        saveWindLayer(key);
-        setState({ windLayer: layer })
-      },
-      enableWindLayer: (enabled: boolean): void => {
-        saveWindLayerEnabled(enabled);
-        setState({ windLayerEnabled: enabled })
-      },
-      showLocationForecast: (latitude: number, longitude: number, viewType: DetailedViewType): void => {
-        state.forecastMetadata
-          .fetchLocationForecasts(latitude, longitude)
-          .then(locationForecasts => setState({ detailedView: [locationForecasts, viewType] }))
-      },
-      hideLocationForecast: () => {
-        setState({ detailedView: undefined })
-      }
-    }
-  ]
-
-  return <SoarContext.Provider value={context}>
-    {props.children}
-  </SoarContext.Provider>
+const saveWindNumericValuesShown = (value: boolean): void => {
+  window.localStorage.setItem(windNumericValuesShownKey, JSON.stringify(value));
 };
 
-export const useState = (): ContextType => {
-  const maybeContext = useContext(SoarContext);
-  if (maybeContext === undefined) throw Error("Unable to initialize the application.")
-  else return maybeContext
-};
+/**
+ * Manages the interactions with the state of the system.
+ * 
+ * The state of the system can be read via the `state` property.
+ * To update the state, use the methods defined here.
+ */
+export class Domain {
+  
+  readonly state: Store<State>;
+  private readonly setState: SetStoreFunction<State>;
+
+  constructor (
+    forecastMetadata: ForecastMetadata,
+    hourOffset: number,
+    currentForecast: Forecast
+  ) {
+    const primaryLayerKey        = loadPrimaryLayer();
+    const windLayerKey           = loadWindLayer();
+    const windLayerEnabled       = loadWindLayerEnabled();
+    const windNumericValuesShown = loadWindNumericValuesShown();
+  
+    // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
+    const [get, set] = createStore<State>({
+      forecastMetadata: forecastMetadata,
+      forecast: currentForecast,
+      hourOffset: hourOffset,
+      primaryLayerKey,
+      windLayerKey,
+      windLayerEnabled,
+      windNumericValuesShown,
+      detailedView: undefined
+    }, { name: 'state' }); // See https://github.com/solidjs/solid/discussions/1414
+
+    this.state = get;
+    this.setState = set;
+  }
+  
+  /** Change the forecast run to display */
+  setForecastMetadata(forecastMetadata: ForecastMetadata): void {
+    this.setState({ forecastMetadata })
+  }
+
+  /** Change the period to display in the current forecast run */
+  setHourOffset(hourOffset: number): void {
+    this.state.forecastMetadata.fetchForecastAtHourOffset(hourOffset)
+      .then(forecast => {
+        this.setState({ hourOffset, forecast });
+      })
+      .catch(error => {
+        console.error(error);
+        alert('Unable to retrieve forecast data');
+      });
+  }
+
+  /** Change which primary layer to show. Valid keys are defined above in the file */
+  setPrimaryLayer(key: string): void {
+    savePrimaryLayer(key);
+    this.setState({ primaryLayerKey: key })
+  }
+
+  /** Change which wind layer to show. Valid keys are defined above in the file */
+  setWindLayer(key: string): void {
+    saveWindLayer(key);
+    this.setState({ windLayerKey: key })
+  }
+
+  /** Whether or not the wind layer should be shown. */
+  enableWindLayer(enabled: boolean): void {
+    saveWindLayerEnabled(enabled);
+    this.setState({ windLayerEnabled: enabled })
+  }
+
+  /** Whether or not numerical values should be displayed instead of wind barb */
+  showWindNumericValues(windNumericValuesShown: boolean): void {
+    saveWindNumericValuesShown(windNumericValuesShown);
+    this.setState({ windNumericValuesShown })
+  }
+
+  /** Display the detailed view (meteogram or sounding) at the given location */
+  showLocationForecast(latitude: number, longitude: number, viewType: DetailedViewType): void {
+    this.state.forecastMetadata
+      .fetchLocationForecasts(latitude, longitude)
+      .then(locationForecasts => this.setState({ detailedView: [locationForecasts, viewType] }))
+  }
+
+  /** Hide the detailed view */
+  hideLocationForecast(): void {
+    this.setState({ detailedView: undefined })
+  }
+
+}

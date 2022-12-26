@@ -2,7 +2,6 @@ import { JSX } from "solid-js";
 import { Color, ColorScale } from "../ColorScale";
 import { Forecast } from "../data/Forecast";
 import { Renderer } from "../map/CanvasLayer";
-import { drawWindArrow } from "../shapes";
 
 /**
  * A layer shown over the map (boundary layer height, cloud cover, etc.)
@@ -10,6 +9,7 @@ import { drawWindArrow } from "../shapes";
  export class Layer {
 
   constructor(
+    readonly key: string,
     readonly name: string,
     readonly title: string,
     readonly createRenderer: (forecast: Forecast) => Renderer,
@@ -34,23 +34,3 @@ export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => 
   };
 
 export const windColor = (opacity: number): string => `rgba(62, 0, 0, ${opacity})`;
-
-export const windScaleEl: JSX.Element =
-  <div>
-    {
-      [2.5, 5, 10, 17.5, 25].map((windSpeed) => {
-        const canvas = <canvas style={{ width: '30px', height: '20px', border: 'thin solid black' }} /> as HTMLCanvasElement;
-        canvas.width = 30;
-        canvas.height = 20;
-        const ctx = canvas.getContext('2d');
-        if (ctx === null) { return }
-        drawWindArrow(ctx, canvas.width / 2, canvas.height / 2, canvas.width - 4, windColor(0.50), windSpeed, 0);
-        return (
-          <div style={{ 'margin-bottom': '2px' }}>
-            <div>{`${windSpeed} km/h `}</div>
-            {canvas}
-          </div>
-        )
-      })
-    }
-  </div>;

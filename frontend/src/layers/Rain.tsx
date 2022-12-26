@@ -2,9 +2,8 @@ import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
 import { Renderer } from "../map/CanvasLayer";
-import { colorScaleEl, Layer } from "./Layer";
 
-class Rain implements Renderer {
+export class Rain implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -26,17 +25,9 @@ const drawRain = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight:
   ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
 }
 
-const rainColorScale = new ColorScale([
+export const rainColorScale = new ColorScale([
   [1,  new Color(0, 0, 255, 0)],
   [3,  new Color(0, 0, 255, 0.30)],
   [7,  new Color(0, 0, 255, 0.70)],
   [10, new Color(0, 0, 255, 1.00)],
 ]);
-
-export const rainLayer = new Layer(
-  'Rain',
-  'Total rain',
-  forecast => new Rain(forecast),
-  colorScaleEl(rainColorScale, value => `${value} mm `),
-  <p>The color scale is shown on the bottom left of the screen.</p>
-);

@@ -6,8 +6,8 @@ import { normalizeCoordinates } from './data/Forecast';
 import { closeButton, surfaceOverMap } from './styles/Styles';
 import layersImg from './images/layers.png';
 import { ForecastMetadata, showDate } from './data/ForecastMetadata';
-import { useState } from './State';
-import { boundaryLayerDepthKey, boundaryLayerTopWindKey, boundaryLayerWindKey, cloudCoverKey, cumuliDepthKey, layerByKey, noneKey, rainKey, surfaceWindKey, thermalVelocityKey, xcFlyingPotentialKey, _300MAGLWindKey } from './layers/Layers';
+import { boundaryLayerDepthKey, boundaryLayerTopWindKey, boundaryLayerWindKey, cloudCoverKey, cumuliDepthKey, noneKey, rainKey, Domain, surfaceWindKey, thermalVelocityKey, xcFlyingPotentialKey, _300MAGLWindKey } from './State';
+import { Layers } from './layers/Layers';
 
 /**
  * Overlay on the map that displays the soaring forecast.
@@ -17,9 +17,11 @@ export const LayersSelector = (props: {
   canvas: CanvasLayer
   popupRequest: Accessor<undefined | L.LeafletMouseEvent>
   openLocationDetailsPopup: (latitude: number, longitude: number, content: JSX.Element) => void
+  domain: Domain
+  layers: Layers
 }): JSX.Element => {
 
-  const [state, { setForecastMetadata, setPrimaryLayer, setWindLayer, enableWindLayer, showLocationForecast }] = useState();
+  const state = props.domain.state;
 
   const [isMenuShown, showMenu] = createSignal(false);
 
@@ -34,29 +36,29 @@ export const LayersSelector = (props: {
             `Show forecast initialized at ${initTimeString}.`,
             () => state.forecastMetadata === forecastMetadata,
             'init',
-            () => setForecastMetadata(forecastMetadata)
+            () => props.domain.setForecastMetadata(forecastMetadata)
           )
         })
       }
     </fieldset>;
 
   function setupLayerBtn(key: string, layerType: 'primary-layer' | 'wind-layer'): JSX.Element {
-    const layer = layerByKey(key);
+    const layer = props.layers.layerByKey(key);
     if (layer === undefined) {
       throw new Error(`Invalid layer key: ${key}`);
     }
     const container = makeRadioBtn(
       layer.name,
       layer.title,
-      () => state.primaryLayer === layer || state.windLayer === layer,
+      () => state.primaryLayerKey === layer.key || state.windLayerKey === layer.key,
       layerType,
       () => {
         switch(layerType) {
           case 'primary-layer':
-            setPrimaryLayer(key, layer);
+            props.domain.setPrimaryLayer(key);
             break;
           case 'wind-layer':
-            setWindLayer(key, layer);
+            props.domain.setWindLayer(key);
             break;
         }
       }
@@ -86,7 +88,16 @@ export const LayersSelector = (props: {
     <input
       type='checkbox'
       checked={state.windLayerEnabled}
-      onChange={() => enableWindLayer(!state.windLayerEnabled)}
+      onChange={() => props.domain.enableWindLayer(!state.windLayerEnabled)}
+    />
+  );
+  const windNumericValuesCheckBox = inputWithLabel(
+    'Numerical values',
+    'Show numerical values instead of showing a wind barb',
+    <input
+      type='checkbox'
+      checked={state.windNumericValuesShown}
+      onChange={() => props.domain.showWindNumericValues(!state.windNumericValuesShown)}
     />
   );
   const windLayersEl =
@@ -96,6 +107,7 @@ export const LayersSelector = (props: {
       {_300MAGLWindEl}
       {blWindEl}
       {blTopWindEl}
+      {windNumericValuesCheckBox}
     </fieldset>;
 
   const cloudCoverEl = setupLayerBtn(cloudCoverKey, 'primary-layer');
@@ -161,19 +173,33 @@ export const LayersSelector = (props: {
       'padding': '5px',
       'text-align': 'center'
     }}>
-      <Show when={state.windLayerEnabled}>
-        {state.windLayer.mapKeyEl}
+      <Show when={state.windLayerEnabled && props.layers.layerByKey(state.windLayerKey)}>
+        { windLayer => windLayer.mapKeyEl }
       </Show>
-      {state.primaryLayer.mapKeyEl}
+      <Show when={props.layers.layerByKey(state.primaryLayerKey)}>
+        { primaryLayer => primaryLayer.mapKeyEl }
+      </Show>
     </div>;
 
   // Sync renderers (used to display the map overlay and tooltips) with current forecast
   const primaryRenderer =
-    createMemo(() => state.primaryLayer.createRenderer(state.forecast));
+    createMemo<Renderer>(() => {
+      const primaryLayer = props.layers.layerByKey(state.primaryLayerKey);
+      if (primaryLayer === undefined) {
+        throw new Error('Implementation error')
+      } else {
+        return primaryLayer.createRenderer(state.forecast)
+      }
+    });
   const windRenderer =
     createMemo<undefined | Renderer>(() => {
       if (state.windLayerEnabled) {
-        return state.windLayer.createRenderer(state.forecast)
+        const windLayer = props.layers.layerByKey(state.windLayerKey);
+        if (windLayer === undefined) {
+          return undefined
+        } else {
+          return windLayer.createRenderer(state.forecast)
+        }
       } else {
         return undefined
       }
@@ -202,13 +228,13 @@ export const LayersSelector = (props: {
             { table(summary) }
             <div style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-around' }}>
               <button
-                onClick={ () => showLocationForecast(event.latlng.lat, event.latlng.lng, 'meteogram') }
+                onClick={ () => props.domain.showLocationForecast(event.latlng.lat, event.latlng.lng, 'meteogram') }
                 title="Meteogram for this location"
               >
                 Meteogram
               </button>
               <button
-                onClick={ () => showLocationForecast(event.latlng.lat, event.latlng.lng, 'sounding') }
+                onClick={ () => props.domain.showLocationForecast(event.latlng.lat, event.latlng.lng, 'sounding') }
                 title="Sounding for this time and location"
               >
                 Sounding

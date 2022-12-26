@@ -2,9 +2,8 @@ import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
 import { Renderer } from "../map/CanvasLayer";
-import { colorScaleEl, Layer } from "./Layer";
 
-class BoundaryLayerDepth implements Renderer {
+export class BoundaryLayerDepth implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 
@@ -27,7 +26,7 @@ const drawBoundaryLayerDepth = (forecastAtPoint: ForecastPoint, topLeft: L.Point
   ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
 }
 
-const boundaryDepthColorScale = new ColorScale([
+export const boundaryDepthColorScale = new ColorScale([
   [250,  new Color(0x33, 0x33, 0x33, 1)],
   [500,  new Color(0x99, 0x00, 0x99, 1)],
   [750,  new Color(0xff, 0x00, 0x00, 1)],
@@ -39,20 +38,3 @@ const boundaryDepthColorScale = new ColorScale([
   [2250, new Color(0x99, 0xff, 0xff, 1)],
   [2500, new Color(0xff, 0xff, 0xff, 1)]
 ]);
-
-export const boundaryLayerDepthLayer = new Layer(
-  'Boundary Layer Depth',
-  'Boundary layer depth',
-  forecast => new BoundaryLayerDepth(forecast),
-  colorScaleEl(boundaryDepthColorScale, value => `${value} m `),
-  <>
-    <p>
-      The <a href="https://wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
-      boundary layer</a> tells us how high the thermals will be at a given location and time.
-      Deep boundary layers are great for flying cross-country.
-    </p>
-    <p>
-      The color scale is shown on the bottom left of the screen.
-    </p>
-  </>
-);
