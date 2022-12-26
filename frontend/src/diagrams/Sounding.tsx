@@ -327,6 +327,18 @@ const drawSounding = (
       [forecast.surface.temperature, forecast.surface.dewPoint, elevation]
     );
 
+    // Thermal velocity
+    const projectedSurfaceTemperature = temperatureScale.apply(forecast.surface.temperature);
+    const projectedElevation = elevationScale.apply(elevation);
+    const projectedBoundaryLayerHeight = elevationScale.apply(elevation + forecast.boundaryLayer.height);
+    diagram.text(
+      `${forecast.thermalVelocity.toFixed(1)} m/s`,
+      [projectedSurfaceTemperature, (projectedElevation + projectedBoundaryLayerHeight) / 2],
+      'black',
+      'right',
+      'middle'
+    );
+
 };
 
 const computeSoundingHeightAndMaxElevation = (zoomed: boolean, elevation: number, forecast: DetailedForecast): [number, number] => {

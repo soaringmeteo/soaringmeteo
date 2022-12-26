@@ -6,6 +6,7 @@ import { cloudsColorScale } from './Clouds';
 import { createEffect, JSX } from 'solid-js';
 import { keyWidth, meteogramColumnWidth } from '../styles/Styles';
 import { State } from '../State';
+import { thermalVelocityColorScale } from '../layers/ThermalVelocity';
 
 const airDiagramHeightAboveGroundLevel = 3500; // m
 
@@ -14,22 +15,23 @@ const airDiagramHeightAboveGroundLevel = 3500; // m
  */
 export const meteogram = (forecasts: LocationForecasts, state: State): { key: JSX.Element, view: JSX.Element } => {
 
-  // For some reason, accessing the state from a separate module does not work, I have to pass it from the parent modules
-  // const [state] = useState();
-
   const gutterHeight = 5; // px
 
-  // Our meteogram is made of four diagrams stacked on top of each other.
+  // Our meteogram is made of five diagrams stacked on top of each other.
   // The first one shows the ThQ
-  // The second one shows the cloud cover for high-level clouds (above 5000 m).
-  // The third one shows the boundary layer, wind, and middle-level clouds.
-  // The fourth one shows rainfalls and ground temperature.
+  // The second one shows the thermal velocity
+  // The third one shows the cloud cover for high-level clouds (above 5000 m).
+  // The fourth one shows the boundary layer, wind, and middle-level clouds.
+  // The fifth one shows rainfalls and ground temperature.
 
   const thqDiagramHeight = 20; // px
   const thqDiagramTop    = gutterHeight;
 
+  const thermalVelocityDiagramHeight = 20; // px
+  const thermalVelocityDiagramTop    = thqDiagramTop + thqDiagramHeight + gutterHeight;
+
   const highAirDiagramHeight = 20; // px
-  const highAirDiagramTop    = thqDiagramTop + thqDiagramHeight + 11 /* There needs to be enough space in case we display the isotherm 0°C */;
+  const highAirDiagramTop    = thermalVelocityDiagramTop + thermalVelocityDiagramHeight + 11 /* There needs to be enough space in case we display the isotherm 0°C */;
 
   const airDiagramHeight = 400; // px
   const airDiagramTop    = highAirDiagramTop + highAirDiagramHeight; // No gutter between high air diagram and air diagram
@@ -75,6 +77,8 @@ export const meteogram = (forecasts: LocationForecasts, state: State): { key: JS
             forecasts,
             thqDiagramTop,
             thqDiagramHeight,
+            thermalVelocityDiagramTop,
+            thermalVelocityDiagramHeight,
             highAirDiagramTop,
             highAirDiagramHeight,
             airDiagramTop,
@@ -103,6 +107,8 @@ const drawMeteogram = (
   forecasts: LocationForecasts,
   thqDiagramTop: number,
   thqDiagramHeight: number,
+  thermalVelocityDiagramTop: number,
+  thermalVelocityDiagramHeight: number,
   highAirDiagramTop: number,
   highAirDiagramHeight: number,
   airDiagramTop: number,
@@ -194,6 +200,23 @@ const drawMeteogram = (
       'dimgray'
     )
     thqDiagram.text(`${thq}`, [columnStart + meteogramColumnWidth / 2, 6], 'dimgray', 'center');
+  });
+
+  // Thermal velocity diagram
+  const thermalVelocityDiagram = new Diagram([0, thermalVelocityDiagramTop], thermalVelocityDiagramHeight, ctx);
+
+  columns((forecast, columnStart, columnEnd) => {
+    thermalVelocityDiagram.fillRect(
+      [columnStart, 0],
+      [columnEnd, thermalVelocityDiagramHeight],
+      `${thermalVelocityColorScale.closest(forecast.thermalVelocity).css()}`
+    );
+    thermalVelocityDiagram.rect(
+      [columnStart, 0],
+      [columnEnd, thermalVelocityDiagramHeight],
+      'dimgray'
+    );
+    thermalVelocityDiagram.text(`${forecast.thermalVelocity.toFixed(1)}`, [columnStart + meteogramColumnWidth / 2, 6], 'dimgray', 'center');
   });
 
   // High altitude air diagram
@@ -432,6 +455,10 @@ const drawMeteogram = (
   // Thq
   const leftThqDiagram = new Diagram([0, thqDiagramTop], thqDiagramHeight, leftCtx);
   leftThqDiagram.text('XC?', [keyWidth / 2, 8], 'black', 'center', 'middle');
+
+  // Thermal velocity
+  const leftThermalVelocityDiagram = new Diagram([0, thermalVelocityDiagramTop], thermalVelocityDiagramHeight, leftCtx);
+  leftThermalVelocityDiagram.text('m/s', [keyWidth / 2, 8], 'black', 'center', 'middle');
 
   // High air diagram
   const leftHighAirDiagram = new Diagram([0, highAirDiagramTop], highAirDiagramHeight, leftCtx);

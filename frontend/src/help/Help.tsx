@@ -148,11 +148,17 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
   </div>
   <p>
     The top row (“XC?”) shows the estimated cross-country flying potential (between 0% and 100%).
-    The higher the number, the higher the chances to fly long distances. Select the
+    The higher the number, the higher the chances to fly long distances. It takes into account the
+    boundary layer depth, the average thermal velocity, the wind speed, and the sunshine. Select the
     layer “{ xcFlyingPotentialName }” in the map view to learn more about how it works.
   </p>
   <p>
-    Below that number, the “airgram” shows various properties of the air at the selected location
+    The second row (“m/s”) shows the estimated average thermal velocity (in m/s) within the boundary layer.
+    Values above 1 m/s usually mean that thermals should be just strong enough to stay in the air. Values
+    above 2 m/s mean good thermals.
+  </p>
+  <p>
+    Below those numbers, the “airgram” shows various properties of the air at the selected location
     over time. The scale on the left shows the altitude. In this example, it starts at { fakeData.groundLevel } m,
     which is the altitude of the selected location as seen by the current forecast model.
   </p>
@@ -160,7 +166,7 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     The <a href="https://en.wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
     boundary layer</a> is shown in green. It tells us how high thermals will be at a given time.
     In this example, we see that they reach { fakeData.groundLevel + fakeData.maxDepth } m in the middle of the
-    last day.
+    last day. It is good to have a boundary layer of at least 1000 m above the ground level to fly cross-country.
   </p>
   <p>
     The wind and clouds are also shown in that diagram at various elevation levels. For
@@ -222,6 +228,11 @@ const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
     The green area shows the boundary layer height. The white or gray areas show the presence of
     clouds. On the left, the wind speed and direction is shown at various altitude levels by the
     wind barb.
+  </p>
+  <p>
+    The text “2.5 m/s” (in the middle of the green area, on the right of the diagram) tells you the
+    estimated average thermal velocity within the boundary layer. Values above 1 m/s usually mean
+    that thermals should be just strong enough to stay in the air. Values above 2 m/s mean good thermals.
   </p>
   <p>
     By default, the diagram shows only the airmass within the boundary layer and a couple of thousand
