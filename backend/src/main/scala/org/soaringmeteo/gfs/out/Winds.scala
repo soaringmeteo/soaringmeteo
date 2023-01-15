@@ -35,7 +35,7 @@ object Winds {
 
     Winds(
       at(Meters(300)),
-      at(forecast.boundaryLayerDepth)
+      at(forecast.soaringLayerDepth)
     )
   }
 

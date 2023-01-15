@@ -227,7 +227,7 @@ const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
     temperature with altitude.
   </p>
   <p>
-    The green area shows the boundary layer height. The white or gray areas show the presence of
+    The green area shows the soaring layer. The white or gray areas show the presence of
     clouds. On the left, the wind speed and direction is shown at various altitude levels by the
     wind barb.
   </p>

@@ -1,7 +1,7 @@
 import { JSX, Show } from "solid-js";
 import { drawWindArrow } from "../shapes";
 import { boundaryLayerDepthKey, boundaryLayerTopWindKey, boundaryLayerWindKey, cloudCoverKey, cumuliDepthKey, noneKey, rainKey, Domain, surfaceWindKey, thermalVelocityKey, xcFlyingPotentialKey, _300MAGLWindKey } from "../State";
-import { boundaryDepthColorScale, BoundaryLayerDepth } from "./BoundaryLayerDepth";
+import { soaringLayerDepthColorScale, SoaringLayerDepth } from "./SoaringLayerDepth";
 import { CloudCover, cloudCoverColorScale } from "./CloudCover";
 import { CumuliDepth, cumuliDepthColorScale } from "./CumuliDepth";
 import { colorScaleEl, Layer, windColor } from "./Layer";
@@ -29,8 +29,8 @@ export class Layers {
       <>
         <p>
           The XC flying potential index is a single indicator that takes into account
-          the boundary layer depth, the sunshine, and the average wind speed within the
-          boundary layer. Deep boundary layer, strong sunshine, and low wind speeds
+          the soaring layer depth, the sunshine, and the average wind speed within the
+          boundary layer. Deep soaring layer, strong sunshine, and low wind speeds
           increase the value of this indicator.
         </p>
         <p>
@@ -42,10 +42,10 @@ export class Layers {
 
     const boundaryLayerDepthLayer = new Layer(
       boundaryLayerDepthKey,
-      'Boundary Layer Depth',
-      'Boundary layer depth (or cloud base)',
-      forecast => new BoundaryLayerDepth(forecast),
-      colorScaleEl(boundaryDepthColorScale, value => `${value} m `),
+      'Soaring Layer Depth',
+      'Soaring layer depth',
+      forecast => new SoaringLayerDepth(forecast),
+      colorScaleEl(soaringLayerDepthColorScale, value => `${value} m `),
       <>
         <p>
           This value tells us how high above the ground level we can soar. For instance, a value of 850 m

@@ -18,7 +18,7 @@ import scala.collection.immutable.SortedMap
 case class Forecast(
   time: OffsetDateTime,
   elevation: Length,
-  boundaryLayerDepth: Length, // m AGL
+  soaringLayerDepth: Length, // m AGL
   boundaryLayerWind: Wind,
   thermalVelocity: Velocity,
   totalCloudCover: Int, // Between 0 and 100
@@ -98,7 +98,7 @@ object Forecast {
             gfsForecastsByLocation.map { case (point, gfsForecast) =>
               val (totalRain, convectiveRain) = extractTotalAndConvectiveRain(point, gfsForecast)
               val maybeConvectiveClouds = ConvectiveClouds(gfsForecast)
-              val soaringDepth =
+              val soaringLayerDepth =
                 maybeConvectiveClouds match {
                   case None => gfsForecast.boundaryLayerDepth
                   case Some(convectiveClouds) =>
@@ -109,7 +109,7 @@ object Forecast {
               val forecast = Forecast(
                 gfsForecast.time,
                 gfsForecast.elevation,
-                soaringDepth,
+                soaringLayerDepth,
                 gfsForecast.boundaryLayerWind,
                 Thermals.velocity(gfsForecast),
                 gfsForecast.totalCloudCover,
@@ -145,7 +145,7 @@ object Forecast {
     Encoder.instance { forecast =>
       val winds = Winds(forecast)
       Json.arr(
-        Json.fromInt(forecast.boundaryLayerDepth.toMeters.round.toInt),
+        Json.fromInt(forecast.soaringLayerDepth.toMeters.round.toInt),
         Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
         Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt),
         Json.fromInt(forecast.totalCloudCover),

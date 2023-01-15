@@ -3,30 +3,30 @@ import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
 import { Renderer } from "../map/CanvasLayer";
 
-export class BoundaryLayerDepth implements Renderer {
+export class SoaringLayerDepth implements Renderer {
 
   constructor(readonly forecast: Forecast) {}
 
   renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    drawBoundaryLayerDepth(forecastAtPoint, topLeft, bottomRight, ctx);
+    drawSoaringLayerDepth(forecastAtPoint, topLeft, bottomRight, ctx);
   }
 
   summary(forecastAtPoint: ForecastPoint): Array<[string, string]> {
     return [
-      ["Boundary layer depth (or cloud base)", `${ forecastAtPoint.boundaryLayerDepth } m`]
+      ["Soaring layer depth", `${ forecastAtPoint.soaringLayerDepth } m`]
     ]
   }
 
 }
 
-const drawBoundaryLayerDepth = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => {
-  const blh = forecastAtPoint.boundaryLayerDepth;
-  const color = boundaryDepthColorScale.closest(blh);
+const drawSoaringLayerDepth = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => {
+  const blh = forecastAtPoint.soaringLayerDepth;
+  const color = soaringLayerDepthColorScale.closest(blh);
   ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
   ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
 }
 
-export const boundaryDepthColorScale = new ColorScale([
+export const soaringLayerDepthColorScale = new ColorScale([
   [250,  new Color(0x33, 0x33, 0x33, 1)],
   [500,  new Color(0x99, 0x00, 0x99, 1)],
   [750,  new Color(0xff, 0x00, 0x00, 1)],
