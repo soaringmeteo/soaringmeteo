@@ -48,7 +48,7 @@ export class Layers {
       colorScaleEl(soaringLayerDepthColorScale, value => `${value} m `),
       <>
         <p>
-          This value tells us how high above the ground level we can soar. For instance, a value of 850 m
+          The soaring layer is the area of the atmosphere where we can soar. For instance, a value of 850 m
           means that we can soar up to 850 m above the ground level. Values higher than 750 m are preferable
           to fly cross-country.
         </p>

@@ -167,8 +167,8 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     the <a href="https://en.wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
     boundary layer</a> depth. Otherwise (if there are cumulus clouds), we show the altitude of the
     cloud base above the ground level.
-    In this example, we see that they reach { fakeData.groundLevel + fakeData.maxDepth } m in the middle of the
-    last day. It is good to have a boundary layer of at least 750 m above the ground level to fly cross-country.
+    In this example, we see that the soaring layer reaches { fakeData.groundLevel + fakeData.maxDepth } m in the middle of the
+    last day. It is good to have a soaring layer of at least 750 m above the ground level to fly cross-country.
   </p>
   <p>
     The wind and clouds are also shown in that diagram at various elevation levels. For
