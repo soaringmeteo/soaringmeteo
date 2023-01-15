@@ -13,7 +13,7 @@ export class BoundaryLayerDepth implements Renderer {
 
   summary(forecastAtPoint: ForecastPoint): Array<[string, string]> {
     return [
-      ["Boundary layer depth", `${ forecastAtPoint.boundaryLayerDepth } m`]
+      ["Boundary layer depth (or cloud base)", `${ forecastAtPoint.boundaryLayerDepth } m`]
     ]
   }
 

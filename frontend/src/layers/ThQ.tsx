@@ -47,7 +47,7 @@ export class ThQ implements Renderer {
 
     return [
       ["XC Flying Potential",  `${thq}%`],
-      ["Boundary layer depth", `${forecastAtPoint.boundaryLayerDepth} m`],
+      ["Boundary layer depth (or cloud base)", `${forecastAtPoint.boundaryLayerDepth} m`],
       ["Thermal velocity",     `${forecastAtPoint.thermalVelocity} m/s`],
       ["Total cloud cover",    `${Math.round(forecastAtPoint.cloudCover * 100)}%`]
     ]

@@ -43,14 +43,20 @@ export class Layers {
     const boundaryLayerDepthLayer = new Layer(
       boundaryLayerDepthKey,
       'Boundary Layer Depth',
-      'Boundary layer depth',
+      'Boundary layer depth (or cloud base)',
       forecast => new BoundaryLayerDepth(forecast),
       colorScaleEl(boundaryDepthColorScale, value => `${value} m `),
       <>
         <p>
-          The <a href="https://wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
-          boundary layer</a> tells us how high the thermals will be at a given location and time.
-          Deep boundary layers are great for flying cross-country.
+          This value tells us how high above the ground level we can soar. For instance, a value of 850 m
+          means that we can soar up to 850 m above the ground level. Values higher than 750 m are preferable
+          to fly cross-country.
+        </p>
+        <p>
+          In case of “blue thermals”, we show
+          the <a href="https://wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
+          boundary layer</a> depth, otherwise (if there are cumulus clouds) we show the altitude of the
+          cloud base above the ground level.
         </p>
         <p>
           The color scale is shown on the bottom left of the screen.

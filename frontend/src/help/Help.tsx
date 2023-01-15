@@ -91,7 +91,7 @@ const MapHelp = (props: { domain: Domain, layers: Layers }): JSX.Element => {
 
   return <>
     <p>
-      Soaringmeteo is a free weather forecast website developped by passionate pilots. Please consider making
+      Soaringmeteo is a free weather forecast website developed by passionate pilots. Please consider making
       a <a href='https://soaringmeteo.org/don.html'>donation</a> to help us cover our cost.
     </p>
     <p>
@@ -163,10 +163,12 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     which is the altitude of the selected location as seen by the current forecast model.
   </p>
   <p>
-    The <a href="https://en.wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
-    boundary layer</a> is shown in green. It tells us how high thermals will be at a given time.
+    The green area shows how high we can soar at a given time. In case of “blue thermals”, we show
+    the <a href="https://en.wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
+    boundary layer</a> depth. Otherwise (if there are cumulus clouds), we show the altitude of the
+    cloud base above the ground level.
     In this example, we see that they reach { fakeData.groundLevel + fakeData.maxDepth } m in the middle of the
-    last day. It is good to have a boundary layer of at least 1000 m above the ground level to fly cross-country.
+    last day. It is good to have a boundary layer of at least 750 m above the ground level to fly cross-country.
   </p>
   <p>
     The wind and clouds are also shown in that diagram at various elevation levels. For

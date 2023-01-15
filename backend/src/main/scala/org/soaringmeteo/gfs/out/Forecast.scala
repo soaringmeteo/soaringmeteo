@@ -97,15 +97,24 @@ object Forecast {
           val forecastsByLocation =
             gfsForecastsByLocation.map { case (point, gfsForecast) =>
               val (totalRain, convectiveRain) = extractTotalAndConvectiveRain(point, gfsForecast)
+              val maybeConvectiveClouds = ConvectiveClouds(gfsForecast)
+              val soaringDepth =
+                maybeConvectiveClouds match {
+                  case None => gfsForecast.boundaryLayerDepth
+                  case Some(convectiveClouds) =>
+                    // In case of presence of convective clouds, use the cloud base as an upper limit
+                    // within the boundary layer
+                    gfsForecast.boundaryLayerDepth.min(convectiveClouds.bottom - gfsForecast.elevation)
+                }
               val forecast = Forecast(
                 gfsForecast.time,
                 gfsForecast.elevation,
-                gfsForecast.boundaryLayerDepth,
+                soaringDepth,
                 gfsForecast.boundaryLayerWind,
                 Thermals.velocity(gfsForecast),
                 gfsForecast.totalCloudCover,
                 gfsForecast.convectiveCloudCover,
-                ConvectiveClouds(gfsForecast),
+                maybeConvectiveClouds,
                 AirData(gfsForecast.atPressure, gfsForecast.elevation),
                 gfsForecast.mslet,
                 gfsForecast.snowDepth,
