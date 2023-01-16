@@ -26,4 +26,3 @@ jobs:
           cache: sbt # Cache the artifacts downloaded by sbt accross CI runs
       - name: Unit tests # Custom action consisting of a shell command
         run: sbt +test
-

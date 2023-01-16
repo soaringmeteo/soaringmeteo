@@ -1,0 +1,27 @@
+name: Frontend test
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+  pull_request:
+    types:
+      - opened
+    paths:
+      - 'frontend/**'
+
+jobs:
+  frontend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 15.x
+          cache: 'yarn'
+      - run: yarn --frozen-lockfile
+      - run: yarn bundle
