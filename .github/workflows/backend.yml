@@ -1,0 +1,29 @@
+name: Backend test
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+  pull_request:
+    types:
+      - opened
+    paths:
+      - 'backend/**'
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v3 # Retrieve the content of the repository
+      - uses: actions/setup-java@v3 # Set up a jdk
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: sbt # Cache the artifacts downloaded by sbt accross CI runs
+      - name: Unit tests # Custom action consisting of a shell command
+        run: sbt +test
+
