@@ -48,15 +48,15 @@ export class Layers {
       colorScaleEl(soaringLayerDepthColorScale, value => `${value} m `),
       <>
         <p>
-          The soaring layer is the area of the atmosphere where we can soar. For instance, a value of 850 m
-          means that we can soar up to 850 m above the ground level. Values higher than 750 m are preferable
-          to fly cross-country.
+          The soaring layer is the area of the atmosphere where we can expect to find thermals and
+          soar. The depth of the soaring layer tells us how high we can soar. For instance, a value
+          of 850 m means that we can soar up to 850 m above the ground level. Values higher than
+          750 m are preferable to fly cross-country.
         </p>
         <p>
-          In case of “blue thermals”, we show
+          In case of “blue thermals”, the soaring layer is
           the <a href="https://wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
-          boundary layer</a> depth, otherwise (if there are cumulus clouds) we show the altitude of the
-          cloud base above the ground level.
+          boundary layer</a>, otherwise (if there are cumulus clouds) it stops at the cloud base.
         </p>
         <p>
           The color scale is shown on the bottom left of the screen.
