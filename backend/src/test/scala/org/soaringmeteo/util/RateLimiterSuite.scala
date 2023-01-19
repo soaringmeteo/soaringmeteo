@@ -16,7 +16,7 @@ object RateLimiterSuite extends BasicTestSuite {
     Future.traverse(1 to 10) { _ =>
       rateLimiter.submit(global)(n.incrementAndGet())
     }
-    Thread.sleep(500)
+    Thread.sleep(400)
     assert(n.get() < 6)
     Thread.sleep(600)
     assert(n.get() == 10)
