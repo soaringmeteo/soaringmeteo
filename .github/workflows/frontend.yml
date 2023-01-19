@@ -10,6 +10,7 @@ on:
       - opened
     paths:
       - 'frontend/**'
+  workflow_dispatch:
 
 jobs:
   frontend-test:
