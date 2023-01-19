@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend
+        working-directory: ./backend
     steps:
       - uses: actions/checkout@v3 # Retrieve the content of the repository
       - uses: actions/setup-java@v3 # Set up a jdk
