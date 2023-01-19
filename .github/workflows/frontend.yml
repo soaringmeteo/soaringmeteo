@@ -24,5 +24,6 @@ jobs:
         with:
           node-version: 15.x
           cache: 'yarn'
-      - run: yarn --frozen-lockfile
+          cache-dependency-path: ./frontend/yarn.lock
+      - run: yarn install --frozen-lockfile
       - run: yarn bundle
