@@ -1,7 +1,7 @@
 import { ForecastMetadata } from "./ForecastMetadata";
 
 export type ForecastPoint = {
-  boundaryLayerDepth: number // m
+  soaringLayerDepth: number // m
   thermalVelocity: number // m/s
   uWind: number // km/h
   vWind: number // km/h
@@ -27,7 +27,7 @@ export class Forecast {
     const pointData = this.data[`${longitude / modelResolution},${latitude / modelResolution}`];
     if (pointData !== undefined) {
       return {
-        boundaryLayerDepth: pointData[0],
+        soaringLayerDepth: pointData[0],
         uWind: pointData[1],
         vWind: pointData[2],
         cloudCover: pointData[3] / 100,
@@ -53,7 +53,7 @@ export type ForecastData = {
 
 // WARN Must be consistent with `Forecast` JSON encoder in the backend
 type ForecastPointData = [
-  number, // Boundary layer height
+  number, // Soaring layer depth
   number, // Wind: u component
   number, // Wind: v component
   number, // Cloud cover between 0 and 100

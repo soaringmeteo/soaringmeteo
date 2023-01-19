@@ -18,7 +18,7 @@ import scala.collection.immutable.SortedMap
 case class Forecast(
   time: OffsetDateTime,
   elevation: Length,
-  boundaryLayerDepth: Length, // m AGL
+  soaringLayerDepth: Length, // m AGL
   boundaryLayerWind: Wind,
   thermalVelocity: Velocity,
   totalCloudCover: Int, // Between 0 and 100
@@ -97,15 +97,24 @@ object Forecast {
           val forecastsByLocation =
             gfsForecastsByLocation.map { case (point, gfsForecast) =>
               val (totalRain, convectiveRain) = extractTotalAndConvectiveRain(point, gfsForecast)
+              val maybeConvectiveClouds = ConvectiveClouds(gfsForecast)
+              val soaringLayerDepth =
+                maybeConvectiveClouds match {
+                  case None => gfsForecast.boundaryLayerDepth
+                  case Some(convectiveClouds) =>
+                    // In case of presence of convective clouds, use the cloud base as an upper limit
+                    // within the boundary layer
+                    gfsForecast.boundaryLayerDepth.min(convectiveClouds.bottom - gfsForecast.elevation)
+                }
               val forecast = Forecast(
                 gfsForecast.time,
                 gfsForecast.elevation,
-                gfsForecast.boundaryLayerDepth,
+                soaringLayerDepth,
                 gfsForecast.boundaryLayerWind,
                 Thermals.velocity(gfsForecast),
                 gfsForecast.totalCloudCover,
                 gfsForecast.convectiveCloudCover,
-                ConvectiveClouds(gfsForecast),
+                maybeConvectiveClouds,
                 AirData(gfsForecast.atPressure, gfsForecast.elevation),
                 gfsForecast.mslet,
                 gfsForecast.snowDepth,
@@ -136,7 +145,7 @@ object Forecast {
     Encoder.instance { forecast =>
       val winds = Winds(forecast)
       Json.arr(
-        Json.fromInt(forecast.boundaryLayerDepth.toMeters.round.toInt),
+        Json.fromInt(forecast.soaringLayerDepth.toMeters.round.toInt),
         Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
         Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt),
         Json.fromInt(forecast.totalCloudCover),

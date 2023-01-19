@@ -24,7 +24,7 @@ export class ThQ implements Renderer {
     if (forecastAtPoint !== undefined) {
       const thq = value(
         forecastAtPoint.thermalVelocity,
-        forecastAtPoint.boundaryLayerDepth,
+        forecastAtPoint.soaringLayerDepth,
         forecastAtPoint.uWind,
         forecastAtPoint.vWind
       );
@@ -40,36 +40,36 @@ export class ThQ implements Renderer {
   summary(forecastAtPoint: ForecastPoint): Array<[string, string]> {
     const thq = value(
       forecastAtPoint.thermalVelocity,
-      forecastAtPoint.boundaryLayerDepth,
+      forecastAtPoint.soaringLayerDepth,
       forecastAtPoint.uWind,
       forecastAtPoint.vWind
     );
 
     return [
-      ["XC Flying Potential",  `${thq}%`],
-      ["Boundary layer depth", `${forecastAtPoint.boundaryLayerDepth} m`],
-      ["Thermal velocity",     `${forecastAtPoint.thermalVelocity} m/s`],
-      ["Total cloud cover",    `${Math.round(forecastAtPoint.cloudCover * 100)}%`]
+      ["XC Flying Potential", `${thq}%`],
+      ["Soaring layer depth", `${forecastAtPoint.soaringLayerDepth} m`],
+      ["Thermal velocity",    `${forecastAtPoint.thermalVelocity} m/s`],
+      ["Total cloud cover",   `${Math.round(forecastAtPoint.cloudCover * 100)}%`]
     ]
   }
 
 }
 
 /**
- * @param thermalVelocity    Thermal velocity in m/s
- * @param boundaryLayerDepth Depth of the boundary layer in meters
- * @param uWind              U part of wind in boundary layer in km/h
- * @param vWind              V part of wind in boundary layer in km/h
+ * @param thermalVelocity   Thermal velocity in m/s
+ * @param soaringLayerDepth Depth of the boundary layer in meters
+ * @param uWind             U part of wind in boundary layer in km/h
+ * @param vWind             V part of wind in boundary layer in km/h
  * @returns A value between 0 and 100
  */
-export const value = (thermalVelocity: number, boundaryLayerDepth: number, uWind: number, vWind: number): number => {
+export const value = (thermalVelocity: number, soaringLayerDepth: number, uWind: number, vWind: number): number => {
   // Thermal velocity
   // coeff is 50% for a 1.55 m/s
   const thermalVelocityCoeff = logistic(thermalVelocity, 1.55, 5);
 
-  // Boundary Layer Depth
-  // coeff is 50% for a boundary layer depth of 400 m
-  const bldCoeff = logistic(boundaryLayerDepth, 400, 4);
+  // Soaring Layer Depth
+  // coeff is 50% for a soaring layer depth of 400 m
+  const bldCoeff = logistic(soaringLayerDepth, 400, 4);
 
   const thermalCoeff = (2 * thermalVelocityCoeff + bldCoeff) / 3;
 

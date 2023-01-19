@@ -1,7 +1,7 @@
 import { JSX, Show } from "solid-js";
 import { drawWindArrow } from "../shapes";
 import { boundaryLayerDepthKey, boundaryLayerTopWindKey, boundaryLayerWindKey, cloudCoverKey, cumuliDepthKey, noneKey, rainKey, Domain, surfaceWindKey, thermalVelocityKey, xcFlyingPotentialKey, _300MAGLWindKey } from "../State";
-import { boundaryDepthColorScale, BoundaryLayerDepth } from "./BoundaryLayerDepth";
+import { soaringLayerDepthColorScale, SoaringLayerDepth } from "./SoaringLayerDepth";
 import { CloudCover, cloudCoverColorScale } from "./CloudCover";
 import { CumuliDepth, cumuliDepthColorScale } from "./CumuliDepth";
 import { colorScaleEl, Layer, windColor } from "./Layer";
@@ -29,8 +29,8 @@ export class Layers {
       <>
         <p>
           The XC flying potential index is a single indicator that takes into account
-          the boundary layer depth, the sunshine, and the average wind speed within the
-          boundary layer. Deep boundary layer, strong sunshine, and low wind speeds
+          the soaring layer depth, the sunshine, and the average wind speed within the
+          boundary layer. Deep soaring layer, strong sunshine, and low wind speeds
           increase the value of this indicator.
         </p>
         <p>
@@ -42,15 +42,21 @@ export class Layers {
 
     const boundaryLayerDepthLayer = new Layer(
       boundaryLayerDepthKey,
-      'Boundary Layer Depth',
-      'Boundary layer depth',
-      forecast => new BoundaryLayerDepth(forecast),
-      colorScaleEl(boundaryDepthColorScale, value => `${value} m `),
+      'Soaring Layer Depth',
+      'Soaring layer depth',
+      forecast => new SoaringLayerDepth(forecast),
+      colorScaleEl(soaringLayerDepthColorScale, value => `${value} m `),
       <>
         <p>
-          The <a href="https://wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
-          boundary layer</a> tells us how high the thermals will be at a given location and time.
-          Deep boundary layers are great for flying cross-country.
+          The soaring layer is the area of the atmosphere where we can expect to find thermals and
+          soar. The depth of the soaring layer tells us how high we can soar. For instance, a value
+          of 850 m means that we can soar up to 850 m above the ground level. Values higher than
+          750 m are preferable to fly cross-country.
+        </p>
+        <p>
+          In case of “blue thermals”, the soaring layer is
+          the <a href="https://wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
+          boundary layer</a>, otherwise (if there are cumulus clouds) it stops at the cloud base.
         </p>
         <p>
           The color scale is shown on the bottom left of the screen.

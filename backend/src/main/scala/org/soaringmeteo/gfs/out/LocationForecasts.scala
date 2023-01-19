@@ -64,7 +64,7 @@ object LocationForecasts {
       forecasts.map { forecast =>
           DetailedForecast(
             forecast.time,
-            forecast.boundaryLayerDepth,
+            forecast.soaringLayerDepth,
             forecast.boundaryLayerWind,
             forecast.thermalVelocity,
             forecast.convectiveCloudCover,

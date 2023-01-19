@@ -127,7 +127,7 @@ export const viewPoint = (forecast: Forecast, averagingFactor: number, lat: numb
     return points[0]
   } else if (points.length > 1) {
     const sumPoint: ForecastPoint = {
-      boundaryLayerDepth: 0,
+      soaringLayerDepth: 0,
       thermalVelocity: 0,
       uWind: 0,
       vWind: 0,
@@ -142,7 +142,7 @@ export const viewPoint = (forecast: Forecast, averagingFactor: number, lat: numb
       cumuliDepth: 0
     };
     points.forEach(point => {
-      sumPoint.boundaryLayerDepth += point.boundaryLayerDepth;
+      sumPoint.soaringLayerDepth += point.soaringLayerDepth;
       sumPoint.thermalVelocity += point.thermalVelocity;
       sumPoint.uWind += point.uWind;
       sumPoint.vWind += point.vWind;
@@ -158,7 +158,7 @@ export const viewPoint = (forecast: Forecast, averagingFactor: number, lat: numb
     })
     const n = points.length;
     return {
-      boundaryLayerDepth: sumPoint.boundaryLayerDepth / n,
+      soaringLayerDepth: sumPoint.soaringLayerDepth / n,
       thermalVelocity: sumPoint.thermalVelocity / n,
       uWind: sumPoint.uWind / n,
       vWind: sumPoint.vWind / n,
