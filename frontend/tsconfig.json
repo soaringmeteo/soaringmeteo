@@ -1,18 +1,16 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
-    "target": "esnext",
+    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "strict": true,
-    "inlineSourceMap": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "noEmit": true
+    "types": ["vite/client"],
+    "noEmit": true,
+    "isolatedModules": true
   },
   "include": ["./pngs.d.ts", "src"],
   "exclude": ["node_modules"]

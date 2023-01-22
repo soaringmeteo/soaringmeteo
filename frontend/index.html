@@ -2,15 +2,19 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <title>SoaringMeteo</title>
         <style>
             body{padding:0;margin:0}
             html,body,#app{height:100%}
         </style>
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>SoaringMeteo</title>
         <meta name="description" content="Free weather information and forecast (WRF and GFS) for soaring (paragliding, hanggliding, sailplane) pilots.">
+        <link rel="icon" href="/src/favicoSoaringMeteo.png">
+        <meta name="theme-color" content="#ffffff">
         <script defer data-domain="soaringmeteo.org" src="https://plausible.soaringmeteo.org/js/script.js"></script>
     </head>
     <body>
         <div id="app"></div>
+        <script src="/src/index.ts" type="module"></script>
     </body>
 </html>

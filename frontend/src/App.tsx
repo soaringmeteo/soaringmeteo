@@ -6,7 +6,7 @@ import { LayersSelector } from './LayersSelector';
 import { fetchDefaultForecast, ForecastMetadata } from './data/ForecastMetadata';
 import { Forecast } from './data/Forecast';
 import * as L from 'leaflet';
-import markerImg from './images/marker-icon.png';
+import markerImg from '../node_modules/leaflet/dist/images/marker-icon.png';
 import { Domain } from './State';
 import { Burger } from './Burger';
 import { Attribution } from './map/Attribution';
