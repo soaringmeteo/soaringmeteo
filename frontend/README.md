@@ -4,14 +4,14 @@ Frontend that consumes the JSON files produced by the backend.
 
 ## Build Requirements
 
-Make sure the npm command is available
+Make sure the yarn command is available
 
 ## Setup
 
 Run the following command once to download the project dependencies:
 
 ~~~
-npm install
+yarn install
 ~~~
 
 ## Build
@@ -19,17 +19,19 @@ npm install
 Run the following command:
 
 ~~~
-npm run bundle
+yarn build
 ~~~
+
+It will produce the production assets into the `dist/` directory.
 
 ## Develop
 
-You need to run `npm install` again each time the dependencies change.
+You need to run `yarn install` again each time the dependencies change.
 
 Then, run the following command to start a web server showing the application:
 
 ~~~
-npm start
+yarn start
 ~~~
 
-It should open a web browser at the URL http://0.0.0.0:8080.
+It should open a web browser at the URL http://0.0.0.0:3000.

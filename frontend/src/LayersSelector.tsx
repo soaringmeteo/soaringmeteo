@@ -4,7 +4,7 @@ import { Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Swi
 import { Renderer, CanvasLayer, viewPoint } from "./map/CanvasLayer";
 import { normalizeCoordinates } from './data/Forecast';
 import { closeButton, surfaceOverMap } from './styles/Styles';
-import layersImg from './images/layers.png';
+import layersImg from '../node_modules/leaflet/dist/images/layers.png';
 import { ForecastMetadata, showDate } from './data/ForecastMetadata';
 import { boundaryLayerDepthKey, boundaryLayerTopWindKey, boundaryLayerWindKey, cloudCoverKey, cumuliDepthKey, noneKey, rainKey, Domain, surfaceWindKey, thermalVelocityKey, xcFlyingPotentialKey, _300MAGLWindKey } from './State';
 import { Layers } from './layers/Layers';
