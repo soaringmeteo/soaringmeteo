@@ -6,8 +6,6 @@ on:
     paths:
       - 'frontend/**'
   pull_request:
-    types:
-      - opened
     paths:
       - 'frontend/**'
   workflow_dispatch:
