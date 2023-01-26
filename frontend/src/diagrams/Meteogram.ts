@@ -188,7 +188,7 @@ const drawMeteogram = (
       forecast.boundaryLayer.height,
       forecast.boundaryLayer.wind.u,
       forecast.boundaryLayer.wind.v
-    )
+    );
     thqDiagram.fillRect(
       [columnStart, 0],
       [columnEnd, thqDiagramHeight],
@@ -199,7 +199,7 @@ const drawMeteogram = (
       [columnEnd, thqDiagramHeight],
       'dimgray'
     )
-    thqDiagram.text(`${thq}`, [columnStart + meteogramColumnWidth / 2, 6], 'dimgray', 'center');
+    thqDiagram.text(`${thq}`, [columnStart + meteogramColumnWidth / 2, 6], thq >= 20 ? 'dimgray' : '#989898', 'center');
   });
 
   // Thermal velocity diagram
@@ -216,7 +216,11 @@ const drawMeteogram = (
       [columnEnd, thermalVelocityDiagramHeight],
       'dimgray'
     );
-    thermalVelocityDiagram.text(`${forecast.thermalVelocity.toFixed(1)}`, [columnStart + meteogramColumnWidth / 2, 6], 'dimgray', 'center');
+    thermalVelocityDiagram.text(
+      `${forecast.thermalVelocity.toFixed(1)}`, [columnStart + meteogramColumnWidth / 2, 6],
+      forecast.thermalVelocity >= 0.5 ? 'dimgray' : '#989898',
+      'center'
+    );
   });
 
   // High altitude air diagram
