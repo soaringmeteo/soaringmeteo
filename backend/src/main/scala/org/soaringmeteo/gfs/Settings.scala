@@ -63,7 +63,12 @@ object Settings {
         gfsArea(Point(BigDecimal("37.5"), BigDecimal("8.25")), Point(BigDecimal("38.75"), BigDecimal("12.25"))) --
         gfsArea(Point(35, -11), Point(BigDecimal("36.75"), BigDecimal("-6.75"))) --
         gfsArea(Point(BigDecimal("43.75"), -11), Point(35, BigDecimal("-9.75")))
-    (westernEurope ++ scandinavia ++ fromCsvFile(csvFile)).toSeq
+    val southAfrica =
+      gfsArea(
+        Point(BigDecimal("-34.25"), BigDecimal("18.25")), // Cape Town
+        Point(-28, 24) // Mont Temple
+      )
+    (westernEurope ++ scandinavia ++ southAfrica ++ fromCsvFile(csvFile)).toSeq
   }
 
   def fromCsvFile(csvFile: os.Path): Set[Point] = {
