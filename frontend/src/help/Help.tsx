@@ -147,13 +147,13 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     { lazyMeteogram({ domain: props.domain }) }
   </div>
   <p>
-    The top row (“XC?”) shows the estimated cross-country flying potential (between 0% and 100%).
+    The <b>top row</b> (“XC?”) shows the estimated cross-country flying potential (between 0% and 100%).
     The higher the number, the higher the chances to fly long distances. It takes into account the
     boundary layer depth, the average thermal velocity, the wind speed, and the sunshine. Select the
     layer “{ xcFlyingPotentialName }” in the map view to learn more about how it works.
   </p>
   <p>
-    The second row (“m/s”) shows the estimated average thermal velocity (in m/s) within the boundary layer.
+    The <b>second row</b> (“m/s”) shows the estimated average thermal velocity (in m/s) within the boundary layer.
     Values above 1 m/s usually mean that thermals should be just strong enough to stay in the air. Values
     above 2 m/s mean good thermals.
   </p>
@@ -163,7 +163,7 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     which is the altitude of the selected location as seen by the current forecast model.
   </p>
   <p>
-    The green area shows the soaring layer, which is the part of the atmosphere where we can expect to find thermals
+    The <b style="color: mediumspringgreen">green area</b> shows the soaring layer, which is the part of the atmosphere where we can expect to find thermals
     and soar. The height of the soaring layer tells us how high we can soar. In case of “blue thermals”,
     the soaring layer is
     the <a href="https://en.wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
@@ -172,7 +172,7 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     last day. It is good to have a soaring layer of at least 750 m above the ground level to fly cross-country.
   </p>
   <p>
-    The wind and clouds are also shown in that diagram at various elevation levels. For
+    The <b>wind</b> and <b>clouds</b> are also shown in that diagram at various elevation levels. For
     instance, within the boundary layer, there is moderate wind the first two days (between 15 km/h
     and 30 km/h), and light wind the third day (5 to 15 km/h). The wind comes from the south the
     second day. You can learn more about the wind barb by showing the help from within the map view,
@@ -183,17 +183,17 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     be cumulus clouds. The third day, there will be few cumulus clouds, but some cirrus clouds.
   </p>
   <p>
-    The altitude of the isotherm 0°C is shown by the black line. In this example, it starts around
+    The altitude of the isotherm 0°C is shown by the <b>black line</b>. In this example, it starts around
     3500 m the first day, and increases up to { fakeData.maxIso } m on the third day.
   </p>
   <p>
-    Last, the atmospheric pressure is shown by the red line. The scale is on the right of the
+    Last, the atmospheric pressure is shown by the <b style="color: red">red line</b>. The scale is on the right of the
     diagram. Here, it oscillates around 1010 hPa.
   </p>
   <p>
-    At the bottom, we see the evolution of the temperature on the ground (red line) and the
-    dew point temperature (blue line), and the amount of rainfalls. Convective rainfalls are
-    shown in cyan, and other rainfalls in blue. The scale for the rainfalls is on the left,
+    At the bottom, we see the evolution of the temperature on the ground (<b style="color: red">red line</b>) and the
+    dew point temperature (<b style="color: blue">blue line</b>), and the amount of rainfalls. Convective rainfalls are
+    shown in <b style="color: cyan">cyan</b>, and other rainfalls in <b style="color: blue">blue</b>. The scale for the rainfalls is on the left,
     and for the temperature on the right. In the example, a few millimeters of rain are expected
     the first day, and the air gets dryer the third day (the dew point temperature decreases).
   </p>
@@ -221,14 +221,15 @@ const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
     { lazySounding({ domain: props.domain }) }
   </div>
   <p>
-    The horizontal axis shows the temperature, whereas the vertical axis shows the altitude. The
-    rightmost line shows the evolution of the temperature of the air with altitude. A black thin line
-    means a stable air mass, an orange line means a conditionally unstable air mass, and a yellow line
-    means an absolutely unstable air mass. The blue line shows the evolution of the dew point
+    The horizontal axis shows the temperature, whereas the vertical axis shows the altitude.
+    The <b>rightmost line</b> shows the evolution of the temperature of the air with altitude. A <b>black thin
+    line</b> means a stable air mass, an <b style="color: orange">orange line</b> means a conditionally unstable air
+    mass, and a <b style="color: yellow">yellow line</b> means an absolutely unstable air mass.
+    The <b style="color: blue">blue line</b> shows the evolution of the dew point
     temperature with altitude.
   </p>
   <p>
-    The green area shows the soaring layer, which is the part of the atmosphere where we can expect to
+    The <b style="color: mediumspringgreen">green area</b> shows the soaring layer, which is the part of the atmosphere where we can expect to
     find thermals and soar. The white or gray areas show the presence of
     clouds. On the left, the wind speed and direction is shown at various altitude levels by the
     wind barb.
