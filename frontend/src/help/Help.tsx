@@ -156,11 +156,10 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     which is the altitude of the selected location as seen by the current forecast model.
   </p>
   <p>
-    The <b style={ lightTextStyle('mediumspringgreen') }>green area</b> shows the soaring layer, which is the part of the atmosphere where we can expect to find thermals
-    and soar. The height of the soaring layer tells us how high we can soar. In case of “blue thermals”,
-    the soaring layer is
+    The <b style={ lightTextStyle('mediumspringgreen') }>green area</b> shows
     the <a href="https://en.wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
-    boundary layer</a>. Otherwise (if there are cumulus clouds), it stops at the cloud base.
+    boundary layer</a>, which is the part of the atmosphere where we can expect to find thermals
+    and soar.
     In this example, we see that the soaring layer reaches { fakeData.groundLevel + fakeData.maxDepth } m in the middle of the
     last day. It is good to have a soaring layer of at least 750 m above the ground level to fly cross-country.
   </p>
@@ -222,9 +221,11 @@ const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
     temperature with altitude.
   </p>
   <p>
-    The <b style={lightTextStyle('mediumspringgreen')}>green area</b> shows the soaring layer, which is the part of the atmosphere where we can expect to
-    find thermals and soar. The white or gray areas show the presence of
-    clouds. On the left, the wind speed and direction is shown at various altitude levels by the
+    The <b style={lightTextStyle('mediumspringgreen')}>green area</b> shows the planetary boundary layer,
+    which is the part of the atmosphere where we can expect to
+    find thermals and soar. The white or gray areas show the presence of clouds. The height and size
+    of cumulus clouds is shown by the cloud picture on the right.
+    On the left, the wind speed and direction is shown at various altitude levels by the
     wind barb.
   </p>
   <p>
