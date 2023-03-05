@@ -17,7 +17,7 @@ import scala.collection.immutable.SortedMap
 case class Forecast(
   time: OffsetDateTime,
   elevation: Length,
-  soaringLayerDepth: Length, // m AGL
+  boundaryLayerDepth: Length, // m AGL
   boundaryLayerWind: Wind,
   thermalVelocity: Velocity,
   totalCloudCover: Int, // Between 0 and 100
@@ -45,6 +45,14 @@ case class Forecast(
   lazy val xcFlyingPotential: Int =
     XCFlyingPotential(thermalVelocity, soaringLayerDepth, boundaryLayerWind)
 
+  // m (AGL)
+  lazy val soaringLayerDepth: Length =
+    convectiveClouds match {
+      case None => boundaryLayerDepth
+      // In case of presence of convective clouds, use the cloud base as an upper limit
+      // within the boundary layer
+      case Some(ConvectiveClouds(bottom, _)) => boundaryLayerDepth.min(bottom - elevation)
+    }
 }
 
 /**
@@ -105,18 +113,10 @@ object Forecast {
             gfsForecastsByLocation.map { case (point, gfsForecast) =>
               val (totalRain, convectiveRain) = extractTotalAndConvectiveRain(point, gfsForecast)
               val maybeConvectiveClouds = ConvectiveClouds(gfsForecast)
-              val soaringLayerDepth =
-                maybeConvectiveClouds match {
-                  case None => gfsForecast.boundaryLayerDepth
-                  case Some(convectiveClouds) =>
-                    // In case of presence of convective clouds, use the cloud base as an upper limit
-                    // within the boundary layer
-                    gfsForecast.boundaryLayerDepth.min(convectiveClouds.bottom - gfsForecast.elevation)
-                }
               val forecast = Forecast(
                 gfsForecast.time,
                 gfsForecast.elevation,
-                soaringLayerDepth,
+                gfsForecast.boundaryLayerDepth,
                 gfsForecast.boundaryLayerWind,
                 Thermals.velocity(gfsForecast),
                 gfsForecast.totalCloudCover,

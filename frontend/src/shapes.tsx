@@ -172,3 +172,65 @@ export const cloudPattern = (width: number, style: string): CanvasPattern => {
   }
   return pattern
 };
+
+const cloudWidth  = 300;
+const cloudHeight = 200;
+const cloudImage: HTMLCanvasElement = document.createElement('canvas');
+cloudImage.width = cloudWidth;
+cloudImage.height = cloudHeight;
+const cloudCtx = cloudImage.getContext('2d');
+if (cloudCtx === null) {
+  throw 'Unsupported execution environment'
+}
+cloudCtx.fillStyle =  'white';
+cloudCtx.beginPath();
+cloudCtx.ellipse(
+  cloudWidth / 3,
+  cloudHeight * 3 / 4,
+  cloudWidth / 3,
+  cloudHeight / 4,
+  0,
+  0,
+  Math.PI * 2
+);
+cloudCtx.fill();
+cloudCtx.beginPath();
+cloudCtx.ellipse(
+  cloudWidth * 2 / 3,
+  cloudHeight * 2 / 3,
+  cloudWidth / 3,
+  cloudHeight / 3,
+  0,
+  0,
+  Math.PI * 2
+);
+cloudCtx.fill();
+cloudCtx.beginPath();
+cloudCtx.ellipse(
+  cloudWidth / 2,
+  cloudHeight / 2,
+  cloudWidth / 4,
+  cloudHeight / 2,
+  0,
+  0,
+  Math.PI * 2
+);
+cloudCtx.fill();
+
+/**
+ * Draw a cumulus cloud on the given canvas context. The drawing is centered horizontally.
+ * @param centerX  horizontal coordinate of the cumulus center.
+ * @param bottomY  vertical coordinate of the cloud base.
+ * @param maxWidth maximum possible value for the cumulus width.
+ */
+export const drawCumulusCloud = (ctx: CanvasRenderingContext2D, centerX: number, bottomY: number, maxWidth: number, height: number, horizontalAlign: 'right' | 'center'): void => {
+  // Keep the image ratio in case the height is small, stretch it vertically in case the height is too high
+  const widthAccordingToRatio = height * cloudWidth / cloudHeight;
+  const width = widthAccordingToRatio < maxWidth ? widthAccordingToRatio : maxWidth;
+  const x =
+    horizontalAlign === 'right' ?
+      centerX + maxWidth / 2 - width :
+      centerX - width / 2;
+  const y = bottomY - height;
+  ctx.drawImage(cloudImage, x, y, width, height);
+};

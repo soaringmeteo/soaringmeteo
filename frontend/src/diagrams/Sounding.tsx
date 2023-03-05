@@ -189,19 +189,32 @@ const drawSounding = (
 
   const diagram     = new Diagram([0, 5], height, ctx);
   const leftDiagram = new Diagram([0, 5], height, leftCtx);
+  const surfaceTemperatureProjectedX = temperatureScale.apply(forecast.surface.temperature);
+
   // --- Background
 
   // Sky and boundary layer
+  const boundaryLayerHeight = elevationScale.apply(elevation + forecast.boundaryLayer.depth);
   diagram.fillRect(
     [0, elevationScale.apply(elevation)],
-    [width, elevationScale.apply(elevation + forecast.boundaryLayer.soaringLayerDepth)],
+    [width, boundaryLayerHeight],
     boundaryLayerStyle
   );
   diagram.fillRect(
-    [0, elevationScale.apply(elevation + forecast.boundaryLayer.soaringLayerDepth)],
+    [0, boundaryLayerHeight],
     [width, elevationScale.apply(maxElevation)],
     skyStyle
   );
+  if (forecast.boundaryLayer.cumulusClouds !== undefined) {
+    const cloudBottomY  = elevationScale.apply(forecast.boundaryLayer.cumulusClouds.bottom + elevation);
+    const cloudTopY     = elevationScale.apply(forecast.boundaryLayer.cumulusClouds.top + elevation);
+    const cloudMaxWidth = 100;
+    diagram.cumulusCloud(
+      [surfaceTemperatureProjectedX - cloudMaxWidth, cloudBottomY],
+      [surfaceTemperatureProjectedX, cloudTopY],
+      'right'
+    );
+  }
 
   // Clouds
   const [lastCloudBottom, maybeLastElevationAndCloudCover] =
@@ -267,7 +280,7 @@ const drawSounding = (
     );
   });
 
-  // Print boundary layer height
+  // Print soaring layer height
   diagram.text(
     `${elevation + forecast.boundaryLayer.soaringLayerDepth}`,
     [2, elevationScale.apply(elevation + forecast.boundaryLayer.soaringLayerDepth) - 4],
@@ -328,12 +341,11 @@ const drawSounding = (
     );
 
     // Thermal velocity
-    const projectedSurfaceTemperature = temperatureScale.apply(forecast.surface.temperature);
     const projectedElevation = elevationScale.apply(elevation);
     const projectedBoundaryLayerHeight = elevationScale.apply(elevation + forecast.boundaryLayer.soaringLayerDepth);
     diagram.text(
       `${forecast.thermalVelocity.toFixed(1)} m/s`,
-      [projectedSurfaceTemperature, (projectedElevation + projectedBoundaryLayerHeight) / 2],
+      [surfaceTemperatureProjectedX, (projectedElevation + projectedBoundaryLayerHeight) / 2],
       'black',
       'right',
       'middle'

@@ -261,8 +261,8 @@ const drawMeteogram = (
   // Ground level & Boundary Layer
   columns((forecast, columnStart, columnEnd) => {
     // Boundary Layer
-    const cappedHeight = Math.min(forecast.boundaryLayer.soaringLayerDepth, airDiagramHeightAboveGroundLevel); // Clip boundary layer in case it’s too high
-    const boundaryLayerHeight = elevationScale.apply(forecasts.elevation + cappedHeight);
+    const cappedBoundaryLayerDepth = Math.min(forecast.boundaryLayer.depth, airDiagramHeightAboveGroundLevel); // Clip boundary layer in case it’s too high
+    const boundaryLayerHeight = elevationScale.apply(forecasts.elevation + cappedBoundaryLayerDepth);
     airDiagram.fillRect(
       [columnStart, 0],
       [columnEnd,   boundaryLayerHeight],
@@ -274,6 +274,14 @@ const drawMeteogram = (
       [columnEnd,   airDiagramHeight],
       skyStyle
     )
+    // Cumulus Clouds
+    if (forecast.boundaryLayer.cumulusClouds !== undefined && forecast.boundaryLayer.cumulusClouds.bottom < airDiagramHeightAboveGroundLevel) {
+      airDiagram.cumulusCloud(
+        [columnStart, elevationScale.apply(forecast.boundaryLayer.cumulusClouds.bottom + forecasts.elevation)],
+        [columnEnd,   elevationScale.apply(forecast.boundaryLayer.cumulusClouds.top + forecasts.elevation)],
+        'center'
+      );
+    }
   });
 
   // Clouds

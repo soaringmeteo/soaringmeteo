@@ -1,4 +1,4 @@
-import { cloudPattern } from "../shapes";
+import { cloudPattern, drawCumulusCloud } from "../shapes";
 
 type Point = [/* x */ number, /* y */ number]
 
@@ -93,6 +93,23 @@ export class Diagram {
     this.ctx.lineTo(this.projectX(to[0]),   this.projectY(from[1]));
     this.ctx.closePath();
     this.ctx.stroke();
+    this.ctx.restore();
+  }
+
+  cumulusCloud(fromBottomLeft: Point, toTopRight: Point, horizontalAlign: 'right' | 'center'): void {
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.rect(this.origX, this.origY - this.height, this.ctx.canvas.width, this.height);
+    this.ctx.clip();
+    const width = toTopRight[0] - fromBottomLeft[0];
+    drawCumulusCloud(
+      this.ctx,
+      this.projectX(fromBottomLeft[0]) + width / 2,
+      this.projectY(fromBottomLeft[1]),
+      width,
+      toTopRight[1] - fromBottomLeft[1],
+      horizontalAlign
+    );
     this.ctx.restore();
   }
 

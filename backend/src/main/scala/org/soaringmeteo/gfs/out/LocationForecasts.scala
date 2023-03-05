@@ -36,7 +36,7 @@ case class DayForecast(
 case class DetailedForecast(
   time: OffsetDateTime,
   xcFlyingPotential: Int, // Between 0 and 100
-  soaringLayerDepth: Length, // m (AGL)
+  boundaryLayerDepth: Length, // m (AGL)
   boundaryLayerWind: Wind,
   thermalVelocity: Velocity,
   totalCloudCover: Int, // Between 0 and 100
@@ -67,7 +67,7 @@ object LocationForecasts {
           DetailedForecast(
             forecast.time,
             forecast.xcFlyingPotential,
-            forecast.soaringLayerDepth,
+            forecast.boundaryLayerDepth,
             forecast.boundaryLayerWind,
             forecast.thermalVelocity,
             forecast.totalCloudCover,
@@ -209,11 +209,20 @@ object LocationForecasts {
                   Json.obj(
                     "t" -> Json.fromString(forecast.time.format(DateTimeFormatter.ISO_DATE_TIME)),
                     "xc" -> Json.fromInt(forecast.xcFlyingPotential),
-                    "bl" -> Json.obj(
-                      "h" -> Json.fromInt(forecast.soaringLayerDepth.toMeters.round.toInt),
+                    "bl" -> Json.obj(Seq(
+                      "h" -> Json.fromInt(forecast.boundaryLayerDepth.toMeters.round.toInt),
                       "u" -> Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
                       "v" -> Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt)
-                    ),
+                    ) ++ (
+                      forecast.convectiveClouds match {
+                        case None => Nil
+                        case Some(convectiveClouds) =>
+                          Seq("c" -> Json.arr(
+                            Json.fromInt((convectiveClouds.bottom - locationForecasts.elevation).toMeters.round.toInt),
+                            Json.fromInt((convectiveClouds.top - locationForecasts.elevation).toMeters.round.toInt)
+                          ))
+                      }
+                    ): _*),
                     "v" -> Json.fromInt((forecast.thermalVelocity.toMetersPerSecond * 10).round.toInt), // dm/s (to avoid floating point values)
                     "p" -> Json.arr(forecast.airDataByAltitude.map { case (elevation, aboveGround) =>
                       Json.obj(

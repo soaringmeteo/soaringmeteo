@@ -60,11 +60,13 @@ export class DetailedForecast {
     this.xcPotential = data.xc;
     this.thermalVelocity = data.v / 10;
     this.boundaryLayer = {
-      soaringLayerDepth: data.bl.h,
+      depth: data.bl.h,
+      soaringLayerDepth: data.bl.c !== undefined ? data.bl.c[0] : data.bl.h,
       wind: {
         u: data.bl.u,
         v: data.bl.v
-      }
+      },
+      cumulusClouds: data.bl.c === undefined ? undefined : ({ bottom: data.bl.c[0] , top: data.bl.c[1] })
     };
     this.surface = {
       temperature: data.s.t,
@@ -110,8 +112,13 @@ export type DetailedSurface = {
 };
 
 export type DetailedBoundaryLayer = {
-  soaringLayerDepth: number // m
+  depth: number // m (AGL)
   wind: Wind
+  soaringLayerDepth: number // m (AGL)
+  cumulusClouds?: {
+    bottom: number // m (AGL)
+    top: number // m (AGL)
+  }
 };
 
 export type DetailedRain = {
@@ -149,11 +156,13 @@ export type DetailedForecastData = {
   xc: number // XC Potential, between 0 and 100
   // Boundary layer
   bl: {
-    // Height
+    // Depth (m AGL)
     h: number,
     // Wind
     u: number,
     v: number,
+    // Cumulus clouds bottom and top (m AGL)
+    c?: [number, number]
   }
   v: number, // Thermal velocity
   // Above ground variables
