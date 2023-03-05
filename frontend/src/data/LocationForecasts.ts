@@ -68,6 +68,13 @@ export class DetailedForecast {
       },
       cumulusClouds: data.bl.c === undefined ? undefined : ({ bottom: data.bl.c[0] , top: data.bl.c[1] })
     };
+    const isWayAboveCumulusClouds = (elevationAMSL: number): boolean => {
+      if (this.boundaryLayer.cumulusClouds === undefined) {
+        return true
+      } else {
+        return elevationAMSL > this.boundaryLayer.cumulusClouds.top + elevation + 500;
+      }
+    };
     this.surface = {
       temperature: data.s.t,
       dewPoint: data.s.dt,
@@ -94,7 +101,7 @@ export class DetailedForecast {
             v: entry.v,
             temperature: entry.t,
             dewPoint: entry.dt,
-            cloudCover: entry.c / 100
+            cloudCover: isWayAboveCumulusClouds(entry.h) ? entry.c / 100 : 0
           }
         });
   }
