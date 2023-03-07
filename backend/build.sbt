@@ -1,6 +1,6 @@
 name := "soaringmeteo"
 
-scalaVersion := "2.13.1"
+scalaVersion := "2.13.10"
 
 libraryDependencies ++= Seq(
   // grib2 manipulation
