@@ -138,6 +138,11 @@ const lazyMeteogram = (props: { domain: Domain }): JSX.Element =>
     })
   });
 
+const lightTextStyle = (color: string) => ({
+  color,
+  'text-shadow': 'darkgray 1px 1px 1px'
+});
+
 const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
   <p>
     Meteograms show the weather forecast for the selected location over time. Here is an
@@ -163,7 +168,7 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     which is the altitude of the selected location as seen by the current forecast model.
   </p>
   <p>
-    The <b style="color: mediumspringgreen">green area</b> shows the soaring layer, which is the part of the atmosphere where we can expect to find thermals
+    The <b style={ lightTextStyle('mediumspringgreen') }>green area</b> shows the soaring layer, which is the part of the atmosphere where we can expect to find thermals
     and soar. The height of the soaring layer tells us how high we can soar. In case of “blue thermals”,
     the soaring layer is
     the <a href="https://en.wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
@@ -193,7 +198,7 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
   <p>
     At the bottom, we see the evolution of the temperature on the ground (<b style="color: red">red line</b>) and the
     dew point temperature (<b style="color: blue">blue line</b>), and the amount of rainfalls. Convective rainfalls are
-    shown in <b style="color: cyan">cyan</b>, and other rainfalls in <b style="color: blue">blue</b>. The scale for the rainfalls is on the left,
+    shown in <b style={lightTextStyle('cyan')}>cyan</b>, and other rainfalls in <b style="color: blue">blue</b>. The scale for the rainfalls is on the left,
     and for the temperature on the right. In the example, a few millimeters of rain are expected
     the first day, and the air gets dryer the third day (the dew point temperature decreases).
   </p>
@@ -224,12 +229,12 @@ const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
     The horizontal axis shows the temperature, whereas the vertical axis shows the altitude.
     The <b>rightmost line</b> shows the evolution of the temperature of the air with altitude. A <b>black thin
     line</b> means a stable air mass, an <b style="color: orange">orange line</b> means a conditionally unstable air
-    mass, and a <b style="color: yellow">yellow line</b> means an absolutely unstable air mass.
+    mass, and a <b style={lightTextStyle('yellow')}>yellow line</b> means an absolutely unstable air mass.
     The <b style="color: blue">blue line</b> shows the evolution of the dew point
     temperature with altitude.
   </p>
   <p>
-    The <b style="color: mediumspringgreen">green area</b> shows the soaring layer, which is the part of the atmosphere where we can expect to
+    The <b style={lightTextStyle('mediumspringgreen')}>green area</b> shows the soaring layer, which is the part of the atmosphere where we can expect to
     find thermals and soar. The white or gray areas show the presence of
     clouds. On the left, the wind speed and direction is shown at various altitude levels by the
     wind barb.
