@@ -8,8 +8,10 @@ type ForecastMetadataData = {
   prev?: [string, string]  // e.g., ["2020-04-13T18-forecast.json", "2020-04-13T18:00:00Z"]
 }
 
+// Version of the forecast data format we consume (see backend/src/main/scala/org/soaringmeteo/package.scala)
+const formatVersion = 0
 // Base path to access forecast data
-const dataPath = "data"
+const dataPath = `data/${formatVersion}`
 export class ForecastMetadata {
   readonly initS: string
   readonly init: Date

@@ -4,8 +4,9 @@ import io.circe
 import io.circe.Json
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.Point
-import org.soaringmeteo.gfs.out.{ ForecastsByHour, Forecast, ForecastMetadata, InitDateString, LocationForecasts }
+import org.soaringmeteo.gfs.out.{Forecast, ForecastMetadata, ForecastsByHour, InitDateString, LocationForecasts, formatVersion}
 
+import java.nio.file.Files
 import scala.collection.immutable.SortedMap
 import scala.util.Try
 
@@ -34,10 +35,12 @@ object JsonWriter {
     forecastsByHour: ForecastsByHour,
     locations: Iterable[Point]
   ): Unit = {
+    // Directory for our version of the forecast data format
+    val versionedTargetDir = targetDir / formatVersion.toString
     val initDateString = InitDateString(gfsRun.initDateTime)
     // Write all the JSON documents in a subdirectory named according to the
     // initialization time of the GFS run (e.g., `2021-01-08T12`).
-    val targetRunDir = targetDir / initDateString
+    val targetRunDir = versionedTargetDir / initDateString
     logger.info(s"Writing soaring forecasts in $targetRunDir")
     os.makeDir.all(targetRunDir)
 
@@ -52,7 +55,7 @@ object JsonWriter {
 
     // Update the file `forecast.json` in the root target directory
     // and rename the old `forecast.json`, if any
-    overwriteLatestForecastMetadata(initDateString, gfsRun, targetDir)
+    overwriteLatestForecastMetadata(initDateString, gfsRun, versionedTargetDir)
 
     // Finally, we remove files older than five days ago from the target directory
     deleteOldData(gfsRun, targetDir)
@@ -139,8 +142,10 @@ object JsonWriter {
   private def deleteOldData(gfsRun: in.ForecastRun, targetDir: os.Path): Unit = {
     val oldestForecastToKeep = gfsRun.initDateTime.minus(Settings.forecastHistory)
     for {
-      path <- os.list(targetDir)
-      date <- InitDateString.parse(path.last)
+      version <- os.list(targetDir)
+      if Files.isDirectory(version.toNIO)
+      path    <- os.list(version)
+      date    <- InitDateString.parse(path.last)
       if date.isBefore(oldestForecastToKeep)
     } os.remove.all(path)
   }
