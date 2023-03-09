@@ -18,6 +18,7 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
+    "deploy": "yarn build && rsync --recursive --times --verbose --delete --exclude=data/ --exclude=wrf/ dist/ soarwrf1.soaringmeteo.org:/var/www/soaringmeteo.org/v2/",
     "preview": "vite preview"
   }
 }
