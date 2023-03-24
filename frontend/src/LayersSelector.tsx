@@ -1,13 +1,21 @@
 import * as L from 'leaflet';
 import { Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Switch } from 'solid-js';
 
-import { Renderer, CanvasLayer, viewPoint } from "./map/CanvasLayer";
-import { normalizeCoordinates } from './data/Forecast';
+import { CanvasLayer } from "./map/CanvasLayer";
+import { normalizeCoordinates } from './data/LocationForecasts';
 import { closeButton, surfaceOverMap } from './styles/Styles';
 import layersImg from '../node_modules/leaflet/dist/images/layers.png';
 import { ForecastMetadata, showDate } from './data/ForecastMetadata';
-import { boundaryLayerDepthKey, boundaryLayerTopWindKey, boundaryLayerWindKey, cloudCoverKey, cumuliDepthKey, noneKey, rainKey, Domain, surfaceWindKey, thermalVelocityKey, xcFlyingPotentialKey, _300MAGLWindKey } from './State';
-import { Layers } from './layers/Layers';
+import { Domain } from './State';
+import { Layer } from './layers/Layer';
+import { noLayer } from './layers/None';
+import { xcFlyingPotentialLayer } from './layers/ThQ';
+import { soaringLayerDepthLayer } from './layers/SoaringLayerDepth';
+import { boundaryLayerWindLayer, soaringLayerTopWindLayer, surfaceWindLayer, _300MAGLWindLayer } from './layers/Wind';
+import { cloudCoverLayer } from './layers/CloudCover';
+import { thermalVelocityLayer } from './layers/ThermalVelocity';
+import { rainLayer } from './layers/Rain';
+import { cumuliDepthLayer } from './layers/CumuliDepth';
 
 /**
  * Overlay on the map that displays the soaring forecast.
@@ -16,9 +24,8 @@ export const LayersSelector = (props: {
   forecastMetadatas: Array<ForecastMetadata>
   canvas: CanvasLayer
   popupRequest: Accessor<undefined | L.LeafletMouseEvent>
-  openLocationDetailsPopup: (latitude: number, longitude: number, content: JSX.Element) => void
+  openLocationDetailsPopup: (latitude: number, longitude: number, content: HTMLElement) => void
   domain: Domain
-  layers: Layers
 }): JSX.Element => {
 
   const state = props.domain.state;
@@ -42,23 +49,19 @@ export const LayersSelector = (props: {
       }
     </fieldset>;
 
-  function setupLayerBtn(key: string, layerType: 'primary-layer' | 'wind-layer'): JSX.Element {
-    const layer = props.layers.layerByKey(key);
-    if (layer === undefined) {
-      throw new Error(`Invalid layer key: ${key}`);
-    }
+  function setupLayerBtn(layer: Layer, layerType: 'primary-layer' | 'wind-layer'): JSX.Element {
     const container = makeRadioBtn(
       layer.name,
       layer.title,
-      () => state.primaryLayerKey === layer.key || state.windLayerKey === layer.key,
+      () => state.primaryLayer === layer || state.windLayer === layer,
       layerType,
       () => {
         switch(layerType) {
           case 'primary-layer':
-            props.domain.setPrimaryLayer(key);
+            props.domain.setPrimaryLayer(layer);
             break;
           case 'wind-layer':
-            props.domain.setWindLayer(key);
+            props.domain.setWindLayer(layer);
             break;
         }
       }
@@ -66,11 +69,11 @@ export const LayersSelector = (props: {
     return container
   }
 
-  const noneEl = setupLayerBtn(noneKey, 'primary-layer');
-  const thqEl = setupLayerBtn(xcFlyingPotentialKey, 'primary-layer');
+  const noneEl = setupLayerBtn(noLayer, 'primary-layer');
+  const thqEl = setupLayerBtn(xcFlyingPotentialLayer, 'primary-layer');
 
-  const boundaryLayerHeightEl = setupLayerBtn(boundaryLayerDepthKey, 'primary-layer');
-  const thermalVelocityEl = setupLayerBtn(thermalVelocityKey, 'primary-layer');
+  const boundaryLayerHeightEl = setupLayerBtn(soaringLayerDepthLayer, 'primary-layer');
+  const thermalVelocityEl = setupLayerBtn(thermalVelocityLayer, 'primary-layer');
   const thermalLayersEl =
     <fieldset>
       <legend>Thermals</legend>
@@ -78,10 +81,10 @@ export const LayersSelector = (props: {
       {thermalVelocityEl}
     </fieldset>;
 
-  const blWindEl = setupLayerBtn(boundaryLayerWindKey, 'wind-layer');
-  const blTopWindEl = setupLayerBtn(boundaryLayerTopWindKey, 'wind-layer');
-  const surfaceWindEl = setupLayerBtn(surfaceWindKey, 'wind-layer');
-  const _300MAGLWindEl = setupLayerBtn(_300MAGLWindKey, 'wind-layer');
+  const blWindEl = setupLayerBtn(boundaryLayerWindLayer, 'wind-layer');
+  const blTopWindEl = setupLayerBtn(soaringLayerTopWindLayer, 'wind-layer');
+  const surfaceWindEl = setupLayerBtn(surfaceWindLayer, 'wind-layer');
+  const _300MAGLWindEl = setupLayerBtn(_300MAGLWindLayer, 'wind-layer');
   const windCheckBox = inputWithLabel(
     'Wind',
     'Show wind force and direction at various elevation levels',
@@ -110,9 +113,9 @@ export const LayersSelector = (props: {
       {windNumericValuesCheckBox}
     </fieldset>;
 
-  const cloudCoverEl = setupLayerBtn(cloudCoverKey, 'primary-layer');
-  const cumuliDepthEl = setupLayerBtn(cumuliDepthKey, 'primary-layer');
-  const rainEl = setupLayerBtn(rainKey, 'primary-layer');
+  const cloudCoverEl = setupLayerBtn(cloudCoverLayer, 'primary-layer');
+  const cumuliDepthEl = setupLayerBtn(cumuliDepthLayer, 'primary-layer');
+  const rainEl = setupLayerBtn(rainLayer, 'primary-layer');
   const cloudsLayersEl =
     <fieldset>
       <legend>Clouds and Rain</legend>
@@ -136,19 +139,19 @@ export const LayersSelector = (props: {
   const layersBtn =
     <Switch>
       <Match when={ isMenuShown() }>
-        <div style={{ ...aboveMapStyle, right: '3px', bottom: '128px', 'background-color': 'white' }}>
+        <div style={{ ...aboveMapStyle, right: '3px', bottom: '128px', 'background-color': 'white' } as JSX.CSSProperties}>
           {selectForecastEl}
           {layerEl}
         </div>
         <div
           onClick={ () => showMenu(false) }
-          style={{ ...aboveMapStyle, ...closeButton, right: '12px', bottom: '90px' }}
+          style={{ ...aboveMapStyle, ...closeButton, right: '12px', bottom: '90px' } as JSX.CSSProperties}
         >⨯</div>
       </Match>
       <Match when={ !isMenuShown() }>
         <div
           onClick={ () => showMenu(true) }
-          style={{ ...aboveMapStyle, right: '5px', bottom: '86px', width: '44px', height: '44px', 'line-height': '44px', color: 'black', display: 'block', cursor: 'pointer', 'text-align': 'center', 'background-image': `url('${layersImg}')`, 'background-position': '50% 50%', 'background-repeat': 'no-repeat', 'background-color': 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '4px' }}
+          style={{ ...aboveMapStyle, right: '5px', bottom: '86px', width: '44px', height: '44px', 'line-height': '44px', color: 'black', display: 'block', cursor: 'pointer', 'text-align': 'center', 'background-image': `url('${layersImg}')`, 'background-position': '50% 50%', 'background-repeat': 'no-repeat', 'background-color': 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '4px' } as JSX.CSSProperties}
         />
       </Match>
     </Switch>;
@@ -157,7 +160,7 @@ export const LayersSelector = (props: {
   const rootElement =
     <div>
       {layersBtn}
-    </div>;
+    </div> as HTMLElement;
 
   L.DomEvent.disableClickPropagation(rootElement);
   L.DomEvent.disableScrollPropagation(rootElement);
@@ -173,40 +176,32 @@ export const LayersSelector = (props: {
       'padding': '5px',
       'text-align': 'center'
     }}>
-      <Show when={state.windLayerEnabled && props.layers.layerByKey(state.windLayerKey)}>
-        { windLayer => windLayer.mapKeyEl }
+      <Show when={state.windLayerEnabled}>
+        <state.windLayer.MapKey state={state} />
       </Show>
-      <Show when={props.layers.layerByKey(state.primaryLayerKey)}>
-        { primaryLayer => primaryLayer.mapKeyEl }
-      </Show>
+      <state.primaryLayer.MapKey state={state} />
     </div>;
 
-  // Sync renderers (used to display the map overlay and tooltips) with current forecast
-  const primaryRenderer =
-    createMemo<Renderer>(() => {
-      const primaryLayer = props.layers.layerByKey(state.primaryLayerKey);
-      if (primaryLayer === undefined) {
-        throw new Error('Implementation error')
-      } else {
-        return primaryLayer.createRenderer(state.forecast)
-      }
-    });
-  const windRenderer =
-    createMemo<undefined | Renderer>(() => {
-      if (state.windLayerEnabled) {
-        const windLayer = props.layers.layerByKey(state.windLayerKey);
-        if (windLayer === undefined) {
-          return undefined
-        } else {
-          return windLayer.createRenderer(state.forecast)
-        }
-      } else {
-        return undefined
-      }
-    });
+  const primaryRendererSignal = createMemo(() => {
+    return state.primaryLayer.renderer(state)
+  });
+
+  const windRendererSignal = createMemo(() => {
+    return state.windLayer.renderer(state)
+  });
 
   createEffect(() => {
-    props.canvas.setRenderers(primaryRenderer(), windRenderer());
+    const primaryRenderer = primaryRendererSignal()();
+    const windRenderer = windRendererSignal()();
+    if (state.windLayerEnabled) {
+      if (primaryRenderer !== undefined && windRenderer !== undefined) {
+        props.canvas.setRenderers(primaryRenderer, windRenderer);
+      }
+    } else {
+      if (primaryRenderer !== undefined) {
+        props.canvas.setRenderers(primaryRenderer, undefined);
+      }
+    }
   });
 
   // Show a popup with a summary when the user clicks on the map
@@ -215,12 +210,25 @@ export const LayersSelector = (props: {
     if (event !== undefined) {
       const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(event.latlng.lat, event.latlng.lng);
       const [latitude, longitude] = [normalizedLatitude / 100, normalizedLongitude / 100];
-      const forecastAtPoint = viewPoint(state.forecast, 1 /* TODO handle averaging */, normalizedLatitude, normalizedLongitude);
-      if (forecastAtPoint !== undefined) {
-        const primaryRendererSummary = primaryRenderer().summary(forecastAtPoint);
-        const windRendererSummary = windRenderer()?.summary(forecastAtPoint);
-        const summary =
-          windRendererSummary === undefined ? primaryRendererSummary : primaryRendererSummary.concat(windRendererSummary);
+      const primaryRenderer = primaryRendererSignal()();
+      let summary: Array<[string, string]> = [];
+      if (primaryRenderer !== undefined) {
+        const primarySummary = primaryRenderer.summary(normalizedLatitude, normalizedLongitude, 1 /* TODO handle averaging */);
+        if (primarySummary !== undefined) {
+          if (state.windLayerEnabled) {
+            const windRenderer = windRendererSignal()();
+            if (windRenderer !== undefined) {
+              const windSummary = windRenderer.summary(normalizedLatitude, normalizedLongitude, 1);
+              if (windSummary !== undefined) {
+                summary = primarySummary.concat(windSummary);
+              } else {
+                summary = primarySummary;
+              }
+            }
+          }
+        }
+      }
+      if (summary.length !== 0) {
         const content =
           <div>
             <div>Grid point: {latitude},{longitude}</div>
@@ -240,7 +248,7 @@ export const LayersSelector = (props: {
                 Sounding
               </button>
             </div>
-          </div>
+          </div> as HTMLElement;
         props.openLocationDetailsPopup(latitude, longitude, content);
       }
     }

@@ -1,5 +1,5 @@
 import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, nextValue, previousValue, skyStyle, temperaturesRange } from './Diagram';
-import { AboveGround, DetailedForecast } from "../data/Forecast";
+import { AboveGround, DetailedForecast } from "../data/LocationForecasts";
 import { cloudsColorScale } from './Clouds';
 import { drawWindArrow } from '../shapes';
 import { createEffect, createSignal, JSX } from 'solid-js';
@@ -95,7 +95,7 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
   >
     { canvas }
     { zoomButton }
-  </div>;
+  </div> as HTMLElement;
 
   if (ctx !== null && leftCtx !== null) {
 

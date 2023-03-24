@@ -1,4 +1,4 @@
-import { LocationForecasts, DetailedForecast } from '../data/Forecast';
+import { LocationForecasts, DetailedForecast } from '../data/LocationForecasts';
 import { drawWindArrow, lightningShape } from '../shapes';
 import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, skyStyle, temperaturesRange } from './Diagram';
 import { value as thqValue, colorScale as thqColorScale } from '../layers/ThQ';

@@ -2,7 +2,7 @@ import * as L from 'leaflet';
 import { createEffect, createMemo, createSignal, JSX } from 'solid-js';
 
 import { forecastOffsets, periodsPerDay, showDate } from './data/ForecastMetadata';
-import { Domain } from './State';
+import { type Domain } from './State';
 import { closeButton, closeButtonSize, keyWidth, meteogramColumnWidth, periodSelectorHeight, surfaceOverMap } from './styles/Styles';
 
 const marginLeft = keyWidth;
@@ -259,7 +259,7 @@ export const PeriodSelectors = (props: {
         {hideDetailedViewBtn}
         {periodSelectorEl}
       </div>
-    </span>;
+    </span> as HTMLElement;
   L.DomEvent.disableClickPropagation(periodSelectorContainer);
   L.DomEvent.disableScrollPropagation(periodSelectorContainer);
 
@@ -275,7 +275,7 @@ export const PeriodSelectors = (props: {
           {nextDayBtn}
         </div>
       </div>
-    </span>;
+    </span> as HTMLElement;
   L.DomEvent.disableClickPropagation(currentDayContainer);
   L.DomEvent.disableScrollPropagation(currentDayContainer);
 

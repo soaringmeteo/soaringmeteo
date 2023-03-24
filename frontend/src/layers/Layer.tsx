@@ -1,21 +1,37 @@
-import { JSX } from "solid-js";
+import { Accessor, JSX } from "solid-js";
 import { Color, ColorScale } from "../ColorScale";
-import { Forecast } from "../data/Forecast";
 import { Renderer } from "../map/CanvasLayer";
+import { State } from "../State";
 
 /**
  * A layer shown over the map (boundary layer height, cloud cover, etc.)
  */
  export class Layer {
 
+  readonly key: string;
+  readonly name: string;
+  readonly title: string;
+  readonly renderer: (state: State) => Accessor<Renderer | undefined>;
+  readonly MapKey: (props: { state: State }) => JSX.Element;
+  readonly Help: (props: { state: State }) => JSX.Element;
+
   constructor(
-    readonly key: string,
-    readonly name: string,
-    readonly title: string,
-    readonly createRenderer: (forecast: Forecast) => Renderer,
-    readonly mapKeyEl: JSX.Element,
-    readonly help: JSX.Element
-  ) {}
+    props: {
+      key: string,
+      name: string,
+      title: string,
+      renderer: (state: State) => Accessor<Renderer | undefined>,
+      MapKey: (props: { state: State }) => JSX.Element,
+      Help: (props: { state: State }) => JSX.Element
+    }
+  ) {
+    this.key = props.key;
+    this.name = props.name;
+    this.title = props.title;
+    this.renderer = props.renderer;
+    this.MapKey = props.MapKey;
+    this.Help = props.Help;
+  }
 
 }
 

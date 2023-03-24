@@ -50,7 +50,7 @@ export const Attribution = (props: { domain: Domain }): JSX.Element => {
           Model: { props.domain.state.forecastMetadata.model }. Initialization: { showDate(props.domain.state.forecastMetadata.init) }
         </div>
       </Show>
-    </span>;
+    </span> as HTMLElement;
 
   L.DomEvent.disableClickPropagation(attribution);
 

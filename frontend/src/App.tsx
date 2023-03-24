@@ -3,14 +3,12 @@ import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap } from './map/Map';
 import { LayersSelector } from './LayersSelector';
-import { fetchDefaultForecast, ForecastMetadata } from './data/ForecastMetadata';
-import { Forecast } from './data/Forecast';
+import { fetchRunsAndComputeInitialHourOffset, ForecastMetadata } from './data/ForecastMetadata';
 import * as L from 'leaflet';
 import markerImg from '../node_modules/leaflet/dist/images/marker-icon.png';
 import { Domain } from './State';
 import { Burger } from './Burger';
 import { Attribution } from './map/Attribution';
-import { Layers } from './layers/Layers';
 
 const Help = lazy(() => import(/* webpackPrefetch: true */ './help/Help').then(module => ({ default: module.Help })));
 const PeriodSelectors = lazy(() => import(/* webpackPrefetch: true */ './PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
@@ -20,7 +18,7 @@ export const start = (containerElement: HTMLElement): void => {
   // The map *must* be initialized before we call the other constructors
   // It *must* also be mounted before we initialize it
   style(containerElement, { display: 'flex', 'align-items': 'stretch', 'align-content': 'stretch' });
-  const mapElement = <div style={ { flex: 1 } } />;
+  const mapElement = <div style={ { flex: 1 } } /> as HTMLElement;
   insert(containerElement, mapElement);
 
   const [canvas, map] = initializeMap(mapElement);
@@ -30,8 +28,6 @@ export const start = (containerElement: HTMLElement): void => {
     forecastMetadatas: Array<ForecastMetadata>
     morningOffset: number
   }): JSX.Element => {
-
-    const layers = new Layers(props.domain);
 
     const selectedLocationMarker: L.Marker = L.marker([0, 0], { icon: L.icon({ iconUrl: markerImg, iconSize: [25, 41] }) });
     createEffect(() => {
@@ -68,7 +64,7 @@ export const start = (containerElement: HTMLElement): void => {
      * @param longitude Longitude of the popup to open
      * @param content   Content of the popup (must be a root element)
      */
-    const openLocationDetailsPopup = (latitude: number, longitude: number, content: JSX.Element): void => {
+    const openLocationDetailsPopup = (latitude: number, longitude: number, content: HTMLElement): void => {
       locationDetailsPopup
         .setLatLng([latitude, longitude])
         .setContent(content)
@@ -93,36 +89,33 @@ export const start = (containerElement: HTMLElement): void => {
         popupRequest={popupRequest}
         openLocationDetailsPopup={openLocationDetailsPopup}
         domain={props.domain}
-        layers={layers}
       />
       <span style={{ position: 'absolute', right: '54px', bottom: '10px', 'z-index': 1300 }}>
         <Attribution domain={props.domain} />
         <span style={{ display: 'inline-block', width: '6px' }} />
-        <Help domain={props.domain} layers={layers} />
+        <Help domain={props.domain} />
       </span>
     </>
   }
 
   const Loader = ((): JSX.Element => {
-    const [loaded, setLoaded] = createSignal<[Array<ForecastMetadata>, ForecastMetadata, number, number, Forecast]>(undefined)
-    fetchDefaultForecast()
-      .then(([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]) => {
-        setLoaded([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]);
-      })
+    const [loaded, setLoaded] = createSignal<[Array<ForecastMetadata>, number, Domain]>();
+    fetchRunsAndComputeInitialHourOffset()
+      .then(([forecastMetadatas, forecastMetadata, morningOffset, hourOffset]) =>
+        setLoaded([forecastMetadatas, morningOffset, new Domain(forecastMetadata, hourOffset)])
+      )
       .catch(reason => {
         console.error(reason);
         alert('Unable to retrieve forecast data');
-      })
+      });
     return <Show when={ loaded() }>
-      { ([forecastMetadatas, forecastMetadata, morningOffset, hourOffset, forecast]) => {
-        const domain = new Domain(forecastMetadata, hourOffset, forecast);
+      { ([forecastMetadatas, morningOffset, domain]) => {
         return <App
           domain={domain}
           forecastMetadatas={forecastMetadatas}
           morningOffset={morningOffset}
         />
-      }
-      }
+      }}
     </Show>
   });
 

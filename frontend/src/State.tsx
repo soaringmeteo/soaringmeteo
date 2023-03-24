@@ -1,18 +1,20 @@
 import { createStore, SetStoreFunction, Store } from 'solid-js/store';
-import { Forecast, LocationForecasts } from './data/Forecast';
+import { LocationForecasts } from './data/LocationForecasts';
 import { ForecastMetadata } from './data/ForecastMetadata';
+import { Layer } from './layers/Layer';
+import { xcFlyingPotentialLayer } from './layers/ThQ';
+import { layerByKey } from './layers/Layers';
+import { boundaryLayerWindLayer } from './layers/Wind';
 
 export type State = {
   // Currently selected forecast run
   forecastMetadata: ForecastMetadata
-  // Currently displayed forecast
-  forecast: Forecast
   // Delta with the forecast initialization time
   hourOffset: number
   // Selected layer on the map (XC flying potential, thermal velocity, etc.)
-  primaryLayerKey: string
+  primaryLayer: Layer
   // It is possible to also show a wind layer as an overlay
-  windLayerKey: string
+  windLayer: Layer
   windLayerEnabled: boolean
   // Whether to show numerical values instead of showing a barb
   windNumericValuesShown: boolean
@@ -28,18 +30,7 @@ const selectedWindLayerKey      = 'selected-wind-layer';
 const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 
-// Keys used to model the layers in the state
-export const boundaryLayerDepthKey   = 'boundary-layer-depth';
-export const cloudCoverKey           = 'cloud-cover';
-export const cumuliDepthKey          = 'cumuli-depth';
-export const noneKey                 = 'none';
-export const rainKey                 = 'rain';
-export const thermalVelocityKey      = 'thermal-velocity';
-export const xcFlyingPotentialKey    = 'xc-flying-potential';
-export const surfaceWindKey          = 'surface-wind';
-export const _300MAGLWindKey         = '300m-agl-wind';
-export const boundaryLayerWindKey    = 'boundary-layer-wind';
-export const boundaryLayerTopWindKey = 'boundary-layer-top-wind';
+// export const cumuliDepthKey          = 'cumuli-depth';
 
 const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValue: A): A => {
   const maybeItem = window.localStorage.getItem(key);
@@ -50,23 +41,23 @@ const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValu
   }
 };
 
-const loadLayer = (key: string, fallback: string): string =>
-  loadStoredState(key, layerKey => layerKey, fallback);
+const loadLayer = (key: string, fallback: Layer): Layer =>
+  loadStoredState(key, layerKey => layerByKey(layerKey) || fallback, fallback);
 
-const loadPrimaryLayer = (): string => 
+const loadPrimaryLayer = (): Layer => 
   loadLayer(
     selectedPrimaryLayerKey,
-    xcFlyingPotentialKey
+    xcFlyingPotentialLayer
   );
 
 const savePrimaryLayer = (key: string): void => {
   window.localStorage.setItem(selectedPrimaryLayerKey, key);
 };
 
-const loadWindLayer = (): string => 
+const loadWindLayer = (): Layer => 
   loadLayer(
     selectedWindLayerKey,
-    boundaryLayerWindKey
+    boundaryLayerWindLayer
   );
 
 const saveWindLayer = (key: string): void => {
@@ -100,21 +91,19 @@ export class Domain {
 
   constructor (
     forecastMetadata: ForecastMetadata,
-    hourOffset: number,
-    currentForecast: Forecast
+    hourOffset: number
   ) {
-    const primaryLayerKey        = loadPrimaryLayer();
-    const windLayerKey           = loadWindLayer();
+    const primaryLayer           = loadPrimaryLayer();
+    const windLayer              = loadWindLayer();
     const windLayerEnabled       = loadWindLayerEnabled();
     const windNumericValuesShown = loadWindNumericValuesShown();
   
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
     const [get, set] = createStore<State>({
       forecastMetadata: forecastMetadata,
-      forecast: currentForecast,
+      primaryLayer: primaryLayer,
+      windLayer: windLayer,
       hourOffset: hourOffset,
-      primaryLayerKey,
-      windLayerKey,
       windLayerEnabled,
       windNumericValuesShown,
       detailedView: undefined
@@ -126,37 +115,30 @@ export class Domain {
   
   /** Change the forecast run to display */
   setForecastMetadata(forecastMetadata: ForecastMetadata): void {
-    this.setState({ forecastMetadata })
+    this.setState({ forecastMetadata }) // TODO Reset hourOffset
   }
 
   /** Change the period to display in the current forecast run */
   setHourOffset(hourOffset: number): void {
-    this.state.forecastMetadata.fetchForecastAtHourOffset(hourOffset)
-      .then(forecast => {
-        this.setState({ hourOffset, forecast });
-      })
-      .catch(error => {
-        console.error(error);
-        alert('Unable to retrieve forecast data');
-      });
+    this.setState({ hourOffset })
   }
 
   /** Change which primary layer to show. Valid keys are defined above in the file */
-  setPrimaryLayer(key: string): void {
-    savePrimaryLayer(key);
-    this.setState({ primaryLayerKey: key })
+  setPrimaryLayer(layer: Layer): void {
+    savePrimaryLayer(layer.key);
+    this.setState({ primaryLayer: layer });
   }
 
   /** Change which wind layer to show. Valid keys are defined above in the file */
-  setWindLayer(key: string): void {
-    saveWindLayer(key);
-    this.setState({ windLayerKey: key })
+  setWindLayer(layer: Layer): void {
+    saveWindLayer(layer.key);
+    this.setState({ windLayer: layer });
   }
 
   /** Whether or not the wind layer should be shown. */
   enableWindLayer(enabled: boolean): void {
     saveWindLayerEnabled(enabled);
-    this.setState({ windLayerEnabled: enabled })
+    this.setState({ windLayerEnabled: enabled });
   }
 
   /** Whether or not numerical values should be displayed instead of wind barb */

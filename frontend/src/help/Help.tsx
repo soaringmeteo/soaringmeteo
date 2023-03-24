@@ -3,11 +3,10 @@ import * as L from 'leaflet'
 import { bottomButtonsSize, keyWidth, soundingWidth, surfaceOverMap } from '../styles/Styles';
 import * as fakeData from './data';
 import { showDate } from '../data/ForecastMetadata';
-import { Domain } from '../State';
-import { Layers, xcFlyingPotentialName } from '../layers/Layers';
-import { Layer } from '../layers/Layer';
+import { type Domain } from '../State';
+import { xcFlyingPotentialLayer } from '../layers/ThQ';
 
-export const Help = (props: { domain: Domain, layers: Layers }): JSX.Element => {
+export const Help = (props: { domain: Domain }): JSX.Element => {
 
   const state = props.domain.state;
   const [isVisible, makeVisible] = createSignal(false);
@@ -65,7 +64,7 @@ export const Help = (props: { domain: Domain, layers: Layers }): JSX.Element => 
         >
           <Switch>
             <Match when={ state.detailedView === undefined }>
-              <MapHelp domain={props.domain} layers={props.layers} />
+              <MapHelp domain={props.domain} />
             </Match>
             <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'meteogram' }>
               <MeteogramHelp domain={props.domain} />
@@ -77,7 +76,7 @@ export const Help = (props: { domain: Domain, layers: Layers }): JSX.Element => 
         </div>
       </div>
     </Show>
-  </span>;
+  </span> as HTMLElement;
 
   L.DomEvent.disableClickPropagation(help);
   L.DomEvent.disableScrollPropagation(help);
@@ -85,7 +84,7 @@ export const Help = (props: { domain: Domain, layers: Layers }): JSX.Element => 
   return help
 };
 
-const MapHelp = (props: { domain: Domain, layers: Layers }): JSX.Element => {
+const MapHelp = (props: { domain: Domain }): JSX.Element => {
 
   const state =  props.domain.state;
 
@@ -99,25 +98,15 @@ const MapHelp = (props: { domain: Domain, layers: Layers }): JSX.Element => {
       from the model { state.forecastMetadata.model }. Select the information to display on the map
       by clicking on the “layers” button to the bottom right of the screen.
     </p>
-    <Show when={ props.layers.layerByKey(state.primaryLayerKey) }>
-      {
-        (primaryLayer: Layer) => <>
-          <p>
-            Currently, you see the <strong>{ primaryLayer.title }</strong>.
-          </p>
-          { primaryLayer.help }
-        </>
-      }
-    </Show>
-    <Show when={ state.windLayerEnabled && props.layers.layerByKey(state.windLayerKey) }>
-      {
-        (windLayer: Layer) => <>
-          <p>
-            You also see the <strong>{ windLayer.title }</strong>.
-          </p>
-          { windLayer.help }
-        </>
-      }
+    <p>
+      Currently, you see the <strong>{ state.primaryLayer.title }</strong>.
+    </p>
+    <state.primaryLayer.Help state={state} />
+    <Show when={ state.windLayerEnabled }>
+      <p>
+        You also see the <strong>{ state.windLayer.title }</strong>.
+      </p>
+      <state.windLayer.Help state={state} />
     </Show>
     <p>
       Click on the map to see meteograms and sounding diagrams for that location. <strong>At any
@@ -155,7 +144,7 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     The <b>top row</b> (“XC?”) shows the estimated cross-country flying potential (between 0% and 100%).
     The higher the number, the higher the chances to fly long distances. It takes into account the
     boundary layer depth, the average thermal velocity, the wind speed, and the sunshine. Select the
-    layer “{ xcFlyingPotentialName }” in the map view to learn more about how it works.
+    layer “{ xcFlyingPotentialLayer.name }” in the map view to learn more about how it works.
   </p>
   <p>
     The <b>second row</b> (“m/s”) shows the estimated average thermal velocity (in m/s) within the boundary layer.

@@ -1,28 +1,35 @@
-import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
+import { createEffect, createSignal } from 'solid-js';
 import { ColorScale, Color } from "../ColorScale";
+import { averager1D } from '../data/Averager';
+import { Grid } from '../data/Grid';
+import { cloudCoverVariable } from '../data/OutputVariable';
 import { Renderer } from "../map/CanvasLayer";
+import { colorScaleEl, Layer } from "./Layer";
 
-export class CloudCover implements Renderer {
+class CloudCoverRenderer implements Renderer {
 
-  constructor(readonly forecast: Forecast) {}
+  constructor(readonly grid: Grid<number>) {}
 
-  renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    drawCloudCover(forecastAtPoint, topLeft, bottomRight, ctx, cloudCoverMaxOpacity);
+  renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
+    this.grid.mapViewPoint(lat, lng, averagingFactor, averager1D, cloudCover => {
+      drawCloudCover(cloudCover, topLeft, bottomRight, ctx, cloudCoverMaxOpacity);
+    })
   }
 
-  summary(forecastPoint: ForecastPoint): Array<[string, string]> {
-    return [
-      ["Total cloud cover", `${ Math.round(forecastPoint.cloudCover * 100) }%`]
-    ]
+  summary(lat: number, lng: number, averagingFactor: number): Array<[string, string]> | undefined {
+    return this.grid.mapViewPoint(lat, lng, averagingFactor, averager1D, cloudCover =>
+      [
+        ["Total cloud cover", `${ Math.round(cloudCover * 100) }%`]
+      ]
+    )
   }
 
 }
 
-const drawCloudCover = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D, maxOpacity: number): void => {
+const drawCloudCover = (cloudCover: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D, maxOpacity: number): void => {
   const width  = bottomRight.x - topLeft.x;
   const height = bottomRight.y - topLeft.y;
-  const cloudCover = forecastAtPoint.cloudCover;
   const ch = 5;
   const hSpace = width / ch;
   const cv = 7;
@@ -48,3 +55,24 @@ export const cloudCoverColorScale = new ColorScale([
   [80,  new Color(0, 0, 0, 0.75 * cloudCoverMaxOpacity)],
   [100, new Color(0, 0, 0, 1.00 * cloudCoverMaxOpacity)]
 ]);
+
+export const cloudCoverLayer = new Layer({
+  key: 'cloud-cover',
+  name: 'Cloud Cover',
+  title: 'Cloud cover (all altitudes)',
+  renderer: state => {
+    const [get, set] = createSignal<Renderer>();
+    createEffect(() => {
+      state.forecastMetadata
+        .fetchOutputVariableAtHourOffset(cloudCoverVariable, state.hourOffset)
+        .then(grid => set(new CloudCoverRenderer(grid)))
+    });
+    return get
+  },
+  MapKey: () => colorScaleEl(cloudCoverColorScale, value => `${value}% `),
+  Help: () => <p>
+    The cloud cover is a value between 0% and 100% that tells us how much of the
+    sunlight will be blocked by the clouds. A low value means a blue sky, and a
+    high value means a dark sky.
+  </p>
+});

@@ -1,4 +1,4 @@
-import { DetailedForecast, DetailedForecastData, LocationForecasts, LocationForecastsData } from "../data/Forecast";
+import { DetailedForecast, DetailedForecastData, LocationForecasts, LocationForecastsData } from "../data/LocationForecasts";
 import { ForecastMetadata } from "../data/ForecastMetadata";
 
 const metadata = {
