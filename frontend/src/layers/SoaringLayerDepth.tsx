@@ -5,7 +5,6 @@ import { Renderer } from "../map/CanvasLayer";
 import { soaringLayerDepthVariable as soaringLayerDepthVariable } from '../data/OutputVariable';
 import { colorScaleEl, Layer } from './Layer';
 import { createEffect, createSignal } from 'solid-js';
-import { averager1D } from '../data/Averager';
 
 export const soaringLayerDepthLayer = new Layer({
 
@@ -50,7 +49,7 @@ class SoaringLayerDepthRenderer implements Renderer {
   constructor(readonly grid: Grid<number>) {}
 
   renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    this.grid.mapViewPoint(lat, lng, averagingFactor, averager1D, soaringLayerDepth => {
+    this.grid.mapViewPoint(lat, lng, averagingFactor, soaringLayerDepth => {
       const color = soaringLayerDepthColorScale.closest(soaringLayerDepth);
       ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
@@ -58,7 +57,7 @@ class SoaringLayerDepthRenderer implements Renderer {
   }
 
   summary(lat: number, lng: number, averagingFactor: number): Array<[string, string]> | undefined {
-    return this.grid.mapViewPoint(lat, lng, averagingFactor, averager1D, soaringLayerDepth =>
+    return this.grid.mapViewPoint(lat, lng, averagingFactor, soaringLayerDepth =>
       [
         ["Soaring layer depth", `${ soaringLayerDepth } m`]
       ]

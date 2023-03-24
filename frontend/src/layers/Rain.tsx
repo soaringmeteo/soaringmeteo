@@ -1,7 +1,6 @@
 import * as L from 'leaflet';
 import { createEffect, createSignal } from 'solid-js';
 import { ColorScale, Color } from "../ColorScale";
-import { averager1D } from '../data/Averager';
 import { Grid } from '../data/Grid';
 import { rainVariable } from '../data/OutputVariable';
 import { Renderer } from "../map/CanvasLayer";
@@ -13,11 +12,11 @@ class RainRenderer implements Renderer {
 
   renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
     this.grid
-      .mapViewPoint(lat, lng, averagingFactor, averager1D, rain => drawRain(rain, topLeft, bottomRight, ctx));
+      .mapViewPoint(lat, lng, averagingFactor, rain => drawRain(rain, topLeft, bottomRight, ctx));
   }
 
   summary(lat: number, lng: number, averagingFactor: number): Array<[string, string]> | undefined {
-    return this.grid.mapViewPoint(lat, lng, averagingFactor, averager1D, rain =>
+    return this.grid.mapViewPoint(lat, lng, averagingFactor, rain =>
       [
         ["Rainfall", `${ rain } mm`]
       ]

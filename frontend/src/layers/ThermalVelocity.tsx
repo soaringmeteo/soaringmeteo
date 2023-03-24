@@ -1,7 +1,6 @@
 import * as L from 'leaflet';
 import { createEffect, createSignal } from 'solid-js';
 import { ColorScale, Color } from "../ColorScale";
-import { averager1D } from '../data/Averager';
 import { Grid } from '../data/Grid';
 import { thermalVelocityVariable } from '../data/OutputVariable';
 import { Renderer } from "../map/CanvasLayer";
@@ -12,7 +11,7 @@ class ThermalVelocityRenderer implements Renderer {
   constructor(readonly grid: Grid<number>) {}
 
   renderPoint(latitude: number, longitude: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    this.grid.mapViewPoint(latitude, longitude, averagingFactor, averager1D, thermalVelocity => {
+    this.grid.mapViewPoint(latitude, longitude, averagingFactor, thermalVelocity => {
       const color = thermalVelocityColorScale.closest(thermalVelocity);
       ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
       ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
@@ -20,7 +19,7 @@ class ThermalVelocityRenderer implements Renderer {
   }
 
   summary(latitude: number, longitude: number, averagingFactor: number): Array<[string, string]> | undefined {
-    return this.grid.mapViewPoint(latitude, longitude, averagingFactor, averager1D, thermalVelocity =>
+    return this.grid.mapViewPoint(latitude, longitude, averagingFactor, thermalVelocity =>
       [
         ["Thermal velocity", `${ thermalVelocity } m/s`]
       ]

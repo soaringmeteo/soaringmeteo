@@ -1,5 +1,5 @@
 import { LocationForecasts, LocationForecastsData, normalizeCoordinates } from "./LocationForecasts";
-import { Grid, GridData, SingleGrid } from "./Grid";
+import { Grid, GridData } from "./Grid";
 import { OutputVariable } from "./OutputVariable";
 
 type ForecastMetadataData = {
@@ -59,7 +59,7 @@ export class ForecastMetadata {
     try {
       const response = await fetch(`${dataPath}/${this.initS}/${outputVariable.path}/${hourOffset}h.json`)
       const data     = await response.json() as GridData;
-      return new SingleGrid(data, outputVariable.parse)
+      return new Grid(data, outputVariable.parse, outputVariable.averager)
     } catch (error) {
       throw `Unable to retrieve forecast data ${hourOffset} hour(s) after the initialization time: ${error}`;
     }

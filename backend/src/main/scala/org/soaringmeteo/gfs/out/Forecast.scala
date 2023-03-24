@@ -1,7 +1,7 @@
 package org.soaringmeteo.gfs.out
 
 import org.soaringmeteo.gfs.in
-import org.soaringmeteo.{Point, Wind}
+import org.soaringmeteo.{Point, Wind, XCFlyingPotential}
 import squants.energy.SpecificEnergy
 import squants.motion.{Pressure, Velocity}
 import squants.radio.Irradiance
@@ -41,6 +41,9 @@ case class Forecast(
 
   /** Wind value at some specific elevation levels */
   lazy val winds = Winds(this)
+
+  lazy val xcFlyingPotential: Int =
+    XCFlyingPotential(thermalVelocity, soaringLayerDepth, boundaryLayerWind)
 
 }
 

@@ -5,7 +5,6 @@ import { colorScaleEl, Layer } from "./Layer";
 import { Grid } from "../data/Grid";
 import { createEffect, createSignal } from "solid-js";
 import { cumulusDepthVariable } from "../data/OutputVariable";
-import { averager1D } from "../data/Averager";
 
 const cumuliDepthColorScale = new ColorScale([
   [50,   new Color(0xff, 0xff, 0xff, 0)],
@@ -20,7 +19,7 @@ class CumuliDepthRenderer implements Renderer {
   constructor(readonly grid: Grid<number>) {}
 
   renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    this.grid.mapViewPoint(lat, lng, averagingFactor, averager1D, cumuliDepth => {
+    this.grid.mapViewPoint(lat, lng, averagingFactor, cumuliDepth => {
       const color = cumuliDepthColorScale.closest(cumuliDepth);
       ctx.save();
       ctx.fillStyle = color.css();
@@ -30,7 +29,7 @@ class CumuliDepthRenderer implements Renderer {
   }
 
   summary(lat: number, lng: number, averagingFactor: number): Array<[string, string]> | undefined {
-    return this.grid.mapViewPoint(lat, lng, averagingFactor, averager1D, cumuliDepth =>
+    return this.grid.mapViewPoint(lat, lng, averagingFactor, cumuliDepth =>
       [
         ["Cumuli depth", `${ cumuliDepth } m`]
       ]

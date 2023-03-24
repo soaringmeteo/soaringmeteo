@@ -45,6 +45,7 @@ export class DayForecasts {
 
 export class DetailedForecast {
   readonly time: Date;
+  readonly xcPotential: number; // between 0 and 100
   readonly thermalVelocity: number; // m/s
   readonly boundaryLayer: DetailedBoundaryLayer;
   readonly surface: DetailedSurface;
@@ -55,6 +56,7 @@ export class DetailedForecast {
 
   constructor(data: DetailedForecastData, elevation: number) {
     this.time = new Date(data.t);
+    this.xcPotential = data.xc;
     this.thermalVelocity = data.v / 10;
     this.boundaryLayer = {
       height: data.bl.h,
@@ -142,6 +144,7 @@ type DayForecastsData = {
 
 export type DetailedForecastData = {
   t: string // Forecast time
+  xc: number // XC Potential, between 0 and 100
   // Boundary layer
   bl: {
     // Height

@@ -6,14 +6,13 @@ import { Layer, windColor } from "./Layer";
 import { Grid } from "../data/Grid";
 import { State } from "../State";
 import { OutputVariable, wind300mAglVariable, windBoundaryLayerVariable, windSoaringLayerTopVariable, windSurfaceVariable } from "../data/OutputVariable";
-import { averager2D } from "../data/Averager";
 
 class WindRenderer implements Renderer {
 
   constructor(readonly grid: Grid<[number, number]>, readonly windNumericValuesShown: boolean) {}
 
   renderPoint(latitude: number, longitude: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    this.grid.mapViewPoint(latitude, longitude, averagingFactor, averager2D, ([u, v]) => {
+    this.grid.mapViewPoint(latitude, longitude, averagingFactor, ([u, v]) => {
       const center = L.point((topLeft.x + bottomRight.x) / 2, (topLeft.y + bottomRight.y) / 2);
       const width  = bottomRight.x - topLeft.x;
       drawWindArrow(
@@ -30,7 +29,7 @@ class WindRenderer implements Renderer {
   }
 
   summary(latitude: number, longitude: number, averagingFactor: number): Array<[string, string]> | undefined {
-    return this.grid.mapViewPoint(latitude, longitude, averagingFactor, averager2D, ([u, v]) => {
+    return this.grid.mapViewPoint(latitude, longitude, averagingFactor, ([u, v]) => {
       const windSpeed = Math.sqrt(u * u + v * v);
       return [
         ["Wind speed", `${ Math.round(windSpeed) } km/h`]
