@@ -1,24 +1,21 @@
-import * as L from 'leaflet';
-import { Renderer } from "../map/CanvasLayer";
-import { Layer } from './Layer';
+import { Layer, ReactiveComponents } from './Layer';
 
-export const noLayer = new Layer({
+export const noLayer : Layer = {
   key: 'none',
   name: 'None',
   title: 'Map only',
-  renderer: () => () => new NoneRenderer(),
-  MapKey: () => <div />,
-  Help: () => <p>This layer just shows the map.</p>
-});
-
-class NoneRenderer implements Renderer {
-
-  constructor() {}
-  renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-
+  reactiveComponents(): ReactiveComponents {
+    return {
+      renderer: () => ({
+        renderPoint(): void {}
+      }),
+      summarizer: () => ({
+        async summary(): Promise<Array<[string, string]> | undefined> {
+          return []
+        }
+      }),
+      mapKey: <div />,
+      help: <p>This layer just shows the map.</p>
+    }
   }
-  summary(lat: number, lng: number, averagingFactor: number): Array<[string, string]> | undefined {
-    return []
-  }
-
-}
+};

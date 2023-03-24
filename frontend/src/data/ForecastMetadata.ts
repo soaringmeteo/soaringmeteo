@@ -40,14 +40,15 @@ export class ForecastMetadata {
    * Fetches the detailed forecast data at the given location.
    * Fails with an error in case of failure.
    */
-  async fetchLocationForecasts(latitude: number, longitude: number): Promise<LocationForecasts> {
+  async fetchLocationForecasts(latitude: number, longitude: number): Promise<LocationForecasts | undefined> {
     try {
       const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(latitude, longitude);
       const response = await fetch(`${dataPath}/${this.initS}/locations/${normalizedLongitude}-${normalizedLatitude}.json`);
       const data     = await response.json() as LocationForecastsData;
       return new LocationForecasts(data, this, normalizedLatitude / 100, normalizedLongitude / 100)
     } catch (error) {
-      throw `Unable to fetch forecast data at ${latitude},${longitude}: ${error}`;
+      // FIXME Should we log anything?
+      return undefined
     }
   }
 

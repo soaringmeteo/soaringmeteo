@@ -9,8 +9,6 @@ export type CanvasLayer = {
 export type Renderer = {
   /** Render one point of the forecast on the map */
   renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void
-  /** Create a summary of the forecast data on the point (displayed in popups) */
-  summary(lat: number, lng: number, averagingFactor: number): Array<[string, string]> | undefined
 }
 
 export const CanvasLayer = L.Layer.extend({

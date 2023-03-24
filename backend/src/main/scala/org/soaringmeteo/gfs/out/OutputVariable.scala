@@ -1,7 +1,6 @@
 package org.soaringmeteo.gfs.out
 
 import io.circe.Json
-import org.soaringmeteo.XCFlyingPotential
 
 /**
  * Output variable of the model
@@ -24,21 +23,9 @@ object OutputVariable {
   }
 
   val gfsOutputVariables: List[OutputVariable] = List(
-    // Summary
-    OutputVariable("summary") { forecast =>
-      Json.arr(
-        // XC Flying potential
-        Json.fromInt(forecast.xcFlyingPotential),
-        // Thermal Velocity
-        Json.fromInt((forecast.thermalVelocity.toMetersPerSecond * 10).round.toInt), // dm/s (to avoid floating point values)
-        // Soaring Layer Depth
-        Json.fromInt(forecast.soaringLayerDepth.toMeters.round.toInt),
-        // Boundary Layer Wind (u, and v)
-        Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
-        Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt),
-        // Cloud Cover
-        Json.fromInt(forecast.totalCloudCover)
-      )
+    // XC Flying potential
+    OutputVariable("xc-potential") { forecast =>
+      Json.fromInt(forecast.xcFlyingPotential)
     },
     // Thermals
     OutputVariable("soaring-layer-depth") { forecast =>

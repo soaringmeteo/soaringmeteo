@@ -1,38 +1,37 @@
 import { Accessor, JSX } from "solid-js";
 import { Color, ColorScale } from "../ColorScale";
+import { ForecastMetadata } from "../data/ForecastMetadata";
 import { Renderer } from "../map/CanvasLayer";
-import { State } from "../State";
+
+type Summarizer = {
+  /** Create a summary of the forecast data on the point (shown in popups) */
+  summary(lat: number, lng: number): Promise<Array<[string, string]> | undefined>
+}
+
+// Non-static parts of layers
+export type ReactiveComponents = {
+  /** The current Canvas renderer of a layer. */
+  readonly renderer: Accessor<Renderer>
+  /** The current summarizer (shown in popups) of a layer. */
+  readonly summarizer: Accessor<Summarizer>
+  /** The map key of the layer. */
+  readonly mapKey: JSX.Element
+  /** The documentation of the layer (shown in the help modal). */
+  readonly help: JSX.Element
+}
 
 /**
  * A layer shown over the map (boundary layer height, cloud cover, etc.)
  */
- export class Layer {
-
-  readonly key: string;
-  readonly name: string;
-  readonly title: string;
-  readonly renderer: (state: State) => Accessor<Renderer | undefined>;
-  readonly MapKey: (props: { state: State }) => JSX.Element;
-  readonly Help: (props: { state: State }) => JSX.Element;
-
-  constructor(
-    props: {
-      key: string,
-      name: string,
-      title: string,
-      renderer: (state: State) => Accessor<Renderer | undefined>,
-      MapKey: (props: { state: State }) => JSX.Element,
-      Help: (props: { state: State }) => JSX.Element
-    }
-  ) {
-    this.key = props.key;
-    this.name = props.name;
-    this.title = props.title;
-    this.renderer = props.renderer;
-    this.MapKey = props.MapKey;
-    this.Help = props.Help;
-  }
-
+ export type Layer = {
+  readonly key: string
+  readonly name: string
+  readonly title: string
+  reactiveComponents(props: {
+    forecastMetadata: ForecastMetadata,
+    hourOffset: number,
+    windNumericValuesShown: boolean
+  }): ReactiveComponents
 }
 
 export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): JSX.Element => {

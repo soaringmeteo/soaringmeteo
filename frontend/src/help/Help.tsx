@@ -101,12 +101,12 @@ const MapHelp = (props: { domain: Domain }): JSX.Element => {
     <p>
       Currently, you see the <strong>{ state.primaryLayer.title }</strong>.
     </p>
-    <state.primaryLayer.Help state={state} />
+    { props.domain.primaryLayerReactiveComponents().help }
     <Show when={ state.windLayerEnabled }>
       <p>
         You also see the <strong>{ state.windLayer.title }</strong>.
       </p>
-      <state.windLayer.Help state={state} />
+      { props.domain.windLayerReactiveComponents().help }
     </Show>
     <p>
       Click on the map to see meteograms and sounding diagrams for that location. <strong>At any

@@ -27,7 +27,7 @@ export class Grid<A> {
   /**
    * @param averagingFactor 1, 2, 4, 8, etc.
    * @param latitude        Hundreth of degrees (e.g. 4675)
-   * @param longitude       Hundreth of degrees (e.g. 7250)
+   * @param longitude       Hundreth of degrees (e.g. 725)
    */
   viewPoint(latitude: number, longitude: number, averagingFactor: number, averager: Averager<A>): A | undefined {
     if (averagingFactor === 1) {
@@ -58,6 +58,10 @@ export class Grid<A> {
     }
   }
 
+  /**
+   * @param latitude  Hundreth of degrees (e.g. 4675)
+   * @param longitude Hundreth of degrees (e.g. 725)
+   */
   mapViewPoint<B>(latitude: number, longitude: number, averagingFactor: number, f: (value: A) => B): B | undefined {
     const point = this.viewPoint(latitude, longitude, averagingFactor, this.averager);
     if (point !== undefined) return f(point)

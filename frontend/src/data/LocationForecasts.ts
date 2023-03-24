@@ -49,6 +49,7 @@ export class DetailedForecast {
   readonly thermalVelocity: number; // m/s
   readonly boundaryLayer: DetailedBoundaryLayer;
   readonly surface: DetailedSurface;
+  readonly cloudCover: number; // %
   readonly rain: DetailedRain;
   readonly meanSeaLevelPressure: number;
   readonly isothermZero: number; // m
@@ -59,7 +60,7 @@ export class DetailedForecast {
     this.xcPotential = data.xc;
     this.thermalVelocity = data.v / 10;
     this.boundaryLayer = {
-      height: data.bl.h,
+      soaringLayerDepth: data.bl.h,
       wind: {
         u: data.bl.u,
         v: data.bl.v
@@ -73,6 +74,7 @@ export class DetailedForecast {
         v: data.s.v
       }
     };
+    this.cloudCover = data.c / 100;
     this.rain = {
       convective: data.r.c,
       total: data.r.t
@@ -108,7 +110,7 @@ export type DetailedSurface = {
 };
 
 export type DetailedBoundaryLayer = {
-  height: number // m
+  soaringLayerDepth: number // m
   wind: Wind
 };
 
@@ -180,7 +182,8 @@ export type DetailedForecastData = {
     c: number // convective
   },
   // Mean sea level pressure 
-  mslet: number // hPa
+  mslet: number, // hPa
+  c: number // Between 0 and 100
 }
 
 export const modelResolution = 25 // Hundredths of degrees

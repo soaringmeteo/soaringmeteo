@@ -1,12 +1,11 @@
 import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
-import { Grid } from '../data/Grid';
-import { Renderer } from "../map/CanvasLayer";
 import { soaringLayerDepthVariable as soaringLayerDepthVariable } from '../data/OutputVariable';
-import { colorScaleEl, Layer } from './Layer';
-import { createEffect, createSignal } from 'solid-js';
+import { colorScaleEl, Layer, ReactiveComponents } from './Layer';
+import { createResource } from 'solid-js';
+import { ForecastMetadata } from '../data/ForecastMetadata';
 
-export const soaringLayerDepthLayer = new Layer({
+export const soaringLayerDepthLayer: Layer = {
 
   key: 'soaring-layer-depth',
 
@@ -14,57 +13,71 @@ export const soaringLayerDepthLayer = new Layer({
 
   title: 'Soaring layer depth',
 
-  renderer: state => {
-    const [get, set] = createSignal<Renderer>();
-    createEffect(() => {
-      state.forecastMetadata
-        .fetchOutputVariableAtHourOffset(soaringLayerDepthVariable, state.hourOffset)
-        .then(grid => set(new SoaringLayerDepthRenderer(grid)))
-    });
-    return get
-  },
+  reactiveComponents(props: {
+    forecastMetadata: ForecastMetadata,
+    hourOffset: number
+  }): ReactiveComponents {
 
-  MapKey: () => colorScaleEl(soaringLayerDepthColorScale, value => `${value} m `),
+    const [soaringLayerDepthGrid] =
+      createResource(
+        () => ({ forecastMetadata: props.forecastMetadata, hourOffset: props.hourOffset }),
+        data => data.forecastMetadata.fetchOutputVariableAtHourOffset(soaringLayerDepthVariable, data.hourOffset)
+      );
 
-  Help: () => <>
-    <p>
-      The soaring layer is the area of the atmosphere where we can expect to find thermals and
-      soar. The depth of the soaring layer tells us how high we can soar. For instance, a value
-      of 850 m means that we can soar up to 850 m above the ground level. Values higher than
-      750 m are preferable to fly cross-country.
-    </p>
-    <p>
-      In case of “blue thermals”, the soaring layer is
-      the <a href="https://wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
-      boundary layer</a>, otherwise (if there are cumulus clouds) it stops at the cloud base.
-    </p>
-    <p>
-      The color scale is shown on the bottom left of the screen.
-    </p>
-  </>
-});
+    const renderer = () => {
+      const grid = soaringLayerDepthGrid();
+      return {
+        renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
+          grid?.mapViewPoint(lat, lng, averagingFactor, soaringLayerDepth => {
+            const color = soaringLayerDepthColorScale.closest(soaringLayerDepth);
+            ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
+            ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
+          });
+        }
+      }
+    };
 
-class SoaringLayerDepthRenderer implements Renderer {
+    const summarizer = () => {
+      const grid = soaringLayerDepthGrid();
+      return {
+        async summary(lat: number, lng: number): Promise<Array<[string, string]> | undefined> {
+          return grid?.mapViewPoint(lat, lng, 1, soaringLayerDepth =>
+            [
+              ["Soaring layer depth", `${ soaringLayerDepth } m`]
+            ]
+          )
+        }
+      }
+    };
 
-  constructor(readonly grid: Grid<number>) {}
+    const mapKey = colorScaleEl(soaringLayerDepthColorScale, value => `${value} m `);
 
-  renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    this.grid.mapViewPoint(lat, lng, averagingFactor, soaringLayerDepth => {
-      const color = soaringLayerDepthColorScale.closest(soaringLayerDepth);
-      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
-      ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
-    });
+    const help = <>
+      <p>
+        The soaring layer is the area of the atmosphere where we can expect to find thermals and
+        soar. The depth of the soaring layer tells us how high we can soar. For instance, a value
+        of 850 m means that we can soar up to 850 m above the ground level. Values higher than
+        750 m are preferable to fly cross-country.
+      </p>
+      <p>
+        In case of “blue thermals”, the soaring layer is
+        the <a href="https://wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
+        boundary layer</a>, otherwise (if there are cumulus clouds) it stops at the cloud base.
+      </p>
+      <p>
+        The color scale is shown on the bottom left of the screen.
+      </p>
+    </>;
+
+    return {
+      renderer,
+      summarizer,
+      mapKey,
+      help
+    }
   }
 
-  summary(lat: number, lng: number, averagingFactor: number): Array<[string, string]> | undefined {
-    return this.grid.mapViewPoint(lat, lng, averagingFactor, soaringLayerDepth =>
-      [
-        ["Soaring layer depth", `${ soaringLayerDepth } m`]
-      ]
-    )
-  }
-
-}
+};
 
 const soaringLayerDepthColorScale = new ColorScale([
   [250,  new Color(0x33, 0x33, 0x33, 1)],

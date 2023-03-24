@@ -21,7 +21,8 @@ const detailedData: DetailedForecastData = {
   "s": { "t": 22.2, "dt": 6.19, "u": -12, "v": 8 },
   "iso": 4135,
   "r": { "t": 0, "c": 0 },
-  "mslet": 1012
+  "mslet": 1012,
+  "c": 3
 };
 
 const locationData: LocationForecastsData = {
@@ -39,7 +40,8 @@ const locationData: LocationForecastsData = {
           "s": { "t": 23.3, "dt": 7.27, "u": -14, "v": -8 },
           "iso": 3480,
           "r": { "t": 0, "c": 0 },
-          "mslet": 1011
+          "mslet": 1011,
+          "c": 100
         },
         {
           "t": "2022-11-02T12:00:00Z",
@@ -50,7 +52,8 @@ const locationData: LocationForecastsData = {
           "s": { "t": 17.9, "dt": 10.8, "u": -5, "v": 3 },
           "iso": 3413,
           "r": { "t": 2, "c": 1 },
-          "mslet": 1010
+          "mslet": 1010,
+          "c": 100
         },
         {
           "t": "2022-11-02T15:00:00Z",
@@ -61,7 +64,8 @@ const locationData: LocationForecastsData = {
           "s": { "t": 19.8, "dt": 10.0, "u": -13, "v": 15 },
           "iso": 3739,
           "r": { "t": 2, "c": 0 },
-          "mslet": 1009
+          "mslet": 1009,
+          "c": 0
         }
       ]
     },
@@ -77,7 +81,8 @@ const locationData: LocationForecastsData = {
           "s": { "t": 20.1, "dt": 10.6, "u": -5, "v": 14 },
           "iso": 3595,
           "r": { "t": 0, "c": 0 },
-          "mslet": 1010
+          "mslet": 1010,
+          "c": 50
         },
         {
           "t": "2022-11-04T12:00:00Z",
@@ -88,7 +93,8 @@ const locationData: LocationForecastsData = {
           "s": { "t": 21.7, "dt": 10.2, "u": 0, "v": 12 },
           "iso": 3767,
           "r": { "t": 0, "c": 0 },
-          "mslet": 1008
+          "mslet": 1008,
+          "c": 75
         },
         {
           "t": "2022-11-04T15:00:00Z",
@@ -99,7 +105,8 @@ const locationData: LocationForecastsData = {
           "s": { "t": 20.3, "dt": 11.1, "u": -2, "v": 18 },
           "iso": 3926,
           "r": { "t": 0, "c": 0 },
-          "mslet": 1009
+          "mslet": 1009,
+          "c": 50
         }
       ]
     },
@@ -115,7 +122,8 @@ const locationData: LocationForecastsData = {
           "s": { "t": 19.1, "dt": 7.24, "u": -6, "v": 8 },
           "iso": 4064,
           "r": { "t": 0, "c": 0 },
-          "mslet": 1014
+          "mslet": 1014,
+          "c": 1
         },
         detailedData,
         {
@@ -127,7 +135,8 @@ const locationData: LocationForecastsData = {
           "s": { "t": 22.1, "dt": 7.25, "u": -12, "v": 15 },
           "iso": 4231,
           "r": { "t": 0, "c": 0 },
-          "mslet": 1011
+          "mslet": 1011,
+          "c": 75
         }
       ]
     }

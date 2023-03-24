@@ -1,10 +1,9 @@
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
-import { Renderer } from "../map/CanvasLayer";
-import { Grid } from "../data/Grid";
-import { colorScaleEl, Layer } from "./Layer";
-import { createEffect, createSignal } from "solid-js";
-import { Summary, summaryVariable } from "../data/OutputVariable";
+import { colorScaleEl, Layer, ReactiveComponents } from "./Layer";
+import { createResource } from "solid-js";
+import { xcFlyingPotentialVariable } from "../data/OutputVariable";
+import { ForecastMetadata } from "../data/ForecastMetadata";
 
 export const colorScale = new ColorScale([
   [10, new Color(0x33, 0x33, 0x33, 1)],
@@ -19,7 +18,7 @@ export const colorScale = new ColorScale([
   [100, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
-export const xcFlyingPotentialLayer = new Layer({
+export const xcFlyingPotentialLayer: Layer = {
 
   key: 'xc-flying-potential',
 
@@ -27,54 +26,75 @@ export const xcFlyingPotentialLayer = new Layer({
 
   title: 'XC flying potential',
 
-  renderer: (state) => {
-    const [get, set] = createSignal<Renderer>();
-    createEffect(() => {
-      state.forecastMetadata
-        .fetchOutputVariableAtHourOffset(summaryVariable, state.hourOffset)
-        .then(grid => set(new XCFlyingPotentialRenderer(grid)))
-    });
-    return get
-  },
+  reactiveComponents(props: {
+    forecastMetadata: ForecastMetadata,
+    hourOffset: number
+  }): ReactiveComponents {
 
-  MapKey: () => colorScaleEl(colorScale, value => `${value}% `),
+    const [xcFlyingPotentialGrid] =
+      createResource(
+        () => ({ forecastMetadata: props.forecastMetadata, hourOffset: props.hourOffset }),
+        data => data.forecastMetadata.fetchOutputVariableAtHourOffset(xcFlyingPotentialVariable, data.hourOffset)
+      );
 
-  Help: () => <>
-    <p>
-      The XC flying potential index is a single indicator that takes into account
-      the soaring layer depth, the sunshine, and the average wind speed within the
-      boundary layer. Deep soaring layer, strong sunshine, and low wind speeds
-      increase the value of this indicator.
-    </p>
-    <p>
-      The color scale is shown on the bottom left of the screen. Click to a location
-      on the map to get numerical data.
-    </p>
-  </>
-  
-});
+    const renderer = () => {
+      const grid = xcFlyingPotentialGrid();
+      return {
+        renderPoint(latitude: number, longitude: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
+          grid?.mapViewPoint(latitude, longitude, averagingFactor, xcFlyingPotential => {
+            const color = colorScale.closest(xcFlyingPotential);
+            ctx.save();
+            ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
+            ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
+            ctx.restore();
+          });
+        }
+      }
+    };
 
-class XCFlyingPotentialRenderer implements Renderer {
+    const summarizer = () => {
+      const grid = xcFlyingPotentialGrid();
+      return {
+        async summary(latitude: number, longitude: number): Promise<Array<[string, string]> | undefined> {
+          const locationForecasts = await props.forecastMetadata.fetchLocationForecasts(latitude / 100, longitude / 100); // TODO Better error handling
+          const detailedForecast  = locationForecasts?.atHourOffset(props.hourOffset)
 
-  constructor(readonly grid: Grid<Summary>) {}
+          return grid?.mapViewPoint(latitude, longitude, 1, xcPotential => {
+            const xcPotentialEntry: [string, string] = ["XC Flying Potential", `${xcPotential}%`];
+            return detailedForecast !== undefined ?
+              [
+                xcPotentialEntry,
+                ["Soaring layer depth", `${detailedForecast.boundaryLayer.soaringLayerDepth} m`],
+                ["Thermal velocity", `${detailedForecast.thermalVelocity} m/s`],
+                ["Total cloud cover", `${Math.round(detailedForecast.cloudCover * 100)}%`]
+              ] :
+              [xcPotentialEntry]
+        });
+        }
+      }
+    };
 
-  renderPoint(latitude: number, longitude: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    this.grid.mapViewPoint(latitude, longitude, averagingFactor, data => {
-      const color = colorScale.closest(data.xcPotential);
-      ctx.save();
-      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
-      ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
-      ctx.restore();
-    });
+    const mapKey = colorScaleEl(colorScale, value => `${value}% `);
+
+    const help = <>
+      <p>
+        The XC flying potential index is a single indicator that takes into account
+        the soaring layer depth, the sunshine, and the average wind speed within the
+        boundary layer. Deep soaring layer, strong sunshine, and low wind speeds
+        increase the value of this indicator.
+      </p>
+      <p>
+        The color scale is shown on the bottom left of the screen. Click to a location
+        on the map to get numerical data.
+      </p>
+    </>;
+
+    return {
+      renderer,
+      summarizer,
+      mapKey,
+      help
+    }
   }
 
-  summary(latitude: number, longitude: number, averagingFactor: number): Array<[string, string]> | undefined {
-    return this.grid.mapViewPoint(latitude, longitude, averagingFactor, data => [
-      ["XC Flying Potential", `${data.xcPotential}%`],
-      ["Soaring layer depth", `${data.soaringLayerDepth} m`],
-      ["Thermal velocity",    `${data.thermalVelocity} m/s`],
-      ["Total cloud cover",   `${Math.round(data.cloudCover * 100)}%`]
-    ])
-  }
-
-}
+};

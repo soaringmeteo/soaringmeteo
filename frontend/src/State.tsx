@@ -1,10 +1,11 @@
 import { createStore, SetStoreFunction, Store } from 'solid-js/store';
 import { LocationForecasts } from './data/LocationForecasts';
 import { ForecastMetadata } from './data/ForecastMetadata';
-import { Layer } from './layers/Layer';
+import { Layer, ReactiveComponents } from './layers/Layer';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
 import { layerByKey } from './layers/Layers';
 import { boundaryLayerWindLayer } from './layers/Wind';
+import { Accessor, createMemo, splitProps } from 'solid-js';
 
 export type State = {
   // Currently selected forecast run
@@ -29,8 +30,6 @@ const selectedPrimaryLayerKey   = 'selected-primary-layer';
 const selectedWindLayerKey      = 'selected-wind-layer';
 const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
-
-// export const cumuliDepthKey          = 'cumuli-depth';
 
 const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValue: A): A => {
   const maybeItem = window.localStorage.getItem(key);
@@ -86,8 +85,12 @@ const saveWindNumericValuesShown = (value: boolean): void => {
  */
 export class Domain {
   
-  readonly state: Store<State>;
+  readonly state: State;
   private readonly setState: SetStoreFunction<State>;
+
+  // Since those reactive components depend on the state, we can not make them part of the state
+  readonly primaryLayerReactiveComponents: Accessor<ReactiveComponents>;
+  readonly windLayerReactiveComponents: Accessor<ReactiveComponents>;
 
   constructor (
     forecastMetadata: ForecastMetadata,
@@ -111,8 +114,15 @@ export class Domain {
 
     this.state = get;
     this.setState = set;
+
+    const [props] = splitProps(this.state, ['forecastMetadata', 'hourOffset', 'windNumericValuesShown'])
+
+    this.primaryLayerReactiveComponents =
+      createMemo(() => this.state.primaryLayer.reactiveComponents(props));
+    this.windLayerReactiveComponents =
+      createMemo(() => this.state.windLayer.reactiveComponents(props));
   }
-  
+
   /** Change the forecast run to display */
   setForecastMetadata(forecastMetadata: ForecastMetadata): void {
     this.setState({ forecastMetadata }) // TODO Reset hourOffset
@@ -151,7 +161,11 @@ export class Domain {
   showLocationForecast(latitude: number, longitude: number, viewType: DetailedViewType): void {
     this.state.forecastMetadata
       .fetchLocationForecasts(latitude, longitude)
-      .then(locationForecasts => this.setState({ detailedView: [locationForecasts, viewType] }))
+      .then(locationForecasts => {
+        if (locationForecasts !== undefined) {
+          this.setState({ detailedView: [locationForecasts, viewType] });
+        }
+    });
   }
 
   /** Hide the detailed view */

@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import { Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Switch } from 'solid-js';
+import { Accessor, createEffect, createSignal, JSX, Match, Show, Switch } from 'solid-js';
 
 import { CanvasLayer } from "./map/CanvasLayer";
 import { normalizeCoordinates } from './data/LocationForecasts';
@@ -53,10 +53,10 @@ export const LayersSelector = (props: {
     const container = makeRadioBtn(
       layer.name,
       layer.title,
-      () => state.primaryLayer === layer || state.windLayer === layer,
+      () => state.primaryLayer.key === layer.key || state.windLayer.key === layer.key, // Note: for some reason, comparing the layers does not work but comparing the keys does.
       layerType,
       () => {
-        switch(layerType) {
+        switch (layerType) {
           case 'primary-layer':
             props.domain.setPrimaryLayer(layer);
             break;
@@ -165,6 +165,9 @@ export const LayersSelector = (props: {
   L.DomEvent.disableClickPropagation(rootElement);
   L.DomEvent.disableScrollPropagation(rootElement);
 
+  const primaryLayerComponents = () => props.domain.primaryLayerReactiveComponents();
+  const windLayerComponents    = () => props.domain.windLayerReactiveComponents();
+
   const layerKeyEl =
     <div style={{
       position: 'absolute',
@@ -177,22 +180,14 @@ export const LayersSelector = (props: {
       'text-align': 'center'
     }}>
       <Show when={state.windLayerEnabled}>
-        <state.windLayer.MapKey state={state} />
+        {windLayerComponents().mapKey}
       </Show>
-      <state.primaryLayer.MapKey state={state} />
+      {primaryLayerComponents().mapKey}
     </div>;
 
-  const primaryRendererSignal = createMemo(() => {
-    return state.primaryLayer.renderer(state)
-  });
-
-  const windRendererSignal = createMemo(() => {
-    return state.windLayer.renderer(state)
-  });
-
   createEffect(() => {
-    const primaryRenderer = primaryRendererSignal()();
-    const windRenderer = windRendererSignal()();
+    const primaryRenderer = primaryLayerComponents().renderer();
+    const windRenderer    = windLayerComponents().renderer();
     if (state.windLayerEnabled) {
       if (primaryRenderer !== undefined && windRenderer !== undefined) {
         props.canvas.setRenderers(primaryRenderer, windRenderer);
@@ -210,47 +205,39 @@ export const LayersSelector = (props: {
     if (event !== undefined) {
       const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(event.latlng.lat, event.latlng.lng);
       const [latitude, longitude] = [normalizedLatitude / 100, normalizedLongitude / 100];
-      const primaryRenderer = primaryRendererSignal()();
-      let summary: Array<[string, string]> = [];
-      if (primaryRenderer !== undefined) {
-        const primarySummary = primaryRenderer.summary(normalizedLatitude, normalizedLongitude, 1 /* TODO handle averaging */);
-        if (primarySummary !== undefined) {
-          if (state.windLayerEnabled) {
-            const windRenderer = windRendererSignal()();
-            if (windRenderer !== undefined) {
-              const windSummary = windRenderer.summary(normalizedLatitude, normalizedLongitude, 1);
-              if (windSummary !== undefined) {
-                summary = primarySummary.concat(windSummary);
-              } else {
-                summary = primarySummary;
-              }
-            }
-          }
+      const summaryPromise =
+        state.windLayerEnabled ?
+          Promise.all([
+            primaryLayerComponents().summarizer().summary(normalizedLatitude, normalizedLongitude),
+            windLayerComponents().summarizer().summary(normalizedLatitude, normalizedLongitude)
+          ])
+            .then(([primarySummary, windSummary]) => primarySummary?.concat(windSummary || [])) :
+          primaryLayerComponents().summarizer().summary(normalizedLatitude, normalizedLongitude);
+      summaryPromise.then(summary => {
+        if (summary !== undefined && summary.length !== 0) {
+          const content =
+            <div>
+              <div>Grid point: {latitude},{longitude}</div>
+              <div>GFS forecast for {showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { showWeekDay: true })}</div>
+              { table(summary) }
+              <div style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-around' }}>
+                <button
+                  onClick={ () => props.domain.showLocationForecast(event.latlng.lat, event.latlng.lng, 'meteogram') }
+                  title="Meteogram for this location"
+                >
+                  Meteogram
+                </button>
+                <button
+                  onClick={ () => props.domain.showLocationForecast(event.latlng.lat, event.latlng.lng, 'sounding') }
+                  title="Sounding for this time and location"
+                >
+                  Sounding
+                </button>
+              </div>
+            </div> as HTMLElement;
+          props.openLocationDetailsPopup(latitude, longitude, content);
         }
-      }
-      if (summary.length !== 0) {
-        const content =
-          <div>
-            <div>Grid point: {latitude},{longitude}</div>
-            <div>GFS forecast for {showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { showWeekDay: true })}</div>
-            { table(summary) }
-            <div style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-around' }}>
-              <button
-                onClick={ () => props.domain.showLocationForecast(event.latlng.lat, event.latlng.lng, 'meteogram') }
-                title="Meteogram for this location"
-              >
-                Meteogram
-              </button>
-              <button
-                onClick={ () => props.domain.showLocationForecast(event.latlng.lat, event.latlng.lng, 'sounding') }
-                title="Sounding for this time and location"
-              >
-                Sounding
-              </button>
-            </div>
-          </div> as HTMLElement;
-        props.openLocationDetailsPopup(latitude, longitude, content);
-      }
+      });
     }
   });
 

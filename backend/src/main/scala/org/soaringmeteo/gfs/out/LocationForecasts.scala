@@ -39,6 +39,7 @@ case class DetailedForecast(
   soaringLayerDepth: Length, // m (AGL)
   boundaryLayerWind: Wind,
   thermalVelocity: Velocity,
+  totalCloudCover: Int, // Between 0 and 100
   convectiveCloudCover: Int, // Between 0 and 100
   convectiveClouds: Option[ConvectiveClouds],
   airDataByAltitude: SortedMap[Length, AirData],
@@ -69,6 +70,7 @@ object LocationForecasts {
             forecast.soaringLayerDepth,
             forecast.boundaryLayerWind,
             forecast.thermalVelocity,
+            forecast.totalCloudCover,
             forecast.convectiveCloudCover,
             forecast.convectiveClouds,
             forecast.airDataByAltitude,
@@ -234,7 +236,8 @@ object LocationForecasts {
                       "t" -> Json.fromInt(forecast.totalRain.toMillimeters.round.toInt),
                       "c" -> Json.fromInt(forecast.convectiveRain.toMillimeters.round.toInt)
                     ),
-                    "mslet" -> Json.fromInt(forecast.mslet.toPascals.round.toInt / 100) // hPa
+                    "mslet" -> Json.fromInt(forecast.mslet.toPascals.round.toInt / 100), // hPa
+                    "c" -> Json.fromInt(forecast.totalCloudCover)
                     // TODO Irradiance, CIN, snow
                   )
                 }: _*
