@@ -47,7 +47,7 @@ export class ForecastMetadata {
       const data     = await response.json() as LocationForecastsData;
       return new LocationForecasts(data, this, normalizedLatitude / 100, normalizedLongitude / 100)
     } catch (error) {
-      // FIXME Should we log anything?
+      console.debug(`Unable to fetch forecast data at ${latitude},${longitude}: ${error}`);
       return undefined
     }
   }
@@ -123,19 +123,6 @@ const fetchPreviousRuns = async (oldestForecastInitDate: Date, maybePreviousData
   const hourOffset = (forecastInitOffset === 0 ? 0 : 24) + noonOffset - forecastInitOffset;
   return [forecastMetadata, hourOffset]
 };
-
-export const showDate = (date: Date, options?: { showWeekDay?: boolean }): string =>
-  date.toLocaleString(
-    undefined,
-    {
-      weekday: (options && options.showWeekDay && 'short') || undefined,
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }
-  )
 
 // We show three forecast periods per day: morning, noon, and afternoon
 export const periodsPerDay = 3;

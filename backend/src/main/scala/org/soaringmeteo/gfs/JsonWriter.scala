@@ -44,7 +44,7 @@ object JsonWriter {
     logger.info(s"Writing soaring forecasts in $targetRunDir")
     os.makeDir.all(targetRunDir)
 
-    // We create one JSON document per forecast time and per output variable (e.g., `2021-01-08T12/soaring-layer/0h.json`,
+    // We create one JSON document per forecast time and per output variable (e.g., `2021-01-08T12/soaring-layer-depth/0h.json`,
     // `2021-01-08T12/wind-300m-agl/3h.json`, etc.).
     // Each document contains the forecast for that parameter (soaring layer depth, wind, etc.) and for each location
     // listed in Settings.gfsForecastLocations

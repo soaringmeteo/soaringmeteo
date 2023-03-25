@@ -4,6 +4,7 @@ import { colorScaleEl, Layer, ReactiveComponents } from "./Layer";
 import { createResource } from "solid-js";
 import { xcFlyingPotentialVariable } from "../data/OutputVariable";
 import { ForecastMetadata } from "../data/ForecastMetadata";
+import { xcFlyingPotentialLayerName } from "../shared";
 
 export const colorScale = new ColorScale([
   [10, new Color(0x33, 0x33, 0x33, 1)],
@@ -22,7 +23,7 @@ export const xcFlyingPotentialLayer: Layer = {
 
   key: 'xc-flying-potential',
 
-  name: 'XC Flying Potential',
+  name: xcFlyingPotentialLayerName,
 
   title: 'XC flying potential',
 
@@ -56,7 +57,7 @@ export const xcFlyingPotentialLayer: Layer = {
       const grid = xcFlyingPotentialGrid();
       return {
         async summary(latitude: number, longitude: number): Promise<Array<[string, string]> | undefined> {
-          const locationForecasts = await props.forecastMetadata.fetchLocationForecasts(latitude / 100, longitude / 100); // TODO Better error handling
+          const locationForecasts = await props.forecastMetadata.fetchLocationForecasts(latitude / 100, longitude / 100);
           const detailedForecast  = locationForecasts?.atHourOffset(props.hourOffset)
 
           return grid?.mapViewPoint(latitude, longitude, 1, xcPotential => {

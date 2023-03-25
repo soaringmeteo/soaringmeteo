@@ -1,6 +1,6 @@
 import { createSignal, JSX, Show } from 'solid-js'
 import * as L from 'leaflet'
-import { showDate } from '../data/ForecastMetadata'
+import { showDate } from '../shared'
 import { bottomButtonsSize, surfaceOverMap } from '../styles/Styles';
 import { Domain } from '../State';
 

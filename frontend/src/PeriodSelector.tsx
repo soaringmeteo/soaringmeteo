@@ -1,7 +1,8 @@
 import * as L from 'leaflet';
 import { createEffect, createMemo, createSignal, JSX } from 'solid-js';
 
-import { forecastOffsets, periodsPerDay, showDate } from './data/ForecastMetadata';
+import { forecastOffsets, periodsPerDay } from './data/ForecastMetadata';
+import { showDate } from './shared';
 import { type Domain } from './State';
 import { closeButton, closeButtonSize, keyWidth, meteogramColumnWidth, periodSelectorHeight, surfaceOverMap } from './styles/Styles';
 

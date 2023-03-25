@@ -1,4 +1,4 @@
-import { createStore, SetStoreFunction, Store } from 'solid-js/store';
+import { createStore, SetStoreFunction } from 'solid-js/store';
 import { LocationForecasts } from './data/LocationForecasts';
 import { ForecastMetadata } from './data/ForecastMetadata';
 import { Layer, ReactiveComponents } from './layers/Layer';

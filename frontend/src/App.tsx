@@ -10,8 +10,8 @@ import { Domain } from './State';
 import { Burger } from './Burger';
 import { Attribution } from './map/Attribution';
 
-const Help = lazy(() => import(/* webpackPrefetch: true */ './help/Help').then(module => ({ default: module.Help })));
-const PeriodSelectors = lazy(() => import(/* webpackPrefetch: true */ './PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
+const Help = lazy(() => import('./help/Help').then(module => ({ default: module.Help })));
+const PeriodSelectors = lazy(() => import('./PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
 
 export const start = (containerElement: HTMLElement): void => {
 

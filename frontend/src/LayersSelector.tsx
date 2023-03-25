@@ -5,7 +5,7 @@ import { CanvasLayer } from "./map/CanvasLayer";
 import { normalizeCoordinates } from './data/LocationForecasts';
 import { closeButton, surfaceOverMap } from './styles/Styles';
 import layersImg from '../node_modules/leaflet/dist/images/layers.png';
-import { ForecastMetadata, showDate } from './data/ForecastMetadata';
+import { ForecastMetadata } from './data/ForecastMetadata';
 import { Domain } from './State';
 import { Layer } from './layers/Layer';
 import { noLayer } from './layers/None';
@@ -16,6 +16,7 @@ import { cloudCoverLayer } from './layers/CloudCover';
 import { thermalVelocityLayer } from './layers/ThermalVelocity';
 import { rainLayer } from './layers/Rain';
 import { cumuliDepthLayer } from './layers/CumuliDepth';
+import { showDate } from './shared';
 
 /**
  * Overlay on the map that displays the soaring forecast.
