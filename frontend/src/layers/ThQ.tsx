@@ -1,7 +1,10 @@
-import { Forecast, ForecastPoint } from "../data/Forecast";
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
-import { Renderer } from "../map/CanvasLayer";
+import { colorScaleEl, Layer, ReactiveComponents } from "./Layer";
+import { createResource } from "solid-js";
+import { xcFlyingPotentialVariable } from "../data/OutputVariable";
+import { ForecastMetadata } from "../data/ForecastMetadata";
+import { xcFlyingPotentialLayerName } from "../shared";
 
 export const colorScale = new ColorScale([
   [10, new Color(0x33, 0x33, 0x33, 1)],
@@ -16,81 +19,83 @@ export const colorScale = new ColorScale([
   [100, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
-export class ThQ implements Renderer {
+export const xcFlyingPotentialLayer: Layer = {
 
-  constructor(readonly forecast: Forecast) {}
+  key: 'xc-flying-potential',
 
-  renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    if (forecastAtPoint !== undefined) {
-      const thq = value(
-        forecastAtPoint.thermalVelocity,
-        forecastAtPoint.soaringLayerDepth,
-        forecastAtPoint.uWind,
-        forecastAtPoint.vWind
+  name: xcFlyingPotentialLayerName,
+
+  title: 'XC flying potential',
+
+  reactiveComponents(props: {
+    forecastMetadata: ForecastMetadata,
+    hourOffset: number
+  }): ReactiveComponents {
+
+    const [xcFlyingPotentialGrid] =
+      createResource(
+        () => ({ forecastMetadata: props.forecastMetadata, hourOffset: props.hourOffset }),
+        data => data.forecastMetadata.fetchOutputVariableAtHourOffset(xcFlyingPotentialVariable, data.hourOffset)
       );
 
-      const color = colorScale.closest(thq);
-      ctx.save();
-      ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
-      ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
-      ctx.restore();
+    const renderer = () => {
+      const grid = xcFlyingPotentialGrid();
+      return {
+        renderPoint(latitude: number, longitude: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
+          grid?.mapViewPoint(latitude, longitude, averagingFactor, xcFlyingPotential => {
+            const color = colorScale.closest(xcFlyingPotential);
+            ctx.save();
+            ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
+            ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
+            ctx.restore();
+          });
+        }
+      }
+    };
+
+    const summarizer = () => {
+      const grid = xcFlyingPotentialGrid();
+      return {
+        async summary(latitude: number, longitude: number): Promise<Array<[string, string]> | undefined> {
+          const locationForecasts = await props.forecastMetadata.fetchLocationForecasts(latitude / 100, longitude / 100);
+          const detailedForecast  = locationForecasts?.atHourOffset(props.hourOffset)
+
+          return grid?.mapViewPoint(latitude, longitude, 1, xcPotential => {
+            const xcPotentialEntry: [string, string] = ["XC Flying Potential", `${xcPotential}%`];
+            return detailedForecast !== undefined ?
+              [
+                xcPotentialEntry,
+                ["Soaring layer depth", `${detailedForecast.boundaryLayer.soaringLayerDepth} m`],
+                ["Thermal velocity", `${detailedForecast.thermalVelocity} m/s`],
+                ["Total cloud cover", `${Math.round(detailedForecast.cloudCover * 100)}%`]
+              ] :
+              [xcPotentialEntry]
+        });
+        }
+      }
+    };
+
+    const mapKey = colorScaleEl(colorScale, value => `${value}% `);
+
+    const help = <>
+      <p>
+        The XC flying potential index is a single indicator that takes into account
+        the soaring layer depth, the sunshine, and the average wind speed within the
+        boundary layer. Deep soaring layer, strong sunshine, and low wind speeds
+        increase the value of this indicator.
+      </p>
+      <p>
+        The color scale is shown on the bottom left of the screen. Click to a location
+        on the map to get numerical data.
+      </p>
+    </>;
+
+    return {
+      renderer,
+      summarizer,
+      mapKey,
+      help
     }
   }
 
-  summary(forecastAtPoint: ForecastPoint): Array<[string, string]> {
-    const thq = value(
-      forecastAtPoint.thermalVelocity,
-      forecastAtPoint.soaringLayerDepth,
-      forecastAtPoint.uWind,
-      forecastAtPoint.vWind
-    );
-
-    return [
-      ["XC Flying Potential", `${thq}%`],
-      ["Soaring layer depth", `${forecastAtPoint.soaringLayerDepth} m`],
-      ["Thermal velocity",    `${forecastAtPoint.thermalVelocity} m/s`],
-      ["Total cloud cover",   `${Math.round(forecastAtPoint.cloudCover * 100)}%`]
-    ]
-  }
-
-}
-
-/**
- * @param thermalVelocity   Thermal velocity in m/s
- * @param soaringLayerDepth Depth of the boundary layer in meters
- * @param uWind             U part of wind in boundary layer in km/h
- * @param vWind             V part of wind in boundary layer in km/h
- * @returns A value between 0 and 100
- */
-export const value = (thermalVelocity: number, soaringLayerDepth: number, uWind: number, vWind: number): number => {
-  // Thermal velocity
-  // coeff is 50% for a 1.55 m/s
-  const thermalVelocityCoeff = logistic(thermalVelocity, 1.55, 5);
-
-  // Soaring Layer Depth
-  // coeff is 50% for a soaring layer depth of 400 m
-  const bldCoeff = logistic(soaringLayerDepth, 400, 4);
-
-  const thermalCoeff = (2 * thermalVelocityCoeff + bldCoeff) / 3;
-
-  // Boundary Layer Wind
-  const u = uWind;
-  const v = vWind;
-  const windForce = Math.sqrt(u * u + v * v);
-  // coeff is 50% for a wind force of 16 km/h
-  const windCoeff = 1 - logistic(windForce, 16, 6);
-
-  return Math.round(thermalCoeff * windCoeff * 100)
-};
-
-/**
- * Logistic function (see https://en.wikipedia.org/wiki/Logistic_regression#Model)
- * @param x  input
- * @param mu “location parameter” (midpoint of the curve, where output = 50%)
- * @param k  steepness (value like 4 is quite smooth, whereas 7 is quite steep)
- */
-const logistic = (x: number, mu: number, k: number): number => {
-  const L = 1; // Output max value. In our case we want the output to be a value between 0 and 1
-  const s = mu / k;
-  return L / (1 + Math.exp(-(x - mu) / s))
 };

@@ -8,7 +8,7 @@ import scala.collection.immutable.ArraySeq
 /** Wind values at several elevation levels */
 case class Winds(
   `300m AGL`: Wind,
-  boundaryLayerTop: Wind
+  soaringLayerTop: Wind
 )
 
 object Winds {

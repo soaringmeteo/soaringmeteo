@@ -1,33 +1,67 @@
-import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
+import { createResource } from 'solid-js';
 import { ColorScale, Color } from "../ColorScale";
-import { Renderer } from "../map/CanvasLayer";
+import { ForecastMetadata } from '../data/ForecastMetadata';
+import { rainVariable } from '../data/OutputVariable';
+import { colorScaleEl, Layer, ReactiveComponents } from './Layer';
 
-export class Rain implements Renderer {
-
-  constructor(readonly forecast: Forecast) {}
-
-  renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    drawRain(forecastAtPoint, topLeft, bottomRight, ctx);
-  }
-
-  summary(forecastPoint: ForecastPoint): Array<[string, string]> {
-    return [
-      ["Rainfall", `${ forecastPoint.rain } mm`]
-    ]
-  }
-
-}
-
-const drawRain = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void => {
-  const color = rainColorScale.closest(forecastAtPoint.rain);
+const drawRain = (rain: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void => {
+  const color = rainColorScale.closest(rain);
   ctx.fillStyle = color.css();
   ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
 }
 
-export const rainColorScale = new ColorScale([
+const rainColorScale = new ColorScale([
   [1,  new Color(0, 0, 255, 0)],
   [3,  new Color(0, 0, 255, 0.30)],
   [7,  new Color(0, 0, 255, 0.70)],
   [10, new Color(0, 0, 255, 1.00)],
 ]);
+
+export const rainLayer: Layer = {
+  key: 'rain',
+  name: 'Rain',
+  title: 'Total rain',
+  reactiveComponents(props: {
+    forecastMetadata: ForecastMetadata,
+    hourOffset: number
+  }): ReactiveComponents {
+
+    const [rainGrid] =
+      createResource(
+        () => ({ forecastMetadata: props.forecastMetadata, hourOffset: props.hourOffset }),
+        (props) => props.forecastMetadata.fetchOutputVariableAtHourOffset(rainVariable, props.hourOffset)
+      );
+
+      const renderer = () => {
+      const grid = rainGrid();
+      return {
+        renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
+          grid?.mapViewPoint(lat, lng, averagingFactor, rain => drawRain(rain, topLeft, bottomRight, ctx));
+        }
+      
+      }
+    };
+
+    const summarizer = () => {
+      const grid = rainGrid();
+      return {
+        async summary(lat: number, lng: number): Promise<Array<[string, string]> | undefined> {
+          return grid?.mapViewPoint(lat, lng, 1, rain =>
+            [
+              ["Rainfall", `${ rain } mm`]
+            ]
+          )
+        }
+      
+      }
+    }
+
+    return {
+      renderer,
+      summarizer,
+      mapKey: colorScaleEl(rainColorScale, value => `${value} mm `),
+      help: <p>The color scale is shown on the bottom left of the screen.</p>
+    }
+  }
+};

@@ -1,28 +1,13 @@
-import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
+import { createResource } from 'solid-js';
 import { ColorScale, Color } from "../ColorScale";
-import { Renderer } from "../map/CanvasLayer";
+import { ForecastMetadata } from '../data/ForecastMetadata';
+import { cloudCoverVariable } from '../data/OutputVariable';
+import { colorScaleEl, Layer, ReactiveComponents } from "./Layer";
 
-export class CloudCover implements Renderer {
-
-  constructor(readonly forecast: Forecast) {}
-
-  renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    drawCloudCover(forecastAtPoint, topLeft, bottomRight, ctx, cloudCoverMaxOpacity);
-  }
-
-  summary(forecastPoint: ForecastPoint): Array<[string, string]> {
-    return [
-      ["Total cloud cover", `${ Math.round(forecastPoint.cloudCover * 100) }%`]
-    ]
-  }
-
-}
-
-const drawCloudCover = (forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D, maxOpacity: number): void => {
+const drawCloudCover = (cloudCover: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D, maxOpacity: number): void => {
   const width  = bottomRight.x - topLeft.x;
   const height = bottomRight.y - topLeft.y;
-  const cloudCover = forecastAtPoint.cloudCover;
   const ch = 5;
   const hSpace = width / ch;
   const cv = 7;
@@ -48,3 +33,58 @@ export const cloudCoverColorScale = new ColorScale([
   [80,  new Color(0, 0, 0, 0.75 * cloudCoverMaxOpacity)],
   [100, new Color(0, 0, 0, 1.00 * cloudCoverMaxOpacity)]
 ]);
+
+export const cloudCoverLayer: Layer = {
+  key: 'cloud-cover',
+  name: 'Cloud Cover',
+  title: 'Cloud cover (all altitudes)',
+  reactiveComponents(props: {
+    forecastMetadata: ForecastMetadata,
+    hourOffset: number
+  }): ReactiveComponents {
+
+    const [cloudCoverGrid] =
+      createResource(
+        () => ({ forecastMetadata: props.forecastMetadata, hourOffset: props.hourOffset }),
+        data => data.forecastMetadata.fetchOutputVariableAtHourOffset(cloudCoverVariable, data.hourOffset)
+      );
+
+    const renderer = () => {
+      const grid = cloudCoverGrid();
+      return {
+        renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
+          grid?.mapViewPoint(lat, lng, averagingFactor, cloudCover => {
+            drawCloudCover(cloudCover, topLeft, bottomRight, ctx, cloudCoverMaxOpacity);
+          })
+        }
+      }
+    };
+
+    const summarizer = () => {
+      const grid = cloudCoverGrid();
+      return {
+        async summary(lat: number, lng: number): Promise<Array<[string, string]> | undefined> {
+          return grid?.mapViewPoint(lat, lng, 1, cloudCover =>
+            [
+              ["Total cloud cover", `${ Math.round(cloudCover * 100) }%`]
+            ]
+          )
+        }
+      }
+    }
+
+    const mapKey = colorScaleEl(cloudCoverColorScale, value => `${value}% `);
+    const help = <p>
+      The cloud cover is a value between 0% and 100% that tells us how much of the
+      sunlight will be blocked by the clouds. A low value means a blue sky, and a
+      high value means a dark sky.
+    </p>;
+
+    return {
+      renderer,
+      summarizer,
+      mapKey,
+      help
+    }
+  }
+};

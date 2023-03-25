@@ -1,5 +1,5 @@
 import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, nextValue, previousValue, skyStyle, temperaturesRange } from './Diagram';
-import { AboveGround, DetailedForecast } from "../data/Forecast";
+import { AboveGround, DetailedForecast } from "../data/LocationForecasts";
 import { cloudsColorScale } from './Clouds';
 import { drawWindArrow } from '../shapes';
 import { createEffect, createSignal, JSX } from 'solid-js';
@@ -95,7 +95,7 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
   >
     { canvas }
     { zoomButton }
-  </div>;
+  </div> as HTMLElement;
 
   if (ctx !== null && leftCtx !== null) {
 
@@ -194,11 +194,11 @@ const drawSounding = (
   // Sky and boundary layer
   diagram.fillRect(
     [0, elevationScale.apply(elevation)],
-    [width, elevationScale.apply(elevation + forecast.boundaryLayer.height)],
+    [width, elevationScale.apply(elevation + forecast.boundaryLayer.soaringLayerDepth)],
     boundaryLayerStyle
   );
   diagram.fillRect(
-    [0, elevationScale.apply(elevation + forecast.boundaryLayer.height)],
+    [0, elevationScale.apply(elevation + forecast.boundaryLayer.soaringLayerDepth)],
     [width, elevationScale.apply(maxElevation)],
     skyStyle
   );
@@ -269,8 +269,8 @@ const drawSounding = (
 
   // Print boundary layer height
   diagram.text(
-    `${elevation + forecast.boundaryLayer.height}`,
-    [2, elevationScale.apply(elevation + forecast.boundaryLayer.height) - 4],
+    `${elevation + forecast.boundaryLayer.soaringLayerDepth}`,
+    [2, elevationScale.apply(elevation + forecast.boundaryLayer.soaringLayerDepth) - 4],
     'black'
   );
 
@@ -330,7 +330,7 @@ const drawSounding = (
     // Thermal velocity
     const projectedSurfaceTemperature = temperatureScale.apply(forecast.surface.temperature);
     const projectedElevation = elevationScale.apply(elevation);
-    const projectedBoundaryLayerHeight = elevationScale.apply(elevation + forecast.boundaryLayer.height);
+    const projectedBoundaryLayerHeight = elevationScale.apply(elevation + forecast.boundaryLayer.soaringLayerDepth);
     diagram.text(
       `${forecast.thermalVelocity.toFixed(1)} m/s`,
       [projectedSurfaceTemperature, (projectedElevation + projectedBoundaryLayerHeight) / 2],
@@ -342,7 +342,7 @@ const drawSounding = (
 };
 
 const computeSoundingHeightAndMaxElevation = (zoomed: boolean, elevation: number, forecast: DetailedForecast): [number, number] => {
-  const maxElevation = zoomed ? (elevation + forecast.boundaryLayer.height + 2000) : 12000; // m
+  const maxElevation = zoomed ? (elevation + forecast.boundaryLayer.soaringLayerDepth + 2000) : 12000; // m
 
   const availableHeight = window.innerHeight - 38 /* top time selector */ - 50 /* bottom time selector */;
   const preferredHeight = (maxElevation - elevation) / 10; // Arbitrary factor to make the diagram visually nice

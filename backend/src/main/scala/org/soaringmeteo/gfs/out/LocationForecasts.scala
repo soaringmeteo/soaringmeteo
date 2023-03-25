@@ -35,9 +35,11 @@ case class DayForecast(
 
 case class DetailedForecast(
   time: OffsetDateTime,
-  boundaryLayerHeight: Length,
+  xcFlyingPotential: Int, // Between 0 and 100
+  soaringLayerDepth: Length, // m (AGL)
   boundaryLayerWind: Wind,
   thermalVelocity: Velocity,
+  totalCloudCover: Int, // Between 0 and 100
   convectiveCloudCover: Int, // Between 0 and 100
   convectiveClouds: Option[ConvectiveClouds],
   airDataByAltitude: SortedMap[Length, AirData],
@@ -64,9 +66,11 @@ object LocationForecasts {
       forecasts.map { forecast =>
           DetailedForecast(
             forecast.time,
+            forecast.xcFlyingPotential,
             forecast.soaringLayerDepth,
             forecast.boundaryLayerWind,
             forecast.thermalVelocity,
+            forecast.totalCloudCover,
             forecast.convectiveCloudCover,
             forecast.convectiveClouds,
             forecast.airDataByAltitude,
@@ -204,8 +208,9 @@ object LocationForecasts {
                 dayForecast.hourForecasts.map { forecast =>
                   Json.obj(
                     "t" -> Json.fromString(forecast.time.format(DateTimeFormatter.ISO_DATE_TIME)),
+                    "xc" -> Json.fromInt(forecast.xcFlyingPotential),
                     "bl" -> Json.obj(
-                      "h" -> Json.fromInt(forecast.boundaryLayerHeight.toMeters.round.toInt),
+                      "h" -> Json.fromInt(forecast.soaringLayerDepth.toMeters.round.toInt),
                       "u" -> Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
                       "v" -> Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt)
                     ),
@@ -231,7 +236,8 @@ object LocationForecasts {
                       "t" -> Json.fromInt(forecast.totalRain.toMillimeters.round.toInt),
                       "c" -> Json.fromInt(forecast.convectiveRain.toMillimeters.round.toInt)
                     ),
-                    "mslet" -> Json.fromInt(forecast.mslet.toPascals.round.toInt / 100) // hPa
+                    "mslet" -> Json.fromInt(forecast.mslet.toPascals.round.toInt / 100), // hPa
+                    "c" -> Json.fromInt(forecast.totalCloudCover)
                     // TODO Irradiance, CIN, snow
                   )
                 }: _*

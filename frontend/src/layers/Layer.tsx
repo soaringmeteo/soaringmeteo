@@ -1,22 +1,37 @@
-import { JSX } from "solid-js";
+import { Accessor, JSX } from "solid-js";
 import { Color, ColorScale } from "../ColorScale";
-import { Forecast } from "../data/Forecast";
+import { ForecastMetadata } from "../data/ForecastMetadata";
 import { Renderer } from "../map/CanvasLayer";
+
+type Summarizer = {
+  /** Create a summary of the forecast data on the point (shown in popups) */
+  summary(lat: number, lng: number): Promise<Array<[string, string]> | undefined>
+}
+
+// Non-static parts of layers
+export type ReactiveComponents = {
+  /** The current Canvas renderer of a layer. */
+  readonly renderer: Accessor<Renderer>
+  /** The current summarizer (shown in popups) of a layer. */
+  readonly summarizer: Accessor<Summarizer>
+  /** The map key of the layer. */
+  readonly mapKey: JSX.Element
+  /** The documentation of the layer (shown in the help modal). */
+  readonly help: JSX.Element
+}
 
 /**
  * A layer shown over the map (boundary layer height, cloud cover, etc.)
  */
- export class Layer {
-
-  constructor(
-    readonly key: string,
-    readonly name: string,
-    readonly title: string,
-    readonly createRenderer: (forecast: Forecast) => Renderer,
-    readonly mapKeyEl: JSX.Element,
-    readonly help: JSX.Element
-  ) {}
-
+ export type Layer = {
+  readonly key: string
+  readonly name: string
+  readonly title: string
+  reactiveComponents(props: {
+    forecastMetadata: ForecastMetadata,
+    hourOffset: number,
+    windNumericValuesShown: boolean
+  }): ReactiveComponents
 }
 
 export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): JSX.Element => {

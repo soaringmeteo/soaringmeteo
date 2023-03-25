@@ -1,16 +1,21 @@
-import { Forecast, ForecastPoint } from "../data/Forecast";
-import * as L from 'leaflet';
-import { Renderer } from "../map/CanvasLayer";
+import { Layer, ReactiveComponents } from './Layer';
 
-export class None implements Renderer {
-
-  constructor(readonly forecast: Forecast) {}
-
-  renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
+export const noLayer : Layer = {
+  key: 'none',
+  name: 'None',
+  title: 'Map only',
+  reactiveComponents(): ReactiveComponents {
+    return {
+      renderer: () => ({
+        renderPoint(): void {}
+      }),
+      summarizer: () => ({
+        async summary(): Promise<Array<[string, string]> | undefined> {
+          return []
+        }
+      }),
+      mapKey: <div />,
+      help: <p>This layer just shows the map.</p>
+    }
   }
-
-  summary(forecastPoint: ForecastPoint) {
-    return [];
-  }
-
-}
+};

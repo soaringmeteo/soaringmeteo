@@ -1,73 +1,8 @@
 import { ForecastMetadata } from "./ForecastMetadata";
 
-export type ForecastPoint = {
-  soaringLayerDepth: number // m
-  thermalVelocity: number // m/s
-  uWind: number // km/h
-  vWind: number // km/h
-  cloudCover: number, // %
-  rain: number, // mm
-  uSurfaceWind: number, // km/h
-  vSurfaceWind: number, // km/h
-  u300MWind: number, // km/h
-  v300MWind: number, // km/h
-  uBLTopWind: number, // km/h
-  vBLTopWind: number, // km/h
-  cumuliDepth: number // m
-}
-
-export class Forecast {
-  constructor(readonly data: ForecastData) {}
-
-  /**
-   * @param latitude  Must be hundredth of latitude (e.g. 4650 instead of 46.5)
-   * @param longitude Must be hundredth of longitude (e.g 725 instead of 7.25)
-   */
-  at(latitude: number, longitude: number): ForecastPoint | undefined {
-    const pointData = this.data[`${longitude / modelResolution},${latitude / modelResolution}`];
-    if (pointData !== undefined) {
-      return {
-        soaringLayerDepth: pointData[0],
-        uWind: pointData[1],
-        vWind: pointData[2],
-        cloudCover: pointData[3] / 100,
-        rain: pointData[4],
-        uSurfaceWind: pointData[5],
-        vSurfaceWind: pointData[6],
-        u300MWind: pointData[7],
-        v300MWind: pointData[8],
-        uBLTopWind: pointData[9],
-        vBLTopWind: pointData[10],
-        thermalVelocity: pointData[11] / 10,
-        cumuliDepth: pointData[12]
-      }
-    } else {
-      return
-    }
-  }
-}
-
-export type ForecastData = {
-  [key: string]: ForecastPointData
-}
-
-// WARN Must be consistent with `Forecast` JSON encoder in the backend
-type ForecastPointData = [
-  number, // Soaring layer depth
-  number, // Wind: u component
-  number, // Wind: v component
-  number, // Cloud cover between 0 and 100
-  number, // Total rain
-  number, // surface wind u
-  number, // surface wind v
-  number, // 300m AGL wind u
-  number, // 300m AGL wind v
-  number, // boundary layer top wind u
-  number, // boundary layer top wind v
-  number, // thermal velocity
-  number, // cumuli depth
-]
-
+/**
+ * Forecast data for several days at a specific location.
+ */
 export class LocationForecasts {
   readonly elevation: number;
   readonly dayForecasts: Array<DayForecasts>;
@@ -90,6 +25,7 @@ export class LocationForecasts {
       });
   }
 
+  /** @returns the forecast data at the given hour offset */
   atHourOffset(hourOffset: number): DetailedForecast | undefined {
     return this.dayForecasts.map(_ => _.forecasts)
       .reduce((x, y) => x.concat(y), [])
@@ -109,9 +45,11 @@ export class DayForecasts {
 
 export class DetailedForecast {
   readonly time: Date;
+  readonly xcPotential: number; // between 0 and 100
   readonly thermalVelocity: number; // m/s
   readonly boundaryLayer: DetailedBoundaryLayer;
   readonly surface: DetailedSurface;
+  readonly cloudCover: number; // %
   readonly rain: DetailedRain;
   readonly meanSeaLevelPressure: number;
   readonly isothermZero: number; // m
@@ -119,9 +57,10 @@ export class DetailedForecast {
 
   constructor(data: DetailedForecastData, elevation: number) {
     this.time = new Date(data.t);
+    this.xcPotential = data.xc;
     this.thermalVelocity = data.v / 10;
     this.boundaryLayer = {
-      height: data.bl.h,
+      soaringLayerDepth: data.bl.h,
       wind: {
         u: data.bl.u,
         v: data.bl.v
@@ -135,6 +74,7 @@ export class DetailedForecast {
         v: data.s.v
       }
     };
+    this.cloudCover = data.c / 100;
     this.rain = {
       convective: data.r.c,
       total: data.r.t
@@ -170,7 +110,7 @@ export type DetailedSurface = {
 };
 
 export type DetailedBoundaryLayer = {
-  height: number // m
+  soaringLayerDepth: number // m
   wind: Wind
 };
 
@@ -206,6 +146,7 @@ type DayForecastsData = {
 
 export type DetailedForecastData = {
   t: string // Forecast time
+  xc: number // XC Potential, between 0 and 100
   // Boundary layer
   bl: {
     // Height
@@ -241,7 +182,8 @@ export type DetailedForecastData = {
     c: number // convective
   },
   // Mean sea level pressure 
-  mslet: number // hPa
+  mslet: number, // hPa
+  c: number // Between 0 and 100
 }
 
 export const modelResolution = 25 // Hundredths of degrees

@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import { modelResolution, Forecast, ForecastPoint } from '../data/Forecast';
+import { modelResolution } from '../data/LocationForecasts';
 
 export type CanvasLayer = {
   setRenderers(primaryRenderer: Renderer, windRenderer: undefined | Renderer): void
@@ -7,11 +7,8 @@ export type CanvasLayer = {
 
 /** A specific view of the forecast output (e.g., wind, XC flying potential, etc.) */
 export type Renderer = {
-  forecast: Forecast
   /** Render one point of the forecast on the map */
-  renderPoint: (forecastPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D) => void
-  /** Create a summary of the forecast data on the point (displayed in popups) */
-  summary: (forecastPoint: ForecastPoint) => Array<[string, string]>
+  renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void
 }
 
 export const CanvasLayer = L.Layer.extend({
@@ -74,20 +71,23 @@ export const CanvasLayer = L.Layer.extend({
     const bottomLat = Math.round(bottomRightCoordinates.lat * 100);
     const minLat = (Math.round(bottomLat / viewResolution) + (bottomLat < 0 ? -1 : 0)) * viewResolution;
 
-    const [primaryRenderer, maybeWindRenderer] = this._renderers;
+    const [primaryRenderer, maybeWindRenderer]: [Renderer, Renderer | undefined] = this._renderers;
 
     let lng = minLng;
     while (lng <= maxLng) {
       let lat = minLat;
       while (lat <= maxLat) {
-        const point = viewPoint(primaryRenderer.forecast /* HACK forecast should be passed separately from the renderers */, averagingFactor, lat, lng);
-        if (point !== undefined) {
-          const topLeft = map.latLngToContainerPoint([(lat + viewResolution / 2) / 100, (lng - viewResolution / 2) / 100]);
-          const bottomRight = map.latLngToContainerPoint([(lat - viewResolution / 2) / 100, (lng + viewResolution / 2) / 100]);
-          primaryRenderer.renderPoint(point, topLeft, bottomRight, ctx);
-          if (maybeWindRenderer !== undefined) {
-            maybeWindRenderer.renderPoint(point, topLeft, bottomRight, ctx);
-          }
+        const topLeft =
+          map.latLngToContainerPoint(
+            [(lat + viewResolution / 2) / 100, (lng - viewResolution / 2) / 100]
+          );
+        const bottomRight =
+          map.latLngToContainerPoint(
+            [(lat - viewResolution / 2) / 100, (lng + viewResolution / 2) / 100]
+          );
+        primaryRenderer.renderPoint(lat, lng, averagingFactor, topLeft, bottomRight, ctx);
+        if (maybeWindRenderer !== undefined) {
+          maybeWindRenderer.renderPoint(lat, lng, averagingFactor, topLeft, bottomRight, ctx);
         }
         lat = lat + viewResolution;
       }
@@ -95,84 +95,9 @@ export const CanvasLayer = L.Layer.extend({
     }
   },
 
-  setRenderers: function (primaryRenderer: Renderer, windRenderer: undefined | Renderer): void {
+  setRenderers(primaryRenderer: Renderer, windRenderer: undefined | Renderer): void {
     this._renderers = [primaryRenderer, windRenderer];
     this._update();
   }
 
 });
-
-/**
- * @param averagingFactor 1, 2, 4, 8, etc.
- * @param lat             Hundreth of degrees (e.g. 4675)
- * @param lng             Hundreth of degrees (e.g. 7250)
- */
-export const viewPoint = (forecast: Forecast, averagingFactor: number, lat: number, lng: number): ForecastPoint | undefined => {
-  // According to the zoom level, users see the actual points, or
-  // an average of several points.
-  const points: Array<ForecastPoint> = [];
-  let i = 0;
-  while (i < averagingFactor) {
-    let j = 0;
-    while (j < averagingFactor) {
-      const point = forecast.at(lat + i * modelResolution, lng + i * modelResolution);
-      if (point !== undefined) {
-        points.push(point);
-      }
-      j = j + 1;
-    }
-    i = i + 1;
-  }
-  if (points.length == 1) {
-    return points[0]
-  } else if (points.length > 1) {
-    const sumPoint: ForecastPoint = {
-      soaringLayerDepth: 0,
-      thermalVelocity: 0,
-      uWind: 0,
-      vWind: 0,
-      cloudCover: 0,
-      rain: 0,
-      uSurfaceWind: 0,
-      vSurfaceWind: 0,
-      u300MWind: 0,
-      v300MWind: 0,
-      uBLTopWind: 0,
-      vBLTopWind: 0,
-      cumuliDepth: 0
-    };
-    points.forEach(point => {
-      sumPoint.soaringLayerDepth += point.soaringLayerDepth;
-      sumPoint.thermalVelocity += point.thermalVelocity;
-      sumPoint.uWind += point.uWind;
-      sumPoint.vWind += point.vWind;
-      sumPoint.cloudCover += point.cloudCover;
-      sumPoint.rain += point.rain;
-      sumPoint.uSurfaceWind += point.uSurfaceWind;
-      sumPoint.vSurfaceWind += point.vSurfaceWind;
-      sumPoint.u300MWind += point.u300MWind;
-      sumPoint.v300MWind += point.v300MWind;
-      sumPoint.uBLTopWind += point.uBLTopWind;
-      sumPoint.vBLTopWind += point.vBLTopWind;
-      sumPoint.cumuliDepth += point.cumuliDepth;
-    })
-    const n = points.length;
-    return {
-      soaringLayerDepth: sumPoint.soaringLayerDepth / n,
-      thermalVelocity: sumPoint.thermalVelocity / n,
-      uWind: sumPoint.uWind / n,
-      vWind: sumPoint.vWind / n,
-      cloudCover: sumPoint.cloudCover / n,
-      rain: sumPoint.rain / n,
-      uSurfaceWind: sumPoint.uSurfaceWind / n,
-      vSurfaceWind: sumPoint.vSurfaceWind / n,
-      u300MWind: sumPoint.u300MWind / n,
-      v300MWind: sumPoint.v300MWind / n,
-      uBLTopWind: sumPoint.uBLTopWind / n,
-      vBLTopWind: sumPoint.vBLTopWind / n,
-      cumuliDepth: sumPoint.cumuliDepth / n
-    };          
-  } else {
-    return
-  }
-};

@@ -1,7 +1,7 @@
-import { LocationForecasts, DetailedForecast } from '../data/Forecast';
+import { LocationForecasts, DetailedForecast } from '../data/LocationForecasts';
 import { drawWindArrow, lightningShape } from '../shapes';
 import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, skyStyle, temperaturesRange } from './Diagram';
-import { value as thqValue, colorScale as thqColorScale } from '../layers/ThQ';
+import { colorScale as thqColorScale } from '../layers/ThQ';
 import { cloudsColorScale } from './Clouds';
 import { createEffect, JSX } from 'solid-js';
 import { keyWidth, meteogramColumnWidth } from '../styles/Styles';
@@ -183,12 +183,7 @@ const drawMeteogram = (
   const thqDiagram = new Diagram([0, thqDiagramTop], thqDiagramHeight, ctx);
 
   columns((forecast, columnStart, columnEnd) => {
-    const thq = thqValue(
-      forecast.thermalVelocity,
-      forecast.boundaryLayer.height,
-      forecast.boundaryLayer.wind.u,
-      forecast.boundaryLayer.wind.v
-    );
+    const thq = forecast.xcPotential;
     thqDiagram.fillRect(
       [columnStart, 0],
       [columnEnd, thqDiagramHeight],
@@ -266,7 +261,7 @@ const drawMeteogram = (
   // Ground level & Boundary Layer
   columns((forecast, columnStart, columnEnd) => {
     // Boundary Layer
-    const cappedHeight = Math.min(forecast.boundaryLayer.height, airDiagramHeightAboveGroundLevel); // Clip boundary layer in case it’s too high
+    const cappedHeight = Math.min(forecast.boundaryLayer.soaringLayerDepth, airDiagramHeightAboveGroundLevel); // Clip boundary layer in case it’s too high
     const boundaryLayerHeight = elevationScale.apply(forecasts.elevation + cappedHeight);
     airDiagram.fillRect(
       [columnStart, 0],

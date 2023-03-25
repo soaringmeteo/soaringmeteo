@@ -1,25 +1,9 @@
-import { Forecast, ForecastPoint } from "../data/Forecast";
 import * as L from 'leaflet';
+import { createResource } from 'solid-js';
 import { ColorScale, Color } from "../ColorScale";
-import { Renderer } from "../map/CanvasLayer";
-
-export class ThermalVelocity implements Renderer {
-
-  constructor(readonly forecast: Forecast) {}
-
-  renderPoint(forecastAtPoint: ForecastPoint, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-    const color = thermalVelocityColorScale.closest(forecastAtPoint.thermalVelocity);
-    ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
-    ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
-  }
-
-  summary(forecastPoint: ForecastPoint): Array<[string, string]> {
-    return [
-      ["Thermal velocity", `${ forecastPoint.thermalVelocity } m/s`]
-    ]
-  }
-
-}
+import { ForecastMetadata } from '../data/ForecastMetadata';
+import { thermalVelocityVariable } from '../data/OutputVariable';
+import { colorScaleEl, Layer, ReactiveComponents } from './Layer';
 
 export const thermalVelocityColorScale = new ColorScale([
   [0.25, new Color(0x33, 0x33, 0x33, 1)],
@@ -33,3 +17,58 @@ export const thermalVelocityColorScale = new ColorScale([
   [2.50, new Color(0x99, 0xff, 0xff, 1)],
   [3.00, new Color(0xff, 0xff, 0xff, 1)]
 ]);
+
+export const thermalVelocityLayer: Layer = {
+  key: 'thermal-velocity',
+  name: 'Thermal Velocity',
+  title: 'Thermal updraft velocity',
+  reactiveComponents(props: {
+    forecastMetadata: ForecastMetadata,
+    hourOffset: number
+  }): ReactiveComponents {
+
+    const [thermalVelocityGrid] =
+      createResource(
+        () => ({ forecastMetadata: props.forecastMetadata, hourOffset: props.hourOffset }),
+        data => data.forecastMetadata.fetchOutputVariableAtHourOffset(thermalVelocityVariable, data.hourOffset)
+      );
+
+    const renderer = () => {
+      const grid = thermalVelocityGrid();
+      return {
+        renderPoint(latitude: number, longitude: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
+          grid?.mapViewPoint(latitude, longitude, averagingFactor, thermalVelocity => {
+            const color = thermalVelocityColorScale.closest(thermalVelocity);
+            ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
+            ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
+          });
+        }      
+      }
+    };
+
+
+    const summarizer = () => {
+      const grid = thermalVelocityGrid();
+      return {
+        async summary(latitude: number, longitude: number): Promise<Array<[string, string]> | undefined> {
+          return grid?.mapViewPoint(latitude, longitude, 1, thermalVelocity =>
+            [
+              ["Thermal velocity", `${ thermalVelocity } m/s`]
+            ]
+          );
+        }      
+      }
+    };
+
+    return {
+      renderer,
+      summarizer,
+      mapKey: colorScaleEl(thermalVelocityColorScale, value => `${value} m/s `),
+      help: <p>
+        The thermal updraft velocity is estimated from the depth of the boundary
+        layer and the sunshine. The color scale is shown on the bottom left of the
+        screen.
+      </p>
+    }
+  }
+};

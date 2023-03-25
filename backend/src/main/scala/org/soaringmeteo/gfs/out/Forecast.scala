@@ -1,8 +1,7 @@
 package org.soaringmeteo.gfs.out
 
-import io.circe.{Encoder, Json}
 import org.soaringmeteo.gfs.in
-import org.soaringmeteo.{Point, Wind}
+import org.soaringmeteo.{Point, Wind, XCFlyingPotential}
 import squants.energy.SpecificEnergy
 import squants.motion.{Pressure, Velocity}
 import squants.radio.Irradiance
@@ -38,7 +37,15 @@ case class Forecast(
   cin: SpecificEnergy,
   downwardShortWaveRadiationFlux: Irradiance,
   isothermZero: Length
-)
+) {
+
+  /** Wind value at some specific elevation levels */
+  lazy val winds = Winds(this)
+
+  lazy val xcFlyingPotential: Int =
+    XCFlyingPotential(thermalVelocity, soaringLayerDepth, boundaryLayerWind)
+
+}
 
 /**
  * Various information at some elevation level
@@ -136,29 +143,5 @@ object Forecast {
           (Some(gfsForecastsByLocation), builder)
       }._2.result()
   }
-
-  /**
-   * JSON representation of the forecast data summary.
-   * WARNING: client must be consistent with this serialization format.
-   */
-  val jsonEncoder: Encoder[Forecast] =
-    Encoder.instance { forecast =>
-      val winds = Winds(forecast)
-      Json.arr(
-        Json.fromInt(forecast.soaringLayerDepth.toMeters.round.toInt),
-        Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),
-        Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt),
-        Json.fromInt(forecast.totalCloudCover),
-        Json.fromInt(forecast.totalRain.toMillimeters.round.toInt),
-        Json.fromInt(forecast.surfaceWind.u.toKilometersPerHour.round.toInt),
-        Json.fromInt(forecast.surfaceWind.v.toKilometersPerHour.round.toInt),
-        Json.fromInt(winds.`300m AGL`.u.toKilometersPerHour.round.toInt),
-        Json.fromInt(winds.`300m AGL`.v.toKilometersPerHour.round.toInt),
-        Json.fromInt(winds.boundaryLayerTop.u.toKilometersPerHour.round.toInt),
-        Json.fromInt(winds.boundaryLayerTop.v.toKilometersPerHour.round.toInt),
-        Json.fromInt((forecast.thermalVelocity.toMetersPerSecond * 10).round.toInt), // dm/s (to avoid floating point values)
-        Json.fromInt(forecast.convectiveClouds.fold(0)(clouds => (clouds.top - clouds.bottom).toMeters.round.toInt))
-      )
-    }
 
 }

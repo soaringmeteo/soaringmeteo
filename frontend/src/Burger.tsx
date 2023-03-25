@@ -32,7 +32,7 @@ export const Burger = (props: { domain: Domain }): JSX.Element => {
         'font-size': '1.5em'
       }}
       onClick={() => { setExpanded(!expanded()); }}
-    >☰</div>;
+    >☰</div> as HTMLElement;
   L.DomEvent.disableClickPropagation(menu);
 
   const optionStyle = {
@@ -66,7 +66,7 @@ export const Burger = (props: { domain: Domain }): JSX.Element => {
           return <a href={href} style={{'text-decoration': 'none'}}><div style={optionStyle}>{label}</div></a>
         })
       }
-    </div>;
+    </div> as HTMLElement;
   L.DomEvent.disableClickPropagation(options);
 
   return <Show when={ state.detailedView === undefined }>

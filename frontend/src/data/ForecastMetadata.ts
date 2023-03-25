@@ -1,4 +1,6 @@
-import { Forecast, ForecastData, LocationForecasts, LocationForecastsData, normalizeCoordinates } from "./Forecast";
+import { LocationForecasts, LocationForecastsData, normalizeCoordinates } from "./LocationForecasts";
+import { Grid, GridData } from "./Grid";
+import { OutputVariable } from "./OutputVariable";
 
 type ForecastMetadataData = {
   h: number      // number of days of historic forecast kept (e.g., 4)
@@ -9,7 +11,7 @@ type ForecastMetadataData = {
 }
 
 // Version of the forecast data format we consume (see backend/src/main/scala/org/soaringmeteo/package.scala)
-const formatVersion = 0
+const formatVersion = 1
 // Base path to access forecast data
 const dataPath = `data/${formatVersion}`
 export class ForecastMetadata {
@@ -38,14 +40,15 @@ export class ForecastMetadata {
    * Fetches the detailed forecast data at the given location.
    * Fails with an error in case of failure.
    */
-  async fetchLocationForecasts(latitude: number, longitude: number): Promise<LocationForecasts> {
+  async fetchLocationForecasts(latitude: number, longitude: number): Promise<LocationForecasts | undefined> {
     try {
       const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(latitude, longitude);
-      const response = await fetch(`${dataPath}/${this.initS}/${normalizedLongitude}-${normalizedLatitude}.json`);
+      const response = await fetch(`${dataPath}/${this.initS}/locations/${normalizedLongitude}-${normalizedLatitude}.json`);
       const data     = await response.json() as LocationForecastsData;
       return new LocationForecasts(data, this, normalizedLatitude / 100, normalizedLongitude / 100)
     } catch (error) {
-      throw `Unable to fetch forecast data at ${latitude},${longitude}: ${error}`;
+      console.debug(`Unable to fetch forecast data at ${latitude},${longitude}: ${error}`);
+      return undefined
     }
   }
 
@@ -53,11 +56,11 @@ export class ForecastMetadata {
    * Fetches the forecast data at the given hour offset.
    * Never completes in case of failure (but logs the error).
    */
-  async fetchForecastAtHourOffset(hourOffset: number): Promise<Forecast> {
+  async fetchOutputVariableAtHourOffset<A>(outputVariable: OutputVariable<A>, hourOffset: number): Promise<Grid<A>> {
     try {
-      const response = await fetch(`${dataPath}/${this.initS}/${hourOffset}h.json`);
-      const data     = await response.json() as ForecastData;
-      return new Forecast(data)
+      const response = await fetch(`${dataPath}/${this.initS}/${outputVariable.path}/${hourOffset}h.json`)
+      const data     = await response.json() as GridData;
+      return new Grid(data, outputVariable.parse, outputVariable.averager)
     } catch (error) {
       throw `Unable to retrieve forecast data ${hourOffset} hour(s) after the initialization time: ${error}`;
     }
@@ -70,21 +73,19 @@ export class ForecastMetadata {
  *   - all the available runs,
  *   - the selected run (most recent one),
  *   - the offset that corresponds to noon time (number of hours to add to 00:00 UTC),
- *   - the offset of the default forecast,
- *   - the default forecast.
+ *   - the offset of the default forecast
  */
- export const fetchDefaultForecast = async (): Promise<[Array<ForecastMetadata>, ForecastMetadata, number, number, Forecast]> => {
+ export const fetchRunsAndComputeInitialHourOffset = async (): Promise<[Array<ForecastMetadata>, ForecastMetadata, number, number]> => {
   // TODO Compute based on user preferred time zone (currently hard-coded for central Europe)
   // Number of hours to add to 00:00Z to be on the morning forecast period (e.g., 9 for Switzerland)
-  const runs              = await fetchForecasts();
+  const runs              = await fetchForecastRuns();
   const morningOffset     = 9;
   const noonOffset        = morningOffset + 3 /* hours */; // TODO Abstract over underlying NWP model resolution
-  const [run, hourOffset] = latestRun(runs, noonOffset)
-  const forecast          = await run.fetchForecastAtHourOffset(hourOffset);
-  return [runs, run, morningOffset, hourOffset, forecast];
+  const [run, hourOffset] = latestRun(runs, noonOffset);
+  return [runs, run, morningOffset, hourOffset]
 };
 
-const fetchForecasts = async (): Promise<Array<ForecastMetadata>> => {
+const fetchForecastRuns = async (): Promise<Array<ForecastMetadata>> => {
   const response       = await fetch(`${dataPath}/forecast.json`);
   const data           = await response.json() as ForecastMetadataData;
   const latestForecast = new ForecastMetadata(data);
@@ -122,19 +123,6 @@ const fetchPreviousRuns = async (oldestForecastInitDate: Date, maybePreviousData
   const hourOffset = (forecastInitOffset === 0 ? 0 : 24) + noonOffset - forecastInitOffset;
   return [forecastMetadata, hourOffset]
 };
-
-export const showDate = (date: Date, options?: { showWeekDay?: boolean }): string =>
-  date.toLocaleString(
-    undefined,
-    {
-      weekday: (options && options.showWeekDay && 'short') || undefined,
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }
-  )
 
 // We show three forecast periods per day: morning, noon, and afternoon
 export const periodsPerDay = 3;

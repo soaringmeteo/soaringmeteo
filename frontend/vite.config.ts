@@ -31,6 +31,12 @@ export default defineConfig(() => ({
       configureServer(server) {
         server.middlewares.use('/v2/data', serveStatic('../backend/target/forecast/data'))
       }
+    },
+    {
+      name: 'serve-forecast-data-preview',
+      configurePreviewServer(server) {
+        server.middlewares.use('/v2/data', serveStatic('../backend/target/forecast/data'))
+      }
     }
   ],
   server: {
