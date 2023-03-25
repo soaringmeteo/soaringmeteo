@@ -5,7 +5,7 @@ import { Renderer } from "../map/CanvasLayer";
 
 type Summarizer = {
   /** Create a summary of the forecast data on the point (shown in popups) */
-  summary(lat: number, lng: number): Promise<Array<[string, string]> | undefined>
+  summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined>
 }
 
 // Non-static parts of layers

@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import { createResource } from 'solid-js';
+import { createResource, JSX } from 'solid-js';
 import { ColorScale, Color } from "../ColorScale";
 import { ForecastMetadata } from '../data/ForecastMetadata';
 import { rainVariable } from '../data/OutputVariable';
@@ -46,10 +46,10 @@ export const rainLayer: Layer = {
     const summarizer = () => {
       const grid = rainGrid();
       return {
-        async summary(lat: number, lng: number): Promise<Array<[string, string]> | undefined> {
+        async summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined> {
           return grid?.mapViewPoint(lat, lng, 1, rain =>
             [
-              ["Rainfall", `${ rain } mm`]
+              ["Rainfall", <span>{ rain } mm</span>]
             ]
           )
         }

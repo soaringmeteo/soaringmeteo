@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import { createResource } from 'solid-js';
+import { createResource, JSX } from 'solid-js';
 import { ColorScale, Color } from "../ColorScale";
 import { ForecastMetadata } from '../data/ForecastMetadata';
 import { cloudCoverVariable } from '../data/OutputVariable';
@@ -63,10 +63,10 @@ export const cloudCoverLayer: Layer = {
     const summarizer = () => {
       const grid = cloudCoverGrid();
       return {
-        async summary(lat: number, lng: number): Promise<Array<[string, string]> | undefined> {
+        async summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined> {
           return grid?.mapViewPoint(lat, lng, 1, cloudCover =>
             [
-              ["Total cloud cover", `${ Math.round(cloudCover * 100) }%`]
+              ["Total cloud cover", <span>{ Math.round(cloudCover * 100) }%</span>]
             ]
           )
         }
