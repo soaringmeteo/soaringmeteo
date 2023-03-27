@@ -1,3 +1,4 @@
+import { JSX } from 'solid-js';
 import { Layer, ReactiveComponents } from './Layer';
 
 export const noLayer : Layer = {
@@ -10,7 +11,7 @@ export const noLayer : Layer = {
         renderPoint(): void {}
       }),
       summarizer: () => ({
-        async summary(): Promise<Array<[string, string]> | undefined> {
+        async summary(): Promise<Array<[string, JSX.Element]> | undefined> {
           return []
         }
       }),

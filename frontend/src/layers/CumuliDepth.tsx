@@ -1,7 +1,7 @@
 import { ColorScale, Color } from "../ColorScale";
 import * as L from 'leaflet';
 import { colorScaleEl, Layer, ReactiveComponents } from "./Layer";
-import { createResource } from "solid-js";
+import { createResource, JSX } from "solid-js";
 import { cumulusDepthVariable } from "../data/OutputVariable";
 import { ForecastMetadata } from "../data/ForecastMetadata";
 
@@ -46,10 +46,10 @@ export const cumuliDepthLayer: Layer = {
     const summarizer = () => {
       const grid = cumulusDepthGrid();
       return {
-        async summary(lat: number, lng: number): Promise<Array<[string, string]> | undefined> {
+        async summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined> {
           return grid?.mapViewPoint(lat, lng, 1, cumuliDepth =>
             [
-              ["Cumuli depth", `${ cumuliDepth } m`]
+              ["Cumuli depth", <span>{ cumuliDepth } m</span>]
             ]
           )
         }

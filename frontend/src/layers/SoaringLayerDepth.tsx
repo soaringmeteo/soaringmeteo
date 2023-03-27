@@ -2,7 +2,7 @@ import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
 import { soaringLayerDepthVariable as soaringLayerDepthVariable } from '../data/OutputVariable';
 import { colorScaleEl, Layer, ReactiveComponents } from './Layer';
-import { createResource } from 'solid-js';
+import { createResource, JSX } from 'solid-js';
 import { ForecastMetadata } from '../data/ForecastMetadata';
 
 export const soaringLayerDepthLayer: Layer = {
@@ -40,10 +40,10 @@ export const soaringLayerDepthLayer: Layer = {
     const summarizer = () => {
       const grid = soaringLayerDepthGrid();
       return {
-        async summary(lat: number, lng: number): Promise<Array<[string, string]> | undefined> {
+        async summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined> {
           return grid?.mapViewPoint(lat, lng, 1, soaringLayerDepth =>
             [
-              ["Soaring layer depth", `${ soaringLayerDepth } m`]
+              ["Soaring layer depth", <span>{ soaringLayerDepth } m</span>]
             ]
           )
         }

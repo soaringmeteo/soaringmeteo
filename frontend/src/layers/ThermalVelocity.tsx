@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import { createResource } from 'solid-js';
+import { createResource, JSX } from 'solid-js';
 import { ColorScale, Color } from "../ColorScale";
 import { ForecastMetadata } from '../data/ForecastMetadata';
 import { thermalVelocityVariable } from '../data/OutputVariable';
@@ -50,10 +50,10 @@ export const thermalVelocityLayer: Layer = {
     const summarizer = () => {
       const grid = thermalVelocityGrid();
       return {
-        async summary(latitude: number, longitude: number): Promise<Array<[string, string]> | undefined> {
+        async summary(latitude: number, longitude: number): Promise<Array<[string, JSX.Element]> | undefined> {
           return grid?.mapViewPoint(latitude, longitude, 1, thermalVelocity =>
             [
-              ["Thermal velocity", `${ thermalVelocity } m/s`]
+              ["Thermal velocity", <span>{ thermalVelocity } m/s</span>]
             ]
           );
         }      

@@ -272,7 +272,7 @@ const inputWithLabel = (
     <label style={{ cursor: 'pointer', padding: '0.3em' }} title={title}>{label}{input}</label>
   </div>;
 
-const table = (data: Array<[string, string]>): JSX.Element => {
+const table = (data: Array<[string, JSX.Element]>): JSX.Element => {
   const rows =
     data.map(([label, value]) => {
       return <tr><th>{label}:</th><td>{value}</td></tr>

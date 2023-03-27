@@ -1,4 +1,4 @@
-import { createResource, Show } from "solid-js";
+import { createResource, JSX, Show } from "solid-js";
 import { drawWindArrow } from "../shapes";
 import * as L from 'leaflet';
 import { Layer, ReactiveComponents, windColor } from "./Layer";
@@ -42,11 +42,11 @@ const windComponents = (windVariable: OutputVariable<[number, number]>) => (prop
   const summarizer = () => {
     const grid = windGrid();
     return {
-      async summary(latitude: number, longitude: number): Promise<Array<[string, string]> | undefined> {
+      async summary(latitude: number, longitude: number): Promise<Array<[string, JSX.Element]> | undefined> {
         return grid?.mapViewPoint(latitude, longitude, 1, ([u, v]) => {
           const windSpeed = Math.sqrt(u * u + v * v);
           return [
-            ["Wind speed", `${Math.round(windSpeed)} km/h`]
+            ["Wind speed", <span>{ Math.round(windSpeed) } km/h</span>]
           ]
         });
       }
