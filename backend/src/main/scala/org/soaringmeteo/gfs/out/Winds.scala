@@ -8,7 +8,10 @@ import scala.collection.immutable.ArraySeq
 /** Wind values at several elevation levels */
 case class Winds(
   `300m AGL`: Wind,
-  soaringLayerTop: Wind
+  soaringLayerTop: Wind,
+  `2000m AMSL`: Wind,
+  `3000m AMSL`: Wind,
+  `4000m AMSL`: Wind
 )
 
 object Winds {
@@ -19,8 +22,7 @@ object Winds {
         .map { case (elevation, airData) => (elevation, airData.wind) }
         .to(ArraySeq)
 
-    def at(heightAboveGroundLevel: Length): Wind = {
-      val elevation = forecast.elevation + heightAboveGroundLevel
+    def at(elevation: Length): Wind = {
       Interpolation.interpolateSortedSeq(
         airDataSorted,
         elevation
@@ -34,8 +36,11 @@ object Winds {
     }
 
     Winds(
-      at(Meters(300)),
-      at(forecast.soaringLayerDepth)
+      at(forecast.elevation + Meters(300)),
+      at(forecast.elevation + forecast.soaringLayerDepth),
+      at(Meters(2000)),
+      at(Meters(3000)),
+      at(Meters(4000))
     )
   }
 

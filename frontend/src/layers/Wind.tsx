@@ -2,7 +2,7 @@ import { createResource, Show } from "solid-js";
 import { drawWindArrow } from "../shapes";
 import * as L from 'leaflet';
 import { Layer, ReactiveComponents, windColor } from "./Layer";
-import { OutputVariable, wind300mAglVariable, windBoundaryLayerVariable, windSoaringLayerTopVariable, windSurfaceVariable } from "../data/OutputVariable";
+import { OutputVariable, wind2000mAmslVariable, wind3000mAmslVariable, wind300mAglVariable, wind4000mAmslVariable, windBoundaryLayerVariable, windSoaringLayerTopVariable, windSurfaceVariable } from "../data/OutputVariable";
 import { ForecastMetadata } from "../data/ForecastMetadata";
 
 const windComponents = (windVariable: OutputVariable<[number, number]>) => (props: {
@@ -121,6 +121,13 @@ export const surfaceWindLayer: Layer = {
   reactiveComponents: windComponents(windSurfaceVariable)
 };
 
+export const soaringLayerTopWindLayer: Layer = {
+  key: 'soaring-layer-top-wind',
+  name: 'Soaring Layer Top',
+  title: 'Wind force and direction at the top of the soaring layer',
+  reactiveComponents: windComponents(windSoaringLayerTopVariable)
+};
+
 export const _300MAGLWindLayer: Layer = {
   key: '300m-agl-wind',
   name: '300 m AGL',
@@ -128,9 +135,23 @@ export const _300MAGLWindLayer: Layer = {
   reactiveComponents: windComponents(wind300mAglVariable)
 };
 
-export const soaringLayerTopWindLayer: Layer = {
-  key: 'soaring-layer-top-wind',
-  name: 'Soaring Layer Top',
-  title: 'Wind force and direction at the top of the soaring layer',
-  reactiveComponents: windComponents(windSoaringLayerTopVariable)
+export const _2000MAMSLWindLayer: Layer = {
+  key: '2000m-amsl-wind',
+  name: '2000 m AMSL',
+  title: 'Wind force and direction at 2000 m above the mean sea level',
+  reactiveComponents: windComponents(wind2000mAmslVariable)
+};
+
+export const _3000MAMSLWindLayer: Layer = {
+  key: '3000m-amsl-wind',
+  name: '3000 m AMSL',
+  title: 'Wind force and direction at 3000 m above the mean sea level',
+  reactiveComponents: windComponents(wind3000mAmslVariable)
+};
+
+export const _4000MAMSLWindLayer: Layer = {
+  key: '4000m-amsl-wind',
+  name: '4000 m AMSL',
+  title: 'Wind force and direction at 4000 m above the mean sea level',
+  reactiveComponents: windComponents(wind4000mAmslVariable)
 };

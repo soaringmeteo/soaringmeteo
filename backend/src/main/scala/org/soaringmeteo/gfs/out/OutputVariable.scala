@@ -57,18 +57,36 @@ object OutputVariable {
         Json.fromInt(forecast.boundaryLayerWind.v.toKilometersPerHour.round.toInt)
       )
     },
+    OutputVariable("wind-soaring-layer-top") { forecast =>
+      Json.arr(
+        Json.fromInt(forecast.winds.soaringLayerTop.u.toKilometersPerHour.round.toInt),
+        Json.fromInt(forecast.winds.soaringLayerTop.v.toKilometersPerHour.round.toInt)
+      )
+    },
     OutputVariable("wind-300m-agl") { forecast =>
       Json.arr(
         Json.fromInt(forecast.winds.`300m AGL`.u.toKilometersPerHour.round.toInt),
         Json.fromInt(forecast.winds.`300m AGL`.v.toKilometersPerHour.round.toInt)
       )
     },
-    OutputVariable("wind-soaring-layer-top") { forecast =>
+    OutputVariable("wind-2000m-amsl") { forecast =>
       Json.arr(
-        Json.fromInt(forecast.winds.soaringLayerTop.u.toKilometersPerHour.round.toInt),
-        Json.fromInt(forecast.winds.soaringLayerTop.v.toKilometersPerHour.round.toInt)
+        Json.fromInt(forecast.winds.`2000m AMSL`.u.toKilometersPerHour.round.toInt),
+        Json.fromInt(forecast.winds.`2000m AMSL`.v.toKilometersPerHour.round.toInt)
       )
-    }
+    },
+    OutputVariable("wind-3000m-amsl") { forecast =>
+      Json.arr(
+        Json.fromInt(forecast.winds.`3000m AMSL`.u.toKilometersPerHour.round.toInt),
+        Json.fromInt(forecast.winds.`3000m AMSL`.v.toKilometersPerHour.round.toInt)
+      )
+    },
+    OutputVariable("wind-4000m-amsl") { forecast =>
+      Json.arr(
+        Json.fromInt(forecast.winds.`4000m AMSL`.u.toKilometersPerHour.round.toInt),
+        Json.fromInt(forecast.winds.`4000m AMSL`.v.toKilometersPerHour.round.toInt)
+      )
+    },
   )
 
 }

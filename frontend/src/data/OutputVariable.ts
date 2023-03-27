@@ -75,6 +75,13 @@ export const windBoundaryLayerVariable: OutputVariable<[number, number]> = Outpu
 );
 
 /** km/h */
+export const windSoaringLayerTopVariable: OutputVariable<[number, number]> = OutputVariable(
+  "wind-soaring-layer-top",
+  data => data,
+  averager2D
+);
+
+/** km/h */
 export const wind300mAglVariable: OutputVariable<[number, number]> = OutputVariable(
   "wind-300m-agl",
   data => data,
@@ -82,8 +89,22 @@ export const wind300mAglVariable: OutputVariable<[number, number]> = OutputVaria
 );
 
 /** km/h */
-export const windSoaringLayerTopVariable: OutputVariable<[number, number]> = OutputVariable(
-  "wind-soaring-layer-top",
+export const wind2000mAmslVariable: OutputVariable<[number, number]> = OutputVariable(
+  "wind-2000m-amsl",
+  data => data,
+  averager2D
+);
+
+/** km/h */
+export const wind3000mAmslVariable: OutputVariable<[number, number]> = OutputVariable(
+  "wind-3000m-amsl",
+  data => data,
+  averager2D
+);
+
+/** km/h */
+export const wind4000mAmslVariable: OutputVariable<[number, number]> = OutputVariable(
+  "wind-4000m-amsl",
   data => data,
   averager2D
 );
