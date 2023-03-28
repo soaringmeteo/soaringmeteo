@@ -11,7 +11,7 @@ import { Layer } from './layers/Layer';
 import { noLayer } from './layers/None';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
 import { soaringLayerDepthLayer } from './layers/SoaringLayerDepth';
-import { boundaryLayerWindLayer, soaringLayerTopWindLayer, surfaceWindLayer, _300MAGLWindLayer } from './layers/Wind';
+import { boundaryLayerWindLayer, soaringLayerTopWindLayer, surfaceWindLayer, _2000MAMSLWindLayer, _3000MAMSLWindLayer, _300MAGLWindLayer, _4000MAMSLWindLayer } from './layers/Wind';
 import { cloudCoverLayer } from './layers/CloudCover';
 import { thermalVelocityLayer } from './layers/ThermalVelocity';
 import { rainLayer } from './layers/Rain';
@@ -86,6 +86,9 @@ export const LayersSelector = (props: {
   const blTopWindEl = setupLayerBtn(soaringLayerTopWindLayer, 'wind-layer');
   const surfaceWindEl = setupLayerBtn(surfaceWindLayer, 'wind-layer');
   const _300MAGLWindEl = setupLayerBtn(_300MAGLWindLayer, 'wind-layer');
+  const _2000MAMSLWindEl = setupLayerBtn(_2000MAMSLWindLayer, 'wind-layer');
+  const _3000MAMSLWindEl = setupLayerBtn(_3000MAMSLWindLayer, 'wind-layer');
+  const _4000MAMSLWindEl = setupLayerBtn(_4000MAMSLWindLayer, 'wind-layer');
   const windCheckBox = inputWithLabel(
     'Wind',
     'Show wind force and direction at various elevation levels',
@@ -111,6 +114,9 @@ export const LayersSelector = (props: {
       {_300MAGLWindEl}
       {blWindEl}
       {blTopWindEl}
+      {_2000MAMSLWindEl}
+      {_3000MAMSLWindEl}
+      {_4000MAMSLWindEl}
       {windNumericValuesCheckBox}
     </fieldset>;
 

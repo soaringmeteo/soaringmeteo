@@ -2,7 +2,7 @@ import { soaringLayerDepthLayer } from "./SoaringLayerDepth";
 import { cloudCoverLayer } from "./CloudCover";
 import { noLayer } from "./None";
 import { thermalVelocityLayer } from "./ThermalVelocity";
-import { soaringLayerTopWindLayer, boundaryLayerWindLayer, surfaceWindLayer, _300MAGLWindLayer } from "./Wind";
+import { soaringLayerTopWindLayer, boundaryLayerWindLayer, surfaceWindLayer, _300MAGLWindLayer, _4000MAMSLWindLayer, _3000MAMSLWindLayer, _2000MAMSLWindLayer } from "./Wind";
 import { xcFlyingPotentialLayer } from "./ThQ";
 import { rainLayer } from "./Rain";
 import { Layer } from "./Layer";
@@ -20,6 +20,9 @@ const layersByKey: Map<string, Layer> =
       rainLayer,
       surfaceWindLayer,
       _300MAGLWindLayer,
+      _2000MAMSLWindLayer,
+      _3000MAMSLWindLayer,
+      _4000MAMSLWindLayer,
       boundaryLayerWindLayer,
       soaringLayerTopWindLayer
     ].map(layer => [layer.key, layer])
