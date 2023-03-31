@@ -56,8 +56,9 @@ export const xcFlyingPotentialLayer: Layer = {
 
     const nextDaysOverview = (locationForecasts: LocationForecasts): JSX.Element => {
       return locationForecasts.dayForecasts
+        .filter(dayForecast => dayForecast.forecasts.length === 3) // HACK Specific to GFS. Keep only full days.
         .map((dayForecasts, i) => {
-          const medianForecast = dayForecasts.forecasts[Math.floor(dayForecasts.forecasts.length / 2)];
+          const medianForecast = dayForecasts.forecasts[1]; // HACK Specific to GFS.
           return <div
             style={{
               display: 'inline-block',
