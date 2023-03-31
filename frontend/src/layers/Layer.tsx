@@ -30,7 +30,8 @@ export type ReactiveComponents = {
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     hourOffset: number,
-    windNumericValuesShown: boolean
+    windNumericValuesShown: boolean,
+    setHourOffset: (value: number) => void
   }): ReactiveComponents
 }
 

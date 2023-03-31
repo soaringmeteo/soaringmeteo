@@ -5,7 +5,7 @@ import { Layer, ReactiveComponents } from './layers/Layer';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
 import { layerByKey } from './layers/Layers';
 import { boundaryLayerWindLayer } from './layers/Wind';
-import { Accessor, createMemo, splitProps } from 'solid-js';
+import { Accessor, createMemo, mergeProps, splitProps } from 'solid-js';
 
 export type State = {
   // Currently selected forecast run
@@ -115,7 +115,10 @@ export class Domain {
     this.state = get;
     this.setState = set;
 
-    const [props] = splitProps(this.state, ['forecastMetadata', 'hourOffset', 'windNumericValuesShown'])
+    const [projectedProps] =
+      splitProps(this.state, ['forecastMetadata', 'hourOffset', 'windNumericValuesShown']);
+    const props =
+      mergeProps(projectedProps, { setHourOffset: (value: number) => this.setHourOffset(value) });
 
     this.primaryLayerReactiveComponents =
       createMemo(() => this.state.primaryLayer.reactiveComponents(props));
