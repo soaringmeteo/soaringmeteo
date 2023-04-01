@@ -11,7 +11,7 @@ type ForecastMetadataData = {
 }
 
 // Version of the forecast data format we consume (see backend/src/main/scala/org/soaringmeteo/package.scala)
-const formatVersion = 1
+const formatVersion = 2
 // Base path to access forecast data
 const dataPath = `data/${formatVersion}`
 export class ForecastMetadata {
