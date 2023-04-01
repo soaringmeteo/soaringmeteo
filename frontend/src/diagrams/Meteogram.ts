@@ -274,14 +274,6 @@ const drawMeteogram = (
       [columnEnd,   airDiagramHeight],
       skyStyle
     )
-    // Cumulus Clouds
-    if (forecast.boundaryLayer.cumulusClouds !== undefined && forecast.boundaryLayer.cumulusClouds.bottom < airDiagramHeightAboveGroundLevel) {
-      airDiagram.cumulusCloud(
-        [columnStart, elevationScale.apply(forecast.boundaryLayer.cumulusClouds.bottom + forecasts.elevation)],
-        [columnEnd,   elevationScale.apply(forecast.boundaryLayer.cumulusClouds.top + forecasts.elevation)],
-        'center'
-      );
-    }
   });
 
   // Clouds
@@ -316,6 +308,13 @@ const drawMeteogram = (
       );
     }
 
+    // Cumulus Clouds
+    if (forecast.boundaryLayer.cumulusClouds !== undefined && forecast.boundaryLayer.cumulusClouds.bottom < airDiagramHeightAboveGroundLevel) {
+      airDiagram.cumulusCloud(
+        [columnStart, elevationScale.apply(forecast.boundaryLayer.cumulusClouds.bottom + forecasts.elevation)],
+        [columnEnd,   elevationScale.apply(forecast.boundaryLayer.cumulusClouds.top + forecasts.elevation)]
+      );
+    }
   });
 
   // Thunderstorm risk

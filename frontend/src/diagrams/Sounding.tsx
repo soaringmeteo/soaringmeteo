@@ -189,7 +189,6 @@ const drawSounding = (
 
   const diagram     = new Diagram([0, 5], height, ctx);
   const leftDiagram = new Diagram([0, 5], height, leftCtx);
-  const surfaceTemperatureProjectedX = temperatureScale.apply(forecast.surface.temperature);
 
   // --- Background
 
@@ -205,16 +204,6 @@ const drawSounding = (
     [width, elevationScale.apply(maxElevation)],
     skyStyle
   );
-  if (forecast.boundaryLayer.cumulusClouds !== undefined) {
-    const cloudBottomY  = elevationScale.apply(forecast.boundaryLayer.cumulusClouds.bottom + elevation);
-    const cloudTopY     = elevationScale.apply(forecast.boundaryLayer.cumulusClouds.top + elevation);
-    const cloudMaxWidth = 100;
-    diagram.cumulusCloud(
-      [surfaceTemperatureProjectedX - cloudMaxWidth, cloudBottomY],
-      [surfaceTemperatureProjectedX, cloudTopY],
-      'right'
-    );
-  }
 
   // Clouds
   const [lastCloudBottom, maybeLastElevationAndCloudCover] =
@@ -280,13 +269,6 @@ const drawSounding = (
     );
   });
 
-  // Print soaring layer height
-  diagram.text(
-    `${elevation + forecast.boundaryLayer.soaringLayerDepth}`,
-    [2, elevationScale.apply(elevation + forecast.boundaryLayer.soaringLayerDepth) - 4],
-    'black'
-  );
-
   // --- Sounding Diagram
 
   const windArrowSize = Math.max(Math.min(canvasHeight / (relevantData.length * 1.15), 35), 1);
@@ -304,10 +286,10 @@ const drawSounding = (
 
       // Temperature
       // Note: this is approximate, see https://en.wikipedia.org/wiki/Lapse_rate
-      // We should consider applying the most precise formulas
+      // TODO We should consider applying the most precise formulas
       const lapseRate = (entry.temperature - previousTemperature) / ((entry.elevation - previousElevation) / 100);
       const [color, width] =
-        lapseRate <= -1 ?
+        lapseRate <= -0.98 ?
           ['yellow', 4] :     // absolutely unstable air
           (lapseRate <= -0.5 ?
             ['orange', 3] :   // conditionally unstable air
@@ -340,16 +322,51 @@ const drawSounding = (
       [forecast.surface.temperature, forecast.surface.dewPoint, elevation]
     );
 
-    // Thermal velocity
-    const projectedElevation = elevationScale.apply(elevation);
-    const projectedBoundaryLayerHeight = elevationScale.apply(elevation + forecast.boundaryLayer.soaringLayerDepth);
-    diagram.text(
-      `${forecast.thermalVelocity.toFixed(1)} m/s`,
-      [surfaceTemperatureProjectedX, (projectedElevation + projectedBoundaryLayerHeight) / 2],
-      'black',
-      'right',
-      'middle'
+  // Cumulus Clouds
+  if (forecast.boundaryLayer.cumulusClouds !== undefined) {
+    const cumulusClouds = forecast.boundaryLayer.cumulusClouds;
+    // Find the temperature of an air parcel lifted to the clouds bottom altitude
+    const bottomTemperature =
+      forecast.surface.temperature - (cumulusClouds.bottom * 9.8 /* dry adiabatic lapse rate */ / 1000);
+    const topTemperature =
+      bottomTemperature - ((cumulusClouds.top - cumulusClouds.bottom) * 5 /* average moist adiabatic lapse rate */ / 1000);
+    const bottomY = elevationScale.apply(cumulusClouds.bottom + elevation);
+    const topY    = elevationScale.apply(cumulusClouds.top + elevation);
+    const leftX   = temperatureScale.apply(topTemperature);
+    const rightX  = temperatureScale.apply(bottomTemperature);
+    diagram.cumulusCloud(
+      [leftX,  bottomY],
+      [rightX, topY]
     );
+    diagram.text(
+      `${elevation + cumulusClouds.bottom} m`,
+      [rightX, bottomY - 4],
+      'black',
+      'left',
+      'top'
+    );
+  }
+  
+  // Print boundary layer height
+  const surfaceTemperatureProjectedX = temperatureScale.apply(forecast.surface.temperature);
+  diagram.text(
+    `${elevation + forecast.boundaryLayer.depth} m`,
+    [surfaceTemperatureProjectedX, elevationScale.apply(elevation + forecast.boundaryLayer.depth)],
+    'black',
+    'right',
+    'middle'
+  );
+
+  // Thermal velocity
+  const projectedElevation = elevationScale.apply(elevation);
+  const projectedBoundaryLayerHeight = elevationScale.apply(elevation + forecast.boundaryLayer.soaringLayerDepth);
+  diagram.text(
+    `${forecast.thermalVelocity.toFixed(1)} m/s`,
+    [surfaceTemperatureProjectedX, (projectedElevation + projectedBoundaryLayerHeight) / 2],
+    'black',
+    'right',
+    'middle'
+  );
 
 };
 

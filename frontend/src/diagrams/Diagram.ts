@@ -96,19 +96,17 @@ export class Diagram {
     this.ctx.restore();
   }
 
-  cumulusCloud(fromBottomLeft: Point, toTopRight: Point, horizontalAlign: 'right' | 'center'): void {
+  cumulusCloud(fromBottomLeft: Point, toTopRight: Point): void {
     this.ctx.save();
     this.ctx.beginPath();
     this.ctx.rect(this.origX, this.origY - this.height, this.ctx.canvas.width, this.height);
     this.ctx.clip();
-    const width = toTopRight[0] - fromBottomLeft[0];
     drawCumulusCloud(
       this.ctx,
-      this.projectX(fromBottomLeft[0]) + width / 2,
+      this.projectX(fromBottomLeft[0]),
       this.projectY(fromBottomLeft[1]),
-      width,
-      toTopRight[1] - fromBottomLeft[1],
-      horizontalAlign
+      toTopRight[0] - fromBottomLeft[0],
+      toTopRight[1] - fromBottomLeft[1]
     );
     this.ctx.restore();
   }

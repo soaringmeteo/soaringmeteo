@@ -160,8 +160,8 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     the <a href="https://en.wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
     boundary layer</a>, which is the part of the atmosphere where we can expect to find thermals
     and soar.
-    In this example, we see that the soaring layer reaches { fakeData.groundLevel + fakeData.maxDepth } m in the middle of the
-    last day. It is good to have a soaring layer of at least 750 m above the ground level to fly cross-country.
+    In this example, we see that the boundary layer reaches { fakeData.groundLevel + fakeData.maxDepth } m in the middle of the
+    last day. It is good to have a boundary layer of at least 750 m above the ground level to fly cross-country.
   </p>
   <p>
     The <b>wind</b> and <b>clouds</b> are also shown in that diagram at various elevation levels. For
@@ -169,6 +169,13 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     and 30 km/h), and light wind the third day (5 to 15 km/h). The wind comes from the south the
     second day. You can learn more about the wind barb by showing the help from within the map view,
     if there is a wind layer enabled.
+  </p>
+  <p>
+    Cumulus clouds are shown by the <b>white dotted boxes</b>. The
+    bottom of the box shows the altitude of the cloud base, and the top of the box shows the top
+    of the clouds. When there is no box at all, it means there will be “blue thermals”. The presence
+    of cumulus clouds is a good thing to fly cross-country, but if they develop too high they can
+    produce showers or thunderstorms.
   </p>
   <p>
     The sky will be quite cloudy the first day, especially at midday. The second day, there will
@@ -224,7 +231,8 @@ const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
     The <b style={lightTextStyle('mediumspringgreen')}>green area</b> shows the planetary boundary layer,
     which is the part of the atmosphere where we can expect to
     find thermals and soar. The white or gray areas show the presence of clouds. The height and size
-    of cumulus clouds is shown by the cloud picture on the right.
+    of cumulus clouds is shown by <b>white dotted box</b>. The altitude of the cumulus clouds base is also
+    written below the bottom-right corner of the box.
     On the left, the wind speed and direction is shown at various altitude levels by the
     wind barb.
   </p>
