@@ -322,39 +322,29 @@ const drawSounding = (
       [forecast.surface.temperature, forecast.surface.dewPoint, elevation]
     );
 
+  const surfaceTemperatureProjectedX = temperatureScale.apply(forecast.surface.temperature);
+
   // Cumulus Clouds
   if (forecast.boundaryLayer.cumulusClouds !== undefined) {
     const cumulusClouds = forecast.boundaryLayer.cumulusClouds;
-    // Find the temperature of an air parcel lifted to the clouds bottom altitude
-    const bottomTemperature =
-      forecast.surface.temperature - (cumulusClouds.bottom * 9.8 /* dry adiabatic lapse rate */ / 1000);
-    const topTemperature =
-      bottomTemperature - ((cumulusClouds.top - cumulusClouds.bottom) * 5 /* average moist adiabatic lapse rate */ / 1000);
     const bottomY = elevationScale.apply(cumulusClouds.bottom + elevation);
-    const topY    = elevationScale.apply(cumulusClouds.top + elevation);
-    const leftX   = temperatureScale.apply(topTemperature);
-    const rightX  = temperatureScale.apply(bottomTemperature);
-    diagram.cumulusCloud(
-      [leftX,  bottomY],
-      [rightX, topY]
-    );
+    diagram.cumulusCloud([0, bottomY], width);
     diagram.text(
       `${elevation + cumulusClouds.bottom} m`,
-      [rightX, bottomY - 4],
+      [surfaceTemperatureProjectedX, bottomY - 6],
       'black',
-      'left',
+      'right',
       'top'
     );
   }
   
   // Print boundary layer height
-  const surfaceTemperatureProjectedX = temperatureScale.apply(forecast.surface.temperature);
   diagram.text(
     `${elevation + forecast.boundaryLayer.depth} m`,
     [surfaceTemperatureProjectedX, elevationScale.apply(elevation + forecast.boundaryLayer.depth)],
     'black',
     'right',
-    'middle'
+    'bottom'
   );
 
   // Thermal velocity

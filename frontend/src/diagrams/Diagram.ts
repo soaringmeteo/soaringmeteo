@@ -96,7 +96,7 @@ export class Diagram {
     this.ctx.restore();
   }
 
-  cumulusCloud(fromBottomLeft: Point, toTopRight: Point): void {
+  cumulusCloud(fromBottomLeft: Point, width: number): void {
     this.ctx.save();
     this.ctx.beginPath();
     this.ctx.rect(this.origX, this.origY - this.height, this.ctx.canvas.width, this.height);
@@ -105,8 +105,7 @@ export class Diagram {
       this.ctx,
       this.projectX(fromBottomLeft[0]),
       this.projectY(fromBottomLeft[1]),
-      toTopRight[0] - fromBottomLeft[0],
-      toTopRight[1] - fromBottomLeft[1]
+      width
     );
     this.ctx.restore();
   }

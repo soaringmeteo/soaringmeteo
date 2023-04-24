@@ -178,13 +178,15 @@ export const cloudPattern = (width: number, style: string): CanvasPattern => {
  * @param leftX    horizontal coordinate of the left of the cumulus box.
  * @param bottomY  vertical coordinate of the cloud base.
  * @param width    width of the cumulus box.
- * @param height   height of the cumulus box.
  */
-export const drawCumulusCloud = (ctx: CanvasRenderingContext2D, leftX: number, bottomY: number, width: number, height: number): void => {
+export const drawCumulusCloud = (ctx: CanvasRenderingContext2D, leftX: number, bottomY: number, width: number): void => {
   ctx.save();
   ctx.strokeStyle = 'rgba(255,255,255,0.8)';
   ctx.setLineDash([3, 3]);
   ctx.lineWidth = 3;
-  ctx.strokeRect(leftX + ctx.lineWidth, bottomY - height, width - ctx.lineWidth * 2, height);
+  ctx.beginPath();
+  ctx.moveTo(leftX, bottomY);
+  ctx.lineTo(leftX + width, bottomY);
+  ctx.stroke();
   ctx.restore();
 };

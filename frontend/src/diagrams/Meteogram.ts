@@ -312,7 +312,7 @@ const drawMeteogram = (
     if (forecast.boundaryLayer.cumulusClouds !== undefined && forecast.boundaryLayer.cumulusClouds.bottom < airDiagramHeightAboveGroundLevel) {
       airDiagram.cumulusCloud(
         [columnStart, elevationScale.apply(forecast.boundaryLayer.cumulusClouds.bottom + forecasts.elevation)],
-        [columnEnd,   elevationScale.apply(forecast.boundaryLayer.cumulusClouds.top + forecasts.elevation)]
+        columnEnd - columnStart
       );
     }
   });
