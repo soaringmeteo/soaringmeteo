@@ -173,20 +173,61 @@ export const cloudPattern = (width: number, style: string): CanvasPattern => {
   return pattern
 };
 
+const cloudWidth  = 300;
+const cloudHeight = 200;
+const cloudImage: HTMLCanvasElement = document.createElement('canvas');
+cloudImage.width = cloudWidth;
+cloudImage.height = cloudHeight;
+const cloudCtx = cloudImage.getContext('2d');
+if (cloudCtx === null) {
+  throw 'Unsupported execution environment'
+}
+cloudCtx.fillStyle = 'whiteSmoke';
+cloudCtx.beginPath();
+cloudCtx.ellipse(
+  cloudWidth / 3,
+  cloudHeight * 3 / 4,
+  cloudWidth / 3,
+  cloudHeight / 4,
+  0,
+  0,
+  Math.PI * 2
+);
+cloudCtx.fill();
+cloudCtx.beginPath();
+cloudCtx.ellipse(
+  cloudWidth * 2 / 3,
+  cloudHeight * 2 / 3,
+  cloudWidth / 3,
+  cloudHeight / 3,
+  0,
+  0,
+  Math.PI * 2
+);
+cloudCtx.fill();
+cloudCtx.beginPath();
+cloudCtx.ellipse(
+  cloudWidth / 2,
+  cloudHeight / 2,
+  cloudWidth / 4,
+  cloudHeight / 2,
+  0,
+  0,
+  Math.PI * 2
+);
+cloudCtx.fill();
+
 /**
  * Draw a cumulus cloud on the given canvas context. The drawing is centered horizontally.
- * @param leftX    horizontal coordinate of the left of the cumulus box.
+ * @param leftX    horizontal coordinate of the left of the cumulus.
  * @param bottomY  vertical coordinate of the cloud base.
- * @param width    width of the cumulus box.
+ * @param maxWidth maximum width of the cumulus.
+ * @param height   height of the cumulus.
  */
-export const drawCumulusCloud = (ctx: CanvasRenderingContext2D, leftX: number, bottomY: number, width: number): void => {
-  ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-  ctx.setLineDash([3, 3]);
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(leftX, bottomY);
-  ctx.lineTo(leftX + width, bottomY);
-  ctx.stroke();
-  ctx.restore();
+export const drawCumulusCloud = (ctx: CanvasRenderingContext2D, leftX: number, bottomY: number, maxWidth: number, height: number): void => {
+  // Keep the image ratio in case the height is small, stretch it vertically in case the height is too high
+  const widthAccordingToRatio = height * cloudWidth / cloudHeight;
+  const width = widthAccordingToRatio < maxWidth ? widthAccordingToRatio : maxWidth;
+  const y = bottomY - height;
+  ctx.drawImage(cloudImage, width == widthAccordingToRatio ? leftX + (maxWidth - width) / 2 : leftX, y, width, height);
 };

@@ -66,7 +66,7 @@ export class DetailedForecast {
         u: data.bl.u,
         v: data.bl.v
       },
-      cumulusClouds: data.bl.c === undefined ? undefined : ({ bottom: data.bl.c[0] , top: data.bl.c[1] })
+      cumulusClouds: data.bl.c === undefined ? undefined : ({ bottom: data.bl.c[0] })
     };
     this.surface = {
       temperature: data.s.t,
@@ -117,7 +117,7 @@ export type DetailedBoundaryLayer = {
   soaringLayerDepth: number // m (AGL)
   cumulusClouds?: {
     bottom: number // m (AGL)
-    top: number // m (AGL)
+    // top: number // m (AGL) (commented because not reliable)
   }
 };
 

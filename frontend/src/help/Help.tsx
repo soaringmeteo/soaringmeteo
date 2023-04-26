@@ -171,8 +171,8 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     if there is a wind layer enabled.
   </p>
   <p>
-    Cumulus clouds are shown by the <b>white dotted line</b>. The altitude of the line indicates
-    the altitude of the cloud base. When there is no white dotted line at all, it means there will
+    Cumulus clouds are shown by the <b>white cloud picture</b>. Soaring pilots can not fly higher
+    than the cloud base. When there is no cloud picture at all, it means there will
     be “blue thermals”. The presence of cumulus clouds is a good thing to fly cross-country, but
     if they develop too high they can produce showers or thunderstorms.
   </p>
@@ -229,9 +229,9 @@ const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
   <p>
     The <b style={lightTextStyle('mediumspringgreen')}>green area</b> shows the planetary boundary layer,
     which is the part of the atmosphere where we can expect to
-    find thermals and soar. The white or gray areas show the presence of clouds. The cumulus clouds base
-    is shown by <b>white dotted line</b>. The altitude of the cumulus clouds base is also
-    written below the line, on the right of the diagram.
+    find thermals and soar. The white or gray areas show the presence of clouds. The presence of cumulus
+    clouds is shown by <b>white cloud picture</b>. The altitude of the cumulus clouds base is also
+    written below the picture, on the right of the diagram.
     On the left, the wind speed and direction is shown at various altitude levels by the
     wind barb.
   </p>

@@ -96,7 +96,7 @@ export class Diagram {
     this.ctx.restore();
   }
 
-  cumulusCloud(fromBottomLeft: Point, width: number): void {
+  cumulusCloud(fromBottomLeft: Point, toTopRight: Point): void {
     this.ctx.save();
     this.ctx.beginPath();
     this.ctx.rect(this.origX, this.origY - this.height, this.ctx.canvas.width, this.height);
@@ -105,7 +105,8 @@ export class Diagram {
       this.ctx,
       this.projectX(fromBottomLeft[0]),
       this.projectY(fromBottomLeft[1]),
-      width
+      toTopRight[0] - fromBottomLeft[0],
+      toTopRight[1] - fromBottomLeft[1],
     );
     this.ctx.restore();
   }
@@ -168,7 +169,7 @@ export const temperaturesRange =
     return [minTemperature, maxTemperature]
   }
 
-export const skyStyle = '#85c1e9';
+export const skyStyle = '#91c7eb';
 export const boundaryLayerStyle = 'mediumspringgreen';
 
 export const meteogramColumnWidth = 33;

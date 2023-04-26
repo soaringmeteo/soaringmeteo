@@ -234,6 +234,20 @@ const drawSounding = (
     );
   }
 
+  const surfaceTemperatureProjectedX = temperatureScale.apply(forecast.surface.temperature);
+
+  // Cumulus Clouds
+  if (forecast.boundaryLayer.cumulusClouds !== undefined) {
+    const cumulusClouds = forecast.boundaryLayer.cumulusClouds;
+    const bottomY = elevationScale.apply(cumulusClouds.bottom + elevation);
+    const topY = elevationScale.apply(forecast.boundaryLayer.depth + elevation);
+    const cloudMaxWidth = 100;
+    diagram.cumulusCloud(
+      [surfaceTemperatureProjectedX - cloudMaxWidth, bottomY],
+      [surfaceTemperatureProjectedX,                 topY]
+    );
+  }
+
   // --- Axes
 
   // Horizontal axis (°C)
@@ -322,19 +336,16 @@ const drawSounding = (
       [forecast.surface.temperature, forecast.surface.dewPoint, elevation]
     );
 
-  const surfaceTemperatureProjectedX = temperatureScale.apply(forecast.surface.temperature);
-
-  // Cumulus Clouds
+  // Print cloud base
   if (forecast.boundaryLayer.cumulusClouds !== undefined) {
     const cumulusClouds = forecast.boundaryLayer.cumulusClouds;
     const bottomY = elevationScale.apply(cumulusClouds.bottom + elevation);
-    diagram.cumulusCloud([0, bottomY], width);
     diagram.text(
       `${elevation + cumulusClouds.bottom} m`,
-      [surfaceTemperatureProjectedX, bottomY - 6],
+      [surfaceTemperatureProjectedX, bottomY],
       'black',
       'right',
-      'top'
+      'bottom'
     );
   }
   
