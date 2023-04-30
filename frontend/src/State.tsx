@@ -23,7 +23,7 @@ export type State = {
   detailedView: undefined | [LocationForecasts, DetailedViewType]
 }
 
-type DetailedViewType = 'meteogram' | 'sounding'
+export type DetailedViewType = 'meteogram' | 'sounding'
 
 // Keys used to store the current display settings in the local storage
 const selectedPrimaryLayerKey   = 'selected-primary-layer';
@@ -162,6 +162,7 @@ export class Domain {
 
   /** Display the detailed view (meteogram or sounding) at the given location */
   showLocationForecast(latitude: number, longitude: number, viewType: DetailedViewType): void {
+    // TODO Optimization if state.detailedView already contains data for the given latitude,longitude
     this.state.forecastMetadata
       .fetchLocationForecasts(latitude, longitude)
       .then(locationForecasts => {

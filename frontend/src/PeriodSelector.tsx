@@ -3,8 +3,10 @@ import { createEffect, createMemo, createSignal, JSX } from 'solid-js';
 
 import { forecastOffsets, periodsPerDay } from './data/ForecastMetadata';
 import { showDate } from './shared';
-import { type Domain } from './State';
+import { DetailedViewType, type Domain } from './State';
 import { closeButton, closeButtonSize, keyWidth, meteogramColumnWidth, periodSelectorHeight, surfaceOverMap } from './styles/Styles';
+import { LocationForecasts } from './data/LocationForecasts';
+import { Help } from './help/Help';
 
 const marginLeft = keyWidth;
 const marginTop = periodSelectorHeight;
@@ -111,6 +113,58 @@ const PeriodSelector = (props: {
   return scrollablePeriodSelector
 }
 
+// Add location information below the detailed view, and additional buttons
+const decorateDetailedView = (
+  domain: Domain,
+  viewType: DetailedViewType,
+  forecasts: LocationForecasts,
+  hourOffset: () => number,
+  keyAndView: { key: JSX.Element, view: JSX.Element },
+  showLocationForecast: (viewType: DetailedViewType) => void
+): { key: JSX.Element, view: JSX.Element } => {
+  const locationCoordinates = `${ forecasts.latitude.toFixed(4) }°,${ forecasts.longitude.toFixed(4) }°`;
+  const extra =
+    viewType === 'meteogram' ?
+      <>
+        <span>
+          Location: { locationCoordinates }. Model: { domain.state.forecastMetadata.model }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false }) }.
+        </span>
+        <button
+          type="button"
+          onClick={ () => showLocationForecast('sounding') }
+          style="font-size: 12px"
+        >
+          Sounding for { showDate(domain.state.forecastMetadata.dateAtHourOffset(hourOffset()), { showWeekDay: true }) }
+        </button>
+      </> :
+      <>
+        <span>
+          Location: { locationCoordinates }. Time: { showDate(domain.state.forecastMetadata.dateAtHourOffset(hourOffset()), { showWeekDay: true }) }. Model: { domain.state.forecastMetadata.model }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false }) }.
+        </span>
+        <button
+          type="button"
+          onClick={ () => showLocationForecast('meteogram') }
+          style="font-size: 12px"
+        >
+          Meteogram
+        </button>
+      </>;
+
+  return {
+    key: <>
+      {keyAndView.key}
+      <div style="height: 27px" /* help (24) + padding (3) */>&nbsp;</div>
+    </>,
+    view: <>
+      { keyAndView.view }
+      <div style="display: flex; gap: 1rem; align-items: baseline; padding-bottom: 3px">
+        { extra }
+        <Help domain={ domain } />
+      </div>
+    </>
+  }
+};
+
 /**
  * Note: this function has to be invoked _after_ the state has been initialized and registered.
  * @returns A pair of a reactive element for the detailed view key, and a
@@ -132,16 +186,30 @@ const detailedView = (props: { domain: Domain }): (() => { key: JSX.Element, vie
     } else {
       const [locationForecasts, viewType] = detailedView;
       if (viewType === 'meteogram') {
-        import(/* webpackPrefetch: true */ './diagrams/Meteogram').then(module => {
-          set(module.meteogram(locationForecasts, state));
+        import('./diagrams/Meteogram').then(module => {
+          set(decorateDetailedView(
+            props.domain,
+            viewType,
+            locationForecasts,
+            () => state.hourOffset,
+            module.meteogram(locationForecasts, state),
+            viewType => props.domain.showLocationForecast(locationForecasts.latitude, locationForecasts.longitude, viewType)
+          ));
         });
       }
       else /*if (viewType === 'sounding')*/ {
         const forecast = locationForecasts.atHourOffset(state.hourOffset);
         if (forecast === undefined) set(noDetailedView);
         else {
-          import(/* webpackPrefetch: true */ './diagrams/Sounding').then(module => {
-            set(module.sounding(forecast, locationForecasts.elevation, true, state));
+          import('./diagrams/Sounding').then(module => {
+            set(decorateDetailedView(
+              props.domain,
+              viewType,
+              locationForecasts,
+              () => state.hourOffset,
+              module.sounding(forecast, locationForecasts.elevation, true, state),
+              viewType => props.domain.showLocationForecast(locationForecasts.latitude, locationForecasts.longitude, viewType)
+            ));
           });
         }
       }

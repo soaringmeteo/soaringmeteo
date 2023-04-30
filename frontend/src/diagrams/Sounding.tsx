@@ -384,7 +384,7 @@ const drawSounding = (
 const computeSoundingHeightAndMaxElevation = (zoomed: boolean, elevation: number, forecast: DetailedForecast): [number, number] => {
   const maxElevation = zoomed ? (elevation + forecast.boundaryLayer.soaringLayerDepth + 2000) : 12000; // m
 
-  const availableHeight = window.innerHeight - 38 /* top time selector */ - 50 /* bottom time selector */;
+  const availableHeight = window.innerHeight - 38 /* top time selector */ - 50 /* bottom time selector */ - 27 /* text information and help */;
   const preferredHeight = (maxElevation - elevation) / 10; // Arbitrary factor to make the diagram visually nice
   const canvasHeight = Math.min(preferredHeight, availableHeight);
   return [canvasHeight, maxElevation];
