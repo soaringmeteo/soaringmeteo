@@ -24,6 +24,7 @@ export const Help = (props: { domain: Domain }): JSX.Element => {
         'background-color': 'white'
       }}
       onClick={ () => makeVisible(true) }
+      title="Help"
     >
       ?
     </div>;
