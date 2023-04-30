@@ -193,14 +193,14 @@ const drawSounding = (
   // --- Background
 
   // Sky and boundary layer
-  const boundaryLayerHeight = elevationScale.apply(elevation + forecast.boundaryLayer.depth);
+  const boundaryLayerHeightY = elevationScale.apply(elevation + forecast.boundaryLayer.depth);
   diagram.fillRect(
     [0, elevationScale.apply(elevation)],
-    [width, boundaryLayerHeight],
+    [width, boundaryLayerHeightY],
     boundaryLayerStyle
   );
   diagram.fillRect(
-    [0, boundaryLayerHeight],
+    [0, boundaryLayerHeightY],
     [width, elevationScale.apply(maxElevation)],
     skyStyle
   );
@@ -336,13 +336,17 @@ const drawSounding = (
       [forecast.surface.temperature, forecast.surface.dewPoint, elevation]
     );
 
+  // pair containing the height (AMSL) of cloud base and the projected Y coordinate of that elevation on the diagram
+  const cumulusCloudData: undefined | [number, number] =
+    forecast.boundaryLayer.cumulusClouds !== undefined ?
+      [forecast.boundaryLayer.cumulusClouds.bottom + elevation, elevationScale.apply(forecast.boundaryLayer.cumulusClouds.bottom + elevation)] :
+      undefined;
+
   // Print cloud base
-  if (forecast.boundaryLayer.cumulusClouds !== undefined) {
-    const cumulusClouds = forecast.boundaryLayer.cumulusClouds;
-    const bottomY = elevationScale.apply(cumulusClouds.bottom + elevation);
+  if (cumulusCloudData !== undefined) {
     diagram.text(
-      `${elevation + cumulusClouds.bottom} m`,
-      [surfaceTemperatureProjectedX, bottomY],
+      `${cumulusCloudData[0]} m`,
+      [surfaceTemperatureProjectedX, cumulusCloudData[1]],
       'black',
       'right',
       'bottom'
@@ -350,9 +354,15 @@ const drawSounding = (
   }
   
   // Print boundary layer height
+  const boundaryLayerHeightAMSL = elevation + forecast.boundaryLayer.depth;
+  // Y coordinate of the text showing the boundary layer height: just above the boundary layer height, or a bit higher in case it overlaps with cloud base
+  const boundaryLayerY =
+    cumulusCloudData !== undefined && cumulusCloudData[1] + 10 > boundaryLayerHeightY ?
+      cumulusCloudData[1] + 10  :
+      boundaryLayerHeightY;
   diagram.text(
-    `${elevation + forecast.boundaryLayer.depth} m`,
-    [surfaceTemperatureProjectedX, elevationScale.apply(elevation + forecast.boundaryLayer.depth)],
+    `${boundaryLayerHeightAMSL} m`,
+    [surfaceTemperatureProjectedX, boundaryLayerY],
     'black',
     'right',
     'bottom'

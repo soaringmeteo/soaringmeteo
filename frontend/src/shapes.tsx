@@ -225,6 +225,9 @@ cloudCtx.fill();
  * @param height   height of the cumulus.
  */
 export const drawCumulusCloud = (ctx: CanvasRenderingContext2D, leftX: number, bottomY: number, maxWidth: number, height: number): void => {
+  if (height < 5) {
+    height = 5;
+  }
   // Keep the image ratio in case the height is small, stretch it vertically in case the height is too high
   const widthAccordingToRatio = height * cloudWidth / cloudHeight;
   const width = widthAccordingToRatio < maxWidth ? widthAccordingToRatio : maxWidth;
