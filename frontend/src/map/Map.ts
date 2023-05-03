@@ -8,6 +8,16 @@ const osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const locationAndZoomKey = 'location-and-zoom'
 
 const loadLocationAndZoom = (): [L.LatLngTuple, number] => {
+  // First, read from the URL parameters
+  const params = new URLSearchParams(window.location.search);
+  const [lat, lng, z] = [params.get('lat'), params.get('lng'), params.get('z')];
+  if (lat !== null && lng !== null) {
+    return [
+      [+lat, +lng],
+      z === null ? 7 : +z
+    ]
+  }
+  // Second, read from local storage (returning visitor)
   const storedLocationAndZoom = window.localStorage.getItem(locationAndZoomKey);
   if (storedLocationAndZoom == null) {
     return [
@@ -20,6 +30,11 @@ const loadLocationAndZoom = (): [L.LatLngTuple, number] => {
 };
 
 const saveLocationAndZoom = (location: L.LatLng, zoom: number) => {
+  const url = new URL(window.location.toString());
+  url.searchParams.set('lat', location.lat.toFixed(4));
+  url.searchParams.set('lng', location.lng.toFixed(4));
+  url.searchParams.set('z', zoom.toString());
+  window.history.replaceState(null, '', url);
   window.localStorage.setItem(locationAndZoomKey, JSON.stringify([[location.lat, location.lng], zoom]));
 };
 
