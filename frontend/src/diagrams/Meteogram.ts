@@ -317,25 +317,6 @@ const drawMeteogram = (
     }
   });
 
-  // Thunderstorm risk
-  let previousLightningX = 0;
-  forecasts.dayForecasts.forEach(forecast => {
-    const lightningWidth = forecast.forecasts.length * meteogramColumnWidth;
-    const x = previousLightningX + lightningWidth / 2;
-    const y = airDiagramHeight - lightningWidth / 2;
-    if (forecast.thunderstormRisk > 0) {
-      let lightningStyle: string;
-      switch (forecast.thunderstormRisk) {
-        case 1: lightningStyle = 'yellow'; break
-        case 2: lightningStyle = 'orange'; break
-        case 3: lightningStyle = 'red'; break
-        default: lightningStyle = 'purple'; break
-      }
-      airDiagram.fillShape(lightningShape(x, y, lightningWidth), lightningStyle);
-    }
-    previousLightningX = previousLightningX + lightningWidth;
-  });
-
   // Wind
   columns((forecast, columnStart, _) => {
     const windCenterX = columnStart + meteogramColumnWidth / 2;
@@ -400,6 +381,29 @@ const drawMeteogram = (
   // Rain diagram
   const rainDiagram = new Diagram([0, rainDiagramTop], rainDiagramHeight, ctx);
 
+  // Thunderstorm risk
+  let previousLightningX = 0;
+  forecasts.dayForecasts.forEach(forecast => {
+    const dayWidth = forecast.forecasts.length * meteogramColumnWidth;
+    if (forecast.thunderstormRisk > 0) {
+      const lightningMaxWidth = dayWidth / 3;
+      const lightningMinWidth = lightningMaxWidth * 3 / 4;
+      const width = lightningMinWidth + lightningMaxWidth * (forecast.thunderstormRisk - 1) / 3;
+      const x = previousLightningX + dayWidth / 2;
+      const y = rainDiagramHeight - width / 2;
+      let lightningStyle: string;
+      switch (forecast.thunderstormRisk) {
+        case 1: lightningStyle = 'yellow'; break
+        case 2: lightningStyle = 'orange'; break
+        case 3: lightningStyle = 'red'; break
+        default: lightningStyle = 'purple'; break
+      }
+      rainDiagram.fillShape(lightningShape(x, y, width), lightningStyle, 'gray');
+    }
+    previousLightningX = previousLightningX + dayWidth;
+  });
+
+  // Rain
   columns((forecast, columnStart, columnEnd) => {
     rainDiagram.fillRect(
       [columnStart, 0],

@@ -70,7 +70,7 @@ const locationData: LocationForecastsData = {
       ]
     },
     {
-      "th": 0,
+      "th": 1,
       "h": [
         {
           "t": "2022-11-04T09:00:00Z",
