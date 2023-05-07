@@ -196,6 +196,7 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     and for the temperature on the right. In the example, a few millimeters of rain are expected
     the first day, and the air gets dryer the third day (the dew point temperature decreases).
   </p>
+  <p>Last, the presence of a lightning picture indicates a risk of thunderstorm during the day. The larger the picture, the higher the risk of thunderstorm.</p>
   <p>
     According to this diagram, the best day for flying is the third day, although the wind may
     be a little bit too strong in the afternoon.

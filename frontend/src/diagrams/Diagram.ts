@@ -47,7 +47,8 @@ export class Diagram {
     this.ctx.restore();
   }
 
-  fillShape(points: Array<Point>, style: string): void {
+  fillShape(points: Array<Point>, style: string, strokeStyle?: string): void {
+    this.ctx.save();
     this.ctx.fillStyle = style;
     this.ctx.beginPath();
     points.forEach(([x, y]) => {
@@ -55,6 +56,12 @@ export class Diagram {
     });
     this.ctx.closePath();
     this.ctx.fill();
+    if (strokeStyle !== undefined) {
+      this.ctx.strokeStyle = strokeStyle;
+      this.ctx.lineWidth = 1;
+      this.ctx.stroke();
+    }
+    this.ctx.restore();
   }
 
   text(content: string, location: Point, style: string, align?: CanvasTextAlign, baseline?: CanvasTextBaseline): void {

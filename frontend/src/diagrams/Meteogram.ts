@@ -398,7 +398,7 @@ const drawMeteogram = (
         case 3: lightningStyle = 'red'; break
         default: lightningStyle = 'purple'; break
       }
-      rainDiagram.fillShape(lightningShape(x, y, width), lightningStyle);
+      rainDiagram.fillShape(lightningShape(x, y, width), lightningStyle, 'gray');
     }
     previousLightningX = previousLightningX + dayWidth;
   });
