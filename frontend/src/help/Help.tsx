@@ -178,8 +178,13 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     if they develop too high they can produce showers or thunderstorms.
   </p>
   <p>
-    The sky will be quite cloudy the first day, especially at midday. The second day, there will
-    be cumulus clouds. The third day, there will be few cumulus clouds, but some cirrus clouds.
+    The cloud cover at various elevation levels is shown by the white or gray strips: the wider the
+    strip, the more the cloud cover. If the strip takes half of the column, it means a cloud cover
+    of 50%. If it takes the whole column, it means a cloud cover of 100%. Note that the high-level
+    cloud cover is indicated at the topmost part of the diagram (when the vertical scale axis becomes
+    discontinued). In our example, the sky will be quite cloudy the first day, especially at midday.
+    The second day, there will be cumulus clouds. The third day, there will be few cumulus clouds, but
+    cirrus clouds will come in the afternoon.
   </p>
   <p>
     The altitude of the isotherm 0°C is shown by the <b>black line</b>. In this example, it starts around
@@ -230,15 +235,24 @@ const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
   </p>
   <p>
     The <b style={lightTextStyle('mediumspringgreen')}>green area</b> shows the planetary boundary layer,
-    which is the part of the atmosphere where we can expect to
-    find thermals and soar. The white or gray areas show the presence of clouds. The presence of cumulus
+    which is the part of the atmosphere where we can expect to find thermals and soar.
+  </p>
+  <p>
+    On the right, The <b>white or gray strips</b> indicate the cloud cover at various elevation
+    levels. The wider the strip, the more the cloud cover. When the strip is as large as the
+    right column, it means a cloud cover of 100%.
+  </p>
+  <p>
+    The presence of cumulus
     clouds is shown by <b>white cloud picture</b>. The altitude of the cumulus clouds base is also
     written below the picture, on the right of the diagram.
-    On the left, the wind speed and direction is shown at various altitude levels by the
+  </p>
+  <p>
+    On the left, the wind speed and direction is shown at various elevation levels by the
     wind barb.
   </p>
   <p>
-    The text “2.5 m/s” (in the middle of the green area, on the right of the diagram) tells you the
+    The text “2.1 m/s” (in the middle of the soaring layer, on the right of the diagram) tells you the
     estimated average thermal velocity within the boundary layer. Values above 1 m/s usually mean
     that thermals should be just strong enough to stay in the air. Values above 2 m/s mean good thermals.
   </p>

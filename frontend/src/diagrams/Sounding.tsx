@@ -1,10 +1,13 @@
 import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, nextValue, previousValue, skyStyle, temperaturesRange } from './Diagram';
 import { AboveGround, DetailedForecast } from "../data/LocationForecasts";
-import { cloudsColorScale } from './Clouds';
+import { drawCloudCover } from './Clouds';
 import { drawWindArrow } from '../shapes';
 import { createEffect, createSignal, JSX } from 'solid-js';
 import { keyWidth, soundingWidth, surfaceOverMap } from '../styles/Styles';
 import { State } from '../State';
+
+// Difference between two temperatures shown on the temperature axis
+const temperatureScaleStep = 10;
 
 const temperatureScaleAndLevels = (
   aboveGround: Array<AboveGround>,
@@ -18,15 +21,14 @@ const temperatureScaleAndLevels = (
     aboveGround.map(_ => _.temperature).concat([surfaceTemperature])
   );
   
-  const step = 10;
-  const minTemperatureRounded = previousValue(minTemperature, step);
-  const maxTemperatureRounded = nextValue(maxTemperature, step);
+  const minTemperatureRounded = previousValue(minTemperature, temperatureScaleStep);
+  const maxTemperatureRounded = nextValue(maxTemperature, temperatureScaleStep);
 
   const levels = [];
-  let nextLevel = minTemperatureRounded + step;
+  let nextLevel = minTemperatureRounded + temperatureScaleStep;
   while (nextLevel < maxTemperatureRounded) {
     levels.push(nextLevel);
-    nextLevel = nextLevel + step;
+    nextLevel = nextLevel + temperatureScaleStep;
   }
 
   const scale = new Scale([minTemperatureRounded, maxTemperatureRounded], pixelRange, false);
@@ -165,20 +167,17 @@ const drawSounding = (
   const height = canvasHeight - 5;
 
   const elevationScale = new Scale([elevation, maxElevation], [offset, height], false);
+  const elevationY = offset;
+  const maxElevationY = height;
 
-  let indexOfFirstDataAboveMaxElevation = 0;
-  while (
-    indexOfFirstDataAboveMaxElevation < forecast.aboveGround.length
-      && forecast.aboveGround[indexOfFirstDataAboveMaxElevation].elevation < maxElevation
-  ) {
-    indexOfFirstDataAboveMaxElevation += 1;
-  }
-  if (indexOfFirstDataAboveMaxElevation < forecast.aboveGround.length) {
-    indexOfFirstDataAboveMaxElevation += 1;
-  }
+  const indexOfFirstDataAboveMaxElevation =
+    forecast.aboveGround.findIndex(aboveGround => aboveGround.elevation > maxElevation);
 
   // Remove points that are above the max elevation level
-  const relevantData = forecast.aboveGround.slice(0, indexOfFirstDataAboveMaxElevation + 1);
+  const relevantData =
+    indexOfFirstDataAboveMaxElevation >= 0 && forecast.aboveGround.length > indexOfFirstDataAboveMaxElevation + 1 ?
+      forecast.aboveGround.slice(0, indexOfFirstDataAboveMaxElevation + 1) :
+      forecast.aboveGround;
 
   const [temperatureScale, temperatureLevels] = temperatureScaleAndLevels(
     relevantData,
@@ -195,43 +194,59 @@ const drawSounding = (
   // Sky and boundary layer
   const boundaryLayerHeightY = elevationScale.apply(elevation + forecast.boundaryLayer.depth);
   diagram.fillRect(
-    [0, elevationScale.apply(elevation)],
+    [0,     elevationY],
     [width, boundaryLayerHeightY],
     boundaryLayerStyle
   );
   diagram.fillRect(
     [0, boundaryLayerHeightY],
-    [width, elevationScale.apply(maxElevation)],
+    [width, maxElevationY],
     skyStyle
   );
 
   // Clouds
-  const [lastCloudBottom, maybeLastElevationAndCloudCover] =
-    relevantData
-      .reduce<[number, [number, number] | undefined]>(
-        ([cloudBottom, maybePreviousElevationAndCloudCover], aboveGround) => {
-          if (maybePreviousElevationAndCloudCover === undefined) {
-            return [cloudBottom, [aboveGround.elevation, aboveGround.cloudCover]]
-          } else {
-            const [previousElevation, previousCloudCover] = maybePreviousElevationAndCloudCover;
-            const cloudTop = (aboveGround.elevation + previousElevation) / 2;
-            diagram.fillRect(
-              [0, elevationScale.apply(cloudBottom)],
-              [width, elevationScale.apply(cloudTop)],
-              cloudsColorScale.interpolate(previousCloudCover).css()
-            );
-            return [cloudTop, [aboveGround.elevation, aboveGround.cloudCover]]
-          }
-        },
-        [elevation, undefined]
+  if (temperatureLevels.length > 0) {
+    const temperatureLeftColumn = temperatureLevels[temperatureLevels.length - 1];
+    const temperatureRightColumn = temperatureLeftColumn + temperatureScaleStep;
+    const leftX  = temperatureScale.apply(temperatureLeftColumn);
+    const rightX = temperatureScale.apply(temperatureRightColumn);
+    const maxWidth = rightX - leftX;
+    const centerX = (leftX + rightX) / 2;
+    const [lastCloudBottomY, maybeLastElevationAndCloudCover] =
+      relevantData
+        .reduce<[number, [number, number] | undefined]>(
+          ([cloudBottomY, maybePreviousYAndCloudCover], aboveGround) => {
+            const y = elevationScale.apply(aboveGround.elevation);
+            if (maybePreviousYAndCloudCover === undefined) {
+              return [cloudBottomY, [y, aboveGround.cloudCover]]
+            } else {
+              const [previousY, previousCloudCover] = maybePreviousYAndCloudCover;
+              // cloud to is in the middle of the previous point and the current point
+              const cloudTopY = (y + previousY) / 2;
+              drawCloudCover(
+                diagram,
+                maxWidth,
+                previousCloudCover,
+                centerX,
+                cloudBottomY,
+                Math.min(cloudTopY, maxElevationY)
+              )
+              return [cloudTopY, [y, aboveGround.cloudCover]]
+            }
+          },
+          [elevationY, undefined]
+        );
+    if (maybeLastElevationAndCloudCover !== undefined && lastCloudBottomY < maxElevationY) {
+      const [_, lastCloudCover] = maybeLastElevationAndCloudCover;
+      drawCloudCover(
+        diagram,
+        maxWidth,
+        lastCloudCover,
+        centerX,
+        lastCloudBottomY,
+        maxElevationY
       );
-  if (maybeLastElevationAndCloudCover !== undefined) {
-    const [_, lastCloudCover] = maybeLastElevationAndCloudCover;
-    diagram.fillRect(
-      [0, elevationScale.apply(lastCloudBottom)],
-      [width, elevationScale.apply(maxElevation)],
-      cloudsColorScale.interpolate(lastCloudCover).css()
-    );
+    }
   }
 
   const surfaceTemperatureProjectedX = temperatureScale.apply(forecast.surface.temperature);
@@ -286,15 +301,20 @@ const drawSounding = (
   // --- Sounding Diagram
 
   const windArrowSize = Math.max(Math.min(canvasHeight / (relevantData.length * 1.15), 35), 1);
-  const windColor = `rgba(62, 0, 0, ${ windNumericValuesShown ? 0.5 : 0.3 })`
+  const windColor = `rgba(62, 0, 0, ${ windNumericValuesShown ? 0.5 : 0.3 })`;
+  const windCenterX =
+    temperatureScale.apply(
+      temperatureLevels.length > 0 ?
+        temperatureLevels[0] - temperatureScaleStep / 2 :
+        forecast.surface.dewPoint
+    );
   relevantData
     .reduce(([previousTemperature, previousDewPoint, previousElevation], entry) => {
       const y0 = elevationScale.apply(previousElevation);
       const y1 = elevationScale.apply(entry.elevation);
 
       // Wind
-      if (temperatureLevels.length >= 2 && entry.elevation < maxElevation) {
-        const windCenterX = temperatureScale.apply(temperatureLevels[0] - 5 /* 5 because step is 10 */);
+      if (entry.elevation < maxElevation) {
         drawWindArrow(ctx, windCenterX, diagram.projectY(y1), windArrowSize, windColor, entry.u, entry.v, windNumericValuesShown);
       }
 
