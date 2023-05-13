@@ -2,7 +2,7 @@ import { LocationForecasts, DetailedForecast } from '../data/LocationForecasts';
 import { drawWindArrow, lightningShape } from '../shapes';
 import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, skyStyle, temperaturesRange } from './Diagram';
 import { colorScale as thqColorScale } from '../layers/ThQ';
-import { cloudsColorScale } from './Clouds';
+import { drawCloudCover } from './Clouds';
 import { createEffect, JSX } from 'solid-js';
 import { keyWidth, meteogramColumnWidth } from '../styles/Styles';
 import { State } from '../State';
@@ -222,6 +222,9 @@ const drawMeteogram = (
   const highAirDiagram = new Diagram([0, highAirDiagramTop], highAirDiagramHeight, ctx);
 
   columns((forecast, columnStart, columnEnd) => {
+
+    const columnCenter = (columnStart + columnEnd) / 2;
+
     // Blue sky
     highAirDiagram.fillRect(
       [columnStart, 0],
@@ -236,11 +239,15 @@ const drawMeteogram = (
           .filter(aboveGround => aboveGround.elevation >= middleCloudsTop && aboveGround.elevation < highCloudsBottom)
           .map(aboveGround => aboveGround.cloudCover)
       );
-    highAirDiagram.fillRect(
-      [columnStart, 0],
-      [columnEnd,   highAirDiagramHeight / 2],
-      cloudsColorScale.interpolate(middleCloudCover).css()
+    drawCloudCover(
+      highAirDiagram,
+      meteogramColumnWidth,
+      middleCloudCover,
+      columnCenter,
+      0,
+      highAirDiagramHeight / 2
     );
+
     const highCloudCover =
       Math.max(
         ...forecast.aboveGround
@@ -248,10 +255,13 @@ const drawMeteogram = (
           .map(aboveGround => aboveGround.cloudCover)
       );
     // High-level clouds
-    highAirDiagram.fillRect(
-      [columnStart, highAirDiagramHeight / 2],
-      [columnEnd,   highAirDiagramHeight],
-      cloudsColorScale.interpolate(highCloudCover).css()
+    drawCloudCover(
+      highAirDiagram,
+      meteogramColumnWidth,
+      highCloudCover,
+      columnCenter,
+      highAirDiagramHeight / 2,
+      highAirDiagramHeight
     );
   });
 
@@ -278,41 +288,50 @@ const drawMeteogram = (
 
   // Clouds
   columns((forecast, columnStart, columnEnd) => {
-    const [lastCloudBottom, maybeLastElevationAndCloudCover] =
-      forecast.aboveGround
-        // Keep only entries that are below the middle clouds top
-        .filter((aboveGround) => aboveGround.elevation < middleCloudsTop)
-        .reduce<[number, [number, number] | undefined]>(
-          ([cloudBottom, maybePreviousElevationAndCloudCover], aboveGround) => {
-            if (maybePreviousElevationAndCloudCover === undefined) {
-              return [cloudBottom, [aboveGround.elevation, aboveGround.cloudCover]]
-            } else {
-              const [previousElevation, previousCloudCover] = maybePreviousElevationAndCloudCover;
-              const cloudTop = (aboveGround.elevation + previousElevation) / 2;
-              airDiagram.fillRect(
-                [columnStart, elevationScale.apply(cloudBottom)],
-                [columnEnd,   elevationScale.apply(cloudTop)],
-                cloudsColorScale.interpolate(previousCloudCover).css()
-              );
-              return [cloudTop, [aboveGround.elevation, aboveGround.cloudCover]]
-            }
-          },
-          [forecasts.elevation, undefined]
-        );
-    if (maybeLastElevationAndCloudCover !== undefined) {
-      const [_, lastCloudCover] = maybeLastElevationAndCloudCover;
-      airDiagram.fillRect(
-        [columnStart, elevationScale.apply(lastCloudBottom)],
-        [columnEnd,   elevationScale.apply(middleCloudsTop)],
-        cloudsColorScale.interpolate(lastCloudCover).css()
-      );
-    }
 
     // Cumulus Clouds
     if (forecast.boundaryLayer.cumulusClouds !== undefined && forecast.boundaryLayer.cumulusClouds.bottom < airDiagramHeightAboveGroundLevel) {
       airDiagram.cumulusCloud(
         [columnStart, elevationScale.apply(forecast.boundaryLayer.cumulusClouds.bottom + forecasts.elevation)],
         [columnEnd,   elevationScale.apply(forecast.boundaryLayer.depth + forecasts.elevation)]
+      );
+    }
+
+    const columnCenter = (columnStart + columnEnd) / 2;
+    const [lastCloudBottomY, maybeLastElevationAndCloudCover] =
+      forecast.aboveGround
+        // Keep only entries that are below the middle clouds top
+        .filter((aboveGround) => aboveGround.elevation < middleCloudsTop)
+        .reduce<[number, [number, number] | undefined]>(
+          ([cloudBottomY, maybePreviousElevationAndCloudCover], aboveGround) => {
+            const elevationY = elevationScale.apply(aboveGround.elevation);
+            if (maybePreviousElevationAndCloudCover === undefined) {
+              return [cloudBottomY, [elevationY, aboveGround.cloudCover]]
+            } else {
+              const [previousElevationY, previousCloudCover] = maybePreviousElevationAndCloudCover;
+              const cloudTopY = (elevationY + previousElevationY) / 2;
+              drawCloudCover(
+                airDiagram,
+                meteogramColumnWidth,
+                previousCloudCover,
+                columnCenter,
+                cloudBottomY,
+                cloudTopY
+              );
+              return [cloudTopY, [elevationY, aboveGround.cloudCover]]
+            }
+          },
+          [elevationScale.apply(forecasts.elevation), undefined]
+        );
+    if (maybeLastElevationAndCloudCover !== undefined) {
+      const [_, lastCloudCover] = maybeLastElevationAndCloudCover;
+      drawCloudCover(
+        airDiagram,
+        meteogramColumnWidth,
+        lastCloudCover,
+        columnCenter,
+        lastCloudBottomY,
+        elevationScale.apply(middleCloudsTop)
       );
     }
   });
