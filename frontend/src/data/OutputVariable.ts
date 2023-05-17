@@ -64,7 +64,7 @@ export const rainVariable: OutputVariable<number> = OutputVariable(
 export const windSurfaceVariable: OutputVariable<[number, number]> = OutputVariable(
   "wind-surface",
   data => data,
-  averager1D
+  averager2D
 );
 
 /** km/h */
