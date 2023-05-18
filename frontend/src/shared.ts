@@ -15,3 +15,4 @@ export const showDate = (date: Date, options?: { showWeekDay?: boolean }): strin
 
 export const xcFlyingPotentialLayerName = 'XC Flying Potential';
 
+export const inversionStyle = '#d0a0e8';
