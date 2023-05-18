@@ -7,6 +7,7 @@ import { createEffect, JSX } from 'solid-js';
 import { keyWidth, meteogramColumnWidth } from '../styles/Styles';
 import { State } from '../State';
 import { thermalVelocityColorScale } from '../layers/ThermalVelocity';
+import { inversionStyle } from '../shared';
 
 const airDiagramHeightAboveGroundLevel = 3500; // m
 
@@ -273,17 +274,36 @@ const drawMeteogram = (
     // Boundary Layer
     const cappedBoundaryLayerDepth = Math.min(forecast.boundaryLayer.depth, airDiagramHeightAboveGroundLevel); // Clip boundary layer in case it’s too high
     const boundaryLayerHeight = elevationScale.apply(forecasts.elevation + cappedBoundaryLayerDepth);
-    airDiagram.fillRect(
-      [columnStart, 0],
-      [columnEnd,   boundaryLayerHeight],
-      boundaryLayerStyle
-    );
     // Blue sky
     airDiagram.fillRect(
       [columnStart, boundaryLayerHeight],
       [columnEnd,   airDiagramHeight],
       skyStyle
     )
+    // Stable layers
+    forecast.aboveGround
+      .filter(aboveGround => aboveGround.elevation < middleCloudsTop)
+      .reduce<[number, number]>(
+        ([previousElevation, previousTemperature], aboveGround) => {
+          const lapseRate = (aboveGround.temperature - previousTemperature) / ((aboveGround.elevation - previousElevation) / 100);
+          // Inversion
+          if (lapseRate >= 0) {
+            airDiagram.fillRect(
+              [columnStart, elevationScale.apply(previousElevation)],
+              [columnEnd,   elevationScale.apply(aboveGround.elevation)],
+              inversionStyle
+            );
+          }
+          return [aboveGround.elevation, aboveGround.temperature]
+        },
+        [forecasts.elevation, forecast.surface.temperature]
+      );
+    // Boundary layer
+    airDiagram.fillRect(
+      [columnStart, 0],
+      [columnEnd,   boundaryLayerHeight],
+      boundaryLayerStyle
+    );
   });
 
   // Clouds

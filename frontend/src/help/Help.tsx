@@ -2,7 +2,7 @@ import { createSignal, JSX, lazy, Match, Show, Switch } from 'solid-js'
 import * as L from 'leaflet'
 import { bottomButtonsSize, keyWidth, soundingWidth, surfaceOverMap } from '../styles/Styles';
 import * as fakeData from './data';
-import { showDate, xcFlyingPotentialLayerName } from '../shared';
+import { showDate, xcFlyingPotentialLayerName, inversionStyle } from '../shared';
 import { type Domain } from '../State';
 
 export const Help = (props: { domain: Domain }): JSX.Element => {
@@ -165,6 +165,9 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     last day. It is good to have a boundary layer of at least 750 m above the ground level to fly cross-country.
   </p>
   <p>
+    <b style={ lightTextStyle(inversionStyle) }>Purple strips</b> indicate inversion layers. Inversions are parts of the atmosphere where the air is very stable. They block thermals and the development of convective clouds.
+  </p>
+  <p>
     The <b>wind</b> and <b>clouds</b> are also shown in that diagram at various elevation levels. For
     instance, within the boundary layer, there is moderate wind the first two days (between 15 km/h
     and 30 km/h), and light wind the third day (5 to 15 km/h). The wind comes from the south the
@@ -178,7 +181,7 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     if they develop too high they can produce showers or thunderstorms.
   </p>
   <p>
-    The cloud cover at various elevation levels is shown by the white or gray strips: the wider the
+    The cloud cover at various elevation levels is shown by the gray strips: the wider the
     strip, the more the cloud cover. If the strip takes half of the column, it means a cloud cover
     of 50%. If it takes the whole column, it means a cloud cover of 100%. Note that the high-level
     cloud cover is indicated at the topmost part of the diagram (when the vertical scale axis becomes
@@ -229,7 +232,8 @@ const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
     The horizontal axis shows the temperature, whereas the vertical axis shows the altitude.
     The <b>rightmost line</b> shows the evolution of the temperature of the air with altitude. A <b>black thin
     line</b> means a stable air mass, an <b style="color: orange">orange line</b> means a conditionally unstable air
-    mass, and a <b style={lightTextStyle('yellow')}>yellow line</b> means an absolutely unstable air mass.
+    mass, and a <b style={lightTextStyle('yellow')}>yellow line</b> means an absolutely unstable air mass. On
+    the other hand, a <b style="color: #f0f">purple line</b> indicates an inversion layer.
     The <b style="color: blue">blue line</b> shows the evolution of the dew point
     temperature with altitude.
   </p>

@@ -329,7 +329,7 @@ const drawSounding = (
             ['orange', 3] :   // conditionally unstable air
             (lapseRate < 0 ?
               ['black', 2] :  // stable air
-              ['black', 1]    // inversion
+              ['#f0f', 2]    // inversion
             )
           );
       diagram.line(
