@@ -17,6 +17,7 @@ import { thermalVelocityLayer } from './layers/ThermalVelocity';
 import { rainLayer } from './layers/Rain';
 import { cumuliDepthLayer } from './layers/CumuliDepth';
 import { showDate } from './shared';
+import { Labelled, Radio } from './styles/Forms';
 
 /**
  * Overlay on the map that displays the soaring forecast.
@@ -39,24 +40,24 @@ export const LayersSelector = (props: {
       {
         props.forecastMetadatas.map(forecastMetadata => {
           const initTimeString = showDate(forecastMetadata.init, { showWeekDay: true });
-          return makeRadioBtn(
-            initTimeString,
-            `Show forecast initialized at ${initTimeString}.`,
-            () => state.forecastMetadata === forecastMetadata,
-            'init',
-            () => props.domain.setForecastMetadata(forecastMetadata)
-          )
+          return <Radio
+            label={ initTimeString }
+            title={ `Show forecast initialized at ${initTimeString}.` }
+            checked={ state.forecastMetadata === forecastMetadata }
+            groupName='init'
+            onChange={ () => props.domain.setForecastMetadata(forecastMetadata) }
+          />
         })
       }
     </fieldset>;
 
   function setupLayerBtn(layer: Layer, layerType: 'primary-layer' | 'wind-layer'): JSX.Element {
-    const container = makeRadioBtn(
-      layer.name,
-      layer.title,
-      () => state.primaryLayer.key === layer.key || state.windLayer.key === layer.key, // Note: for some reason, comparing the layers does not work but comparing the keys does.
-      layerType,
-      () => {
+    const container = <Radio
+      label={ layer.name }
+      title={ layer.title }
+      checked={ state.primaryLayer.key === layer.key || state.windLayer.key === layer.key } // Note: for some reason, comparing the layers does not work but comparing the keys does.
+      groupName={ layerType }
+      onChange={ () => {
         switch (layerType) {
           case 'primary-layer':
             props.domain.setPrimaryLayer(layer);
@@ -65,8 +66,8 @@ export const LayersSelector = (props: {
             props.domain.setWindLayer(layer);
             break;
         }
-      }
-    );
+      }}
+    />;
     return container
   }
 
@@ -89,24 +90,16 @@ export const LayersSelector = (props: {
   const _2000MAMSLWindEl = setupLayerBtn(_2000MAMSLWindLayer, 'wind-layer');
   const _3000MAMSLWindEl = setupLayerBtn(_3000MAMSLWindLayer, 'wind-layer');
   const _4000MAMSLWindEl = setupLayerBtn(_4000MAMSLWindLayer, 'wind-layer');
-  const windCheckBox = inputWithLabel(
-    'Wind',
-    'Show wind force and direction at various elevation levels',
+  const windCheckBox = <Labelled
+    label='Wind'
+    title='Show wind force and direction at various elevation levels'
+  >
     <input
       type='checkbox'
       checked={state.windLayerEnabled}
       onChange={() => props.domain.enableWindLayer(!state.windLayerEnabled)}
     />
-  );
-  const windNumericValuesCheckBox = inputWithLabel(
-    'Numerical values',
-    'Show numerical values instead of showing a wind barb',
-    <input
-      type='checkbox'
-      checked={state.windNumericValuesShown}
-      onChange={() => props.domain.showWindNumericValues(!state.windNumericValuesShown)}
-    />
-  );
+  </Labelled>;
   const windLayersEl =
     <fieldset>
       <legend>{windCheckBox}</legend>
@@ -117,7 +110,6 @@ export const LayersSelector = (props: {
       {_2000MAMSLWindEl}
       {_3000MAMSLWindEl}
       {_4000MAMSLWindEl}
-      {windNumericValuesCheckBox}
     </fieldset>;
 
   const cloudCoverEl = setupLayerBtn(cloudCoverLayer, 'primary-layer');
@@ -250,33 +242,6 @@ export const LayersSelector = (props: {
 
   return [rootElement, layerKeyEl]
 };
-
-const makeRadioBtn = (
-  label: string,
-  title: string,
-  checked: () => boolean,
-  groupName: string,
-  onChange: () => void
-): JSX.Element =>
-  inputWithLabel(
-    label,
-    title,
-    <input
-      name={groupName}
-      type='radio'
-      checked={checked()}
-      onChange={() => onChange()}
-    />
-  );
-
-const inputWithLabel = (
-  label: string,
-  title: string,
-  input: JSX.Element
-): JSX.Element =>
-  <div style={{ 'background-color': 'rgba(255, 255, 255, 0.5)', 'text-align': 'right' }}>
-    <label style={{ cursor: 'pointer', padding: '0.3em' }} title={title}>{label}{input}</label>
-  </div>;
 
 const table = (data: Array<[string, JSX.Element]>): JSX.Element => {
   const rows =

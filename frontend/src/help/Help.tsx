@@ -4,6 +4,7 @@ import { bottomButtonsSize, keyWidth, soundingWidth, surfaceOverMap } from '../s
 import * as fakeData from './data';
 import { showDate, xcFlyingPotentialLayerName, inversionStyle } from '../shared';
 import { type Domain } from '../State';
+import { Overlay } from '../map/Overlay';
 
 export const Help = (props: { domain: Domain }): JSX.Element => {
 
@@ -31,51 +32,23 @@ export const Help = (props: { domain: Domain }): JSX.Element => {
 
   const help = <span>
     { expandButton }
-    <Show
-      when={ isVisible() }
+    <Overlay
+      isVisible={ isVisible() }
+      close={ () => makeVisible(false) }
+      maxWidth='80em'
     >
-      <div
-        style={{
-          position: 'fixed',
-          inset: '0',
-          'background-color': 'rgb(0, 0, 0, 0.3)',
-          cursor: 'pointer',
-          'backdrop-filter': 'blur(5px)',
-          display: 'flex',
-          'align-items': 'center',
-          'justify-content': 'center'
-        }}
-        onClick={ () => makeVisible(false) }
-      >
-        <div
-          style={{
-            ...surfaceOverMap,
-            'max-width': '80em',
-            display: 'inline-block',
-            'border-radius': '5px',
-            'background-color': 'white',
-            padding: '0 0.5em',
-            'font-size': '1rem',
-            cursor: 'auto',
-            'overflow': 'scroll',
-            'max-height': '90%'
-          }}
-          onClick={ e => e.stopPropagation() }
-        >
-          <Switch>
-            <Match when={ state.detailedView === undefined }>
-              <MapHelp domain={props.domain} />
-            </Match>
-            <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'meteogram' }>
-              <MeteogramHelp domain={props.domain} />
-            </Match>
-            <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'sounding' }>
-              <SoundingHelp domain={props.domain} />
-            </Match>
-          </Switch>
-        </div>
-      </div>
-    </Show>
+      <Switch>
+        <Match when={ state.detailedView === undefined }>
+          <MapHelp domain={props.domain} />
+        </Match>
+        <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'meteogram' }>
+          <MeteogramHelp domain={props.domain} />
+        </Match>
+        <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'sounding' }>
+          <SoundingHelp domain={props.domain} />
+        </Match>
+      </Switch>
+    </Overlay>
   </span> as HTMLElement;
 
   L.DomEvent.disableClickPropagation(help);
