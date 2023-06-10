@@ -3,6 +3,7 @@ import { createSignal, JSX, Show } from "solid-js";
 import { Domain } from "./State";
 import { periodSelectorHeight } from "./styles/Styles";
 import { surfaceOverMap } from "./styles/Styles";
+import { Settings } from "./Settings";
 
 /**
  * Burger menu with links to the other parts of the website.
@@ -14,6 +15,7 @@ export const Burger = (props: { domain: Domain }): JSX.Element => {
 
   const state = props.domain.state;
   const [expanded, setExpanded] = createSignal(false);
+  const [areSettingsVisible, makeSettingsVisible] = createSignal(false);
 
   const menu =
     <div
@@ -36,14 +38,14 @@ export const Burger = (props: { domain: Domain }): JSX.Element => {
   L.DomEvent.disableClickPropagation(menu);
 
   const optionStyle = {
-    padding: '8px 16px',
+    padding: '8px 0',
     'font-size': '15px',
     'line-height': '1.5',
     'font-family': 'sans-serif',
     'color': '#fff'
   };
 
-  const entries = [
+  const staticEntries = [
     ['⌂ Soaringmeteo',       'https://soaringmeteo.org/'],
     ['soarGFS',              'https://soaringmeteo.org/GFSw/googleMap.html'],
     ['soarWRF',              'https://soaringmeteo.org/soarWRF'],
@@ -58,11 +60,18 @@ export const Burger = (props: { domain: Domain }): JSX.Element => {
         ...surfaceOverMap,
         'background-color': '#009688',
         color: '#fff',
-        'border-radius': '0 0 4px 0'
+        'border-radius': '0 0 4px 0',
+        padding: '0 12px'
       }}
     >
+      <div
+        style={{...optionStyle, cursor: 'pointer'}}
+        onClick={ () => makeSettingsVisible(true) }>
+          ⚙ Settings
+      </div>
+      <hr />
       {
-        entries.map(([label, href]) => {
+        staticEntries.map(([label, href]) => {
           return <a href={href} style={{'text-decoration': 'none'}}><div style={optionStyle}>{label}</div></a>
         })
       }
@@ -74,5 +83,10 @@ export const Burger = (props: { domain: Domain }): JSX.Element => {
     <Show when={expanded()}>
       {options}
     </Show>
+    <Settings
+      isVisible={ areSettingsVisible() }
+      close={ () => makeSettingsVisible(false) }
+      domain={ props.domain }
+    />
   </Show>
 };
