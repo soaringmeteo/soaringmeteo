@@ -14,8 +14,9 @@ export const Settings = (props: {
     close={ () => props.close() }
     maxWidth='30em'
   >
-    <h1>Settings</h1>
-    <fieldset>
+    <h1 style={{ margin: '.1em 0' }}>Settings</h1>
+
+    <fieldset style={{ 'margin-top': '.1em 0' }}>
       <legend>Wind</legend>
       <p>The wind speed can be indicated by either wind barbs or a numerical value in km/h. Wind barbs are a visual way of representing the wind speed by increments of 2.5 km/h. See the help for more information on how to interpret the barbs.</p>
       <Radio
@@ -33,6 +34,27 @@ export const Settings = (props: {
         checked={ props.domain.state.windNumericValuesShown }
         groupName='barbs-vs-numerical'
         onChange={ () => props.domain.showWindNumericValues(true) }
+      />
+    </fieldset>
+
+    <fieldset style={{ 'margin-top': '.1em' }}>
+      <legend>Time</legend>
+      <p>The time can be displayed according to your timezone, or in UTC.</p>
+      <Radio
+        label='Show time using my current timezone'
+        labelPosition='right'
+        title='Show time using my current timezone instead of UTC'
+        checked={ !props.domain.state.utcTimeShown }
+        groupName='time'
+        onChange={ () => props.domain.showUtcTime(false) }
+      />
+      <Radio
+        label='Show time according to UTC'
+        labelPosition='right'
+        title='Show UTC time instead of using my current timezone'
+        checked={ props.domain.state.utcTimeShown }
+        groupName='time'
+        onChange={ () => props.domain.showUtcTime(true) }
       />
     </fieldset>
   </Overlay>;

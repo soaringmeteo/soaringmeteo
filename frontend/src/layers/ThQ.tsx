@@ -31,6 +31,7 @@ export const xcFlyingPotentialLayer: Layer = {
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     hourOffset: number,
+    timeZone: string | undefined,
     setHourOffset: (value: number) => void
   }): ReactiveComponents {
 
@@ -71,7 +72,7 @@ export const xcFlyingPotentialLayer: Layer = {
               'box-sizing': 'border-box',
               'cursor': 'pointer'
             }}
-            title={ `${ showDate(medianForecast.time, { showWeekDay: true }) }: ${ medianForecast.xcPotential }%` }
+            title={ `${ showDate(medianForecast.time, { showWeekDay: true, timeZone: props.timeZone }) }: ${ medianForecast.xcPotential }%` }
             onClick={ () => props.setHourOffset(medianForecast.hourOffsetSinceInitializationTime(props.forecastMetadata.init)) }
           />
         })

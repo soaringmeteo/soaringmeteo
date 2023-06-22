@@ -48,7 +48,12 @@ const PeriodSelector = (props: {
               }}
               onClick={() => props.domain.setHourOffset(hourOffset)}
             >
-              {date.toLocaleTimeString(undefined, { hour12: false, hour: '2-digit' })}
+              {
+                date.toLocaleTimeString(
+                  undefined,
+                  { hour12: false, hour: '2-digit', timeZone: props.domain.timeZone() }
+                )
+              }
             </span>;
           hover(htmlEl);
           return [htmlEl, hourOffset, date]
@@ -90,7 +95,7 @@ const PeriodSelector = (props: {
             >
             {
               periods.length === periodsPerDay ?
-                date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', weekday: 'short' }) :
+                date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', weekday: 'short', timeZone: props.domain.timeZone() }) :
                 '\xa0'
             }
             </div>
@@ -127,19 +132,19 @@ const decorateDetailedView = (
     viewType === 'meteogram' ?
       <>
         <span>
-          Location: { locationCoordinates }. Model: { domain.state.forecastMetadata.model }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false }) }.
+          Location: { locationCoordinates }. Model: { domain.state.forecastMetadata.model }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false, timeZone: domain.timeZone() }) }.
         </span>
         <button
           type="button"
           onClick={ () => showLocationForecast('sounding') }
           style="font-size: 12px"
         >
-          Sounding for { showDate(domain.state.forecastMetadata.dateAtHourOffset(hourOffset()), { showWeekDay: true }) }
+          Sounding for { showDate(domain.state.forecastMetadata.dateAtHourOffset(hourOffset()), { showWeekDay: true, timeZone: domain.timeZone() }) }
         </button>
       </> :
       <>
         <span>
-          Location: { locationCoordinates }. Time: { showDate(domain.state.forecastMetadata.dateAtHourOffset(hourOffset()), { showWeekDay: true }) }. Model: { domain.state.forecastMetadata.model }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false }) }.
+          Location: { locationCoordinates }. Time: { showDate(domain.state.forecastMetadata.dateAtHourOffset(hourOffset()), { showWeekDay: true, timeZone: domain.timeZone() }) }. Model: { domain.state.forecastMetadata.model }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false, timeZone: domain.timeZone() }) }.
         </span>
         <button
           type="button"
@@ -245,7 +250,7 @@ export const PeriodSelectors = (props: {
       {
         showDate(
           state.forecastMetadata.dateAtHourOffset(state.hourOffset),
-          { showWeekDay: true }
+          { showWeekDay: true, timeZone: props.domain.timeZone() }
         )
       }
     </div>;

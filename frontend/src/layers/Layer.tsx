@@ -31,6 +31,7 @@ export type ReactiveComponents = {
     forecastMetadata: ForecastMetadata,
     hourOffset: number,
     windNumericValuesShown: boolean,
+    timeZone: string | undefined,
     setHourOffset: (value: number) => void
   }): ReactiveComponents
 }
