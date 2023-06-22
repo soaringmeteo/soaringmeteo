@@ -39,7 +39,11 @@ export const LayersSelector = (props: {
       <legend>Initialization Time</legend>
       {
         props.forecastMetadatas.map(forecastMetadata => {
-          const initTimeString = showDate(forecastMetadata.init, { showWeekDay: true });
+          const initTimeString =
+            showDate(
+              forecastMetadata.init,
+              { showWeekDay: true, timeZone: props.domain.timeZone() }
+            );
           return <Radio
             label={ initTimeString }
             title={ `Show forecast initialized at ${initTimeString}.` }
@@ -217,7 +221,7 @@ export const LayersSelector = (props: {
           const content =
             <div>
               <div>Grid point: {latitude},{longitude}</div>
-              <div>GFS forecast for {showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { showWeekDay: true })}</div>
+              <div>GFS forecast for {showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { showWeekDay: true, timeZone: props.domain.timeZone() })}</div>
               { table(summary) }
               <div style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-around' }}>
                 <button

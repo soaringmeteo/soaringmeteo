@@ -67,7 +67,7 @@ const MapHelp = (props: { domain: Domain }): JSX.Element => {
       a <a href='https://soaringmeteo.org/don.html'>donation</a> to help us cover our cost.
     </p>
     <p>
-      You are looking at the weather forecast for { showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset)) },
+      You are looking at the weather forecast for { showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { timeZone: props.domain.timeZone() }) },
       from the model { state.forecastMetadata.model }. Select the information to display on the map
       by clicking on the “layers” button to the bottom right of the screen.
     </p>

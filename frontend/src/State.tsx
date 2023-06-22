@@ -17,10 +17,13 @@ export type State = {
   // It is possible to also show a wind layer as an overlay
   windLayer: Layer
   windLayerEnabled: boolean
-  // Whether to show numerical values instead of showing a barb
-  windNumericValuesShown: boolean
   // If defined, the detailed forecast data for the selected location, and the type of detailed view to display
   detailedView: undefined | [LocationForecasts, DetailedViewType]
+  // --- Settings
+  // Whether to show numerical values instead of showing a barb
+  windNumericValuesShown: boolean
+  // Whether to show UTC time instead of using the user timezone
+  utcTimeShown: boolean
 }
 
 export type DetailedViewType = 'meteogram' | 'sounding'
@@ -30,6 +33,7 @@ const selectedPrimaryLayerKey   = 'selected-primary-layer';
 const selectedWindLayerKey      = 'selected-wind-layer';
 const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
+const utcTimeShownKey           = 'utc-time-shown';
 
 const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValue: A): A => {
   const maybeItem = window.localStorage.getItem(key);
@@ -77,6 +81,13 @@ const saveWindNumericValuesShown = (value: boolean): void => {
   window.localStorage.setItem(windNumericValuesShownKey, JSON.stringify(value));
 };
 
+const loadUtcTimeShown = (): boolean =>
+  loadStoredState(utcTimeShownKey, raw => JSON.parse(raw), false);
+
+const saveUtcTimeShown = (value: boolean): void => {
+  window.localStorage.setItem(utcTimeShownKey, JSON.stringify(value));
+};
+
 /**
  * Manages the interactions with the state of the system.
  * 
@@ -100,6 +111,7 @@ export class Domain {
     const windLayer              = loadWindLayer();
     const windLayerEnabled       = loadWindLayerEnabled();
     const windNumericValuesShown = loadWindNumericValuesShown();
+    const utcTimeShown           = loadUtcTimeShown();
   
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
     const [get, set] = createStore<State>({
@@ -108,17 +120,22 @@ export class Domain {
       windLayer: windLayer,
       hourOffset: hourOffset,
       windLayerEnabled,
+      detailedView: undefined,
       windNumericValuesShown,
-      detailedView: undefined
+      utcTimeShown
     }, { name: 'state' }); // See https://github.com/solidjs/solid/discussions/1414
 
     this.state = get;
     this.setState = set;
+    const self = this;
 
     const [projectedProps] =
       splitProps(this.state, ['forecastMetadata', 'hourOffset', 'windNumericValuesShown']);
     const props =
-      mergeProps(projectedProps, { setHourOffset: (value: number) => this.setHourOffset(value) });
+      mergeProps(projectedProps, {
+        setHourOffset: (value: number) => this.setHourOffset(value),
+        get timeZone(): string | undefined { return self.timeZone() }
+      });
 
     this.primaryLayerReactiveComponents =
       createMemo(() => this.state.primaryLayer.reactiveComponents(props));
@@ -158,6 +175,17 @@ export class Domain {
   showWindNumericValues(windNumericValuesShown: boolean): void {
     saveWindNumericValuesShown(windNumericValuesShown);
     this.setState({ windNumericValuesShown })
+  }
+
+  /** Whether to show UTC time instead of using the user timezone */
+  showUtcTime(utcTimeShown: boolean): void {
+    saveUtcTimeShown(utcTimeShown);
+    this.setState({ utcTimeShown });
+  }
+
+  /** The timezone to use according to the user’s preferences */
+  timeZone(): string | undefined {
+    return this.state.utcTimeShown ? 'UTC' : undefined
   }
 
   /** Display the detailed view (meteogram or sounding) at the given location */
