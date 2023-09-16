@@ -48,7 +48,8 @@ object Settings {
         gfsArea(Point(65, 5), Point(69, 11)) --
         gfsArea(Point(64, 9), Point(BigDecimal("64.75"), 5))
     val westernEurope =
-      gfsArea(Point(35, -11), Point(55, 30)) --
+      gfsArea(Point(35, -11), Point(55, 30)) ++
+        gfsArea(Point(BigDecimal("36.25"), BigDecimal("30.25")), Point(BigDecimal("41.25"), BigDecimal("32.5"))) -- // Expand in Turkey
         gfsArea(Point(44, -11), Point(47, -3)) --
         gfsArea(Point(47, -11), Point(51, -6)) --
         gfsArea(Point(35, BigDecimal("17.5")), Point(39, 20)) --
