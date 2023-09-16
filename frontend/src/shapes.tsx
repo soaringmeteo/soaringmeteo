@@ -90,13 +90,13 @@ export const drawWindArrow = (ctx: CanvasRenderingContext2D, x: number, y: numbe
   if (showNumericValues) {
     drawWindArrowAndNumericalValue(ctx, x, y, width, color, windForce, windDirection);
   } else {
-    drawWindBarb(ctx, x, y, width - 4, color, windForce, windDirection);
+    drawWindBarb(ctx, x, y, width, color, windForce, windDirection);
   }
 }
 
 const drawWindBarb = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, color: string, windForce: number, windDirection: number): void => {
   ctx.save();
-  ctx.lineWidth = Math.ceil(width / 15);
+  ctx.lineWidth = Math.max(Math.ceil(width / 20), 2);
   ctx.strokeStyle = color;
   ctx.lineCap = 'round';
   ctx.beginPath();

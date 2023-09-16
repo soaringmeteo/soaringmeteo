@@ -23,7 +23,7 @@ const windComponents = (windVariable: OutputVariable<[number, number]>) => (prop
       renderPoint(latitude: number, longitude: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
         grid?.mapViewPoint(latitude, longitude, averagingFactor, ([u, v]) => {
           const center = L.point((topLeft.x + bottomRight.x) / 2, (topLeft.y + bottomRight.y) / 2);
-          const width = bottomRight.x - topLeft.x;
+          const width = Math.min((bottomRight.x - topLeft.x) * 0.8, 75);
           drawWindArrow(
             ctx,
             center.x,
@@ -63,7 +63,7 @@ const windComponents = (windVariable: OutputVariable<[number, number]>) => (prop
             canvas.height = 20;
             const ctx = canvas.getContext('2d');
             if (ctx === null) { return }
-            drawWindArrow(ctx, canvas.width / 2, canvas.height / 2, canvas.width - 4, windColor(0.50), windSpeed, 0, false);
+            drawWindArrow(ctx, canvas.width / 2, canvas.height / 2, canvas.width - 6, windColor(0.50), windSpeed, 0, false);
             return (
               <div style={{ 'margin-bottom': '2px' }}>
                 <div>{`${windSpeed} km/h `}</div>

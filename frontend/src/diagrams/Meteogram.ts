@@ -361,13 +361,13 @@ const drawMeteogram = (
     const windCenterX = columnStart + meteogramColumnWidth / 2;
     const windColor = `rgba(62, 0, 0, ${ windNumericValuesShown ? 0.5 : 0.25 })`;
     // Surface wind
-    drawWindArrow(ctx, windCenterX, airDiagram.projectY(0), meteogramColumnWidth - 4, windColor, forecast.surface.wind.u, forecast.surface.wind.v, windNumericValuesShown);
+    drawWindArrow(ctx, windCenterX, airDiagram.projectY(0), meteogramColumnWidth - 12, windColor, forecast.surface.wind.u, forecast.surface.wind.v, windNumericValuesShown);
     // Air wind
     forecast.aboveGround
       // Keep enly the wind values that are above the ground + 125 meters (so that arrows don’t overlap)
       .filter((entry) => entry.elevation > forecasts.elevation + 125 && entry.elevation < forecasts.elevation + airDiagramHeightAboveGroundLevel)
       .forEach((wind) => {
-        drawWindArrow(ctx, windCenterX, airDiagram.projectY(elevationScale.apply(wind.elevation)), meteogramColumnWidth - 4, windColor, wind.u, wind.v, windNumericValuesShown);
+        drawWindArrow(ctx, windCenterX, airDiagram.projectY(elevationScale.apply(wind.elevation)), meteogramColumnWidth - 12, windColor, wind.u, wind.v, windNumericValuesShown);
       });
   });
 
