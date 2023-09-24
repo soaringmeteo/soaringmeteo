@@ -75,7 +75,7 @@ const saveWindLayerEnabled = (value: boolean): void => {
 };
 
 const loadWindNumericValuesShown = (): boolean =>
-  loadStoredState(windNumericValuesShownKey, raw => JSON.parse(raw), false);
+  loadStoredState(windNumericValuesShownKey, raw => JSON.parse(raw), true);
 
 const saveWindNumericValuesShown = (value: boolean): void => {
   window.localStorage.setItem(windNumericValuesShownKey, JSON.stringify(value));
