@@ -12,7 +12,7 @@ Building the program requires a JDK and sbt.
 ## Build
 
 ~~~
-sbt universal:packageZipTarball
+sbt Universal/packageZipTarball
 ~~~
 
 It should create a tarball named `soaringmeteo-0.1.0-SNAPSHOT.tgz` in the
@@ -23,14 +23,13 @@ It should create a tarball named `soaringmeteo-0.1.0-SNAPSHOT.tgz` in the
 Unpack the archive `soaringmeteo-0.1.0-SNAPSHOT.tgz` and run the binaries in the `bin` directory:
 
 ~~~
-bin/soaringmeteo <CSV locations file> <GRIBs directory> <JSON directory>
+bin/soaringmeteo <GRIBs directory> <JSON directory>
 ~~~
 
-The program takes three required arguments:
+The program takes two required arguments:
 
-1. the location of the CSV file that contains the GFS points for which we want to produce a soaring forecast,
-2. the directory where to store the GRIB files downloaded from GFS,
-3. the directory where to write the produced JSON files.
+1. the directory where to store the GRIB files downloaded from GFS,
+2. the directory where to write the produced JSON files.
 
 Optional flags and arguments are documented with `--help`:
 

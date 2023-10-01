@@ -30,12 +30,13 @@ case class AreaAndHour(area: Area, hourOffset: Int)
 object AreaAndHour {
 
   /**
-   * All the areas and hour offsets we are interested in.
+   * @param  gfsDownloadAreas The areas for which we need to download the GFS forecast.
+   * @return all the areas and hour offsets we are interested in.
    */
-  val all: Seq[AreaAndHour] =
+  def all(gfsDownloadAreas: Iterable[Area]): Seq[AreaAndHour] =
     for {
       t    <- Settings.forecastHours
-      area <- Settings.gfsDownloadAreas
+      area <- gfsDownloadAreas
     } yield AreaAndHour(area, t)
 
 }
