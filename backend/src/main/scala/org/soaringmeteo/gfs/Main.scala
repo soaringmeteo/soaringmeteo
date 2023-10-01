@@ -12,9 +12,15 @@ object Main extends CommandApp(
   "soaringmeteo",
   "Download weather data, extract the relevant information for soaring pilots, and produce JSON data from it",
   main = {
-    val csvLocationsFile = Opts.argument[os.Path]("CSV locations file")
     val gribsDir         = Opts.argument[os.Path]("GRIBs directory")
     val jsonDir          = Opts.argument[os.Path]("JSON directory")
+
+    val csvLocationsFile = Opts.option[os.Path](
+      "locations-file",
+      "CSV file containing a list of GFS points to cover in our results",
+      "f"
+    )
+      .orNone
 
     val gfsRunInitTime = Opts.option[String](
       "gfs-run-init-time",
@@ -30,7 +36,7 @@ object Main extends CommandApp(
       "r"
     ).orFalse
 
-    (csvLocationsFile, gribsDir, jsonDir, gfsRunInitTime, reusePreviousGribFiles).mapN(Soaringmeteo.run)
+    (gribsDir, jsonDir, csvLocationsFile, gfsRunInitTime, reusePreviousGribFiles).mapN(Soaringmeteo.run)
   }
 )
 
@@ -38,9 +44,9 @@ object Soaringmeteo {
   private val logger = LoggerFactory.getLogger(getClass)
 
   def run(
-    csvLocationsFile: os.Path,
     gribsDir: os.Path,
     jsonDir: os.Path,
+    csvLocationsFile: Option[os.Path],
     maybeGfsRunInitTime: Option[String],
     reusePreviousGribFiles: Boolean
   ): Unit = Try {

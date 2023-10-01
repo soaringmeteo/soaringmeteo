@@ -1,11 +1,14 @@
 package org.soaringmeteo.gfs
 
 import com.typesafe.config.ConfigFactory
+import org.slf4j.LoggerFactory
 import org.soaringmeteo.Point
 
 import java.time.Period
 
 object Settings {
+
+  private val logger = LoggerFactory.getLogger(getClass)
 
   val config = ConfigFactory.load().getConfig("soargfs")
 
@@ -42,7 +45,7 @@ object Settings {
   val numberOfForecastsPerDay: Int = 24 / gfsForecastTimeResolution
 
   /** The forecast locations we are interested in */
-  def gfsForecastLocations(csvFile: os.Path): Seq[Point] = {
+  def gfsForecastLocations(csvFile: Option[os.Path]): Seq[Point] = {
     val scandinavia =
       gfsArea(Point(58, 5), Point(69, 28)) --
         gfsArea(Point(65, 5), Point(69, 11)) --
@@ -86,16 +89,24 @@ object Settings {
     (westernEurope ++ scandinavia ++ southAfrica ++ himalaya ++ morocco ++ fromCsvFile(csvFile)).toSeq
   }
 
-  def fromCsvFile(csvFile: os.Path): Set[Point] = {
-    val step = BigDecimal(gfsForecastSpaceResolution) / 100
-    for {
-      location  <- GfsLocation.parse(os.read(csvFile)).to(Set)
-      longitude <- (location.longitude - step) to (location.longitude + step) by step
-      if longitude >= -180 && longitude <= 180
-      latitude  <- (location.latitude - step) to (location.latitude + step) by step
-      if latitude >= -90 && latitude <= 90
-    } yield Point(latitude, longitude)
-  }
+  private def fromCsvFile(maybeCsvFile: Option[os.Path]): Set[Point] =
+    maybeCsvFile match {
+      case Some(csvFile) =>
+        if (os.exists(csvFile)) {
+          val step = BigDecimal(gfsForecastSpaceResolution) / 100
+          for {
+            location <- GfsLocation.parse(os.read(csvFile)).to(Set)
+            longitude <- (location.longitude - step) to (location.longitude + step) by step
+            if longitude >= -180 && longitude <= 180
+            latitude <- (location.latitude - step) to (location.latitude + step) by step
+            if latitude >= -90 && latitude <= 90
+          } yield Point(latitude, longitude)
+        } else {
+          logger.error(s"Ignoring non-existing locations file: ${csvFile}")
+          Set.empty
+        }
+      case None => Set.empty
+    }
 
   /**
    * @return All the GFS points that are in the area delimited by the two

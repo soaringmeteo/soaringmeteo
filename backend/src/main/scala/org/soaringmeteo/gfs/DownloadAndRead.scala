@@ -53,8 +53,9 @@ object DownloadAndRead {
 
     val gribDownloader = new GribDownloader
 
+    val allAreasAndHours = AreaAndHour.all(locationsByArea.keys)
     // Total number of files to download and then load into memory
-    val filesCount = AreaAndHour.all.size
+    val filesCount = allAreasAndHours.size
 
     // Reports the progression of downloads
     val downloadReporter = new WorkReporter(filesCount, "Downloading forecast data", logger)
@@ -86,7 +87,7 @@ object DownloadAndRead {
       // For all the other cases, we just use the default execution context
       import scala.concurrent.ExecutionContext.Implicits.global
       Future
-        .traverse(AreaAndHour.all) { areaAndHour =>
+        .traverse(allAreasAndHours) { areaAndHour =>
           val locations = locationsByArea(areaAndHour.area)
           for {
             gribFile  <- download(areaAndHour)

@@ -66,7 +66,7 @@ InputKey[Unit]("downloadGribAndMakeJson") := Def.inputTaskDyn {
   val maybeGfsRunInitTime = (Space ~> (literal("00") | literal("06") | literal("12") | literal("18"))).?.parsed
   val requiredArgs = List(
     "-r", // always reuse previous files in dev mode
-    "../../Boran/soaringmeteo/gfs/gfs-loc.csv",
+    "-f", "../../Boran/soaringmeteo/gfs/gfs-loc.csv",
     "target/grib",
     "target/forecast/data"
   )
