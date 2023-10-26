@@ -4,8 +4,11 @@ import cats.syntax.apply._
 import com.monovore.decline.{CommandApp, Opts}
 import org.slf4j.LoggerFactory
 import PathArgument.pathArgument
+import org.soaringmeteo.gfs.out.{InitDateString, Store, runTargetPath, versionedTargetPath}
 
-import scala.util.Try
+import java.util.concurrent.TimeoutException
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.control.NonFatal
 
 object Main extends CommandApp(
@@ -14,13 +17,6 @@ object Main extends CommandApp(
   main = {
     val gribsDir         = Opts.argument[os.Path]("GRIBs directory")
     val jsonDir          = Opts.argument[os.Path]("JSON directory")
-
-    val csvLocationsFile = Opts.option[os.Path](
-      "locations-file",
-      "CSV file containing a list of GFS points to cover in our results",
-      "f"
-    )
-      .orNone
 
     val gfsRunInitTime = Opts.option[String](
       "gfs-run-init-time",
@@ -36,7 +32,7 @@ object Main extends CommandApp(
       "r"
     ).orFalse
 
-    (gribsDir, jsonDir, csvLocationsFile, gfsRunInitTime, reusePreviousGribFiles).mapN(Soaringmeteo.run)
+    (gribsDir, jsonDir, gfsRunInitTime, reusePreviousGribFiles).mapN(Soaringmeteo.run)
   }
 )
 
@@ -46,28 +42,46 @@ object Soaringmeteo {
   def run(
     gribsDir: os.Path,
     jsonDir: os.Path,
-    csvLocationsFile: Option[os.Path],
     maybeGfsRunInitTime: Option[String],
     reusePreviousGribFiles: Boolean
-  ): Unit = Try {
-    val locationsByArea =
-      Settings.gfsForecastLocations(csvLocationsFile)
-        .groupBy { point =>
-          Settings.gfsDownloadAreas
-            .find(_.contains(point))
-            .getOrElse(sys.error(s"${point} is not in the downloaded GFS areas"))
+  ): Unit = {
+    val exitStatus =
+      try {
+        resetDatabaseIfNeeded(Store.ensureSchemaExists(), 20.seconds)
+        val subgrids = Settings.gfsSubgrids
+        val gfsRun = in.ForecastRun.findLatest(maybeGfsRunInitTime)
+        if (!reusePreviousGribFiles) {
+          logger.info("Removing old data")
+          os.remove.all(gribsDir)
+          resetDatabaseIfNeeded(Store.deleteAll(), 60.seconds)
+          ()
         }
-    val gfsRun = in.ForecastRun.findLatest(maybeGfsRunInitTime)
-    if (!reusePreviousGribFiles) {
-      logger.info("Removing old GRIB files")
-      os.remove.all(gribsDir)
-    }
-    val forecastGribsDir = gfsRun.storagePath(gribsDir)
-    val forecastsByHour = DownloadAndRead(forecastGribsDir, gfsRun, locationsByArea, reusePreviousGribFiles)
-    JsonWriter.writeJsons(jsonDir, gfsRun, forecastsByHour, locationsByArea.values.flatten)
-    logger.info("Done")
-  }.recover {
-    case NonFatal(error) => logger.error("Failed to run soaringmeteo", error)
-  }.get
+        val forecastGribsDir = gfsRun.storagePath(gribsDir)
+        val versionedTargetDir = versionedTargetPath(jsonDir)
+        val runTargetDir = runTargetPath(versionedTargetDir, InitDateString(gfsRun.initDateTime))
+        os.makeDir.all(runTargetDir)
+        DataPipeline(forecastGribsDir, runTargetDir, gfsRun, subgrids, reusePreviousGribFiles)
+        JsonWriter.writeJsons(versionedTargetDir, gfsRun)
+        logger.info("Done")
+        0
+      } catch {
+        case NonFatal(error) =>
+          logger.error("Failed to run soaringmeteo", error)
+          1
+      } finally {
+        Store.close()
+      }
+    System.exit(exitStatus)
+  }
 
+  def resetDatabaseIfNeeded[A](result: Future[A], timeout: Duration): Unit =
+    try {
+      Await.result(result, timeout)
+      ()
+    } catch {
+      case _: TimeoutException =>
+        logger.error("Possibly corrupted database.")
+        os.remove(os.pwd / "data.mv.db")
+        ()
+    }
 }

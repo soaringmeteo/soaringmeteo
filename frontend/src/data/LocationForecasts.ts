@@ -54,6 +54,7 @@ export class DetailedForecast {
   readonly meanSeaLevelPressure: number;
   readonly isothermZero: number; // m
   readonly aboveGround: Array<AboveGround>; // Sorted by ascending elevation
+  readonly winds: DetailedWinds;
 
   constructor(data: DetailedForecastData, elevation: number) {
     this.time = new Date(data.t);
@@ -66,7 +67,7 @@ export class DetailedForecast {
         u: data.bl.u,
         v: data.bl.v
       },
-      cumulusClouds: data.bl.c === undefined ? undefined : ({ bottom: data.bl.c[0] })
+      cumulusClouds: data.bl.c === undefined ? undefined : ({ bottom: data.bl.c[0], top: data.bl.c[1] })
     };
     this.surface = {
       temperature: data.s.t,
@@ -97,6 +98,14 @@ export class DetailedForecast {
             cloudCover: entry.c / 100
           }
         });
+
+    this.winds = {
+      soaringLayerTop: data.w[0],
+      _300MAGL: data.w[1],
+      _2000MAMSL: data.w[2],
+      _3000MAMSL: data.w[3],
+      _4000MAMSL: data.w[4]
+    };
   }
 
   hourOffsetSinceInitializationTime(initializationTime: Date): number {
@@ -104,6 +113,14 @@ export class DetailedForecast {
   }
 
 }
+
+export type DetailedWinds = {
+  soaringLayerTop: Wind
+  _300MAGL: Wind
+  _2000MAMSL: Wind
+  _3000MAMSL: Wind
+  _4000MAMSL: Wind
+};
 
 export type DetailedSurface = {
   temperature: number // °C
@@ -117,7 +134,7 @@ export type DetailedBoundaryLayer = {
   soaringLayerDepth: number // m (AGL)
   cumulusClouds?: {
     bottom: number // m (AGL)
-    // top: number // m (AGL) (commented because not reliable)
+    top: number // m (AGL)
   }
 };
 
@@ -126,7 +143,7 @@ export type DetailedRain = {
   total: number // mm
 };
 
-type Wind = {
+export type Wind = {
   u: number // km/h
   v: number // km/h
 };
@@ -193,6 +210,7 @@ export type DetailedForecastData = {
   // Mean sea level pressure 
   mslet: number, // hPa
   c: number // Between 0 and 100
+  w: Array<{u: number, v: number}>
 }
 
 export const modelResolution = 25 // Hundredths of degrees

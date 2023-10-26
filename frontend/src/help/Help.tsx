@@ -1,5 +1,4 @@
 import { createSignal, JSX, lazy, Match, Show, Switch } from 'solid-js'
-import * as L from 'leaflet'
 import { bottomButtonsSize, keyWidth, soundingWidth, surfaceOverMap } from '../styles/Styles';
 import * as fakeData from './data';
 import { showDate, xcFlyingPotentialLayerName, inversionStyle } from '../shared';
@@ -30,29 +29,33 @@ export const Help = (props: { domain: Domain }): JSX.Element => {
       ?
     </div>;
 
-  const help = <span>
+  const help = <span
+    style={{
+      display: 'block',
+      margin: '3px'
+    }}
+  >
     { expandButton }
     <Overlay
       isVisible={ isVisible() }
       close={ () => makeVisible(false) }
       maxWidth='80em'
     >
-      <Switch>
-        <Match when={ state.detailedView === undefined }>
-          <MapHelp domain={props.domain} />
-        </Match>
-        <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'meteogram' }>
-          <MeteogramHelp domain={props.domain} />
-        </Match>
-        <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'sounding' }>
-          <SoundingHelp domain={props.domain} />
-        </Match>
-      </Switch>
+      <span style="text-align: left">
+        <Switch>
+          <Match when={ state.detailedView === undefined }>
+            <MapHelp domain={props.domain} />
+          </Match>
+          <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'meteogram' }>
+            <MeteogramHelp domain={props.domain} />
+          </Match>
+          <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'sounding' }>
+            <SoundingHelp domain={props.domain} />
+          </Match>
+        </Switch>
+      </span>
     </Overlay>
   </span> as HTMLElement;
-
-  L.DomEvent.disableClickPropagation(help);
-  L.DomEvent.disableScrollPropagation(help);
 
   return help
 };
@@ -68,8 +71,8 @@ const MapHelp = (props: { domain: Domain }): JSX.Element => {
     </p>
     <p>
       You are looking at the weather forecast for { showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { timeZone: props.domain.timeZone() }) },
-      from the model { state.forecastMetadata.model }. Select the information to display on the map
-      by clicking on the “layers” button to the bottom right of the screen.
+      from the model { state.forecastMetadata.model }. Select the information to display on the map, or the zone of the world to cover,
+      by clicking on the “layers” button at the bottom right of the screen.
     </p>
     <p>
       Currently, you see the <strong>{ state.primaryLayer.title }</strong>.
@@ -83,7 +86,7 @@ const MapHelp = (props: { domain: Domain }): JSX.Element => {
     </Show>
     <p>
       Click on the map to see meteograms and sounding diagrams for that location. <strong>At any
-      point, click on the help button again to get an explanation about you currently see.</strong>
+      point, click on the help button again to get an explanation about what you currently see.</strong>
     </p>
     <p>
       Something is not working as expected? Please file an <a href='https://github.com/soaringmeteo/soaringmeteo/issues'>issue</a>.
@@ -144,9 +147,18 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     The <b>wind</b> and <b>clouds</b> are also shown in that diagram at various elevation levels. For
     instance, within the boundary layer, there is moderate wind the first two days (between 15 km/h
     and 30 km/h), and light wind the third day (5 to 15 km/h). The wind comes from the south the
-    second day. You can learn more about the wind barb by showing the help from within the map view,
-    if there is a wind layer enabled.
+    second day.
   </p>
+  <Show when={ !props.domain.state.windNumericValuesShown }>
+    <p>The wind is shown by wind barbs. The number of barb “flags”, in the
+      arrow, indicates the speed with a precision of 2.5 km/h. For instance, an arrow
+      with a single short flag indicate a speed between 0 and 2.5 km/h. If it has two
+      short flags, it means a speed between 2.5 and 5 km/h. Two long flags mean a speed
+      between 7.5 and 10 km/h. Four long flags mean a speed between 17.5 and 20 km/h,
+      and so on. Alternatively, you can show the wind speed as a numerical value by going
+      to the Settings from the top-left main menu.
+    </p>
+  </Show>
   <p>
     Cumulus clouds are shown by the <b>white cloud picture</b>. Soaring pilots can not fly higher
     than the cloud base. When there is no cloud picture at all, it means there will

@@ -3,6 +3,7 @@ package org.soaringmeteo.gfs.out
 import org.soaringmeteo.{Interpolation, Wind}
 import squants.space.{Length, Meters}
 
+import scala.collection.SortedMap
 import scala.collection.immutable.ArraySeq
 
 /** Wind values at several elevation levels */
@@ -16,9 +17,9 @@ case class Winds(
 
 object Winds {
 
-  def apply(forecast: Forecast): Winds = {
+  def apply(airData: SortedMap[Length, AirData], locationElevation: Length, soaringLayerDepth: Length): Winds = {
     val airDataSorted =
-      forecast.airDataByAltitude.view
+      airData.view
         .map { case (elevation, airData) => (elevation, airData.wind) }
         .to(ArraySeq)
 
@@ -36,8 +37,8 @@ object Winds {
     }
 
     Winds(
-      at(forecast.elevation + Meters(300)),
-      at(forecast.elevation + forecast.soaringLayerDepth),
+      at(locationElevation + Meters(300)),
+      at(locationElevation + soaringLayerDepth),
       at(Meters(2000)),
       at(Meters(3000)),
       at(Meters(4000))

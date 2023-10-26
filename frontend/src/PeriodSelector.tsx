@@ -1,8 +1,7 @@
-import * as L from 'leaflet';
 import { createEffect, createMemo, createSignal, JSX } from 'solid-js';
 
 import { forecastOffsets, periodsPerDay } from './data/ForecastMetadata';
-import { showDate } from './shared';
+import {showCoordinates, showDate} from './shared';
 import { DetailedViewType, type Domain } from './State';
 import { closeButton, closeButtonSize, keyWidth, meteogramColumnWidth, periodSelectorHeight, surfaceOverMap } from './styles/Styles';
 import { LocationForecasts } from './data/LocationForecasts';
@@ -127,11 +126,11 @@ const decorateDetailedView = (
   keyAndView: { key: JSX.Element, view: JSX.Element },
   showLocationForecast: (viewType: DetailedViewType) => void
 ): { key: JSX.Element, view: JSX.Element } => {
-  const locationCoordinates = `${ forecasts.latitude.toFixed(4) }°,${ forecasts.longitude.toFixed(4) }°`;
+  const locationCoordinates = showCoordinates(forecasts.longitude, forecasts.latitude, 2);
   const extra =
     viewType === 'meteogram' ?
       <>
-        <span>
+        <span style="font-size: 12px">
           Location: { locationCoordinates }. Model: { domain.state.forecastMetadata.model }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false, timeZone: domain.timeZone() }) }.
         </span>
         <button
@@ -143,7 +142,7 @@ const decorateDetailedView = (
         </button>
       </> :
       <>
-        <span>
+        <span style="font-size: 12px">
           Location: { locationCoordinates }. Time: { showDate(domain.state.forecastMetadata.dateAtHourOffset(hourOffset()), { showWeekDay: true, timeZone: domain.timeZone() }) }. Model: { domain.state.forecastMetadata.model }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false, timeZone: domain.timeZone() }) }.
         </span>
         <button
@@ -327,31 +326,41 @@ export const PeriodSelectors = (props: {
 
   // Period selector and close button for the meteogram
   const periodSelectorContainer =
-    <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 1100, 'max-width': '100%', 'user-select': 'none', cursor: 'default' }}>
+    <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 100, 'max-width': '100%', 'user-select': 'none', cursor: 'default', 'font-size': '0.8125rem' }}>
       {detailedViewKeyEl}
       <div style={{ display: 'flex', 'align-items': 'flex-start' }}>
         {hideDetailedViewBtn}
         {periodSelectorEl}
       </div>
     </span> as HTMLElement;
-  L.DomEvent.disableClickPropagation(periodSelectorContainer);
-  L.DomEvent.disableScrollPropagation(periodSelectorContainer);
 
   // Current period
   const currentDayContainer =
-    <span style={{ position: 'absolute', bottom: 0, 'margin-left': 'auto', 'margin-right': 'auto', left: 0, right: 0, 'text-align': 'center', 'z-index': 950, 'user-select': 'none', cursor: 'default' }}>
-      <div style={{ ...surfaceOverMap, width: '125px', display: 'inline-block', 'background-color': 'white', 'border-radius': '4px 4px 0 0' }}>
-        {currentDayEl}
-        <div>
-          {previousDayBtn}
-          {previousPeriodBtn}
-          {nextPeriodBtn}
-          {nextDayBtn}
-        </div>
+    <div
+      style={{
+        ...surfaceOverMap,
+        display: 'block',
+        position: 'absolute',
+        bottom: 0,
+        left: '50%',
+        transform: 'translate(-50%,0)',
+        'background-color': 'white',
+        'border-radius': '2px 2px 0 0',
+        'font-size': '0.8125rem',
+        'text-align': 'center',
+        'user-select': 'none',
+        cursor: 'default',
+        padding: '0.1rem 0.2rem 0 0.2rem'
+      }}
+    >
+      {currentDayEl}
+      <div>
+        {previousDayBtn}
+        {previousPeriodBtn}
+        {nextPeriodBtn}
+        {nextDayBtn}
       </div>
-    </span> as HTMLElement;
-  L.DomEvent.disableClickPropagation(currentDayContainer);
-  L.DomEvent.disableScrollPropagation(currentDayContainer);
+    </div> as HTMLElement;
 
   return <>
     {periodSelectorContainer}

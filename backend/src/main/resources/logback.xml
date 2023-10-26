@@ -8,8 +8,10 @@
 
     <logger name="ucar" level="WARN" />
     <logger name="cacheLogger" level="WARN" />
+    <logger name="slick" level="INFO" />
+    <!-- <logger name="org.soaringmeteo.gfs.out.VectorTiles$" level="TRACE" /> -->
 
-    <root level="debug">
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
 

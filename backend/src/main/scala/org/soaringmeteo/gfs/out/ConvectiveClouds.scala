@@ -1,6 +1,8 @@
 package org.soaringmeteo.gfs.out
 
 import org.soaringmeteo.gfs.in
+import squants.Temperature
+import squants.motion.Pressure
 import squants.space.{Length, Meters}
 import squants.thermal.Celsius
 
@@ -15,15 +17,21 @@ object ConvectiveClouds {
 
   // TODO copied from old soarWRF, we need to check that this is correct
   // Eventually, we might want to replace with Convective Rolls Index (see https://www.academia.edu/download/66056559/RomJPhys.66.803.pdf)
-  def apply(forecast: in.Forecast): Option[ConvectiveClouds] = {
+  def apply(
+     surfaceTemperature: Temperature,
+     surfaceDewPoint: Temperature,
+     elevation: Length,
+     boundaryLayerDepth: Length,
+     atPressure: Map[Pressure, in.IsobaricVariables]
+   ): Option[ConvectiveClouds] = {
     // Cumuli base height is computed via Hennig formula
     val convectiveCloudsBottom: Length =
-      Meters(122.6 * (forecast.surfaceTemperature - forecast.surfaceDewPoint).toCelsiusScale) + forecast.elevation
+      Meters(122.6 * (surfaceTemperature - surfaceDewPoint).toCelsiusScale) + elevation
 
-    val boundaryLayerHeight = forecast.elevation + forecast.boundaryLayerDepth
+    val boundaryLayerHeight = elevation + boundaryLayerDepth
 
     val maybeVariables =
-      forecast.atPressure.view
+      atPressure.view
         .map { case (_, variables) => (variables.geopotentialHeight, (variables.temperature, variables.dewPoint)) }
         // Keep only the values above the boundary layer height
         .filter { case (elevation, _) => elevation > boundaryLayerHeight }

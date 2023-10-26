@@ -1,6 +1,5 @@
 import { JSX, Show } from 'solid-js'
 import { surfaceOverMap } from '../styles/Styles'
-import * as L from 'leaflet'
 
 /**
  * An overlay on the map, with a blur background.
@@ -21,7 +20,8 @@ export const Overlay = (props: {
         'backdrop-filter': 'blur(5px)',
         display: 'flex',
         'align-items': 'center',
-        'justify-content': 'center'
+        'justify-content': 'center',
+        'z-index': 1000
       }}
       onClick={ () => props.close() }
     >
@@ -43,9 +43,6 @@ export const Overlay = (props: {
         { props.children }
       </div>
     </div> as HTMLElement;
-
-  L.DomEvent.disableClickPropagation(element);
-  L.DomEvent.disableScrollPropagation(element);
 
   return <Show when={ props.isVisible }>
     { element }

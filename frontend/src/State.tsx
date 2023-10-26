@@ -1,6 +1,6 @@
 import { createStore, SetStoreFunction } from 'solid-js/store';
 import { LocationForecasts } from './data/LocationForecasts';
-import { ForecastMetadata } from './data/ForecastMetadata';
+import {ForecastMetadata, Zone} from './data/ForecastMetadata';
 import { Layer, ReactiveComponents } from './layers/Layer';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
 import { layerByKey } from './layers/Layers';
@@ -10,6 +10,8 @@ import { Accessor, createMemo, mergeProps, splitProps } from 'solid-js';
 export type State = {
   // Currently selected forecast run
   forecastMetadata: ForecastMetadata
+  // Currently selected zone. Must be included in `forecastMetadata.zones`
+  zone: Zone
   // Delta with the forecast initialization time
   hourOffset: number
   // Selected layer on the map (XC flying potential, thermal velocity, etc.)
@@ -31,6 +33,7 @@ export type DetailedViewType = 'meteogram' | 'sounding'
 // Keys used to store the current display settings in the local storage
 const selectedPrimaryLayerKey   = 'selected-primary-layer';
 const selectedWindLayerKey      = 'selected-wind-layer';
+const zoneKey = 'zone-key';
 const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 const utcTimeShownKey           = 'utc-time-shown';
@@ -65,6 +68,17 @@ const loadWindLayer = (): Layer =>
 
 const saveWindLayer = (key: string): void => {
   window.localStorage.setItem(selectedWindLayerKey, key);
+};
+
+const loadZone = (zones: Array<Zone>): Zone =>
+  loadStoredState(
+    zoneKey,
+    value => zones.find(zone => zone.id === value) || zones.find(zone => zone.id === 'europe') || zones[0],
+    zones.find(zone => zone.id === 'europe') || zones[0]
+  );
+
+const saveZone = (key: string): void => {
+  window.localStorage.setItem(zoneKey, key);
 };
 
 const loadWindLayerEnabled = (): boolean =>
@@ -107,6 +121,7 @@ export class Domain {
     forecastMetadata: ForecastMetadata,
     hourOffset: number
   ) {
+    const zone = loadZone(forecastMetadata.zones);
     const primaryLayer           = loadPrimaryLayer();
     const windLayer              = loadWindLayer();
     const windLayerEnabled       = loadWindLayerEnabled();
@@ -116,6 +131,7 @@ export class Domain {
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
     const [get, set] = createStore<State>({
       forecastMetadata: forecastMetadata,
+      zone,
       primaryLayer: primaryLayer,
       windLayer: windLayer,
       hourOffset: hourOffset,
@@ -130,7 +146,7 @@ export class Domain {
     const self = this;
 
     const [projectedProps] =
-      splitProps(this.state, ['forecastMetadata', 'hourOffset', 'windNumericValuesShown']);
+      splitProps(this.state, ['forecastMetadata', 'zone', 'hourOffset', 'windNumericValuesShown']);
     const props =
       mergeProps(projectedProps, {
         setHourOffset: (value: number) => this.setHourOffset(value),
@@ -146,6 +162,11 @@ export class Domain {
   /** Change the forecast run to display */
   setForecastMetadata(forecastMetadata: ForecastMetadata): void {
     this.setState({ forecastMetadata }) // TODO Reset hourOffset
+  }
+
+  setZone(zone: Zone): void {
+    saveZone(zone.id);
+    this.setState({ zone });
   }
 
   /** Change the period to display in the current forecast run */
@@ -165,13 +186,13 @@ export class Domain {
     this.setState({ windLayer: layer });
   }
 
-  /** Whether or not the wind layer should be shown. */
+  /** Whether the wind layer should be shown. */
   enableWindLayer(enabled: boolean): void {
     saveWindLayerEnabled(enabled);
     this.setState({ windLayerEnabled: enabled });
   }
 
-  /** Whether or not numerical values should be displayed instead of wind barb */
+  /** Whether numerical values should be displayed instead of wind barbs */
   showWindNumericValues(windNumericValuesShown: boolean): void {
     saveWindNumericValuesShown(windNumericValuesShown);
     this.setState({ windNumericValuesShown })
@@ -192,7 +213,7 @@ export class Domain {
   showLocationForecast(latitude: number, longitude: number, viewType: DetailedViewType): void {
     // TODO Optimization if state.detailedView already contains data for the given latitude,longitude
     this.state.forecastMetadata
-      .fetchLocationForecasts(latitude, longitude)
+      .fetchLocationForecasts(this.state.zone, latitude, longitude)
       .then(locationForecasts => {
         if (locationForecasts !== undefined) {
           this.setState({ detailedView: [locationForecasts, viewType] });
@@ -204,5 +225,21 @@ export class Domain {
   hideLocationForecast(): void {
     this.setState({ detailedView: undefined })
   }
+
+  readonly urlOfRasterAtCurrentHourOffset: Accessor<string> =
+    (): string =>
+      this.state.forecastMetadata.urlOfRasterAtHourOffset(
+        this.state.zone.id,
+        this.state.primaryLayer.dataPath,
+        this.state.hourOffset
+      );
+
+  readonly urlOfVectorTilesAtCurrentHourOffset: Accessor<string> =
+    (): string =>
+      this.state.forecastMetadata.urlOfVectorTilesAtHourOffset(
+        this.state.zone.id,
+        this.state.windLayer.dataPath,
+        this.state.hourOffset
+      );
 
 }

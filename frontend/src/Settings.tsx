@@ -1,7 +1,7 @@
 import { JSX } from "solid-js";
 import { Domain } from "./State";
 import { Overlay } from "./map/Overlay";
-import { Radio } from "./styles/Forms";
+import {Checkbox, Radio} from "./styles/Forms";
 
 /** User settings */
 export const Settings = (props: {
@@ -18,22 +18,13 @@ export const Settings = (props: {
 
     <fieldset style={{ 'margin-top': '.1em 0' }}>
       <legend>Wind</legend>
-      <p>The wind speed can be indicated by either wind barbs or a numerical value in km/h. Wind barbs are a visual way of representing the wind speed by increments of 2.5 km/h. See the help for more information on how to interpret the barbs.</p>
-      <Radio
-        label='Show wind barbs'
-        labelPosition='right'
-        title='Show wind barbs instead of showing numerical values'
-        checked={ !props.domain.state.windNumericValuesShown }
-        groupName='barbs-vs-numerical'
-        onChange={ () => props.domain.showWindNumericValues(false) }
-      />
-      <Radio
-        label='Show numerical values'
-        labelPosition='right'
-        title='Show numerical values instead of showing wind barbs'
+      <p>By default, the wind speed is indicated by a numerical value next to each wind arrow. If you hide the numerical values, in the meteograms the wind speed will be indicated by wind barbs (with a precision of 2.5 km/h). See the help on the meteograms for more information on how to interpret the barbs.</p>
+      <Checkbox
+        label='Show the numerical values'
+        title='Show the wind speed as a numerical value next to the wind arrow'
         checked={ props.domain.state.windNumericValuesShown }
-        groupName='barbs-vs-numerical'
-        onChange={ () => props.domain.showWindNumericValues(true) }
+        onChange={ value => props.domain.showWindNumericValues(value) }
+        labelPosition='right'
       />
     </fieldset>
 

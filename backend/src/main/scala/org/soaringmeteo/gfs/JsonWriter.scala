@@ -1,19 +1,22 @@
 package org.soaringmeteo.gfs
 
+import geotrellis.vector.Extent
 import io.circe
 import io.circe.Json
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.Point
-import org.soaringmeteo.gfs.out.{Forecast, ForecastMetadata, ForecastsByHour, InitDateString, LocationForecasts, OutputVariable, formatVersion}
+import org.soaringmeteo.gfs.out.{Forecast, ForecastMetadata, InitDateString, LocationForecasts, Store, VectorTiles, runTargetPath, subgridTargetPath}
+import org.soaringmeteo.util.WorkReporter
 
-import java.nio.file.Files
-import scala.collection.immutable.SortedMap
+import java.time.OffsetDateTime
+import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
 import scala.util.Try
 
 /**
  * Produce soaring forecast data from the GFS forecast data.
  *
- * GFS runs produce one file per time of forecast, and each file contains the forecast
+ * GFS runs produce one file per time-step of forecast, and each file contains the forecast
  * data of all the locations in the world.
  *
  * We want to structure data differently: we want to gather, for one location, the
@@ -27,93 +30,88 @@ object JsonWriter {
    * Extract data from the GFS forecast in the form of JSON documents.
    *
    *
-   * @param targetDir Directory where we write our resulting JSON documents
+   * @param versionedTargetDir Directory where we write our resulting JSON documents
    */
   def writeJsons(
-    targetDir: os.Path,
+    versionedTargetDir: os.Path,
     gfsRun: in.ForecastRun,
-    forecastsByHour: ForecastsByHour,
-    locations: Iterable[Point]
   ): Unit = {
-    // Directory for our version of the forecast data format
-    val versionedTargetDir = targetDir / formatVersion.toString
     val initDateString = InitDateString(gfsRun.initDateTime)
-    // Write all the JSON documents in a subdirectory named according to the
+    // Write all the data in a subdirectory named according to the
     // initialization time of the GFS run (e.g., `2021-01-08T12`).
-    val targetRunDir = versionedTargetDir / initDateString
-    logger.info(s"Writing soaring forecasts in $targetRunDir")
-    os.makeDir.all(targetRunDir)
+    val targetRunDir = runTargetPath(versionedTargetDir, initDateString)
+    logger.info(s"Writing location forecasts in $targetRunDir")
 
-    // We create one JSON document per forecast time and per output variable (e.g., `2021-01-08T12/soaring-layer-depth/0h.json`,
-    // `2021-01-08T12/wind-300m-agl/3h.json`, etc.).
-    // Each document contains the forecast for that parameter (soaring layer depth, wind, etc.) and for each location
-    // listed in Settings.gfsForecastLocations
-    writeForecastsByHour(forecastsByHour, targetRunDir)
+    for (subgrid <- Settings.gfsSubgrids) {
+      // Write the data corresponding to every subgrid in a specific subdirectory
+      val subgridTargetDir = subgridTargetPath(targetRunDir, subgrid)
 
-    // We also create one JSON document per location (e.g., `2021-01-08T12/locations/700-4650.json`), where each
-    // document contains the detail of the forecast for each period of forecast
-    writeLocationsForecasts(locations, forecastsByHour, targetRunDir)
+      // We write the detailed forecast over time of every point of the grid. To avoid creating
+      // many files, we group the points into clusters and create one file per cluster (e.g.,
+      // `2021-01-08T12/europe-africa/locations/{x}-{y}.json`, where x and y are the coordinates
+      // of the cluster)
+      writeForecastsByLocation(gfsRun.initDateTime, subgrid, subgridTargetDir)
+    }
 
     // Update the file `forecast.json` in the root target directory
     // and rename the old `forecast.json`, if any
     overwriteLatestForecastMetadata(initDateString, gfsRun, versionedTargetDir)
 
     // Finally, we remove files older than five days ago from the target directory
-    deleteOldData(gfsRun, targetDir)
+    deleteOldData(gfsRun, versionedTargetDir)
   }
 
   /**
-   * Write one JSON file per hour of forecast and per output variable, containing forecast data
-   * for every point defined [[Settings.gfsForecastLocations]].
-   */
-  private def writeForecastsByHour(
-    forecastsByHour: ForecastsByHour,
-    targetDir: os.Path
-  ): Unit = {
-    for {
-      (t, forecastsByLocation) <- forecastsByHour
-      outputVariable           <- OutputVariable.gfsOutputVariables
-    } {
-      val fields =
-        forecastsByLocation.iterator.map { case (p, forecast) =>
-          // Coordinates are indexed according to the resolution of the GFS model.
-          // For instance, latitude 0.0 has index 0, latitude 0.25 has index 1, latitude 0.50 has
-          // index 2, etc.
-          val locationKey = s"${(p.longitude * 100 / Settings.gfsForecastSpaceResolution).intValue},${(p.latitude * 100 / Settings.gfsForecastSpaceResolution).intValue}"
-          locationKey -> outputVariable.toJson(forecast)
-        }.toSeq
-
-      val fileName = s"${t}h.json" // e.g., "3h.json", "6h.json", etc.
-      os.write.over(
-        targetDir / outputVariable.path / fileName,
-        Json.obj(fields: _*).noSpaces,
-        createFolders = true
-      )
-    }
-  }
-
-  /**
-   * Write one JSON file per point containing the forecast data for
+   * Write one JSON file per every 16 points, containing the forecast data for
    * the next days.
    */
-  private def writeLocationsForecasts(
-    locations: Iterable[Point],
-    forecastsByHour: ForecastsByHour,
+  private def writeForecastsByLocation(
+    initTime: OffsetDateTime,
+    subgrid: Subgrid,
     targetDir: os.Path
   ): Unit = {
-    // Make sure forecasts are in chronological order
-    val forecasts = forecastsByHour.to(SortedMap).view.values.toSeq
-    for (location <- locations) {
-      val point = Point(location.latitude, location.longitude)
-      logger.trace(s"Writing forecast for location ${location.longitude},${location.latitude}")
-      val locationForecasts = LocationForecasts(point, forecasts.map(_(point)))
-      // E.g., "750-4625.json"
-      val fileName = s"${(location.longitude * 100).intValue}-${(location.latitude * 100).intValue}.json"
+    val k = 4 // clustering factor
+    val reporter = new WorkReporter(subgrid.size / (k * k), s"Writing location forecasts for subgrid ${subgrid.id}", logger)
+    for {
+      (longitudes, xCluster) <- subgrid.longitudes.grouped(k).zipWithIndex
+      (latitudes,  yCluster) <- subgrid.latitudes.grouped(k).zipWithIndex
+    } {
+      val forecastHours =
+        Settings.forecastHours.map(hourOffset => (hourOffset, initTime.plusHours(hourOffset)))
+      val forecastsCluster: IndexedSeq[IndexedSeq[Map[Int, Forecast]]] = {
+        val xMin = xCluster * k
+        val yMin = yCluster * k
+        for ((longitude, x) <- longitudes.zip(Iterator.from(xMin))) yield {
+          for ((latitude, y) <- latitudes.zip(Iterator.from(yMin)))
+            yield {
+              val location = Point(latitude, longitude)
+              // TODO That could be optimized further (e.g. pre-compute for every grid point)
+              val relevantHours =
+                forecastHours
+                  .view
+                  .filter { case (_, time) => LocationForecasts.isRelevant(location)(time) }
+                  .map(_._1)
+                  .toSet
+              Await.result(Store.forecastForLocation(initTime, subgrid, x, y, relevantHours), 300.second)
+            }
+        }
+      }
+      logger.trace(s"Writing forecast for cluster (${xCluster}-${yCluster}) including longitudes ${longitudes} and latitudes ${latitudes}.")
+      val json =
+        Json.arr(forecastsCluster.map { forecastColumns =>
+          Json.arr(forecastColumns.map { forecastsByHour =>
+            val locationForecasts = LocationForecasts(forecastsByHour.toSeq.sortBy(_._1).map(_._2))
+            LocationForecasts.jsonEncoder(locationForecasts)
+          }: _*)
+        }: _*)
+      // E.g., "12-34.json"
+      val fileName = s"${xCluster}-${yCluster}.json"
       os.write.over(
         targetDir / "locations" / fileName,
-        LocationForecasts.jsonEncoder(locationForecasts).noSpaces,
+        json.noSpaces,
         createFolders = true
       )
+      reporter.notifyCompleted()
     }
   }
 
@@ -138,19 +136,49 @@ object JsonWriter {
       } yield metadata.initDateTime
 
     val metadata =
-      ForecastMetadata(initDateString, gfsRun.initDateTime, Settings.forecastHours.last, maybePreviousForecastInitDateTime)
+      ForecastMetadata(
+        initDateString,
+        gfsRun.initDateTime,
+        Settings.forecastHours.last,
+        maybePreviousForecastInitDateTime,
+        for (subgrid <- Settings.gfsSubgrids) yield {
+          ForecastMetadata.Zone(
+            subgrid.id,
+            subgrid.label,
+            ForecastMetadata.Raster(
+              "EPSG:4326",
+              Extent(
+                subgrid.leftLongitude.doubleValue,
+                subgrid.bottomLatitude.doubleValue,
+                subgrid.rightLongitude.doubleValue,
+                subgrid.topLatitude.doubleValue
+              ).buffer(0.125) // Add buffer because we draw rectangles, not points
+            ),
+            ForecastMetadata.VectorTiles(
+              subgrid.vectorTilesParameters.extent,
+              subgrid.vectorTilesParameters.zoomLevels,
+              subgrid.vectorTilesParameters.minViewZoom,
+            )
+          )
+        }
+      )
     os.write.over(
       latestForecastPath,
       ForecastMetadata.jsonCodec(metadata).noSpaces
     )
   }
 
+  /**
+   * Delete the target directories older than `Settings.forecastHistory` days compared
+   * to the initialization time of given `gfsRun`.
+   *
+   * @param targetDir Directory that contains the `forecast.json` file and the subdirectories
+   *                  named according to the initialization time of the forecast.
+   */
   private def deleteOldData(gfsRun: in.ForecastRun, targetDir: os.Path): Unit = {
     val oldestForecastToKeep = gfsRun.initDateTime.minus(Settings.forecastHistory)
     for {
-      version <- os.list(targetDir)
-      if Files.isDirectory(version.toNIO)
-      path    <- os.list(version)
+      path    <- os.list(targetDir)
       date    <- InitDateString.parse(path.last)
       if date.isBefore(oldestForecastToKeep)
     } os.remove.all(path)

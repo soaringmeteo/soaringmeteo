@@ -34,20 +34,22 @@ class GribDownloader {
   def scheduleDownload(
     targetFile: os.Path,
     gfsRun: in.ForecastRun,
-    areaAndHour: AreaAndHour
+    hourOffset: Int,
+    subgrid: Subgrid
   ): Future[os.Path] =
     rateLimiter.submit(severalThreads) {
-      logger.debug(s"Downloading GFS data for $areaAndHour")
-      download(targetFile, gfsRun, areaAndHour)
+      logger.debug(s"Downloading GFS data at time $hourOffset and area ${subgrid.id}")
+      download(targetFile, gfsRun, hourOffset, subgrid)
       targetFile
     }
 
   private def download(
     targetFile: os.Path,
     gfsRun: in.ForecastRun,
-    areaAndHour: AreaAndHour
+    hourOffset: Int,
+    subgrid: Subgrid
   ): Unit = concurrent.blocking {
-    val url = gfsRun.gribUrl(areaAndHour)
+    val url = gfsRun.gribUrl(hourOffset, subgrid)
     // In my experience, the `time` directory is created ~3 hours after the run initialization
     // But the grib files that we are interested are only available around 3 hours and 30 min after the run initialization
     val response = insist(maxAttempts = 10, delay = 3.minutes, url)

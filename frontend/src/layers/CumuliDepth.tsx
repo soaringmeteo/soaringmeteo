@@ -1,9 +1,6 @@
 import { ColorScale, Color } from "../ColorScale";
-import * as L from 'leaflet';
-import { colorScaleEl, Layer, ReactiveComponents } from "./Layer";
-import { createResource, JSX } from "solid-js";
-import { cumulusDepthVariable } from "../data/OutputVariable";
-import { ForecastMetadata } from "../data/ForecastMetadata";
+import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
+import {ForecastMetadata, Zone} from "../data/ForecastMetadata";
 
 const cumuliDepthColorScale = new ColorScale([
   [50,   new Color(0xff, 0xff, 0xff, 0)],
@@ -17,58 +14,36 @@ export const cumuliDepthLayer: Layer = {
   key: 'cumuli-depth',
   name: 'Cumulus Clouds',
   title: 'Cumulus clouds depth',
+  dataPath: 'cumulus-depth',
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
+    zone: Zone,
     hourOffset: number
   }): ReactiveComponents {
 
-    const [cumulusDepthGrid] =
-      createResource(
-        () => ({ forecastMetadata: props.forecastMetadata, hourOffset: props.hourOffset }),
-        data => data.forecastMetadata.fetchOutputVariableAtHourOffset(cumulusDepthVariable, data.hourOffset)
-      );
+    const summarizer = summarizerFromLocationDetails(props, detailedForecast => {
+      const cumulusClouds = detailedForecast.boundaryLayer.cumulusClouds
+      const depth =
+        cumulusClouds !== undefined ?
+          cumulusClouds.top - cumulusClouds.bottom :
+          0
+      return [
+        ["Cumuli depth", <span>{ depth } m</span>]
+      ]
+    });
 
-    const renderer = () => {
-      const grid = cumulusDepthGrid();
-      return {
-        renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-          grid?.mapViewPoint(lat, lng, averagingFactor, cumuliDepth => {
-            const color = cumuliDepthColorScale.closest(cumuliDepth);
-            ctx.save();
-            ctx.fillStyle = color.css();
-            ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
-            ctx.restore();
-          });
-        }      
-      };
-    };
-
-    const summarizer = () => {
-      const grid = cumulusDepthGrid();
-      return {
-        async summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined> {
-          return grid?.mapViewPoint(lat, lng, 1, cumuliDepth =>
-            [
-              ["Cumuli depth", <span>{ cumuliDepth } m</span>]
-            ]
-          )
-        }
-      }
-    };
-    
     const mapKey = colorScaleEl(cumuliDepthColorScale, value => `${value} m `);
 
     const help = <>
       <p>
         Cumulus clouds are clouds caused by thermal activity. No cumulus clouds
         means no thermals or blue thermals. Deep cumulus clouds means there is
-        risk of overdevelopment.
+        risk of over-development.
       </p>
       <p>The color scale is shown on the bottom left of the screen.</p>
     </>;
 
     return {
-      renderer,
       summarizer,
       mapKey,
       help

@@ -1,9 +1,7 @@
 import { ColorScale, Color } from "../ColorScale";
-import * as L from 'leaflet';
-import { colorScaleEl, Layer, ReactiveComponents } from "./Layer";
-import { createResource, JSX } from "solid-js";
-import { xcFlyingPotentialVariable } from "../data/OutputVariable";
-import { ForecastMetadata } from "../data/ForecastMetadata";
+import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
+import { JSX } from "solid-js";
+import { ForecastMetadata, Zone } from "../data/ForecastMetadata";
 import { showDate, xcFlyingPotentialLayerName } from "../shared";
 import { LocationForecasts } from "../data/LocationForecasts";
 
@@ -28,33 +26,15 @@ export const xcFlyingPotentialLayer: Layer = {
 
   title: 'XC flying potential',
 
+  dataPath: 'xc-potential',
+
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
+    zone: Zone,
     hourOffset: number,
     timeZone: string | undefined,
     setHourOffset: (value: number) => void
   }): ReactiveComponents {
-
-    const [xcFlyingPotentialGrid] =
-      createResource(
-        () => ({ forecastMetadata: props.forecastMetadata, hourOffset: props.hourOffset }),
-        data => data.forecastMetadata.fetchOutputVariableAtHourOffset(xcFlyingPotentialVariable, data.hourOffset)
-      );
-
-    const renderer = () => {
-      const grid = xcFlyingPotentialGrid();
-      return {
-        renderPoint(latitude: number, longitude: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-          grid?.mapViewPoint(latitude, longitude, averagingFactor, xcFlyingPotential => {
-            const color = colorScale.closest(xcFlyingPotential);
-            ctx.save();
-            ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
-            ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
-            ctx.restore();
-          });
-        }
-      }
-    };
 
     const nextDaysOverview = (locationForecasts: LocationForecasts): JSX.Element => {
       return locationForecasts.dayForecasts
@@ -78,28 +58,13 @@ export const xcFlyingPotentialLayer: Layer = {
         })
     };
 
-    const summarizer = () => {
-      const grid = xcFlyingPotentialGrid();
-      return {
-        async summary(latitude: number, longitude: number): Promise<Array<[string, JSX.Element]> | undefined> {
-          const locationForecasts = await props.forecastMetadata.fetchLocationForecasts(latitude / 100, longitude / 100);
-          const detailedForecast  = locationForecasts?.atHourOffset(props.hourOffset)
-
-          return grid?.mapViewPoint(latitude, longitude, 1, xcPotential => {
-            const xcPotentialEntry: [string, JSX.Element] = ["XC Flying Potential", <span>{xcPotential}%</span>];
-            return detailedForecast !== undefined ?
-              [
-                ["Week overview", <span>{ nextDaysOverview(locationForecasts as LocationForecasts) }</span>],
-                xcPotentialEntry,
-                ["Soaring layer depth", <span>{detailedForecast.boundaryLayer.soaringLayerDepth} m</span>],
-                ["Thermal velocity", <span>{detailedForecast.thermalVelocity} m/s</span>],
-                ["Total cloud cover", <span>{Math.round(detailedForecast.cloudCover * 100)}%</span>],
-              ] :
-              [xcPotentialEntry]
-        });
-        }
-      }
-    };
+    const summarizer = summarizerFromLocationDetails(props, (detailedForecast, locationForecasts) => [
+      ["Week overview", <span>{ nextDaysOverview(locationForecasts) }</span>],
+      ["XC Flying Potential", <span>{detailedForecast.xcPotential}%</span>],
+      ["Soaring layer depth", <span>{detailedForecast.boundaryLayer.soaringLayerDepth} m</span>],
+      ["Thermal velocity", <span>{detailedForecast.thermalVelocity} m/s</span>],
+      ["Total cloud cover", <span>{Math.round(detailedForecast.cloudCover * 100)}%</span>],
+    ]);
 
     const mapKey = colorScaleEl(colorScale, value => `${value}% `);
 
@@ -117,7 +82,6 @@ export const xcFlyingPotentialLayer: Layer = {
     </>;
 
     return {
-      renderer,
       summarizer,
       mapKey,
       help

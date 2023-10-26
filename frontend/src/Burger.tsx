@@ -1,4 +1,3 @@
-import * as L from "leaflet";
 import { createSignal, JSX, Show } from "solid-js";
 import { Domain } from "./State";
 import { periodSelectorHeight } from "./styles/Styles";
@@ -24,18 +23,19 @@ export const Burger = (props: { domain: Domain }): JSX.Element => {
         width: `${periodSelectorHeight}px`,
         height: `${periodSelectorHeight}px`,
         cursor: 'pointer',
-        padding: '0.3em',
+        'user-select': 'none',
+        padding: '3px',
         border: 'thin solid darkGray',
         'box-sizing': 'border-box',
         'background-color': '#009688',
         color: '#fff',
         'text-align': 'center',
         'font-weight': 'bold',
-        'font-size': '1.5em'
+        'font-size': `${periodSelectorHeight / 2}px`,
+        'line-height': `1.5`
       }}
       onClick={() => { setExpanded(!expanded()); }}
     >☰</div> as HTMLElement;
-  L.DomEvent.disableClickPropagation(menu);
 
   const optionStyle = {
     padding: '8px 0',
@@ -58,6 +58,7 @@ export const Burger = (props: { domain: Domain }): JSX.Element => {
     <div
       style={{
         ...surfaceOverMap,
+        'user-select': 'none',
         'background-color': '#009688',
         color: '#fff',
         'border-radius': '0 0 4px 0',
@@ -76,7 +77,6 @@ export const Burger = (props: { domain: Domain }): JSX.Element => {
         })
       }
     </div> as HTMLElement;
-  L.DomEvent.disableClickPropagation(options);
 
   return <Show when={ state.detailedView === undefined }>
     {menu}
