@@ -55,13 +55,13 @@ case class DetailedForecast(
   cape: SpecificEnergy,
   cin: SpecificEnergy,
   downwardShortWaveRadiationFlux: Irradiance,
-  isothermZero: Length
+  isothermZero: Length,
+  winds: Winds
 )
 
 object LocationForecasts {
 
-  def apply(location: Point, forecasts: Seq[Forecast]): LocationForecasts = {
-    val isRelevantAtLocation = isRelevant(location)
+  def apply(forecasts: Seq[Forecast]): LocationForecasts = {
     val detailedForecasts: Seq[DetailedForecast] =
       forecasts.map { forecast =>
           DetailedForecast(
@@ -86,14 +86,14 @@ object LocationForecasts {
             forecast.cape,
             forecast.cin,
             forecast.downwardShortWaveRadiationFlux,
-            forecast.isothermZero
+            forecast.isothermZero,
+            forecast.winds
           )
       }
     LocationForecasts(
       elevation = forecasts.head.elevation,
       dayForecasts =
         detailedForecasts
-          .filter(forecast => isRelevantAtLocation(forecast.time)) // Keep only forecasts during the day, and around noon
           .groupBy(_.time.toLocalDate)
           .filter { case (_, forecasts) => forecasts.nonEmpty }
           .toSeq
@@ -246,7 +246,19 @@ object LocationForecasts {
                       "c" -> Json.fromInt(forecast.convectiveRain.toMillimeters.round.toInt)
                     ),
                     "mslet" -> Json.fromInt(forecast.mslet.toPascals.round.toInt / 100), // hPa
-                    "c" -> Json.fromInt(forecast.totalCloudCover)
+                    "c" -> Json.fromInt(forecast.totalCloudCover),
+                    "w" -> Json.arr(
+                      Seq(
+                        forecast.winds.soaringLayerTop,
+                        forecast.winds.`300m AGL`,
+                        forecast.winds.`2000m AMSL`,
+                        forecast.winds.`3000m AMSL`,
+                        forecast.winds.`4000m AMSL`
+                      ).map(wind => Json.obj(
+                        "u" -> Json.fromInt(wind.u.toKilometersPerHour.round.toInt),
+                        "v" -> Json.fromInt(wind.v.toKilometersPerHour.round.toInt)
+                      )): _*
+                    )
                     // TODO Irradiance, CIN, snow
                   )
                 }: _*

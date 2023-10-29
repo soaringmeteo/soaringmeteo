@@ -1,31 +1,10 @@
-import * as L from 'leaflet';
-import { createResource, JSX } from 'solid-js';
 import { ColorScale, Color } from "../ColorScale";
-import { ForecastMetadata } from '../data/ForecastMetadata';
-import { cloudCoverVariable } from '../data/OutputVariable';
-import { colorScaleEl, Layer, ReactiveComponents } from "./Layer";
-
-const drawCloudCover = (cloudCover: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D, maxOpacity: number): void => {
-  const width  = bottomRight.x - topLeft.x;
-  const height = bottomRight.y - topLeft.y;
-  const ch = 5;
-  const hSpace = width / ch;
-  const cv = 7;
-  const vSpace = height / cv;
-  Array.from({ length: ch }, (_, i) => {
-    Array.from({ length: cv }, (_, j) => {
-      const x = topLeft.x + hSpace * (i + 1 / 2);
-      const y = topLeft.y + vSpace * (j + 1 / 2);
-      ctx.fillStyle = cloudCoverColorScale.closest(cloudCover * 100).css();
-      ctx.beginPath();
-      ctx.arc(x, y, hSpace / 2, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  });
-}
+import {ForecastMetadata, Zone} from '../data/ForecastMetadata';
+import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
 
 const cloudCoverMaxOpacity = 0.35;
 
+// TODO Make sure this is consistent with what the backend does (consider providing the scale from the backend)
 export const cloudCoverColorScale = new ColorScale([
   [20,  new Color(0, 0, 0, 0.00 * cloudCoverMaxOpacity)],
   [40,  new Color(0, 0, 0, 0.25 * cloudCoverMaxOpacity)],
@@ -38,40 +17,16 @@ export const cloudCoverLayer: Layer = {
   key: 'cloud-cover',
   name: 'Cloud Cover',
   title: 'Cloud cover (all altitudes)',
+  dataPath: 'cloud-cover',
   reactiveComponents(props: {
+    zone: Zone,
     forecastMetadata: ForecastMetadata,
     hourOffset: number
   }): ReactiveComponents {
 
-    const [cloudCoverGrid] =
-      createResource(
-        () => ({ forecastMetadata: props.forecastMetadata, hourOffset: props.hourOffset }),
-        data => data.forecastMetadata.fetchOutputVariableAtHourOffset(cloudCoverVariable, data.hourOffset)
-      );
-
-    const renderer = () => {
-      const grid = cloudCoverGrid();
-      return {
-        renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-          grid?.mapViewPoint(lat, lng, averagingFactor, cloudCover => {
-            drawCloudCover(cloudCover, topLeft, bottomRight, ctx, cloudCoverMaxOpacity);
-          })
-        }
-      }
-    };
-
-    const summarizer = () => {
-      const grid = cloudCoverGrid();
-      return {
-        async summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined> {
-          return grid?.mapViewPoint(lat, lng, 1, cloudCover =>
-            [
-              ["Total cloud cover", <span>{ Math.round(cloudCover * 100) }%</span>]
-            ]
-          )
-        }
-      }
-    }
+    const summarizer = summarizerFromLocationDetails(props, detailedForecast => [
+      ["Total cloud cover", <span>{ Math.round(detailedForecast.cloudCover * 100) }%</span>]
+    ]);
 
     const mapKey = colorScaleEl(cloudCoverColorScale, value => `${value}% `);
     const help = <p>
@@ -81,7 +36,6 @@ export const cloudCoverLayer: Layer = {
     </p>;
 
     return {
-      renderer,
       summarizer,
       mapKey,
       help

@@ -53,4 +53,6 @@ files that can be consumed by the frontend:
 downloadGribAndMakeJson
 ~~~
 
-Look at the file [reference.conf](src/main/resources/reference.conf) for the configuration options.
+This command downloads a subset of the usual data to speed up the development workflow.
+
+You can customize the settings by changing the configuration file [dev.conf](dev.conf). Look at the file [reference.conf](src/main/resources/reference.conf) for an overview of all the configuration options.

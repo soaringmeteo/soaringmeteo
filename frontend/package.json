@@ -4,19 +4,18 @@
   "private": true,
   "license": "GPL-3.0-only",
   "dependencies": {
-    "@types/leaflet": "1.9.0",
-    "leaflet": "1.9.2",
+    "ol": "8.1.0",
     "solid-js": "1.4.8"
   },
   "devDependencies": {
+    "serve-static": "1.15.0",
     "typescript": "4.6.3",
     "vite": "4.0.5",
-    "vite-plugin-solid": "2.5.0",
     "vite-plugin-pwa": "0.14.1",
-    "serve-static": "1.15.0"
+    "vite-plugin-solid": "2.5.0"
   },
   "scripts": {
-    "start": "vite",
+    "start": "vite --host=0.0.0.0",
     "build": "vite build",
     "compile": "tsc --noEmit",
     "deploy": "yarn compile && yarn build && rsync --recursive --times --verbose --delete --exclude=data/ --exclude=wrf/ dist/ soarwrf1.soaringmeteo.org:/var/www/soaringmeteo.org/v2/",

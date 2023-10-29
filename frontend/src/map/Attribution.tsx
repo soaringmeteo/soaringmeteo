@@ -1,5 +1,4 @@
 import { createSignal, JSX, Show } from 'solid-js'
-import * as L from 'leaflet'
 import { showDate } from '../shared'
 import { bottomButtonsSize, surfaceOverMap } from '../styles/Styles';
 import { Domain } from '../State';
@@ -13,7 +12,6 @@ export const Attribution = (props: { domain: Domain }): JSX.Element => {
       style={{
         ...surfaceOverMap,
         'cursor': 'pointer',
-        display: 'inline-block',
         width: `${bottomButtonsSize}px`,
         height: `${bottomButtonsSize}px`,
         'line-height': `${bottomButtonsSize}px`,
@@ -29,7 +27,12 @@ export const Attribution = (props: { domain: Domain }): JSX.Element => {
     </div>;
 
   const attribution =
-    <span>
+    <span
+      style={{
+        display: 'block',
+        margin: '3px'
+      }}
+    >
       <Show
         when={ isExpanded() }
         fallback={ expandButton }
@@ -39,9 +42,9 @@ export const Attribution = (props: { domain: Domain }): JSX.Element => {
           style={{
             ...surfaceOverMap,
             'cursor': 'pointer',
-            display: 'inline-block',
             height: `${bottomButtonsSize}px`,
             'line-height': `${bottomButtonsSize}px`,
+            'font-size': '0.8rem',
             padding: '0 0.5em',
             'border-radius': '4px',
             'background-color': 'white'
@@ -51,8 +54,6 @@ export const Attribution = (props: { domain: Domain }): JSX.Element => {
         </div>
       </Show>
     </span> as HTMLElement;
-
-  L.DomEvent.disableClickPropagation(attribution);
 
   return attribution
 };

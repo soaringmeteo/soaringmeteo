@@ -3,7 +3,7 @@ package org.soaringmeteo.gfs.in
 import java.time.{LocalDate, LocalTime, OffsetDateTime, ZoneOffset}
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
-import org.soaringmeteo.gfs.AreaAndHour
+import org.soaringmeteo.gfs.Subgrid
 import org.soaringmeteo.gfs.Settings.gfsRootUrl
 
 import scala.util.chaining._
@@ -20,16 +20,15 @@ case class ForecastRun(
   /**
    * Name of the grib file we save on disk.
    *
-   * @param areaAndHour Downloaded area, and number of hours since
-   *                    initialization time
+   * @param hourOffset Number of hours since initialization time
+   * @param subgrid    Area within the GFS domain
    */
-  def fileName(areaAndHour: AreaAndHour): String =
-    f"GFS${areaAndHour.area.id}-forecastTime${areaAndHour.hourOffset}%03d.grib2"
+  def fileName(hourOffset: Int, subgrid: Subgrid): String =
+    f"GFS-${subgrid.id}-${hourOffset}%03d.grib2"
 
   /**
    * @param base Base path of the directory containing the grib files.
    * @return The path of the directory to store the grib files of this run.
-   *         (Currently, returns a path compatible with old soargfs)
    */
   def storagePath(base: os.Path): os.Path =
     base / initDateString / initTimeString
@@ -39,12 +38,22 @@ case class ForecastRun(
    * and then selecting a GFS run, and then selecting the levels as well as the variables we are
    * interested in.
    *
-   * @param areaAndHour Area to download, and number of hours since
-   *                    initialization time
+   * @param hourOffset Number of hours since initialization time
    */
-  def gribUrl(areaAndHour: AreaAndHour): String = {
-    val file = f"gfs.t${initTimeString}z.pgrb2.0p25.f${areaAndHour.hourOffset}%03d"
-    s"$gfsRootUrl?file=${file}&dir=%2F${dateDirectory}%2F${initTimeString}%2Fatmos&leftlon=${areaAndHour.area.leftLongitude}&rightlon=${areaAndHour.area.rightLongitude}&toplat=${areaAndHour.area.topLatitude}&bottomlat=${areaAndHour.area.bottomLatitude}&subregion=&${GfsGrib.gribFilterParameters.map(p => s"$p=on").mkString("&")}"
+  def gribUrl(hourOffset: Int, subgrid: Subgrid): String = {
+    val file = f"gfs.t${initTimeString}z.pgrb2.0p25.f${hourOffset}%03d"
+    val parameters =
+      GfsGrib.gribFilterParameters.map(p => s"${p}=on") ++
+        Seq(
+          s"file=${file}",
+          s"dir=%2F${dateDirectory}%2F${initTimeString}%2Fatmos",
+          "subregion=",
+          s"leftlon=${subgrid.leftLongitude}",
+          s"rightlon=${subgrid.rightLongitude}",
+          s"toplat=${subgrid.topLatitude}",
+          s"bottomlat=${subgrid.bottomLatitude}"
+        )
+    s"$gfsRootUrl?${parameters.mkString("&")}"
   }
 
 }

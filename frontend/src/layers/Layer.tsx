@@ -1,7 +1,7 @@
-import { Accessor, JSX } from "solid-js";
+import {Accessor, JSX, on} from "solid-js";
 import { Color, ColorScale } from "../ColorScale";
-import { ForecastMetadata } from "../data/ForecastMetadata";
-import { Renderer } from "../map/CanvasLayer";
+import {ForecastMetadata, Zone} from "../data/ForecastMetadata";
+import {DetailedForecast, LocationForecasts} from "../data/LocationForecasts";
 
 type Summarizer = {
   /** Create a summary of the forecast data on the point (shown in popups) */
@@ -10,8 +10,6 @@ type Summarizer = {
 
 // Non-static parts of layers
 export type ReactiveComponents = {
-  /** The current Canvas renderer of a layer. */
-  readonly renderer: Accessor<Renderer>
   /** The current summarizer (shown in popups) of a layer. */
   readonly summarizer: Accessor<Summarizer>
   /** The map key of the layer. */
@@ -27,8 +25,10 @@ export type ReactiveComponents = {
   readonly key: string
   readonly name: string
   readonly title: string
+  readonly dataPath: string
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
+    zone: Zone,
     hourOffset: number,
     windNumericValuesShown: boolean,
     timeZone: string | undefined,
@@ -50,4 +50,31 @@ export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => 
   </div>
   };
 
-export const windColor = (opacity: number): string => `rgba(62, 0, 0, ${opacity})`;
+ export const summarizerFromLocationDetails = (props: {
+  zone: Zone,
+  forecastMetadata: ForecastMetadata,
+  hourOffset: number
+}, summary: (detailedForecast: DetailedForecast, locationForecasts: LocationForecasts) => Array<[string, JSX.Element]>) => {
+  return (): Summarizer => {
+    // Make our dependencies explicit because accessing them from the summary method would be outside the tracking scope
+    on(
+      [
+        () => props.forecastMetadata,
+        () => props.hourOffset,
+        () => props.zone
+      ],
+      () => {}
+    )();
+    return {
+      async summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined> {
+        const locationForecasts = await props.forecastMetadata.fetchLocationForecasts(props.zone, lat / 100, lng / 100);
+        const detailedForecast = locationForecasts?.atHourOffset(props.hourOffset);
+        if (detailedForecast !== undefined) {
+          return summary(detailedForecast, locationForecasts as LocationForecasts)
+        } else {
+          return undefined
+        }
+      }
+    }
+  }
+}

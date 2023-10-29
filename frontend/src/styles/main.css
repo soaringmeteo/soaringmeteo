@@ -1,0 +1,29 @@
+@import 'ol/ol.css';
+
+body {
+    padding: 0;
+    margin: 0;
+    font-family: sans-serif;
+}
+
+html, body, #app {
+    height: 100%;
+}
+
+/* Override some styles from OpenLayers */
+#app .ol-zoom {
+    right: .5em;
+    bottom: .5em;
+    left: auto;
+    top: auto;
+}
+
+#app .ol-rotate {
+    top: auto;
+    bottom: .5em;
+    right: 3em;
+}
+
+#app .ol-layers {
+    cursor: grab;
+}

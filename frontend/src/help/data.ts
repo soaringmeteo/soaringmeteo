@@ -5,7 +5,8 @@ const metadata = {
   h: 0,
   initS: '2030-05-14T00',
   init: '2030-05-14T00:00:00Z',
-  latest: 42
+  latest: 42,
+  zones: []
 };
 
 export const groundLevel = 964;
@@ -22,7 +23,8 @@ const detailedData: DetailedForecastData = {
   "iso": 3595,
   "r": { "t": 0, "c": 0 },
   "mslet": 1010,
-  "c": 50
+  "c": 50,
+  w: [{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0}]
 };
 
 const locationData: LocationForecastsData = {
@@ -41,7 +43,8 @@ const locationData: LocationForecastsData = {
           "iso": 3480,
           "r": { "t": 0, "c": 0 },
           "mslet": 1011,
-          "c": 100
+          "c": 100,
+          w: [{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0}]
         },
         {
           "t": "2022-11-02T12:00:00Z",
@@ -53,7 +56,8 @@ const locationData: LocationForecastsData = {
           "iso": 3413,
           "r": { "t": 2, "c": 1 },
           "mslet": 1010,
-          "c": 100
+          "c": 100,
+          w: [{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0}]
         },
         {
           "t": "2022-11-02T15:00:00Z",
@@ -65,7 +69,8 @@ const locationData: LocationForecastsData = {
           "iso": 3739,
           "r": { "t": 2, "c": 0 },
           "mslet": 1009,
-          "c": 0
+          "c": 0,
+          w: [{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0}]
         }
       ]
     },
@@ -83,7 +88,8 @@ const locationData: LocationForecastsData = {
           "iso": 3767,
           "r": { "t": 0, "c": 0 },
           "mslet": 1008,
-          "c": 75
+          "c": 75,
+          w: [{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0}]
         },
         {
           "t": "2022-11-04T15:00:00Z",
@@ -95,7 +101,8 @@ const locationData: LocationForecastsData = {
           "iso": 3926,
           "r": { "t": 0, "c": 0 },
           "mslet": 1009,
-          "c": 50
+          "c": 50,
+          w: [{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0}]
         }
       ]
     },
@@ -112,7 +119,8 @@ const locationData: LocationForecastsData = {
           "iso": 4064,
           "r": { "t": 0, "c": 0 },
           "mslet": 1014,
-          "c": 1
+          "c": 1,
+          w: [{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0}]
         },
         {
           "t": "2022-11-05T12:00:00Z",
@@ -124,7 +132,8 @@ const locationData: LocationForecastsData = {
           "iso": 4135,
           "r": { "t": 0, "c": 0 },
           "mslet": 1012,
-          "c": 3
+          "c": 3,
+          w: [{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0}]
         },
         {
           "t": "2022-11-05T15:00:00Z",
@@ -136,7 +145,8 @@ const locationData: LocationForecastsData = {
           "iso": 4231,
           "r": { "t": 0, "c": 0 },
           "mslet": 1011,
-          "c": 75
+          "c": 75,
+          w: [{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0},{"u": 0, "v": 0}]
         }
       ]
     }

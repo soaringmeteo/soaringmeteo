@@ -1,9 +1,6 @@
-import * as L from 'leaflet';
 import { ColorScale, Color } from "../ColorScale";
-import { soaringLayerDepthVariable as soaringLayerDepthVariable } from '../data/OutputVariable';
-import { colorScaleEl, Layer, ReactiveComponents } from './Layer';
-import { createResource, JSX } from 'solid-js';
-import { ForecastMetadata } from '../data/ForecastMetadata';
+import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from './Layer';
+import {ForecastMetadata, Zone} from '../data/ForecastMetadata';
 
 export const soaringLayerDepthLayer: Layer = {
 
@@ -13,42 +10,17 @@ export const soaringLayerDepthLayer: Layer = {
 
   title: 'Soaring layer depth',
 
+  dataPath: 'soaring-layer-depth',
+
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
+    zone: Zone,
     hourOffset: number
   }): ReactiveComponents {
 
-    const [soaringLayerDepthGrid] =
-      createResource(
-        () => ({ forecastMetadata: props.forecastMetadata, hourOffset: props.hourOffset }),
-        data => data.forecastMetadata.fetchOutputVariableAtHourOffset(soaringLayerDepthVariable, data.hourOffset)
-      );
-
-    const renderer = () => {
-      const grid = soaringLayerDepthGrid();
-      return {
-        renderPoint(lat: number, lng: number, averagingFactor: number, topLeft: L.Point, bottomRight: L.Point, ctx: CanvasRenderingContext2D): void {
-          grid?.mapViewPoint(lat, lng, averagingFactor, soaringLayerDepth => {
-            const color = soaringLayerDepthColorScale.closest(soaringLayerDepth);
-            ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.25)`;
-            ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
-          });
-        }
-      }
-    };
-
-    const summarizer = () => {
-      const grid = soaringLayerDepthGrid();
-      return {
-        async summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined> {
-          return grid?.mapViewPoint(lat, lng, 1, soaringLayerDepth =>
-            [
-              ["Soaring layer depth", <span>{ soaringLayerDepth } m</span>]
-            ]
-          )
-        }
-      }
-    };
+    const summarizer = summarizerFromLocationDetails(props, detailedForecast => [
+      ["Soaring layer depth", <span>{ detailedForecast.boundaryLayer.soaringLayerDepth } m</span>]
+    ]);
 
     const mapKey = colorScaleEl(soaringLayerDepthColorScale, value => `${value} m `);
 
@@ -70,7 +42,6 @@ export const soaringLayerDepthLayer: Layer = {
     </>;
 
     return {
-      renderer,
       summarizer,
       mapKey,
       help
@@ -79,6 +50,7 @@ export const soaringLayerDepthLayer: Layer = {
 
 };
 
+// TODO Consistency with the backend
 const soaringLayerDepthColorScale = new ColorScale([
   [250,  new Color(0x33, 0x33, 0x33, 1)],
   [500,  new Color(0x99, 0x00, 0x99, 1)],

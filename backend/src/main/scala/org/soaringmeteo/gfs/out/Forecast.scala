@@ -1,7 +1,11 @@
 package org.soaringmeteo.gfs.out
 
-import org.soaringmeteo.gfs.in
-import org.soaringmeteo.{Point, Wind, XCFlyingPotential}
+import org.slf4j.LoggerFactory
+import org.soaringmeteo.Temperatures.dewPoint
+import org.soaringmeteo.gfs.in.GfsGrib
+import org.soaringmeteo.gfs.{Subgrid, in}
+import org.soaringmeteo.grib.Grib
+import org.soaringmeteo.{Wind, XCFlyingPotential}
 import squants.energy.SpecificEnergy
 import squants.motion.{Pressure, Velocity}
 import squants.radio.Irradiance
@@ -12,7 +16,9 @@ import java.time.OffsetDateTime
 import scala.collection.immutable.SortedMap
 
 /**
- * Result of processing a [[org.soaringmeteo.gfs.in.Forecast]].
+ * Result of processing the forecast data read from the GRIB files.
+ *
+ * This data is saved on the disk storage.
  */
 case class Forecast(
   time: OffsetDateTime,
@@ -36,24 +42,11 @@ case class Forecast(
   cape: SpecificEnergy,
   cin: SpecificEnergy,
   downwardShortWaveRadiationFlux: Irradiance,
-  isothermZero: Length
-) {
-
-  /** Wind value at some specific elevation levels */
-  lazy val winds = Winds(this)
-
-  lazy val xcFlyingPotential: Int =
-    XCFlyingPotential(thermalVelocity, soaringLayerDepth, boundaryLayerWind)
-
-  // m (AGL)
-  lazy val soaringLayerDepth: Length =
-    convectiveClouds match {
-      case None => boundaryLayerDepth
-      // In case of presence of convective clouds, use the cloud base as an upper limit
-      // within the boundary layer
-      case Some(ConvectiveClouds(bottom, _)) => boundaryLayerDepth.min(bottom - elevation)
-    }
-}
+  isothermZero: Length,
+  winds: Winds, // wind value at some specific elevation levels
+  xcFlyingPotential: Int,
+  soaringLayerDepth: Length // m (AGL)
+)
 
 /**
  * Various information at some elevation level
@@ -88,60 +81,95 @@ object AirData {
 
 object Forecast {
 
-  /** Transforms the forecast data into a data structure tailored to our needs */
-  def apply(gfsForecastsByHourAndLocation: Map[Int, Map[Point, in.Forecast]]): ForecastsByHour = {
-    gfsForecastsByHourAndLocation
-      // Make sure we iterate over the forecasts in chronological order
-      .to(SortedMap)
-      // Transform accumulated rain into per-period rain
-      .foldLeft((Option.empty[Map[Point, in.Forecast]], Map.newBuilder[Int, ForecastsByLocation])) {
-        case ((maybePreviousForecast, builder), (hour, gfsForecastsByLocation)) =>
-          val extractTotalAndConvectiveRain: (Point, in.Forecast) => (Length, Length) =
-            maybePreviousForecast match {
-              case None =>
-                // First forecast (+3h) is special, it contains the accumulated
-                // rain since the forecast initialization time, which is equivalent
-                // to the rain that fell during the forecast period
-                (_, gfsForecast) => (gfsForecast.accumulatedRain, gfsForecast.accumulatedConvectiveRain)
-              case Some(previousForecast) =>
-                (point, gfsForecast) => (
-                  gfsForecast.accumulatedRain - previousForecast(point).accumulatedRain,
-                  gfsForecast.accumulatedConvectiveRain - previousForecast(point).accumulatedConvectiveRain
-                )
-            }
-          val forecastsByLocation =
-            gfsForecastsByLocation.map { case (point, gfsForecast) =>
-              val (totalRain, convectiveRain) = extractTotalAndConvectiveRain(point, gfsForecast)
-              val maybeConvectiveClouds = ConvectiveClouds(gfsForecast)
-              val forecast = Forecast(
-                gfsForecast.time,
-                gfsForecast.elevation,
-                gfsForecast.boundaryLayerDepth,
-                gfsForecast.boundaryLayerWind,
-                Thermals.velocity(gfsForecast),
-                gfsForecast.totalCloudCover,
-                gfsForecast.convectiveCloudCover,
-                maybeConvectiveClouds,
-                AirData(gfsForecast.atPressure, gfsForecast.elevation),
-                gfsForecast.mslet,
-                gfsForecast.snowDepth,
-                gfsForecast.surfaceTemperature,
-                gfsForecast.surfaceDewPoint,
-                gfsForecast.surfaceWind,
-                totalRain,
-                convectiveRain,
-                gfsForecast.latentHeatNetFlux,
-                gfsForecast.sensibleHeatNetFlux,
-                gfsForecast.cape,
-                gfsForecast.cin,
-                gfsForecast.downwardShortWaveRadiationFlux,
-                gfsForecast.isothermZero
-              )
-              (point, forecast)
-            }
-          builder += hour -> forecastsByLocation
-          (Some(gfsForecastsByLocation), builder)
-      }._2.result()
+  private val logger = LoggerFactory.getLogger(classOf[Forecast])
+
+  /**
+   * Compute a couple of extra information from the raw data we get from the
+   * GFS model such as the thermal velocity, the soaring layer depth, the XC
+   * flying potential, the wind at relevant elevation levels, etc.
+   */
+  def apply(
+    time: OffsetDateTime,
+    elevation: Length,
+    boundaryLayerDepth: Length, // m AGL
+    boundaryLayerWind: Wind,
+    totalCloudCover: Int, // Between 0 and 100
+    convectiveCloudCover: Int, // Between 0 and 100
+    atPressure: Map[Pressure, in.IsobaricVariables],
+    mslet: Pressure,
+    snowDepth: Length,
+    surfaceTemperature: Temperature, // Air temperature at 2 meters above the ground level
+    surfaceRelativeHumidity: Double,
+    surfaceWind: Wind,
+    accumulatedRain: Length,
+    accumulatedConvectiveRain: Length,
+    latentHeatNetFlux: Irradiance,
+    sensibleHeatNetFlux: Irradiance,
+    cape: SpecificEnergy,
+    cin: SpecificEnergy,
+    downwardShortWaveRadiationFlux: Irradiance,
+    isothermZero: Length
+  ): Forecast = {
+    val surfaceDewPoint = dewPoint(surfaceTemperature, surfaceRelativeHumidity)
+    val thermalVelocity = Thermals.velocity(sensibleHeatNetFlux, boundaryLayerDepth)
+    val maybeConvectiveClouds = ConvectiveClouds(surfaceTemperature, surfaceDewPoint, elevation, boundaryLayerDepth, atPressure)
+    val soaringLayerDepth: Length =
+      maybeConvectiveClouds match {
+        case None => boundaryLayerDepth
+        // In case of presence of convective clouds, use the cloud base as an upper limit
+        // within the boundary layer
+        case Some(ConvectiveClouds(bottom, _)) => boundaryLayerDepth.min(bottom - elevation)
+      }
+    val airData = AirData(atPressure, elevation)
+
+    Forecast(
+      time,
+      elevation,
+      boundaryLayerDepth,
+      boundaryLayerWind,
+      thermalVelocity,
+      totalCloudCover,
+      convectiveCloudCover,
+      maybeConvectiveClouds,
+      airData,
+      mslet,
+      snowDepth,
+      surfaceTemperature,
+      surfaceDewPoint,
+      surfaceWind,
+      accumulatedRain,
+      accumulatedConvectiveRain,
+      latentHeatNetFlux,
+      sensibleHeatNetFlux,
+      cape,
+      cin,
+      downwardShortWaveRadiationFlux,
+      isothermZero,
+      Winds(airData, elevation, soaringLayerDepth),
+      XCFlyingPotential(thermalVelocity, soaringLayerDepth, boundaryLayerWind),
+      soaringLayerDepth
+    )
+  }
+
+  /**
+   * @param gribFile             GRIB file to read
+   * @param forecastInitDateTime Initialization time of the forecast
+   * @param forecastHourOffset   Time of forecast we want to extract, in number of hours
+   *                             from the forecast initialization (e.g., 0, 3, 6, etc.)
+   * @param subgrid              Part of the GFS data that we want to extract
+   */
+  def fromGribFile(
+    gribFile: os.Path,
+    forecastInitDateTime: OffsetDateTime,
+    forecastHourOffset: Int,
+    subgrid: Subgrid
+  ): IndexedSeq[IndexedSeq[Forecast]] = {
+    Grib.bracket(gribFile) { grib =>
+      val forecastTime = forecastInitDateTime.plusHours(forecastHourOffset)
+      val forecasts = GfsGrib.readSubgrid(grib, subgrid, forecastTime)
+      logger.debug(s"Read $gribFile")
+      forecasts
+    }
   }
 
 }

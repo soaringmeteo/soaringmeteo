@@ -3,6 +3,8 @@ package org.soaringmeteo.gfs.in
 import java.time.OffsetDateTime
 import org.soaringmeteo.grib.Grib
 import org.soaringmeteo._
+import org.soaringmeteo.gfs.Subgrid
+import org.soaringmeteo.gfs.out.Forecast
 import squants.energy.Grays
 import squants.motion.{MetersPerSecond, Pascals}
 import squants.radio.WattsPerSquareMeter
@@ -10,7 +12,7 @@ import squants.space.{Meters, Millimeters}
 import squants.thermal.Kelvin
 
 /**
-  * Extract a [[Forecast]] for each of the given `locations`.
+  * Extract a [[gfs.out.Forecast]] for each of the given `locations`.
   */
 object GfsGrib {
 
@@ -38,13 +40,10 @@ object GfsGrib {
     "lev_1000_mb",
     "lev_convective_cloud_layer",
     "lev_entire_atmosphere",
-    "lev_high_cloud_layer", // Used only by legacy soarGFS
-    "lev_low_cloud_layer", // Used only by legacy soarGFS
-    "lev_middle_cloud_layer", // Used only by legacy soarGFS
     "lev_planetary_boundary_layer",
     "lev_surface",
-    "var_ACPCP",
-    "var_APCP",
+    "var_PRATE",
+    "var_CPRAT",
     "var_CAPE",
     "var_CIN",
     "var_DSWRF",
@@ -55,16 +54,13 @@ object GfsGrib {
     "var_RH",
     "var_SHTFL",
     "var_TCDC",
-    "var_LCDC", // Used only by legacy soarGFS
-    "var_MCDC", // Used only by legacy soarGFS
-    "var_HCDC", // Used only by legacy soarGFS
     "var_TMP",
     "var_UGRD",
     "var_VGRD",
     "var_WEASD"
   )
 
-  def forecast(grib: Grib, locations: Seq[Point], time: OffsetDateTime): Map[Point, Forecast] = {
+  def readSubgrid(grib: Grib, subgrid: Subgrid, time: OffsetDateTime): IndexedSeq[IndexedSeq[Forecast]] = {
     import grib.Feature
 
     // You can see how the following variables were used here:
@@ -87,16 +83,8 @@ object GfsGrib {
 
     val hgt0 = Feature("Geopotential_height_zeroDegC_isotherm")
 
-    val apcpSurface =
-      Feature
-        .maybe("Total_precipitation_surface_3_Hour_Accumulation")
-        .orElse(Feature.maybe("Total_precipitation_surface_6_Hour_Accumulation"))
-        .getOrElse(Feature("Total_precipitation_surface_Mixed_intervals_Accumulation"))
-    val acpcpSurface =
-      Feature
-        .maybe("Convective_precipitation_surface_3_Hour_Accumulation")
-        .orElse(Feature.maybe("Convective_precipitation_surface_6_Hour_Accumulation"))
-        .getOrElse(Feature("Convective_precipitation_surface_Mixed_intervals_Accumulation"))
+    val prateSurface = Feature("Precipitation_rate_surface")
+    val cpratSurface = Feature("Convective_precipitation_rate_surface")
 
     val lhtflSurface =
       Feature
@@ -109,7 +97,7 @@ object GfsGrib {
     val capeSurface = Feature("Convective_available_potential_energy_surface")
     val cinSurface = Feature("Convective_inhibition_surface")
 
-    val isobaricFeatures = Forecast.pressureLevels
+    val isobaricFeatures = IsobaricVariables.pressureLevels
       .map { pressureLevel =>
         val hgt = Feature("Geopotential_height_isobaric")
         val tmp = Feature("Temperature_isobaric")
@@ -130,57 +118,59 @@ object GfsGrib {
     val ugrd10 = Feature("u-component_of_wind_height_above_ground")
     val vgrd10 = Feature("v-component_of_wind_height_above_ground")
 
-    (for (location <- locations) yield {
-      // Read the value of the given `grid` at the current `location`
-      def readXY(feature: Feature): Double = feature.read(location)
+    for (longitude <- subgrid.longitudes) yield {
+      for (latitude <- subgrid.latitudes) yield {
+        val location = Point(latitude, longitude)
 
-      val isobaricVariables = isobaricFeatures.map { case (pressure, (hgt, tmp, rh, ugrd, vgrd, cc)) =>
-        // Read the value of the given `grid` at the current `location` and `pressure` level
-        def readXYZ(feature: Feature) = feature.read(location, pressure.toPascals)
+        // Read the value of the given `grid` at the current `location`
+        def readXY(feature: Feature): Double = feature.read(location)
 
-        pressure -> IsobaricVariables(
-          Meters(readXYZ(hgt)),
-          Kelvin(readXYZ(tmp)),
-          readXYZ(rh),
-          Wind(
-            MetersPerSecond(readXYZ(ugrd)),
-            MetersPerSecond(readXYZ(vgrd))
+        val isobaricVariables = isobaricFeatures.map { case (pressure, (hgt, tmp, rh, ugrd, vgrd, cc)) =>
+          // Read the value of the given `grid` at the current `location` and `pressure` level
+          def readXYZ(feature: Feature) = feature.read(location, pressure.toPascals)
+
+          pressure -> IsobaricVariables(
+            Meters(readXYZ(hgt)),
+            Kelvin(readXYZ(tmp)),
+            readXYZ(rh),
+            Wind(
+              MetersPerSecond(readXYZ(ugrd)),
+              MetersPerSecond(readXYZ(vgrd))
+            ),
+            readXYZ(cc).round.intValue()
+          )
+        }
+
+        Forecast(
+          time = time,
+          elevation = Meters(readXY(hgtSurface)),
+          boundaryLayerDepth = Meters(readXY(hpblSurface)),
+          boundaryLayerWind = Wind(
+            MetersPerSecond(readXY(ugrdPlanetary)),
+            MetersPerSecond(readXY(vgrdPlanetary))
           ),
-          readXYZ(cc).round.intValue()
+          totalCloudCover = readXY(tcdcEntire).round.intValue(),
+          convectiveCloudCover = readXY(tcdcConv).round.intValue(),
+          atPressure = isobaricVariables,
+          mslet = Pascals(readXY(msletMean)),
+          snowDepth = Millimeters(readXY(weasdSurface)), // kg/m² <=> mm (for water)
+          surfaceTemperature = Kelvin(readXY(tmp2)),
+          surfaceRelativeHumidity = readXY(rh2),
+          surfaceWind = Wind(
+            MetersPerSecond(readXY(ugrd10)),
+            MetersPerSecond(readXY(vgrd10))
+          ),
+          accumulatedRain = Millimeters(readXY(prateSurface) * 3 * 60 * 60), // FIXME The values seem a bit too high
+          accumulatedConvectiveRain = Millimeters(readXY(cpratSurface) * 3 * 60 * 60),
+          latentHeatNetFlux = WattsPerSquareMeter(readXY(lhtflSurface)),
+          sensibleHeatNetFlux = WattsPerSquareMeter(readXY(shtflSurface)),
+          cape = Grays(readXY(capeSurface)),
+          cin = Grays(readXY(cinSurface)),
+          downwardShortWaveRadiationFlux = WattsPerSquareMeter(readXY(dswrfSurface)),
+          isothermZero = Meters(readXY(hgt0))
         )
       }
-
-      val gfsForecast = Forecast(
-        time = time,
-        elevation = Meters(readXY(hgtSurface)),
-        boundaryLayerDepth = Meters(readXY(hpblSurface)),
-        boundaryLayerWind = Wind(
-          MetersPerSecond(readXY(ugrdPlanetary)),
-          MetersPerSecond(readXY(vgrdPlanetary))
-        ),
-        totalCloudCover = readXY(tcdcEntire).round.intValue(),
-        convectiveCloudCover = readXY(tcdcConv).round.intValue(),
-        atPressure = isobaricVariables,
-        mslet = Pascals(readXY(msletMean)),
-        snowDepth = Millimeters(readXY(weasdSurface)), // kg/m² <=> mm (for water)
-        surfaceTemperature = Kelvin(readXY(tmp2)),
-        surfaceRelativeHumidity = readXY(rh2),
-        surfaceWind = Wind(
-          MetersPerSecond(readXY(ugrd10)),
-          MetersPerSecond(readXY(vgrd10))
-        ),
-        accumulatedRain = Millimeters(readXY(apcpSurface)),
-        accumulatedConvectiveRain = Millimeters(readXY(acpcpSurface)),
-        latentHeatNetFlux = WattsPerSquareMeter(readXY(lhtflSurface)),
-        sensibleHeatNetFlux = WattsPerSquareMeter(readXY(shtflSurface)),
-        cape = Grays(readXY(capeSurface)),
-        cin = Grays(readXY(cinSurface)),
-        downwardShortWaveRadiationFlux = WattsPerSquareMeter(readXY(dswrfSurface)),
-        isothermZero = Meters(readXY(hgt0))
-      )
-      val point = Point(location.latitude, location.longitude)
-      point -> gfsForecast
-    }).toMap
+    }
   }
 
 }

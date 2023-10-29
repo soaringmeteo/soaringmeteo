@@ -178,8 +178,3 @@ export const temperaturesRange =
 
 export const skyStyle = '#91c7eb';
 export const boundaryLayerStyle = 'mediumspringgreen';
-
-export const meteogramColumnWidth = 33;
-
-// Pre-compute cloud pattern
-export const columnCloud = cloudPattern(meteogramColumnWidth / 3, 'rgba(255, 255, 255, 0.7)');

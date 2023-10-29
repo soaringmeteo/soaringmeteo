@@ -1,6 +1,4 @@
 import { LocationForecasts, LocationForecastsData, normalizeCoordinates } from "./LocationForecasts";
-import { Grid, GridData } from "./Grid";
-import { OutputVariable } from "./OutputVariable";
 
 type ForecastMetadataData = {
   h: number      // number of days of historic forecast kept (e.g., 4)
@@ -8,23 +6,40 @@ type ForecastMetadataData = {
   init: string   // e.g., "2020-04-14T06:00:00Z"
   latest: number // e.g., 189
   prev?: [string, string]  // e.g., ["2020-04-13T18-forecast.json", "2020-04-13T18:00:00Z"]
+  zones: Array<Zone>
+}
+
+export type Zone = {
+  readonly id: string
+  readonly label: string
+  readonly raster: {
+    extent: [number, number, number, number]
+    proj: string
+  }
+  readonly vectorTiles: {
+    minZoom: number
+    zoomLevels: number
+    extent: [number, number, number, number]
+  }
 }
 
 // Version of the forecast data format we consume (see backend/src/main/scala/org/soaringmeteo/package.scala)
-const formatVersion = 2
+const formatVersion = 3
 // Base path to access forecast data
-const dataPath = `data/${formatVersion}`
+const dataPath = `data/${formatVersion}/gfs`
 export class ForecastMetadata {
   readonly initS: string
   readonly init: Date
   readonly latest: number
   readonly model: string
+  readonly zones: Array<Zone>
 
   constructor(data: ForecastMetadataData) {
     this.initS = data.initS;
     this.init = new Date(data.init);
     this.latest = data.latest;
     this.model = 'GFS (NOAA)' // Hardcoded for now
+    this.zones = data.zones
   }
 
   /**
@@ -40,12 +55,17 @@ export class ForecastMetadata {
    * Fetches the detailed forecast data at the given location.
    * Fails with an error in case of failure.
    */
-  async fetchLocationForecasts(latitude: number, longitude: number): Promise<LocationForecasts | undefined> {
+  async fetchLocationForecasts(zone: Zone, latitude: number, longitude: number): Promise<LocationForecasts | undefined> {
     try {
       const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(latitude, longitude);
-      const response = await fetch(`${dataPath}/${this.initS}/locations/${normalizedLongitude}-${normalizedLatitude}.json`);
-      const data     = await response.json() as LocationForecastsData;
-      return new LocationForecasts(data, this, normalizedLatitude / 100, normalizedLongitude / 100)
+      const normalizedZoneLeftLongitude = Math.round((zone.raster.extent[0] + 0.125) * 100);
+      const normalizedZoneTopLatitude = Math.round((zone.raster.extent[3] - 0.125) * 100);
+      const clusteringFactor = 4; // must be consistent with the backend
+      const x = ((normalizedLongitude - normalizedZoneLeftLongitude) / 25);
+      const y = ((normalizedZoneTopLatitude - normalizedLatitude) / 25);
+      const response = await fetch(`${dataPath}/${this.initS}/${zone.id}/locations/${Math.floor(x / clusteringFactor)}-${Math.floor(y / clusteringFactor)}.json`);
+      const data     = await response.json() as Array<Array<LocationForecastsData>>;
+      return new LocationForecasts(data[x % clusteringFactor][y % clusteringFactor], this, normalizedLatitude / 100, normalizedLongitude / 100)
     } catch (error) {
       console.debug(`Unable to fetch forecast data at ${latitude},${longitude}: ${error}`);
       return undefined
@@ -56,14 +76,12 @@ export class ForecastMetadata {
    * Fetches the forecast data at the given hour offset.
    * Never completes in case of failure (but logs the error).
    */
-  async fetchOutputVariableAtHourOffset<A>(outputVariable: OutputVariable<A>, hourOffset: number): Promise<Grid<A>> {
-    try {
-      const response = await fetch(`${dataPath}/${this.initS}/${outputVariable.path}/${hourOffset}h.json`)
-      const data     = await response.json() as GridData;
-      return new Grid(data, outputVariable.parse, outputVariable.averager)
-    } catch (error) {
-      throw `Unable to retrieve forecast data ${hourOffset} hour(s) after the initialization time: ${error}`;
-    }
+  urlOfRasterAtHourOffset(zone: string, variablePath: string, hourOffset: number): string {
+    return `${dataPath}/${this.initS}/${zone}/${variablePath}/${hourOffset}.png`
+  }
+
+  urlOfVectorTilesAtHourOffset(zone: string, variablePath: string, hourOffset: number): string {
+    return `${dataPath}/${this.initS}/${zone}/${variablePath}/${hourOffset}/{z}-{x}-{y}.json`
   }
 
 }
@@ -76,7 +94,7 @@ export class ForecastMetadata {
  *   - the offset of the default forecast
  */
  export const fetchRunsAndComputeInitialHourOffset = async (): Promise<[Array<ForecastMetadata>, ForecastMetadata, number, number]> => {
-  // TODO Compute based on user preferred time zone (currently hard-coded for central Europe)
+  // TODO Compute based on user preferred time zone (currently hard-coded for central Europe) or selected zone
   // Number of hours to add to 00:00Z to be on the morning forecast period (e.g., 9 for Switzerland)
   const runs              = await fetchForecastRuns();
   const morningOffset     = 9;
@@ -129,7 +147,7 @@ export const periodsPerDay = 3;
 
 // TODO Return an array containing an array for each day instead of a flat array
 export const forecastOffsets = (gfsRunDateTime: Date, firstPeriodOffset: number, forecastMetadata: ForecastMetadata): Array<[number, Date]> => {
-  // UTC-offsets of the periods we are interested in in a day (e.g., [9, 12, 15] around longitude 0)
+  // UTC-offsets of the periods we are interested in a day (e.g., [9, 12, 15] around longitude 0)
   const forecastUTCOffsets = Array.from({ length: periodsPerDay }, (_, i) => firstPeriodOffset + i * 3);
   return Array.from<unknown, [number, number]>({ length: (forecastMetadata.latest / 3) - 1 }, (_, i) => [gfsRunDateTime.getUTCHours() + (i + 1) * 3, (i + 1) * 3])
     .filter(([utcOffset, _]) => forecastUTCOffsets.includes(utcOffset % 24))

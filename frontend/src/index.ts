@@ -1,4 +1,4 @@
-import 'leaflet/dist/leaflet.css';
+import './styles/main.css';
 import { start } from './App';
 
 const containerElement = document.getElementById('app');
