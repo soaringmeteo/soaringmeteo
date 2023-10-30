@@ -107,13 +107,18 @@ export const LayersSelector = (props: {
       {thermalVelocityEl}
     </fieldset>;
 
-  const blWindEl = setupLayerBtn(boundaryLayerWindLayer, 'wind-layer');
-  const blTopWindEl = setupLayerBtn(soaringLayerTopWindLayer, 'wind-layer');
-  const surfaceWindEl = setupLayerBtn(surfaceWindLayer, 'wind-layer');
-  const _300MAGLWindEl = setupLayerBtn(_300MAGLWindLayer, 'wind-layer');
-  const _2000MAMSLWindEl = setupLayerBtn(_2000MAMSLWindLayer, 'wind-layer');
-  const _3000MAMSLWindEl = setupLayerBtn(_3000MAMSLWindLayer, 'wind-layer');
-  const _4000MAMSLWindEl = setupLayerBtn(_4000MAMSLWindLayer, 'wind-layer');
+  const windOptions: Array<[string, Layer]> =
+    [
+      surfaceWindLayer,
+      _300MAGLWindLayer,
+      boundaryLayerWindLayer,
+      soaringLayerTopWindLayer,
+      _2000MAMSLWindLayer,
+      _3000MAMSLWindLayer,
+      _4000MAMSLWindLayer
+    ].map(layer =>
+      [layer.name, layer]
+    );
   const windCheckBox =
     <Checkbox
         label="Wind"
@@ -124,13 +129,13 @@ export const LayersSelector = (props: {
   const windLayersEl =
     <fieldset style={ fieldsetPaddingStyle }>
       <legend>{windCheckBox}</legend>
-      {surfaceWindEl}
-      {_300MAGLWindEl}
-      {blWindEl}
-      {blTopWindEl}
-      {_2000MAMSLWindEl}
-      {_3000MAMSLWindEl}
-      {_4000MAMSLWindEl}
+      <Select
+        title="Altitude of the wind"
+        options={ windOptions }
+        selectedOption={ state.windLayer }
+        onChange={ windLayer => props.domain.setWindLayer(windLayer) }
+        key={ windLayer => windLayer.key }
+      />
     </fieldset>;
 
   const cloudCoverEl = setupLayerBtn(cloudCoverLayer, 'primary-layer');
