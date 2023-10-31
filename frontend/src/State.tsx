@@ -5,9 +5,11 @@ import { Layer, ReactiveComponents } from './layers/Layer';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
 import { layerByKey } from './layers/Layers';
 import { boundaryLayerWindLayer } from './layers/Wind';
-import { Accessor, createMemo, mergeProps, splitProps } from 'solid-js';
+import {Accessor, batch, createMemo, mergeProps, splitProps} from 'solid-js';
 
 export type State = {
+  // Currently selected numerical weather prediction model (GFS or WRF)
+  model: Model
   // Currently selected forecast run
   forecastMetadata: ForecastMetadata
   // Currently selected zone. Must be included in `forecastMetadata.zones`
@@ -29,11 +31,15 @@ export type State = {
 }
 
 export type DetailedViewType = 'meteogram' | 'sounding'
+export type Model = 'gfs' | 'wrf'
+export const gfsModel: Model = 'gfs'
+export const wrfModel: Model = 'wrf'
 
 // Keys used to store the current display settings in the local storage
 const selectedPrimaryLayerKey   = 'selected-primary-layer';
 const selectedWindLayerKey      = 'selected-wind-layer';
-const zoneKey = 'zone-key';
+const modelKey = 'model';
+const zoneKey = (model: Model): string => `zone-${model}`;
 const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 const utcTimeShownKey           = 'utc-time-shown';
@@ -70,15 +76,21 @@ const saveWindLayer = (key: string): void => {
   window.localStorage.setItem(selectedWindLayerKey, key);
 };
 
-const loadZone = (zones: Array<Zone>): Zone =>
+const loadModel = (): Model =>
+  loadStoredState(modelKey, value => value === wrfModel ? wrfModel : gfsModel, gfsModel);
+const saveModel = (model: Model) => {
+  window.localStorage.setItem(modelKey, model);
+}
+
+const loadZone = (model: Model, zones: Array<Zone>): Zone =>
   loadStoredState(
-    zoneKey,
+    zoneKey(model),
     value => zones.find(zone => zone.id === value) || zones.find(zone => zone.id === 'europe') || zones[0],
     zones.find(zone => zone.id === 'europe') || zones[0]
   );
 
-const saveZone = (key: string): void => {
-  window.localStorage.setItem(zoneKey, key);
+const saveZone = (model: Model, key: string): void => {
+  window.localStorage.setItem(zoneKey(model), key);
 };
 
 const loadWindLayerEnabled = (): boolean =>
@@ -118,10 +130,12 @@ export class Domain {
   readonly windLayerReactiveComponents: Accessor<ReactiveComponents>;
 
   constructor (
-    forecastMetadata: ForecastMetadata,
-    hourOffset: number
+    readonly gfsRuns: Array<ForecastMetadata>,
+    readonly wrfRuns: Array<ForecastMetadata>
   ) {
-    const zone = loadZone(forecastMetadata.zones);
+    const model = loadModel();
+    const forecastMetadata = model === gfsModel ? gfsRuns[gfsRuns.length - 1] : wrfRuns[wrfRuns.length - 1];
+    const zone = loadZone(model, forecastMetadata.zones);
     const primaryLayer           = loadPrimaryLayer();
     const windLayer              = loadWindLayer();
     const windLayerEnabled       = loadWindLayerEnabled();
@@ -130,11 +144,12 @@ export class Domain {
   
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
     const [get, set] = createStore<State>({
+      model: model,
       forecastMetadata: forecastMetadata,
       zone,
       primaryLayer: primaryLayer,
       windLayer: windLayer,
-      hourOffset: hourOffset,
+      hourOffset: forecastMetadata.defaultHourOffset(),
       windLayerEnabled,
       detailedView: undefined,
       windNumericValuesShown,
@@ -159,19 +174,72 @@ export class Domain {
       createMemo(() => this.state.windLayer.reactiveComponents(props));
   }
 
-  /** Change the forecast run to display */
-  setForecastMetadata(forecastMetadata: ForecastMetadata): void {
-    this.setState({ forecastMetadata }) // TODO Reset hourOffset
+  /** Set the model (GFS vs WRF) to display */
+  setModel(model: Model): void {
+    const runs = model === gfsModel ? this.gfsRuns : this.wrfRuns;
+    const defaultRun = runs[runs.length - 1];
+    const zone = loadZone(model, defaultRun.zones);
+    saveModel(model);
+    saveZone(model, zone.id);
+    batch(() => {
+      this.setState({ model, zone });
+      this.setForecastMetadata(defaultRun);
+    });
   }
 
+  modelName(): string {
+    if (this.state.model === gfsModel) {
+      return 'GFS (25 km)'
+    } else {
+      return 'WRF (2-6 km)'
+    }
+  }
+
+  /** Set the forecast run to display */
+  setForecastMetadata(forecastMetadata: ForecastMetadata): void {
+    this.setState({
+      forecastMetadata,
+      hourOffset: forecastMetadata.defaultHourOffset()
+    });
+  }
+
+  /** Set the zone (Europe, America, etc.) to cover */
   setZone(zone: Zone): void {
-    saveZone(zone.id);
+    saveZone(this.state.model, zone.id);
     this.setState({ zone });
+  }
+
+  timeStep(): number {
+    return this.state.model === 'gfs' ? 3 : 1
   }
 
   /** Change the period to display in the current forecast run */
   setHourOffset(hourOffset: number): void {
     this.setState({ hourOffset })
+  }
+
+  nextHourOffset(): void {
+    const hourOffset =
+      Math.min(this.state.hourOffset + this.timeStep(), this.state.forecastMetadata.latest);
+    this.setHourOffset(hourOffset);
+  }
+
+  previousHourOffset(): void {
+    const hourOffset =
+      Math.max(this.state.hourOffset - this.timeStep(), this.state.model === 'gfs' ? 3 : 0);
+    this.setHourOffset(hourOffset);
+  }
+
+  nextDay(): void {
+    const hourOffset =
+      Math.min(this.state.hourOffset + 24, this.state.forecastMetadata.latest);
+    this.setHourOffset(hourOffset);
+  }
+
+  previousDay(): void {
+    const hourOffset =
+      Math.max(this.state.hourOffset - 24, this.state.model === 'gfs' ? 3 : 0);
+    this.setHourOffset(hourOffset);
   }
 
   /** Change which primary layer to show. Valid keys are defined above in the file */

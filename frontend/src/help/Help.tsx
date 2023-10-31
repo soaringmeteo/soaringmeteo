@@ -71,7 +71,7 @@ const MapHelp = (props: { domain: Domain }): JSX.Element => {
     </p>
     <p>
       You are looking at the weather forecast for { showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { timeZone: props.domain.timeZone() }) },
-      from the model { state.forecastMetadata.model }. Select the information to display on the map, or the zone of the world to cover,
+      from the model { props.domain.modelName() }. Select the information to display on the map, or the zone of the world to cover,
       by clicking on the “layers” button at the bottom right of the screen.
     </p>
     <p>

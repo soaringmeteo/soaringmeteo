@@ -3,8 +3,7 @@ import {Accessor, createEffect, createResource, createSignal, JSX, Match, Show, 
 import { normalizeCoordinates } from './data/LocationForecasts';
 import { closeButton, surfaceOverMap } from './styles/Styles';
 import layersImg from './images/layers.png';
-import {ForecastMetadata} from './data/ForecastMetadata';
-import { Domain } from './State';
+import {Domain, gfsModel, wrfModel} from './State';
 import { Layer } from './layers/Layer';
 import { noLayer } from './layers/None';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
@@ -25,7 +24,6 @@ import {containsCoordinate} from "ol/extent";
  * Overlay on the map that displays the soaring forecast.
  */
 export const LayersSelector = (props: {
-  forecastMetadatas: Array<ForecastMetadata>
   popupRequest: Accessor<undefined | MapBrowserEvent<any>>
   openLocationDetailsPopup: (latitude: number, longitude: number, content: HTMLElement) => void
   closeLocationDetailsPopup: () => void
@@ -41,24 +39,55 @@ export const LayersSelector = (props: {
   const selectForecastEl =
     <fieldset style={ fieldsetPaddingStyle }>
       <legend>Forecast Data</legend>
-      <fieldset style={ fieldsetPaddingStyle }>
-        <legend>Initialization Time</legend>
+      <fieldset style={ fieldsetPaddingStyle}>
+        <legend>Model</legend>
         <Select
-          title="Initialization time of the forecast run"
-          options={
-            props.forecastMetadatas.map(forecastMetadata => {
-              const initTimeString =
-                showDate(
-                  forecastMetadata.init,
-                  { showWeekDay: true, timeZone: props.domain.timeZone() }
-                );
-              return [initTimeString, forecastMetadata]
-            })
-          }
-          selectedOption={ state.forecastMetadata }
-          onChange={ forecastMetadata => props.domain.setForecastMetadata(forecastMetadata) }
-          key={ forecastMetadata => forecastMetadata.initS }
+          title="Numerical Weather Prediction Model"
+          options={ [['GFS (25 km)', gfsModel], ['WRF (2-6 km)', wrfModel]] }
+          selectedOption={ state.model }
+          onChange={ model => props.domain.setModel(model) }
+          key={ model => model }
         />
+      </fieldset>
+      <fieldset style={ fieldsetPaddingStyle }>
+        <Switch>
+          <Match when={ state.model === gfsModel }>
+            <legend>Initialization Time</legend>
+            <Select
+              title="Initialization time of the forecast run"
+              options={
+                props.domain.gfsRuns.map(gfsRun => {
+                  const initTimeString =
+                    showDate(
+                      gfsRun.init,
+                      { showWeekDay: true, timeZone: props.domain.timeZone() }
+                    );
+                  return [initTimeString, gfsRun]
+                })
+              }
+              selectedOption={ state.forecastMetadata }
+              onChange={ forecastMetadata => props.domain.setForecastMetadata(forecastMetadata) }
+              key={ forecastMetadata => forecastMetadata.initS }
+            />
+          </Match>
+          <Match when={ state.model === wrfModel }>
+            <legend>Date</legend>
+            <Select
+              title="Forecast date"
+              options={
+                props.domain.wrfRuns.map(wrfRun =>
+                  [
+                    showDate(wrfRun.firstTimeStep, { showWeekDay: true, timeZone: props.domain.timeZone() }),
+                    wrfRun
+                  ]
+                )
+              }
+              selectedOption={ state.forecastMetadata }
+              onChange={ value => props.domain.setForecastMetadata(value) }
+              key={ forecastMetadata => forecastMetadata.initS }
+            />
+          </Match>
+        </Switch>
       </fieldset>
       <fieldset style={ fieldsetPaddingStyle }>
         <legend>Zone</legend>

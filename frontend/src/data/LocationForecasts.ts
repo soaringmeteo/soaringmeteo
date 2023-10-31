@@ -21,7 +21,7 @@ export class LocationForecasts {
       .map(_ => _.forecasts)
       .reduce((x, y) => x.concat(y), [])
       .map(forecast => {
-        return [forecast.hourOffsetSinceInitializationTime(this.metadata.init), forecast.time]
+        return [forecast.hourOffsetSinceFirstTimeStep(this.metadata.firstTimeStep), forecast.time]
       });
   }
 
@@ -29,7 +29,7 @@ export class LocationForecasts {
   atHourOffset(hourOffset: number): DetailedForecast | undefined {
     return this.dayForecasts.map(_ => _.forecasts)
       .reduce((x, y) => x.concat(y), [])
-      .find(forecast => forecast.hourOffsetSinceInitializationTime(this.metadata.init) === hourOffset)
+      .find(forecast => forecast.hourOffsetSinceFirstTimeStep(this.metadata.firstTimeStep) === hourOffset)
   }
 
 }
@@ -108,8 +108,8 @@ export class DetailedForecast {
     };
   }
 
-  hourOffsetSinceInitializationTime(initializationTime: Date): number {
-    return Math.round((this.time.getTime() - initializationTime.getTime()) / 3600000)
+  hourOffsetSinceFirstTimeStep(firstTimeStep: Date): number {
+    return Math.round((this.time.getTime() - firstTimeStep.getTime()) / 3600000)
   }
 
 }

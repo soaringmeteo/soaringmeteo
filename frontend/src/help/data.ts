@@ -154,7 +154,7 @@ const locationData: LocationForecastsData = {
 };
 
 export const locationForecasts =
-  new LocationForecasts(locationData, new ForecastMetadata(metadata), -33.25, 19.75);
+  new LocationForecasts(locationData, new ForecastMetadata('gfs', metadata), -33.25, 19.75);
 
 export const detailedForecast =
   new DetailedForecast(detailedData, groundLevel);

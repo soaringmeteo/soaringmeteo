@@ -20,6 +20,8 @@ import windImg8 from '../images/wind-8.png';
 import windImg9 from '../images/wind-9.png';
 import markerImg from '../images/marker-icon.png';
 import { Extent } from "ol/extent";
+import proj4 from 'proj4';
+import { register } from "ol/proj/proj4";
 
 const windImages = [windImg0, windImg1, windImg2, windImg3, windImg4, windImg5, windImg6, windImg7, windImg8, windImg9];
 
@@ -32,6 +34,12 @@ const webMercatorProjection: Projection = (() => {
   if (projection === null) throw 'Projection not found';
   return projection
 })();
+
+proj4.defs(
+  'WRF',
+  '+proj=lcc +lat_1=45.848999 +lon_0=11.400000 +lat_0=46.008598 +units=m +R=6370'
+);
+register(proj4)
 
 export const viewProjection: Projection = webMercatorProjection;
 

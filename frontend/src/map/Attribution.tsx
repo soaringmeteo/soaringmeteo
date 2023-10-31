@@ -50,7 +50,7 @@ export const Attribution = (props: { domain: Domain }): JSX.Element => {
             'background-color': 'white'
           }}
         >
-          Model: { props.domain.state.forecastMetadata.model }. Initialization: { showDate(props.domain.state.forecastMetadata.init, { timeZone: props.domain.timeZone() }) }
+          Model: { props.domain.modelName() }. Initialization: { showDate(props.domain.state.forecastMetadata.init, { timeZone: props.domain.timeZone() }) }
         </div>
       </Show>
     </span> as HTMLElement;

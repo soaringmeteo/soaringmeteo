@@ -53,7 +53,7 @@ export const xcFlyingPotentialLayer: Layer = {
               'cursor': 'pointer'
             }}
             title={ `${ showDate(medianForecast.time, { showWeekDay: true, timeZone: props.timeZone }) }: ${ medianForecast.xcPotential }%` }
-            onClick={ () => props.setHourOffset(medianForecast.hourOffsetSinceInitializationTime(props.forecastMetadata.init)) }
+            onClick={ () => props.setHourOffset(medianForecast.hourOffsetSinceFirstTimeStep(props.forecastMetadata.firstTimeStep)) }
           />
         })
     };
