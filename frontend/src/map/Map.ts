@@ -248,5 +248,5 @@ const linearRamp = (x0: number, y0: number, x1: number, y1: number) => (x: numbe
   else return y0 + (x - x0) * (y1 - y0) / (x1 - x0)
 };
 
-const windArrowScale = linearRamp(0, 0.6, 40, 1);
+const windArrowScale = linearRamp(0, 0.7, 40, 1);
 const windNumericalValueOffset = linearRamp(0, 10, 40, 15);
