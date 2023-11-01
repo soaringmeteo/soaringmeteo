@@ -199,14 +199,18 @@ export class Domain {
   setForecastMetadata(forecastMetadata: ForecastMetadata): void {
     this.setState({
       forecastMetadata,
-      hourOffset: forecastMetadata.defaultHourOffset()
+      hourOffset: forecastMetadata.defaultHourOffset(),
+      detailedView: undefined
     });
   }
 
   /** Set the zone (Europe, America, etc.) to cover */
   setZone(zone: Zone): void {
     saveZone(this.state.model, zone.id);
-    this.setState({ zone });
+    this.setState({
+      zone,
+      detailedView: undefined
+    });
   }
 
   timeStep(): number {

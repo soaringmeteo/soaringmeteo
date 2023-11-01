@@ -1,14 +1,13 @@
 package org.soaringmeteo.gfs
 
 import geotrellis.vector.Extent
-import io.circe.Json
 import org.slf4j.LoggerFactory
-import org.soaringmeteo.{Forecast, InitDateString, Point}
-import org.soaringmeteo.gfs.out.{LocationForecasts, Store, runTargetPath, subgridTargetPath}
-import org.soaringmeteo.out.{ForecastMetadata, deleteOldData}
-import org.soaringmeteo.util.WorkReporter
+import org.soaringmeteo.gfs.out.{Store, runTargetPath, subgridTargetPath}
+import org.soaringmeteo.out.{ForecastMetadata, JsonData, deleteOldData}
+import org.soaringmeteo.{InitDateString, Point}
 
 import java.time.OffsetDateTime
+import scala.collection.mutable
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 
@@ -70,48 +69,57 @@ object JsonWriter {
     subgrid: Subgrid,
     targetDir: os.Path
   ): Unit = {
-    val k = 4 // clustering factor
-    val reporter = new WorkReporter(subgrid.size / (k * k), s"Writing location forecasts for subgrid ${subgrid.id}", logger)
-    for {
-      (longitudes, xCluster) <- subgrid.longitudes.grouped(k).zipWithIndex
-      (latitudes,  yCluster) <- subgrid.latitudes.grouped(k).zipWithIndex
-    } {
-      val forecastHours =
-        Settings.forecastHours.map(hourOffset => (hourOffset, initTime.plusHours(hourOffset)))
-      val forecastsCluster: IndexedSeq[IndexedSeq[Map[Int, Forecast]]] = {
-        val xMin = xCluster * k
-        val yMin = yCluster * k
-        for ((longitude, x) <- longitudes.zip(Iterator.from(xMin))) yield {
-          for ((latitude, y) <- latitudes.zip(Iterator.from(yMin)))
-            yield {
-              val location = Point(latitude, longitude)
-              // TODO That could be optimized further (e.g. pre-compute for every grid point)
-              val relevantHours =
-                forecastHours
-                  .view
-                  .filter { case (_, time) => LocationForecasts.isRelevant(location)(time) }
-                  .map(_._1)
-                  .toSet
-              Await.result(Store.forecastForLocation(initTime, subgrid, x, y, relevantHours), 300.second)
-            }
-        }
-      }
-      logger.trace(s"Writing forecast for cluster (${xCluster}-${yCluster}) including longitudes ${longitudes} and latitudes ${latitudes}.")
-      val json =
-        Json.arr(forecastsCluster.map { forecastColumns =>
-          Json.arr(forecastColumns.map { forecastsByHour =>
-            val locationForecasts = LocationForecasts(forecastsByHour.toSeq.sortBy(_._1).map(_._2))
-            LocationForecasts.jsonEncoder(locationForecasts)
-          }: _*)
-        }: _*)
-      // E.g., "12-34.json"
-      val fileName = s"${xCluster}-${yCluster}.json"
-      os.write.over(
-        targetDir / "locations" / fileName,
-        json.noSpaces,
-        createFolders = true
-      )
-      reporter.notifyCompleted()
+    val forecastHours =
+      Settings.forecastHours.map(hourOffset => (hourOffset, initTime.plusHours(hourOffset)))
+
+    val cache = mutable.Map.empty[BigDecimal, OffsetDateTime => Boolean]
+
+    JsonData.writeForecastsByLocation(
+      s"subgrid ${subgrid.id}",
+      subgrid.width,
+      subgrid.height,
+      targetDir
+    ) { (x, y) =>
+      val location = Point(subgrid.latitudes(y), subgrid.longitudes(x))
+      val isRelevant =
+        cache.getOrElseUpdate(location.longitude, relevantTimeStepsForLocation(location))
+      val relevantHours =
+        forecastHours
+          .view
+          .filter { case (_, time) => isRelevant(time) }
+          .map(_._1)
+          .toSet
+      Await.result(Store.forecastForLocation(initTime, subgrid, x, y, relevantHours), 300.second)
+    }
+  }
+
+  def relevantTimeStepsForLocation(location: Point): OffsetDateTime => Boolean = {
+    // Transform longitude so that it goes from 0 to 360 instead of 180 to -180
+    val normalizedLongitude = 180 - location.longitude
+    // Width of each zone, in degrees
+    val zoneWidthDegrees = 360 / Settings.numberOfForecastsPerDay
+    // Width of each zone, in hours
+    val zoneWidthHours = Settings.gfsForecastTimeResolution
+    // Noon time offset is 12 around prime meridian, 0 on the other side of the
+    // earth, and 6 on the east and 21 on the west.
+    // For example, a point with a longitude of 7 (e.g., Bulle) will have a normalized
+    // longitude of 173. If we divide this number of degrees by the width of a zone,
+    // we get its zone number, 4. Finally, we multiply this zone number by the number of
+    // hours of a zone, we get the noon time for this longitude, 12.
+    val noonHour =
+      ((normalizedLongitude + (zoneWidthDegrees / 2.0)) % 360).doubleValue.round.toInt / zoneWidthDegrees * zoneWidthHours
+
+    val allHours = (0 until 24 by Settings.gfsForecastTimeResolution).to(Set)
+
+    val relevantHours: Set[Int] =
+      (1 to Settings.relevantForecastPeriodsPerDay).foldLeft((allHours, Set.empty[Int])) {
+        case ((hs, rhs), _) =>
+          val rh = hs.minBy(h => math.min(noonHour + 24 - h, math.abs(h - noonHour)))
+          (hs - rh, rhs + rh)
+      }._2
+
+    time => {
+      relevantHours.contains(time.getHour)
     }
   }
 
@@ -125,17 +133,19 @@ object JsonWriter {
   private def overwriteLatestForecastMetadata(initDateString: String, gfsRun: in.ForecastRun, targetDir: os.Path): Unit = {
     val zones =
       for (subgrid <- Settings.gfsSubgrids) yield {
+        val resolution = BigDecimal("0.25")
         ForecastMetadata.Zone(
           subgrid.id,
           subgrid.label,
           ForecastMetadata.Raster(
             projection = "EPSG:4326" /* WGS84 */,
+            resolution,
             Extent(
               subgrid.leftLongitude.doubleValue,
               subgrid.bottomLatitude.doubleValue,
               subgrid.rightLongitude.doubleValue,
               subgrid.topLatitude.doubleValue
-            ).buffer(0.125) // Add buffer because we draw rectangles, not points
+            ).buffer((resolution / 2).doubleValue) // Add buffer because we draw rectangles, not points
           ),
           ForecastMetadata.VectorTiles(subgrid.vectorTilesParameters)
         )

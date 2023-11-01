@@ -1,6 +1,6 @@
 import {createEffect, createMemo, createSignal, JSX, Show} from 'solid-js';
 
-import { forecastOffsets, periodsPerDay } from './data/ForecastMetadata';
+import { forecastOffsets } from './data/ForecastMetadata';
 import {showCoordinates, showDate} from './shared';
 import {DetailedViewType, type Domain, gfsModel} from './State';
 import { closeButton, closeButtonSize, keyWidth, meteogramColumnWidth, periodSelectorHeight, surfaceOverMap } from './styles/Styles';
@@ -77,7 +77,17 @@ const PeriodSelector = (props: {
 
   const periodSelectors: () => Array<JSX.Element> =
     createMemo(() => {
-      return periodSelectorsByDay().map(([periods, date]) => {
+      const periodSelectorsByDayValue = periodSelectorsByDay();
+
+      const maxPeriodsPerDay =
+        periodSelectorsByDayValue.reduce(
+          (previousMax, [periodSelectors, date]) => {
+            return Math.max(previousMax, periodSelectors.length)
+          },
+          0
+        );
+
+      return periodSelectorsByDayValue.map(([periods, date]) => {
         const dayEl =
           hover(
             <div
@@ -90,10 +100,10 @@ const PeriodSelector = (props: {
                 'border-left': 'thin solid darkGray',
                 'line-height': '13px'
               }}
-              onClick={() => props.domain.setHourOffset(periods[1 /* because we have three periods per day in total in GFS */][1])}
+              onClick={() => props.domain.setHourOffset(periods[Math.floor(maxPeriodsPerDay / 2)][1])}
             >
             {
-              periods.length === periodsPerDay ?
+              periods.length === maxPeriodsPerDay ?
                 date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', weekday: 'short', timeZone: props.domain.timeZone() }) :
                 '\xa0'
             }
@@ -126,7 +136,7 @@ const decorateDetailedView = (
   keyAndView: { key: JSX.Element, view: JSX.Element },
   showLocationForecast: (viewType: DetailedViewType) => void
 ): { key: JSX.Element, view: JSX.Element } => {
-  const locationCoordinates = showCoordinates(forecasts.longitude, forecasts.latitude, 2);
+  const locationCoordinates = showCoordinates(forecasts.longitude, forecasts.latitude, domain.state.model);
   const extra =
     viewType === 'meteogram' ?
       <>
@@ -298,12 +308,11 @@ export const PeriodSelectors = (props: {
   const periodSelectorEl =
     <PeriodSelector
       forecastOffsetAndDates={
-        state.model === 'wrf' ? [] :
-          // If there is no selected forecast, infer the available periods from the forecast metadata
-          (state.detailedView === undefined) ?
-            forecastOffsets(state.forecastMetadata.firstTimeStep, 9, state.forecastMetadata)
-          :
-            state.detailedView[0].offsetAndDates()
+        // If there is no selected forecast, infer the available periods from the forecast metadata
+        (state.detailedView === undefined) ?
+          state.model === 'wrf' ? [] : forecastOffsets(state.forecastMetadata.firstTimeStep, 9, state.forecastMetadata)
+        :
+          state.detailedView[0].offsetAndDates()
       }
       detailedView={ getDetailedView().view }
       domain={ props.domain }

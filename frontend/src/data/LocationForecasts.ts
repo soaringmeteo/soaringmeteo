@@ -52,7 +52,7 @@ export class DetailedForecast {
   readonly cloudCover: number; // %
   readonly rain: DetailedRain;
   readonly meanSeaLevelPressure: number;
-  readonly isothermZero: number; // m
+  readonly isothermZero: number | undefined; // m
   readonly aboveGround: Array<AboveGround>; // Sorted by ascending elevation
   readonly winds: DetailedWinds;
 
@@ -83,7 +83,7 @@ export class DetailedForecast {
       total: data.r.t
     };
     this.meanSeaLevelPressure = data.mslet;
-    this.isothermZero = data.iso;
+    this.isothermZero = data.iso !== null && data.iso !== undefined ? data.iso : undefined;
 
     this.aboveGround =
       data.p
@@ -201,7 +201,7 @@ export type DetailedForecastData = {
     v: number
   }
   // Isotherm 0°C
-  iso: number,
+  iso?: number,
   // Rain
   r: {
     t: number, // total
@@ -212,18 +212,3 @@ export type DetailedForecastData = {
   c: number // Between 0 and 100
   w: Array<{u: number, v: number}>
 }
-
-export const modelResolution = 25 // Hundredths of degrees
-
-/**
- * Return the closest point of the underlying model grid, in hundreths of degrees.
- * 
- * E.g., for GFS `normalizeCoordinates(46.1234, 7.5678) == [4600, 750]`.
- */
-export const normalizeCoordinates =
-  (latitude: number, longitude: number): [number, number] => {
-    return [
-      Math.floor(((latitude * 100) + modelResolution / 2) / modelResolution) * modelResolution,
-      Math.floor(((longitude * 100) + modelResolution / 2) / modelResolution) * modelResolution
-    ]
-  }

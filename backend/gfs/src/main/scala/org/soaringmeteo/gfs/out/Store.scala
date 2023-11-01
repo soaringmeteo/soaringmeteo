@@ -223,7 +223,7 @@ object Store {
         "cape" -> Json.fromBigDecimal(BigDecimal(forecast.cape.toGrays)),
         "cin" -> Json.fromBigDecimal(BigDecimal(forecast.cin.toGrays)),
         "irradiance" -> Json.fromInt(forecast.downwardShortWaveRadiationFlux.toWattsPerSquareMeter.round.intValue),
-        "isothermZero" -> Json.fromInt(forecast.isothermZero.toMeters.round.intValue),
+        "isothermZero" -> forecast.isothermZero.fold(Json.Null)(elevation => Json.fromInt(elevation.toMeters.round.intValue)),
         "winds" -> windsCodec(forecast.winds),
         "xcFlyingPotential" -> Json.fromInt(forecast.xcFlyingPotential),
         "soaringLayerDepth" -> Json.fromInt(forecast.soaringLayerDepth.toMeters.round.intValue)
@@ -270,7 +270,10 @@ object Store {
         cape <- cursor.downField("cape").as[BigDecimal].map(Grays(_))
         cin <- cursor.downField("cin").as[BigDecimal].map(Grays(_))
         downwardShortWaveRadiationFlux <- cursor.downField("irradiance").as[Int].map(WattsPerSquareMeter(_))
-        isothermZero <- cursor.downField("isothermZero").as[Int].map(Meters(_))
+        isothermZero <- cursor.downField("isothermZero").as[Json].flatMap {
+          case Json.Null => Right(None)
+          case json => Decoder[Int].decodeJson(json).map(elevation => Some(Meters(elevation)))
+        }
         winds <- cursor.downField("winds").as(windsCodec)
         xcFlyingPotential <- cursor.downField("xcFlyingPotential").as[Int]
         soaringLayerDepth <- cursor.downField("soaringLayerDepth").as[Int].map(Meters(_))

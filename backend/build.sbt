@@ -24,6 +24,8 @@ val common =
         "edu.ucar" % "grib" % "5.5.3",
         // Quantities
         Dependencies.squants,
+        // Testing
+        Dependencies.verify % Test,
       )
     )
 
@@ -55,7 +57,7 @@ val gfs =
         // Configuration
         Dependencies.config,
         // Testing
-        "com.eed3si9n.verify" %% "verify" % "0.2.0" % Test
+        Dependencies.verify % Test,
       ),
     )
     .dependsOn(common)

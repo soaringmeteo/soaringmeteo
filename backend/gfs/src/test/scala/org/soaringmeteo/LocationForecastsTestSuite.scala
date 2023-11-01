@@ -3,7 +3,7 @@ package org.soaringmeteo
 import java.time.{LocalDate, LocalTime, OffsetDateTime, ZoneOffset}
 import java.time.OffsetDateTime.parse
 
-import org.soaringmeteo.gfs.out.LocationForecasts.isRelevant
+import org.soaringmeteo.gfs.JsonWriter.relevantTimeStepsForLocation
 import org.soaringmeteo.gfs.Settings
 import verify.BasicTestSuite
 
@@ -21,12 +21,12 @@ object LocationForecastsTestSuite extends BasicTestSuite {
     for {
       longitude <- BigDecimal(-180) until BigDecimal(180) by 0.5
     } {
-      val relevantForecasts = forecastTimes.count(isRelevant(Point(latitude = 0, longitude)))
+      val relevantForecasts = forecastTimes.count(relevantTimeStepsForLocation(Point(latitude = 0, longitude)))
       assert(relevantForecasts == Settings.relevantForecastPeriodsPerDay)
     }
 
     locally {
-      val isRelevantAtPoint = isRelevant(Point(0, -180))
+      val isRelevantAtPoint = relevantTimeStepsForLocation(Point(0, -180))
       assert(isRelevantAtPoint(parse("2020-08-01T00:00:00Z")))
       assert(isRelevantAtPoint(parse("2020-08-01T03:00:00Z")))
       assert(!isRelevantAtPoint(parse("2020-08-01T06:00:00Z")))
@@ -38,7 +38,7 @@ object LocationForecastsTestSuite extends BasicTestSuite {
     }
 
     locally {
-      val isRelevantAtPoint = isRelevant(Point(0, 7))
+      val isRelevantAtPoint = relevantTimeStepsForLocation(Point(0, 7))
       assert(!isRelevantAtPoint(parse("2020-08-01T00:00:00Z")))
       assert(!isRelevantAtPoint(parse("2020-08-01T03:00:00Z")))
       assert(!isRelevantAtPoint(parse("2020-08-01T06:00:00Z")))

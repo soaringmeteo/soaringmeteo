@@ -1,10 +1,8 @@
-package org.soaringmeteo.gfs.out
+package org.soaringmeteo
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, OffsetDateTime}
 import io.circe.{Encoder, Json}
-import org.soaringmeteo.gfs.Settings
-import org.soaringmeteo.{AirData, ConvectiveClouds, Forecast, Point, Wind, Winds}
 import squants.Velocity
 import squants.energy.SpecificEnergy
 import squants.motion.Pressure
@@ -18,9 +16,9 @@ import scala.util.chaining._
 
 /**
  * All the forecast data for one location and several days, with
- * high-level information extracted from the content of each GFS forecast
+ * high-level information extracted from the content of each forecast
  * (e.g., thunderstorm risk per day).
- * This forecast data is used to build meteograms.
+ * This forecast data is used to build meteograms and sounding diagrams.
  */
 case class LocationForecasts(
   elevation: Length,
@@ -55,7 +53,7 @@ case class DetailedForecast(
   cape: SpecificEnergy,
   cin: SpecificEnergy,
   downwardShortWaveRadiationFlux: Irradiance,
-  isothermZero: Length,
+  isothermZero: Option[Length],
   winds: Winds
 )
 
@@ -111,36 +109,6 @@ object LocationForecasts {
             )
           }
     )
-  }
-
-  def isRelevant(location: Point): OffsetDateTime => Boolean = {
-    // Transform longitude so that it goes from 0 to 360 instead of 180 to -180
-    val normalizedLongitude = 180 - location.longitude
-    // Width of each zone, in degrees
-    val zoneWidthDegrees = 360 / Settings.numberOfForecastsPerDay
-    // Width of each zone, in hours
-    val zoneWidthHours   = Settings.gfsForecastTimeResolution
-    // Noon time offset is 12 around prime meridian, 0 on the other side of the
-    // earth, and 6 on the east and 21 on the west.
-    // For example, a point with a longitude of 7 (e.g., Bulle) will have a normalized
-    // longitude of 173. If we divide this number of degrees by the width of a zone,
-    // we get its zone number, 4. Finally, we multiply this zone number by the number of
-    // hours of a zone, we get the noon time for this longitude, 12.
-    val noonHour =
-      ((normalizedLongitude + (zoneWidthDegrees / 2.0)) % 360).doubleValue.round.toInt / zoneWidthDegrees * zoneWidthHours
-
-    val allHours = (0 until 24 by Settings.gfsForecastTimeResolution).to(Set)
-
-    val relevantHours: Set[Int] =
-      (1 to Settings.relevantForecastPeriodsPerDay).foldLeft((allHours, Set.empty[Int])) {
-        case ((hs, rhs), _) =>
-          val rh = hs.minBy(h => math.min(noonHour + 24 - h, math.abs(h - noonHour)))
-          (hs - rh, rhs + rh)
-      }._2
-
-    time => {
-      relevantHours.contains(time.getHour)
-    }
   }
 
   // FIXME Generalize to an arbitrary number of forecasts for the day
@@ -240,7 +208,7 @@ object LocationForecasts {
                       "u" -> Json.fromInt(forecast.surfaceWind.u.toKilometersPerHour.round.toInt),
                       "v" -> Json.fromInt(forecast.surfaceWind.v.toKilometersPerHour.round.toInt)
                     ),
-                    "iso" -> Json.fromInt(forecast.isothermZero.toMeters.round.toInt),
+                    "iso" -> forecast.isothermZero.fold(Json.Null)(elevation => Json.fromInt(elevation.toMeters.round.toInt)),
                     "r" -> Json.obj(
                       "t" -> Json.fromInt(forecast.totalRain.toMillimeters.round.toInt),
                       "c" -> Json.fromInt(forecast.convectiveRain.toMillimeters.round.toInt)

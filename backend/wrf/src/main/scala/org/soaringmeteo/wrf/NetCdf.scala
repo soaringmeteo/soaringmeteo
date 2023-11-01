@@ -6,8 +6,7 @@ import geotrellis.vector.reproject.Reproject
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.grib.Grib
 import org.soaringmeteo.out.VectorTiles
-import org.soaringmeteo.Point
-import org.soaringmeteo.{AirData, ConvectiveClouds, Forecast, Thermals, Wind, Winds, XCFlyingPotential}
+import org.soaringmeteo.{AirData, ConvectiveClouds, Forecast, Point, Temperatures, Thermals, Wind, Winds, XCFlyingPotential}
 import squants.energy.Grays
 import squants.motion.{KilometersPerHour, MetersPerSecond, Pascals}
 import squants.radio.WattsPerSquareMeter
@@ -25,10 +24,14 @@ object NetCdf {
 
   case class Result(
     forecastsByHour: IndexedSeq[IndexedSeq[IndexedSeq[Forecast]]], // 3D matrix indexed by time, x-coordinate, and y-coordinate
+    metadata: Metadata
+  )
+
+  case class Metadata(
     latestHourOffset: Int,
     width: Int,
     height: Int,
-    rasterExtent: Extent,
+    raster: (BigDecimal, Extent),
     vectorTilesParameters: VectorTiles.Parameters
   )
 
@@ -94,15 +97,20 @@ object NetCdf {
           for (y <- (height - 1) to 0 by -1) yield {
             index3D.set(t, y, x)
             val elevation = Meters(hgt.read(index3D))
+            // TODO Investigate why we cannot use the thermal velocity as computed by the WRF model
 //            val thermalVelocity = MetersPerSecond(w.read(index3D))
             val boundaryLayerDepth = Meters(pblh.read(index3D))
             val downwardShortWaveFlux = WattsPerSquareMeter(swdown.read(index3D))
+            // FIXME Should we use the sensible net heat flux instead of the downward short-wave flux?
             val thermalVelocity = Thermals.velocity(downwardShortWaveFlux, boundaryLayerDepth)
             val maybeConvectiveClouds = None // TODO
             val soaringLayerDepth = Thermals.soaringLayerDepth(elevation, boundaryLayerDepth, maybeConvectiveClouds)
             val airData = {
               val airDataBuilder = SortedMap.newBuilder[Length, AirData]
-              (0 until zs).foldLeft(Meters(zFeature.read(zIndex.set(t, 0, y, x)))) { (previousElevation, z) =>
+              // Read the first elevation value (should be equal to the value read from the hgt variable)
+              var previousElevation = Meters(zFeature.read(zIndex.set(t, 0, y, x)))
+              var z = 0
+              while (z < zs && previousElevation <= Meters(12_000)) {
                 // The z axis is staggered on the Z feature (FIXME there might be a better way to achieve this)
                 val nextElevation = Meters(zFeature.read(zIndex.set(t, z + 1, y, x)))
                 val dataElevation = (previousElevation + nextElevation) / 2
@@ -115,7 +123,8 @@ object NetCdf {
                 val dp = Celsius(dewPoint.read(index4D))
                 val cloudCover = (cloudFraction.read(index4D) * 100).round.intValue
                 airDataBuilder += dataElevation -> AirData(wind, temp, dp, cloudCover)
-                nextElevation
+                previousElevation = nextElevation
+                z = z + 1
               }
               airDataBuilder.result()
             }
@@ -148,7 +157,7 @@ object NetCdf {
               Grays(0), // CAPE (TODO)
               Grays(0), // CIN (TODO)
               downwardShortWaveFlux,
-              Meters(0), // Isotherm 0°C (TODO)
+              isothermZero = None,
               winds, // Winds
               XCFlyingPotential(thermalVelocity, soaringLayerDepth, boundaryLayerWind),
               soaringLayerDepth
@@ -159,11 +168,13 @@ object NetCdf {
 
     Result(
       forecastsByHour,
-      latestHourOffset = forecastsByHour.size - 1, // Assume 1 hour time-steps
-      width,
-      height,
-      rasterExtent(xAxis, yAxis, resolution),
-      vectorTilesParameters(coordinateSystem, resolution, width, height)
+      Metadata(
+        latestHourOffset = forecastsByHour.size - 1, // Assume 1 hour time-steps
+        width,
+        height,
+        raster(xAxis, yAxis, resolution),
+        vectorTilesParameters(coordinateSystem, resolution, width, height)
+      )
     )
   }
 
@@ -221,12 +232,13 @@ object NetCdf {
     VectorTiles.Parameters(extent, maxViewZoom, width, height, coordinates)
   }
 
-  def rasterExtent(xAxis: CoordinateAxis, yAxis: CoordinateAxis, resolution: Double): Extent = {
+  def raster(xAxis: CoordinateAxis, yAxis: CoordinateAxis, resolution: Double): (BigDecimal, Extent) = {
     val xMin = xAxis.getMinValue * 1000 // convert kms to meters
     val xMax = xAxis.getMaxValue * 1000
     val yMin = yAxis.getMinValue * 1000
     val yMax = yAxis.getMaxValue * 1000
-    Extent(xMin, yMin, xMax, yMax).buffer((resolution * 1000) / 2)
+    val extent = Extent(xMin, yMin, xMax, yMax).buffer((resolution * 1000) / 2)
+    (resolution * 1000, extent)
   }
 
 }

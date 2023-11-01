@@ -58,13 +58,23 @@ export const xcFlyingPotentialLayer: Layer = {
         })
     };
 
-    const summarizer = summarizerFromLocationDetails(props, (detailedForecast, locationForecasts) => [
-      ["Week overview", <span>{ nextDaysOverview(locationForecasts) }</span>],
-      ["XC Flying Potential", <span>{detailedForecast.xcPotential}%</span>],
-      ["Soaring layer depth", <span>{detailedForecast.boundaryLayer.soaringLayerDepth} m</span>],
-      ["Thermal velocity", <span>{detailedForecast.thermalVelocity} m/s</span>],
-      ["Total cloud cover", <span>{Math.round(detailedForecast.cloudCover * 100)}%</span>],
-    ]);
+    // TODO Is it redundant with meteograms?
+    // const dayOverview = (locationForecasts: LocationForecasts): JSX.Element => {
+    //
+    // };
+
+    const summarizer = summarizerFromLocationDetails(props, (detailedForecast, locationForecasts) => {
+      const maybeOverview: Array<[string, JSX.Element]> =
+        props.forecastMetadata.modelPath === 'gfs' ?
+          [["Week overview", <span>{ nextDaysOverview(locationForecasts) }</span>]] :
+          [/*["Day overview", <span>{ dayOverview(locationForecasts) }</span>]*/];
+      return maybeOverview.concat([
+        ["XC Flying Potential", <span>{detailedForecast.xcPotential}%</span>],
+        ["Soaring layer depth", <span>{detailedForecast.boundaryLayer.soaringLayerDepth} m</span>],
+        ["Thermal velocity", <span>{detailedForecast.thermalVelocity} m/s</span>],
+        ["Total cloud cover", <span>{Math.round(detailedForecast.cloudCover * 100)}%</span>],
+      ]);
+    });
 
     const mapKey = colorScaleEl(colorScale, value => `${value}% `);
 

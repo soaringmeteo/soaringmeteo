@@ -270,7 +270,7 @@ object GfsGrib {
       cape,
       cin,
       downwardShortWaveRadiationFlux,
-      isothermZero,
+      Some(isothermZero),
       Winds(airData, elevation, soaringLayerDepth),
       XCFlyingPotential(thermalVelocity, soaringLayerDepth, boundaryLayerWind),
       soaringLayerDepth

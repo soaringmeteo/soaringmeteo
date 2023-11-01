@@ -23,4 +23,7 @@ object Dependencies {
 
   // Quantities and dimensions (velocity, temperature, length, etc.)
   val squants = "org.typelevel" %% "squants" % "1.8.3"
+
+  // Testing
+  val verify = "com.eed3si9n.verify" %% "verify" % "0.2.0"
 }

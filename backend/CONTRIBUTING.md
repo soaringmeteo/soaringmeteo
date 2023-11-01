@@ -60,6 +60,8 @@ You can customize the settings by changing the configuration file [dev.conf](gfs
 
 ## Run the WRF Pipeline Locally
 
+Before running the command, you need to fetch `.nc` files produced by the WRF model. Ask help from the maintainers.
+
 ~~~
 makeWrfAssets
 ~~~

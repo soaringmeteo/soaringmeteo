@@ -33,6 +33,15 @@ object Thermals {
     }
   }
 
+  /**
+   * Depth of atmosphere where pilots can expect to soar.
+   * In presence of convective clouds, the cloud base is the upper limit,
+   * otherwise, the planetary boundary layer height is the upper limit.
+   * @param elevation             Ground level (AMSL)
+   * @param boundaryLayerDepth    Planetary boundary layer depth (AGL)
+   * @param maybeConvectiveClouds Possible presence of convective clouds
+   * @return Height above ground level
+   */
   def soaringLayerDepth(
     elevation: Length /* AMSL */,
     boundaryLayerDepth: Length /* AGL */,

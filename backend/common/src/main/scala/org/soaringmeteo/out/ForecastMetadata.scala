@@ -32,10 +32,12 @@ case class ForecastMetadata(
 object ForecastMetadata {
   /** Description of the zones covered */
   case class Zone(id: String, label: String, raster: Raster, vectorTiles: VectorTiles)
-  /** Description of the raster images of a zone. The coordinates of the extent must be
-   *  in the given projection
+  /** Description of the raster images of a zone.
+   * @param projection Identifier of the projection to use to render the raster image
+   * @param extent     Extent of the raster (expressed in projection coordinates)
+   * @param resolution Size of a pixel in projection unit (e.g. 2000 for WRF, 0.25 for GFS)
    */
-  case class Raster(projection: String, extent: Extent)
+  case class Raster(projection: String, resolution: BigDecimal, extent: Extent)
   /** Description of the vector tiles of a zone. The `minZoom` is the minimum zoom level
    *  of the view for showing the vector tiles
    */
@@ -123,12 +125,14 @@ object ForecastMetadata {
         Decoder.instance { cursor =>
           for {
             projection <- cursor.downField("proj").as[String]
+            resolution <- cursor.downField("resolution").as[BigDecimal]
             extent <- cursor.downField("extent").as(extentCodec)
-          } yield Raster(projection, extent)
+          } yield Raster(projection, resolution, extent)
         },
         Encoder.instance { raster =>
           Json.obj(
             "proj" -> Json.fromString(raster.projection),
+            "resolution" -> Json.fromBigDecimal(raster.resolution),
             "extent" -> extentCodec(raster.extent)
           )
         }

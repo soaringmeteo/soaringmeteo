@@ -1,5 +1,7 @@
-import {LocationForecasts, LocationForecastsData, normalizeCoordinates} from "./LocationForecasts";
+import {LocationForecasts, LocationForecastsData} from "./LocationForecasts";
 import {Model} from "../State";
+import {toLonLat, fromLonLat} from "ol/proj";
+import {containsCoordinate} from "ol/extent";
 
 type ForecastMetadataData = {
   h: number      // number of days of historic forecast kept (e.g., 4)
@@ -16,6 +18,7 @@ export type Zone = {
   readonly label: string
   readonly raster: {
     extent: [number, number, number, number]
+    resolution: number
     proj: string
   }
   readonly vectorTiles: {
@@ -26,7 +29,7 @@ export type Zone = {
 }
 
 // Version of the forecast data format we consume (see backend/src/main/scala/org/soaringmeteo/package.scala)
-const formatVersion = 3
+const formatVersion = 4
 // Base path to access forecast data
 const dataPath = `data/${formatVersion}`
 export class ForecastMetadata {
@@ -61,19 +64,47 @@ export class ForecastMetadata {
    */
   async fetchLocationForecasts(zone: Zone, latitude: number, longitude: number): Promise<LocationForecasts | undefined> {
     try {
-      const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(latitude, longitude);
-      const normalizedZoneLeftLongitude = Math.round((zone.raster.extent[0] + 0.125) * 100);
-      const normalizedZoneTopLatitude = Math.round((zone.raster.extent[3] - 0.125) * 100);
-      const clusteringFactor = 4; // must be consistent with the backend
-      const x = ((normalizedLongitude - normalizedZoneLeftLongitude) / 25);
-      const y = ((normalizedZoneTopLatitude - normalizedLatitude) / 25);
-      const response = await fetch(`${dataPath}/${this.modelPath}/${this.initS}/${zone.id}/locations/${Math.floor(x / clusteringFactor)}-${Math.floor(y / clusteringFactor)}.json`);
-      const data     = await response.json() as Array<Array<LocationForecastsData>>;
-      return new LocationForecasts(data[x % clusteringFactor][y % clusteringFactor], this, normalizedLatitude / 100, normalizedLongitude / 100)
+      const maybePoint = this.closestPoint(zone, longitude, latitude);
+      if (maybePoint !== undefined) {
+        const [xIndex, yIndex] = maybePoint;
+        const [normalizedLongitude, normalizedLatitude] = this.toLonLat(zone, maybePoint);
+        const clusteringFactor = 4; // must be consistent with the backend
+        const xCluster = Math.floor(xIndex / clusteringFactor);
+        const yCluster = Math.floor(yIndex / clusteringFactor);
+        const response = await fetch(`${dataPath}/${this.modelPath}/${this.initS}/${zone.id}/locations/${xCluster}-${yCluster}.json`);
+        const data     = await response.json() as Array<Array<LocationForecastsData>>;
+        return new LocationForecasts(data[xIndex % clusteringFactor][yIndex % clusteringFactor], this, normalizedLatitude, normalizedLongitude)
+      } else {
+        return undefined
+      }
     } catch (error) {
       console.debug(`Unable to fetch forecast data at ${latitude},${longitude}: ${error}`);
       return undefined
     }
+  }
+
+  /**
+   * Return the closest point within the `zone`, if the zone contains the provided coordinates.
+   */
+  closestPoint(zone: Zone, longitude: number, latitude: number): [number, number] | undefined {
+    const proj = zone.raster.proj;
+    const extent = zone.raster.extent;
+    const [x, y] = fromLonLat([longitude, latitude], proj);
+    if (containsCoordinate(extent, [x, y])) {
+      const resolution = zone.raster.resolution;
+      const xIndex = Math.round(((x - extent[0]) / resolution) - 0.5);
+      const yIndex = Math.round(((extent[3] - y) / resolution) - 0.5);
+      return [xIndex, yIndex]
+    } else {
+      return undefined
+    }
+  }
+
+  toLonLat(zone: Zone, coordinates: [number, number]): [number, number] {
+    const raster = zone.raster;
+    const x = (coordinates[0] + 0.5) * raster.resolution + raster.extent[0];
+    const y = raster.extent[3] - (coordinates[1] + 0.5) * raster.resolution;
+    return toLonLat([x, y], raster.proj) as [number, number];
   }
 
   /**
@@ -98,6 +129,7 @@ export class ForecastMetadata {
 
 }
 
+// TODO More resilience (no errors in case there are no forecasts, or no WRF forecasts)
 export const fetchForecastRuns = async (model: Model): Promise<Array<ForecastMetadata>> => {
   const response       = await fetch(`${dataPath}/${model}/forecast.json`);
   const data           = await response.json() as ForecastMetadataData;

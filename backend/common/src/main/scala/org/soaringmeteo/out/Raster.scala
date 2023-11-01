@@ -2,7 +2,7 @@ package org.soaringmeteo.out
 
 import geotrellis.raster.render.png.{GreyaPngEncoding, PngColorEncoding, RgbPngEncoding, RgbaPngEncoding}
 import geotrellis.raster.{DoubleArrayTile, IntArrayTile, Tile}
-import geotrellis.raster.render.{ColorMap, Png}
+import geotrellis.raster.render.{ColorMap, LessThan, Png}
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.Forecast
 
@@ -34,6 +34,7 @@ object Raster {
           }
         val tile = extractor.makeTile(pixels, width, height)
         colorMap
+          .withBoundaryType(LessThan)
           .render(tile)
           .renderPng(pngColorEncoding)
       }

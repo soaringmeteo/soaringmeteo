@@ -10,9 +10,9 @@ import java.time.OffsetDateTime
 import scala.collection.SortedMap
 
 /**
- * Result of processing the forecast data read from the GRIB files.
+ * Result of processing the forecast data read from the input sources (GRIB files or .nc files).
  *
- * This data is saved on the disk storage.
+ * In the case of the GFS pipeline, this data is saved on the disk storage.
  */
 case class Forecast(
   time: OffsetDateTime,
@@ -36,14 +36,14 @@ case class Forecast(
   cape: SpecificEnergy, // FIXME Remove
   cin: SpecificEnergy, // FIXME Remove
   downwardShortWaveRadiationFlux: Irradiance, // FIXME Remove
-  isothermZero: Length,
+  isothermZero: Option[Length],
   winds: Winds, // wind value at some specific elevation levels
   xcFlyingPotential: Int,
   soaringLayerDepth: Length // m (AGL)
 )
 
 /**
- * Various information at some elevation level
+ * Various information at some elevation level. Used for the sounding diagrams and meteograms.
  * @param wind        Wind force and direction at the `elevation` level
  * @param temperature Air temperature at the `elevation` level
  * @param dewPoint    Air humidity at the `elevation` level

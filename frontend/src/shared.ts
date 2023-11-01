@@ -1,5 +1,7 @@
 // We centralize here some code shared by multiple modules to reduce the size of the bundles
 
+import {type Model} from "./State";
+
 export const showDate = (date: Date, options: { showWeekDay?: boolean, timeZone: string | undefined }): string => {
   const formattedDate = date.toLocaleString(
     undefined,
@@ -16,8 +18,10 @@ export const showDate = (date: Date, options: { showWeekDay?: boolean, timeZone:
   return options.timeZone === 'UTC' ? `${formattedDate}Z` : formattedDate
 }
 
-export const showCoordinates = (lng: number, lat: number, precision: number): string =>
-  `${ lng >= 0 ? 'E' : 'W' }${ Math.abs(lng).toFixed(precision) } ${ lat >= 0 ? 'N' : 'S' }${ Math.abs(lat).toFixed(precision) }`
+export const showCoordinates = (lng: number, lat: number, model: Model): string => {
+  const precision = model === 'gfs' ? 2 : 4;
+  return `${lng >= 0 ? 'E' : 'W'}${Math.abs(lng).toFixed(precision)} ${lat >= 0 ? 'N' : 'S'}${Math.abs(lat).toFixed(precision)}`
+}
 
 export const xcFlyingPotentialLayerName = 'XC Flying Potential';
 
