@@ -50,7 +50,7 @@ object JsonData {
       val fileName = s"${xCluster}-${yCluster}.json"
       os.write.over(
         targetDir / "locations" / fileName,
-        json.noSpaces,
+        json.deepDropNullValues.noSpaces,
         createFolders = true
       )
       reporter.notifyCompleted()

@@ -103,7 +103,6 @@ object NetCdf {
             val boundaryLayerDepth = Meters(pblh.read(index3D))
             val downwardShortWaveFlux = WattsPerSquareMeter(swdown.read(index3D))
             val upwardHeatFlux = WattsPerSquareMeter(hfx.read(index3D))
-            // FIXME Should we use the sensible net heat flux instead of the downward short-wave flux?
             val thermalVelocity = Thermals.velocity(upwardHeatFlux, boundaryLayerDepth)
             val airData = {
               val airDataBuilder = SortedMap.newBuilder[Length, AirData]

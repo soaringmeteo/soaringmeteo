@@ -83,7 +83,7 @@ export class DetailedForecast {
       total: data.r.t
     };
     this.meanSeaLevelPressure = data.mslet;
-    this.isothermZero = data.iso !== null && data.iso !== undefined ? data.iso : undefined;
+    this.isothermZero = data.iso !== undefined ? data.iso : undefined;
 
     this.aboveGround =
       data.p

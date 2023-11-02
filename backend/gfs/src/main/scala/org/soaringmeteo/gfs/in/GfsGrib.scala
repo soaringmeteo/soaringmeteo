@@ -125,7 +125,7 @@ object GfsGrib {
     val capeSurface = Feature("Convective_available_potential_energy_surface")
     val cinSurface = Feature("Convective_inhibition_surface")
 
-    val isobaricFeatures = org.soaringmeteo.gfs.in.IsobaricVariables.pressureLevels
+    val isobaricFeatures = IsobaricVariables.pressureLevels
       .map { pressureLevel =>
         val hgt = Feature("Geopotential_height_isobaric")
         val tmp = Feature("Temperature_isobaric")

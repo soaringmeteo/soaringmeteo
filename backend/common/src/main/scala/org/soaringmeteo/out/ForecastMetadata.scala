@@ -91,7 +91,7 @@ object ForecastMetadata {
 
     os.write.over(
       latestForecastPath,
-      jsonCodec(metadata).noSpaces
+      jsonCodec(metadata).deepDropNullValues.noSpaces
     )
   }
 
