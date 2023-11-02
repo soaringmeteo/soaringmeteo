@@ -129,7 +129,6 @@ export class ForecastMetadata {
 
 }
 
-// TODO More resilience (no errors in case there are no forecasts, or no WRF forecasts)
 export const fetchForecastRuns = async (model: Model): Promise<Array<ForecastMetadata>> => {
   const response       = await fetch(`${dataPath}/${model}/forecast.json`);
   const data           = await response.json() as ForecastMetadataData;

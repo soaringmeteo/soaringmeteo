@@ -37,7 +37,7 @@ const webMercatorProjection: Projection = (() => {
 
 proj4.defs(
   'WRF',
-  '+proj=lcc +lat_1=45.848999 +lon_0=11.400000 +lat_0=46.008598 +units=m +R=6370'
+  '+proj=lcc +lat_1=45.849 +lat_2=45.849 +lat_0=46.0086 +lon_0=11.4 +a=6370000 +b=6370000 +units=m'
 );
 register(proj4)
 

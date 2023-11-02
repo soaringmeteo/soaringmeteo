@@ -6,18 +6,18 @@ import geotrellis.vector.reproject.Reproject
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.grib.Grib
 import org.soaringmeteo.out.VectorTiles
-import org.soaringmeteo.{AirData, ConvectiveClouds, Forecast, Point, Temperatures, Thermals, Wind, Winds, XCFlyingPotential}
+import org.soaringmeteo.{AirData, ConvectiveClouds, Forecast, Point, Thermals, Wind, Winds, XCFlyingPotential}
 import squants.energy.Grays
-import squants.motion.{KilometersPerHour, MetersPerSecond, Pascals}
+import squants.motion.{MetersPerSecond, Pascals}
 import squants.radio.WattsPerSquareMeter
-import squants.space.{Kilometers, Length, Meters, Millimeters}
+import squants.space.{Length, Meters, Millimeters}
 import squants.thermal.Celsius
-import ucar.nc2.dataset.CoordinateAxis
 import ucar.nc2.dt.GridCoordSystem
 import ucar.nc2.time.CalendarPeriod.Field
 
 import java.time.{OffsetDateTime, ZoneOffset}
 import scala.collection.SortedMap
+import scala.collection.immutable.ArraySeq
 import scala.util.chaining.scalaUtilChainingOps
 
 object NetCdf {
@@ -94,7 +94,7 @@ object NetCdf {
             ZoneOffset.UTC
           )
         )
-        for (x <- 0 until width) yield {
+        ArraySeq.tabulate(width) { x =>
           for (y <- (height - 1) to 0 by -1) yield {
             index3D.set(t, y, x)
             val elevation = Meters(hgt.read(index3D))
@@ -177,7 +177,7 @@ object NetCdf {
         latestHourOffset = forecastsByHour.size - 1, // Assume 1 hour time-steps
         width,
         height,
-        raster(xAxis, yAxis, resolution),
+        (resolution * 1000, rasterExtent(coordinateSystem)),
         vectorTilesParameters(coordinateSystem, resolution, width, height)
       )
     )
@@ -237,13 +237,14 @@ object NetCdf {
     VectorTiles.Parameters(extent, maxViewZoom, width, height, coordinates)
   }
 
-  def raster(xAxis: CoordinateAxis, yAxis: CoordinateAxis, resolution: Double): (BigDecimal, Extent) = {
-    val xMin = xAxis.getMinValue * 1000 // convert kms to meters
-    val xMax = xAxis.getMaxValue * 1000
-    val yMin = yAxis.getMinValue * 1000
-    val yMax = yAxis.getMaxValue * 1000
-    val extent = Extent(xMin, yMin, xMax, yMax).buffer((resolution * 1000) / 2)
-    (resolution * 1000, extent)
+  def rasterExtent(coordinateSystem: GridCoordSystem): Extent = {
+    val boundingBox = coordinateSystem.getBoundingBox
+    Extent(
+      boundingBox.getMinX * 1000,
+      boundingBox.getMinY * 1000,
+      boundingBox.getMaxX * 1000,
+      boundingBox.getMaxY * 1000
+    )
   }
 
 }
