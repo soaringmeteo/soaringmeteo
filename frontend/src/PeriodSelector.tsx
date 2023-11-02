@@ -119,7 +119,7 @@ const PeriodSelector = (props: {
   const length = () => periodSelectorsByDay().reduce((n, ss) => n + ss[0].length, 0);
   const scrollablePeriodSelector =
     <div style={{ 'overflow-x': 'auto', 'background-color': 'white' }}>
-      <div style={{ width: `${length() * meteogramColumnWidth + keyWidth}px` }}>
+      <div style={{ 'min-width': `${length() * meteogramColumnWidth + keyWidth}px` }}>
         <div>{periodSelectors}</div>
         {props.detailedView}
       </div>
