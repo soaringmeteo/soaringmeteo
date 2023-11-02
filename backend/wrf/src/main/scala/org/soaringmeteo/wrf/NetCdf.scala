@@ -63,6 +63,7 @@ object NetCdf {
     val totalPrecipitation = grib.Feature("TOTPREC")
     val convectivePrecipitation = grib.Feature("PREC_ACC_C")
     val swdown = grib.Feature("SWDOWN") // Downward short-wave flux at ground surface
+    val hfx = grib.Feature("HFX")
     // TODO We need more data to compute the thunderstorm risk as per Jean’s formula
     // Take the grid from a 4D non-staggered variable (e.g., UMET, VMET, CLDFRA, etc.)
     val grid4D = cloudFraction.grid
@@ -101,8 +102,9 @@ object NetCdf {
 //            val thermalVelocity = MetersPerSecond(w.read(index3D))
             val boundaryLayerDepth = Meters(pblh.read(index3D))
             val downwardShortWaveFlux = WattsPerSquareMeter(swdown.read(index3D))
+            val upwardHeatFlux = WattsPerSquareMeter(hfx.read(index3D))
             // FIXME Should we use the sensible net heat flux instead of the downward short-wave flux?
-            val thermalVelocity = Thermals.velocity(downwardShortWaveFlux, boundaryLayerDepth)
+            val thermalVelocity = Thermals.velocity(upwardHeatFlux, boundaryLayerDepth)
             val maybeConvectiveClouds = None // TODO
             val soaringLayerDepth = Thermals.soaringLayerDepth(elevation, boundaryLayerDepth, maybeConvectiveClouds)
             val airData = {
@@ -153,7 +155,7 @@ object NetCdf {
               Millimeters(totalPrecipitation.read(index3D)),
               Millimeters(convectivePrecipitation.read(index3D)),
               WattsPerSquareMeter(0), // Latent heat net flux (TODO)
-              WattsPerSquareMeter(0), // Sensible heat net flux (TODO)
+              upwardHeatFlux,
               Grays(0), // CAPE (TODO)
               Grays(0), // CIN (TODO)
               downwardShortWaveFlux,
