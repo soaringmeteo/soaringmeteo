@@ -1,10 +1,8 @@
 import {Accessor, createEffect, createResource, createSignal, JSX, Match, Show, Switch} from 'solid-js';
 
-import { normalizeCoordinates } from './data/LocationForecasts';
 import { closeButton, surfaceOverMap } from './styles/Styles';
 import layersImg from './images/layers.png';
-import {ForecastMetadata} from './data/ForecastMetadata';
-import { Domain } from './State';
+import {Domain, gfsModel, wrfModel} from './State';
 import { Layer } from './layers/Layer';
 import { noLayer } from './layers/None';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
@@ -17,15 +15,12 @@ import { cumuliDepthLayer } from './layers/CumuliDepth';
 import {showCoordinates, showDate} from './shared';
 import {Checkbox, Radio, Select} from './styles/Forms';
 import {MapBrowserEvent} from "ol";
-import {toLonLat, transform} from "ol/proj";
-import {viewProjection} from "./map/Map";
-import {containsCoordinate} from "ol/extent";
+import {toLonLat} from "ol/proj";
 
 /**
  * Overlay on the map that displays the soaring forecast.
  */
 export const LayersSelector = (props: {
-  forecastMetadatas: Array<ForecastMetadata>
   popupRequest: Accessor<undefined | MapBrowserEvent<any>>
   openLocationDetailsPopup: (latitude: number, longitude: number, content: HTMLElement) => void
   closeLocationDetailsPopup: () => void
@@ -41,24 +36,55 @@ export const LayersSelector = (props: {
   const selectForecastEl =
     <fieldset style={ fieldsetPaddingStyle }>
       <legend>Forecast Data</legend>
-      <fieldset style={ fieldsetPaddingStyle }>
-        <legend>Initialization Time</legend>
+      <fieldset style={ fieldsetPaddingStyle}>
+        <legend>Model</legend>
         <Select
-          title="Initialization time of the forecast run"
-          options={
-            props.forecastMetadatas.map(forecastMetadata => {
-              const initTimeString =
-                showDate(
-                  forecastMetadata.init,
-                  { showWeekDay: true, timeZone: props.domain.timeZone() }
-                );
-              return [initTimeString, forecastMetadata]
-            })
-          }
-          selectedOption={ state.forecastMetadata }
-          onChange={ forecastMetadata => props.domain.setForecastMetadata(forecastMetadata) }
-          key={ forecastMetadata => forecastMetadata.initS }
+          title="Numerical Weather Prediction Model"
+          options={ [['GFS (25 km)', gfsModel], ['WRF (2-6 km)', wrfModel]] }
+          selectedOption={ state.model }
+          onChange={ model => props.domain.setModel(model) }
+          key={ model => model }
         />
+      </fieldset>
+      <fieldset style={ fieldsetPaddingStyle }>
+        <Switch>
+          <Match when={ state.model === gfsModel }>
+            <legend>Initialization Time</legend>
+            <Select
+              title="Initialization time of the forecast run"
+              options={
+                props.domain.gfsRuns.map(gfsRun => {
+                  const initTimeString =
+                    showDate(
+                      gfsRun.init,
+                      { showWeekDay: true, timeZone: props.domain.timeZone() }
+                    );
+                  return [initTimeString, gfsRun]
+                })
+              }
+              selectedOption={ state.forecastMetadata }
+              onChange={ forecastMetadata => props.domain.setForecastMetadata(forecastMetadata) }
+              key={ forecastMetadata => forecastMetadata.initS }
+            />
+          </Match>
+          <Match when={ state.model === wrfModel }>
+            <legend>Date</legend>
+            <Select
+              title="Forecast date"
+              options={
+                props.domain.wrfRuns.map(wrfRun =>
+                  [
+                    showDate(wrfRun.firstTimeStep, { showWeekDay: true, timeZone: props.domain.timeZone() }),
+                    wrfRun
+                  ]
+                )
+              }
+              selectedOption={ state.forecastMetadata }
+              onChange={ value => props.domain.setForecastMetadata(value) }
+              key={ forecastMetadata => forecastMetadata.initS }
+            />
+          </Match>
+        </Switch>
       </fieldset>
       <fieldset style={ fieldsetPaddingStyle }>
         <legend>Zone</legend>
@@ -201,61 +227,62 @@ export const LayersSelector = (props: {
   // Show a popup with a summary when the user clicks on the map
   createEffect(() => {
     const event = props.popupRequest();
-    if (event !== undefined) {
-      if (
-        !containsCoordinate(
-          props.domain.state.zone.raster.extent,
-          transform(event.coordinate, viewProjection, props.domain.state.zone.raster.proj)
-        )
-      ) {
-        return
-      }
-      const [eventLng, eventLat] = toLonLat(event.coordinate);
-      const [normalizedLatitude, normalizedLongitude] = normalizeCoordinates(eventLat, eventLng);
-      const [latitude, longitude] = [normalizedLatitude / 100, normalizedLongitude / 100];
-      const summaryPromise =
-        state.windLayerEnabled ?
-          Promise.all([
-            primaryLayerComponents().summarizer().summary(normalizedLatitude, normalizedLongitude),
-            windLayerComponents().summarizer().summary(normalizedLatitude, normalizedLongitude)
-          ])
-            .then(([primarySummary, windSummary]) => primarySummary?.concat(windSummary || [])) :
-          primaryLayerComponents().summarizer().summary(normalizedLatitude, normalizedLongitude);
-      const [summaryResource] =
-        createResource(() => summaryPromise.then(summary =>
-          summary !== undefined && summary.length !== 0 ? summary : undefined
-        ));
-      const content =
-        <div style={{ ...surfaceOverMap, background: 'white', padding: '.7em', 'font-size': '0.8125rem', 'text-align': 'left', 'border-radius': '5px' }}>
-          <span
-            style={{ position: 'absolute', top: '2px', right: '8px', cursor: 'pointer', 'font-weight': 'bold' }}
-            onClick={ () => props.closeLocationDetailsPopup() }
-            title="Close"
-          >
-            ×
-          </span>
-          <div>Grid point: { showCoordinates(longitude, latitude, 2) }</div>
-          <div>GFS forecast for {showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { showWeekDay: true, timeZone: props.domain.timeZone() })}</div>
-          <Show when={ summaryResource() }>
-            { summary => table(summary) }
-          </Show>
-          <div style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-around' }}>
-            <button
-              onClick={ () => props.domain.showLocationForecast(eventLat, eventLng, 'meteogram') }
-              title="Meteogram for this location"
-            >
-              Meteogram
-            </button>
-            <button
-              onClick={ () => props.domain.showLocationForecast(eventLat, eventLng, 'sounding') }
-              title="Sounding for this time and location"
-            >
-              Sounding
-            </button>
-          </div>
-        </div> as HTMLElement;
-      props.openLocationDetailsPopup(latitude, longitude, content);
+    if (event === undefined) {
+      return
     }
+
+    const [eventLng, eventLat] = toLonLat(event.coordinate);
+    const maybePoint =
+      props.domain.state.forecastMetadata.closestPoint(props.domain.state.zone, eventLng, eventLat);
+    if (maybePoint === undefined) {
+      return
+    }
+
+    const [longitude, latitude] =
+      props.domain.state.forecastMetadata.toLonLat(props.domain.state.zone, maybePoint);
+
+    const summaryPromise =
+      state.windLayerEnabled ?
+        Promise.all([
+          primaryLayerComponents().summarizer().summary(latitude, longitude),
+          windLayerComponents().summarizer().summary(latitude, longitude)
+        ])
+          .then(([primarySummary, windSummary]) => primarySummary?.concat(windSummary || [])) :
+        primaryLayerComponents().summarizer().summary(latitude, longitude);
+    const [summaryResource] =
+      createResource(() => summaryPromise.then(summary =>
+        summary !== undefined && summary.length !== 0 ? summary : undefined
+      ));
+    const content =
+      <div style={{ ...surfaceOverMap, background: 'white', padding: '.7em', 'font-size': '0.8125rem', 'text-align': 'left', 'border-radius': '5px' }}>
+        <span
+          style={{ position: 'absolute', top: '2px', right: '8px', cursor: 'pointer', 'font-weight': 'bold' }}
+          onClick={ () => props.closeLocationDetailsPopup() }
+          title="Close"
+        >
+          ×
+        </span>
+        <div>Grid point: { showCoordinates(longitude, latitude, props.domain.state.model) }</div>
+        <div>Forecast for {showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { showWeekDay: true, timeZone: props.domain.timeZone() })}</div>
+        <Show when={ summaryResource() }>
+          { summary => table(summary) }
+        </Show>
+        <div style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-around' }}>
+          <button
+            onClick={ () => props.domain.showLocationForecast(eventLat, eventLng, 'meteogram') }
+            title="Meteogram for this location"
+          >
+            Meteogram
+          </button>
+          <button
+            onClick={ () => props.domain.showLocationForecast(eventLat, eventLng, 'sounding') }
+            title="Sounding for this time and location"
+          >
+            Sounding
+          </button>
+        </div>
+      </div> as HTMLElement;
+    props.openLocationDetailsPopup(latitude, longitude, content);
   });
 
   return [rootElement, layerKeyEl]

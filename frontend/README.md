@@ -26,6 +26,8 @@ It will produce the production assets into the `dist/` directory.
 
 ## Develop
 
+First, generate meteorological assets by running the backend (see [here](../backend/CONTRIBUTING.md)).
+
 You need to run `yarn install` again each time the dependencies change.
 
 Then, run the following command to start a web server showing the application:

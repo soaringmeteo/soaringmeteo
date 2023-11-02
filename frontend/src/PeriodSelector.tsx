@@ -1,8 +1,8 @@
-import { createEffect, createMemo, createSignal, JSX } from 'solid-js';
+import {createEffect, createMemo, createSignal, JSX, Show} from 'solid-js';
 
-import { forecastOffsets, periodsPerDay } from './data/ForecastMetadata';
+import { forecastOffsets } from './data/ForecastMetadata';
 import {showCoordinates, showDate} from './shared';
-import { DetailedViewType, type Domain } from './State';
+import {DetailedViewType, type Domain, gfsModel} from './State';
 import { closeButton, closeButtonSize, keyWidth, meteogramColumnWidth, periodSelectorHeight, surfaceOverMap } from './styles/Styles';
 import { LocationForecasts } from './data/LocationForecasts';
 import { Help } from './help/Help';
@@ -77,7 +77,17 @@ const PeriodSelector = (props: {
 
   const periodSelectors: () => Array<JSX.Element> =
     createMemo(() => {
-      return periodSelectorsByDay().map(([periods, date]) => {
+      const periodSelectorsByDayValue = periodSelectorsByDay();
+
+      const maxPeriodsPerDay =
+        periodSelectorsByDayValue.reduce(
+          (previousMax, [periodSelectors, date]) => {
+            return Math.max(previousMax, periodSelectors.length)
+          },
+          0
+        );
+
+      return periodSelectorsByDayValue.map(([periods, date]) => {
         const dayEl =
           hover(
             <div
@@ -90,10 +100,10 @@ const PeriodSelector = (props: {
                 'border-left': 'thin solid darkGray',
                 'line-height': '13px'
               }}
-              onClick={() => props.domain.setHourOffset(periods[1 /* because we have three periods per day in total in GFS */][1])}
+              onClick={() => props.domain.setHourOffset(periods[Math.floor(maxPeriodsPerDay / 2)][1])}
             >
             {
-              periods.length === periodsPerDay ?
+              periods.length === maxPeriodsPerDay ?
                 date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', weekday: 'short', timeZone: props.domain.timeZone() }) :
                 '\xa0'
             }
@@ -109,7 +119,7 @@ const PeriodSelector = (props: {
   const length = () => periodSelectorsByDay().reduce((n, ss) => n + ss[0].length, 0);
   const scrollablePeriodSelector =
     <div style={{ 'overflow-x': 'auto', 'background-color': 'white' }}>
-      <div style={{ width: `${length() * meteogramColumnWidth + keyWidth}px` }}>
+      <div style={{ 'min-width': `${length() * meteogramColumnWidth + keyWidth}px` }}>
         <div>{periodSelectors}</div>
         {props.detailedView}
       </div>
@@ -126,12 +136,12 @@ const decorateDetailedView = (
   keyAndView: { key: JSX.Element, view: JSX.Element },
   showLocationForecast: (viewType: DetailedViewType) => void
 ): { key: JSX.Element, view: JSX.Element } => {
-  const locationCoordinates = showCoordinates(forecasts.longitude, forecasts.latitude, 2);
+  const locationCoordinates = showCoordinates(forecasts.longitude, forecasts.latitude, domain.state.model);
   const extra =
     viewType === 'meteogram' ?
       <>
         <span style="font-size: 12px">
-          Location: { locationCoordinates }. Model: { domain.state.forecastMetadata.model }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false, timeZone: domain.timeZone() }) }.
+          Location: { locationCoordinates }. Model: { domain.modelName() }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false, timeZone: domain.timeZone() }) }.
         </span>
         <button
           type="button"
@@ -143,7 +153,7 @@ const decorateDetailedView = (
       </> :
       <>
         <span style="font-size: 12px">
-          Location: { locationCoordinates }. Time: { showDate(domain.state.forecastMetadata.dateAtHourOffset(hourOffset()), { showWeekDay: true, timeZone: domain.timeZone() }) }. Model: { domain.state.forecastMetadata.model }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false, timeZone: domain.timeZone() }) }.
+          Location: { locationCoordinates }. Time: { showDate(domain.state.forecastMetadata.dateAtHourOffset(hourOffset()), { showWeekDay: true, timeZone: domain.timeZone() }) }. Model: { domain.modelName() }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false, timeZone: domain.timeZone() }) }.
         </span>
         <button
           type="button"
@@ -230,7 +240,6 @@ const detailedView = (props: { domain: Domain }): (() => { key: JSX.Element, vie
  *          of the screen (which shows the current date).
  */
 export const PeriodSelectors = (props: {
-  morningOffset: number
   domain: Domain
 }): JSX.Element => {
 
@@ -258,7 +267,7 @@ export const PeriodSelectors = (props: {
     <div
       title='24 hours before'
       style={{ ...buttonStyle }}
-      onClick={() => props.domain.setHourOffset(Math.max(state.hourOffset - 24, 3))}
+      onClick={ () => props.domain.previousDay() }
     >
       -24
     </div>
@@ -269,9 +278,9 @@ export const PeriodSelectors = (props: {
     <div
       title='Previous forecast period'
       style={{ ...buttonStyle }}
-      onClick={() => props.domain.setHourOffset(Math.max(state.hourOffset - 3, 3))}
+      onClick={ () => props.domain.previousHourOffset() }
     >
-      -3
+      -{ props.domain.timeStep() }
     </div>
   );
 
@@ -280,9 +289,9 @@ export const PeriodSelectors = (props: {
     <div
       title='Next forecast period'
       style={{ ...buttonStyle }}
-      onClick={() => props.domain.setHourOffset(Math.min(state.hourOffset + 3, state.forecastMetadata.latest))}
+      onClick={ () => props.domain.nextHourOffset() }
     >
-      +3
+      +{ props.domain.timeStep() }
     </div>
   );
 
@@ -290,7 +299,7 @@ export const PeriodSelectors = (props: {
     <div
       title='24 hours after'
       style={{ ...buttonStyle }}
-      onClick={() => props.domain.setHourOffset(Math.min(state.hourOffset + 24, state.forecastMetadata.latest))}
+      onClick={ () => props.domain.nextDay() }
     >
       +24
     </div>
@@ -301,7 +310,7 @@ export const PeriodSelectors = (props: {
       forecastOffsetAndDates={
         // If there is no selected forecast, infer the available periods from the forecast metadata
         (state.detailedView === undefined) ?
-          forecastOffsets(state.forecastMetadata.init, props.morningOffset, state.forecastMetadata)
+          state.model === 'wrf' ? [] : forecastOffsets(state.forecastMetadata.firstTimeStep, 9, state.forecastMetadata)
         :
           state.detailedView[0].offsetAndDates()
       }
@@ -355,10 +364,10 @@ export const PeriodSelectors = (props: {
     >
       {currentDayEl}
       <div>
-        {previousDayBtn}
+        <Show when={ props.domain.state.model === gfsModel }>{previousDayBtn}</Show>
         {previousPeriodBtn}
         {nextPeriodBtn}
-        {nextDayBtn}
+        <Show when={ props.domain.state.model === gfsModel }>{nextDayBtn}</Show>
       </div>
     </div> as HTMLElement;
 

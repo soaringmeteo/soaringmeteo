@@ -67,7 +67,7 @@ export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => 
     )();
     return {
       async summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined> {
-        const locationForecasts = await props.forecastMetadata.fetchLocationForecasts(props.zone, lat / 100, lng / 100);
+        const locationForecasts = await props.forecastMetadata.fetchLocationForecasts(props.zone, lat, lng);
         const detailedForecast = locationForecasts?.atHourOffset(props.hourOffset);
         if (detailedForecast !== undefined) {
           return summary(detailedForecast, locationForecasts as LocationForecasts)

@@ -3,8 +3,8 @@ import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap } from './map/Map';
 import { LayersSelector } from './LayersSelector';
-import {fetchRunsAndComputeInitialHourOffset, ForecastMetadata} from './data/ForecastMetadata';
-import { Domain } from './State';
+import { fetchForecastRuns } from './data/ForecastMetadata';
+import {Domain, gfsModel, wrfModel} from './State';
 import { Burger } from './Burger';
 import { Attribution } from './map/Attribution';
 import {noLayer} from "./layers/None";
@@ -24,8 +24,6 @@ export const start = (containerElement: HTMLElement): void => {
 
   const App = (props: {
     domain: Domain
-    forecastMetadatas: Array<ForecastMetadata>
-    morningOffset: number
   }): JSX.Element => {
 
     // Update primary layer
@@ -79,11 +77,9 @@ export const start = (containerElement: HTMLElement): void => {
         <Burger domain={props.domain} />
       </span>
       <PeriodSelectors
-        morningOffset={props.morningOffset}
         domain={props.domain}
       />
       <LayersSelector
-        forecastMetadatas={props.forecastMetadatas}
         popupRequest={mapHooks.popupRequest}
         openLocationDetailsPopup={mapHooks.openPopup}
         closeLocationDetailsPopup={mapHooks.closePopup}
@@ -97,22 +93,19 @@ export const start = (containerElement: HTMLElement): void => {
   }
 
   const Loader = ((): JSX.Element => {
-    const [loaded, setLoaded] = createSignal<[Array<ForecastMetadata>, number, Domain]>();
-    fetchRunsAndComputeInitialHourOffset()
-      .then(([forecastMetadatas, forecastMetadata, morningOffset, hourOffset]) =>
-        setLoaded([forecastMetadatas, morningOffset, new Domain(forecastMetadata, hourOffset)])
-      )
-      .catch(reason => {
-        console.error(reason);
-        alert('Unable to retrieve forecast data');
+    const [loaded, setLoaded] = createSignal<Domain>();
+    Promise
+      .all([fetchForecastRuns(gfsModel), fetchForecastRuns(wrfModel)])
+      .then(([gfsRuns, wrfRuns]) => {
+        setLoaded(new Domain(gfsRuns, wrfRuns));
+      })
+      .catch(error => {
+        console.log(error);
+        alert('Unable to retrieve forecast data. Try again later or contact equipe@soaringmeteo.org if the problem persists.');
       });
     return <Show when={ loaded() }>
-      { ([forecastMetadatas, morningOffset, domain]) => {
-        return <App
-          domain={domain}
-          forecastMetadatas={forecastMetadatas}
-          morningOffset={morningOffset}
-        />
+      { (domain) => {
+        return <App domain={domain} />
       }}
     </Show>
   });

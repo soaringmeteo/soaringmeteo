@@ -1,89 +1,122 @@
-name := "soaringmeteo"
+import org.soaringmeteo.build.Dependencies
 
-scalaVersion := "2.13.10"
+// Build settings
+inThisBuild(Seq(
+  scalaVersion := "2.13.12",
+  scalacOptions += "-deprecation",
+  libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % "always",
+  testFrameworks += new TestFramework("verify.runner.Framework"),
+  resolvers += "Unidata All" at "https://artifacts.unidata.ucar.edu/repository/unidata-all",
+))
 
-libraryDependencies ++= Seq(
-  // grib2 manipulation
-  "edu.ucar"             % "grib"            % "5.3.1",
-  "ch.qos.logback"       % "logback-classic" % "1.2.3",
-  // Image generation
-  "org.locationtech.geotrellis" %% "geotrellis-raster" % "3.7.0",
-//  "org.locationtech.geotrellis" %% "geotrellis-layer" % "3.7.0",
-//  "org.locationtech.geotrellis" %% "geotrellis-spark" % "3.7.0",
-//  "org.apache.spark" %% "spark-core" % "3.3.3",
-  // HTTP requests
-  "org.jsoup"            % "jsoup"           % "1.13.1",
-  "com.lihaoyi"         %% "requests"        % "0.5.2",
-  // Files manipulation
-  "com.lihaoyi"         %% "os-lib"          % "0.6.3",
-  // CSV
-  "com.nrinaudo"        %% "kantan.csv"      % "0.6.0",
-  // Quantities and refined types
-  "org.typelevel"       %% "squants"         % "1.6.0",
-  "eu.timepit"          %% "refined"         % "0.11.0",
-  // Persistence
-  "com.typesafe.slick"  %% "slick"           % "3.4.1",
-  //"org.slf4j"           % "slf4j-nop"        % "1.7.26",
-  "com.h2database"       % "h2"              % "2.2.224",
-  // JSON
-  "io.circe"            %% "circe-literal"   % "0.14.3",
-  "io.circe"            %% "circe-jawn"      % "0.14.3" % Compile,
-  "io.circe"            %% "circe-parser"    % "0.14.3",
-  // Configuration
-  "com.typesafe"         % "config"          % "1.4.1",
-  // Command-line arguments parsing
-  "com.monovore"        %% "decline"         % "2.2.0",
-  // Testing
-  "com.eed3si9n.verify" %% "verify"          % "0.2.0"  % Test
-)
+// Module with shared utilities
+val common =
+  project.in(file("common"))
+    .settings(
+      libraryDependencies ++= Seq(
+        // Files manipulation
+        "com.lihaoyi" %% "os-lib" % "0.9.1",
+        // Command-line arguments processing
+        Dependencies.decline,
+        // Image generation
+        Dependencies.geotrellisRaster,
+        // grib2 and NetCDF files manipulation
+        "edu.ucar" % "grib" % "5.5.3",
+        // Quantities
+        Dependencies.squants,
+        // Testing
+        Dependencies.verify % Test,
+      )
+    )
 
-libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % "always"
+// The GFS pipeline
+val gfs =
+  project.in(file("gfs"))
+    .enablePlugins(JavaAppPackaging)
+    .settings(
+      name := "gfs",
+      Universal / packageName := "soaringmeteo-gfs",
+      run / fork := true,
+      javaOptions ++= Seq("-Xmx6g", "-Xms5g"),
+      Universal / javaOptions ++= javaOptions.value.map(opt => s"-J$opt"),
+      Compile / mainClass := Some("org.soaringmeteo.gfs.Main"),
+      maintainer := "equipe@soaringmeteo.org",
+      libraryDependencies ++= Seq(
+        // Logging
+        Dependencies.logback,
+        // HTTP requests
+        "org.jsoup" % "jsoup" % "1.16.2",
+        "com.lihaoyi" %% "requests" % "0.8.0",
+        // Refined types
+        "eu.timepit" %% "refined" % "0.11.0",
+        // Persistence
+        "com.typesafe.slick" %% "slick" % "3.4.1",
+        "com.h2database" % "h2" % "2.2.224",
+        // JSON
+        Dependencies.circeParser,
+        // Configuration
+        Dependencies.config,
+        // Testing
+        Dependencies.verify % Test,
+      ),
+    )
+    .dependsOn(common)
 
-scalacOptions += "-deprecation"
+// The WRF pipeline
+val wrf =
+  project.in(file("wrf"))
+    .enablePlugins(JavaAppPackaging)
+    .settings(
+      name := "wrf",
+      Universal / packageName := "soaringmeteo-wrf",
+      run / fork := true,
+      javaOptions ++= Seq("-Xmx5g", "-Xms5g"),
+      Universal / javaOptions ++= javaOptions.value.map(opt => s"-J$opt"),
+      Compile / mainClass := Some("org.soaringmeteo.wrf.Main"),
+      maintainer := "equipe@soaringmeteo.org",
+      libraryDependencies ++= Seq(
+        Dependencies.circeParser,
+        Dependencies.geotrellisRaster,
+        Dependencies.logback,
+      )
+    )
+    .dependsOn(common)
 
-run / fork := true
-javaOptions ++= Seq("-Xmx5g", "-Xms5g") // ++ org.apache.spark.launcher.JavaModuleOptions.defaultModuleOptions().split(" ") /* for JDK 17, see https://stackoverflow.com/questions/73465937/apache-spark-3-3-0-breaks-on-java-17-with-cannot-access-class-sun-nio-ch-direct */
-Universal / javaOptions ++= javaOptions.value.map(opt => s"-J$opt")
-
-testFrameworks += new TestFramework("verify.runner.Framework")
-
-resolvers += "Unidata All" at "https://artifacts.unidata.ucar.edu/repository/unidata-all"
+// Root project for convenience
+val soaringmeteo =
+  project.in(file("."))
+    .settings(
+      name := "soaringmeteo"
+    )
+    .aggregate(common, gfs, wrf)
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-enablePlugins(GraalVMNativeImagePlugin)
-Compile / mainClass := Some("org.soaringmeteo.gfs.Main")
-graalVMNativeImageGraalVersion := Some("20.2.0")
-graalVMNativeImageOptions ++= Seq(
-  "--enable-https",
-  "--verbose",
-  "--no-fallback",
-  "--static",
-  "-H:+ReportExceptionStackTraces"
-)
-// To re-generate reflect-config.json file:
-// javaOptions += "-agentlib:native-image-agent=config-output-dir=src/main/resources/META-INF/native-image/org.soaringmeteo/soaringmeteo"
-
-TaskKey[Unit]("deploy") := {
-  IO.move(
-    (GraalVMNativeImage / packageBin).value,
-    baseDirectory.value / ".." / ".." / "gfs" / "makeGFSJson"
-  )
-}
-
-InputKey[Unit]("downloadGribAndMakeJson") := Def.inputTaskDyn {
+// Task that runs the gfs pipeline locally. It takes an optional parameter indicating the initialization
+// time of the GFS run to download (00, 06, 12, or 18)
+InputKey[Unit]("makeGfsAssets") := Def.inputTaskDyn {
   import sbt.complete.DefaultParsers._
   val maybeGfsRunInitTime = (Space ~> (literal("00") | literal("06") | literal("12") | literal("18"))).?.parsed
   val requiredArgs = List(
     "-r", // always reuse previous files in dev mode
     "target/grib",
-    "target/forecast/data"
+    ((soaringmeteo / target).value / "forecast" / "data").absolutePath
   )
   val args =
     maybeGfsRunInitTime.fold(requiredArgs)(t => s"-t ${t}" :: requiredArgs)
-  (Compile / runMain).toTask(s" -Dconfig.file=dev.conf org.soaringmeteo.gfs.Main ${args.mkString(" ")}")
+  (gfs / Compile / runMain).toTask(s" -Dconfig.file=dev.conf org.soaringmeteo.gfs.Main ${args.mkString(" ")}")
 }.evaluated
 
-TaskKey[Unit]("makeWrfJson") := {
-  (Compile / runMain).toTask(" org.soaringmeteo.wrf.MakeWRFJson ../../Boran/soaringmeteo/wrf/wrf-loc.csv target/grib 2020-09-29_Init2020092700Z+54h.nc target/soarwrf").value
-}
+TaskKey[Unit]("makeWrfAssets") := Def.taskDyn {
+  val inputFiles =
+    Seq("d02", "d03", "d04", "d05")
+      .map(domain => s"wrfout_${domain}_2023-10-30_Init2023102918Z+12h.nc")
+  val args = List(
+    ((soaringmeteo / target).value / "forecast" / "data").absolutePath,
+    "2023-10-29T18:00Z",
+    "2023-10-30T06:00Z"
+  ) ++ inputFiles.map(file =>
+    ((soaringmeteo / baseDirectory).value / file).absolutePath
+  )
+  (wrf / Compile / runMain).toTask(s" org.soaringmeteo.wrf.Main ${args.mkString(" ")}")
+}.value

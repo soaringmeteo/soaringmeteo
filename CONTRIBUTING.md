@@ -13,7 +13,7 @@ by the backend can evolve:
 However, to add non-optional fields we have to perform the following procedure:
 
 - Bump the format version both in the backend and the frontend
-  - `backend/src/main/scala/org/soaringmeteo/gfs/out/package.scala`
+  - `backend/common/src/main/scala/org/soaringmeteo/out/package.scala`
   - `frontend/src/data/ForecastMetadata.ts`
 - Perform a two-stage deployment
   1. Deploy the backend,
