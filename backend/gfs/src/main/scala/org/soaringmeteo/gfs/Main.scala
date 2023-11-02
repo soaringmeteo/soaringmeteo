@@ -48,13 +48,13 @@ object Soaringmeteo {
   ): Unit = {
     val exitStatus =
       try {
-        resetDatabaseIfNeeded(Store.ensureSchemaExists(), 20.seconds)
+        Await.result(Store.ensureSchemaExists(), 30.seconds)
         val subgrids = Settings.gfsSubgrids
         val gfsRun = in.ForecastRun.findLatest(maybeGfsRunInitTime)
         if (!reusePreviousGribFiles) {
           logger.info("Removing old data")
           os.remove.all(gribsDir)
-          resetDatabaseIfNeeded(Store.deleteAll(), 60.seconds)
+          Await.result(Store.deleteAll(), 120.seconds)
           ()
         }
         val forecastGribsDir = gfsRun.storagePath(gribsDir)
@@ -75,14 +75,4 @@ object Soaringmeteo {
     System.exit(exitStatus)
   }
 
-  def resetDatabaseIfNeeded[A](result: Future[A], timeout: Duration): Unit =
-    try {
-      Await.result(result, timeout)
-      ()
-    } catch {
-      case _: TimeoutException =>
-        logger.error("Possibly corrupted database.")
-        os.remove(os.pwd / "data.mv.db")
-        ()
-    }
 }
