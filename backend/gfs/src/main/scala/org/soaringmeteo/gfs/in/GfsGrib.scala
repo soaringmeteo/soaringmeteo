@@ -5,7 +5,7 @@ import org.soaringmeteo.Temperatures.dewPoint
 
 import java.time.OffsetDateTime
 import org.soaringmeteo.grib.Grib
-import org.soaringmeteo._
+import org.soaringmeteo.{ ConvectiveClouds, Forecast, Point, Thermals, Wind, Winds, XCFlyingPotential }
 import org.soaringmeteo.gfs.Subgrid
 import squants.{Length, Temperature}
 import squants.energy.{Grays, SpecificEnergy}
@@ -35,7 +35,7 @@ object GfsGrib {
     forecastInitDateTime: OffsetDateTime,
     forecastHourOffset: Int,
     subgrid: Subgrid
-  ): IndexedSeq[IndexedSeq[org.soaringmeteo.Forecast]] = {
+  ): IndexedSeq[IndexedSeq[Forecast]] = {
     Grib.bracket(gribFile) { grib =>
       val forecastTime = forecastInitDateTime.plusHours(forecastHourOffset)
       val forecasts = GfsGrib.readSubgrid(grib, subgrid, forecastTime)
@@ -230,8 +230,6 @@ object GfsGrib {
   ): Forecast = {
     val surfaceDewPoint = dewPoint(surfaceTemperature, surfaceRelativeHumidity)
     val thermalVelocity = Thermals.velocity(sensibleHeatNetFlux, boundaryLayerDepth)
-    val maybeConvectiveClouds = ConvectiveClouds(surfaceTemperature, surfaceDewPoint, elevation, boundaryLayerDepth, atPressure)
-    val soaringLayerDepth: Length = Thermals.soaringLayerDepth(elevation, boundaryLayerDepth, maybeConvectiveClouds)
     val airData =
       atPressure.values
         .view
@@ -247,6 +245,8 @@ object GfsGrib {
             )
           height -> aboveGround
         }.to(SortedMap)
+    val maybeConvectiveClouds = ConvectiveClouds(surfaceTemperature, surfaceDewPoint, elevation, boundaryLayerDepth, airData)
+    val soaringLayerDepth: Length = Thermals.soaringLayerDepth(elevation, boundaryLayerDepth, maybeConvectiveClouds)
 
     org.soaringmeteo.Forecast(
       time,

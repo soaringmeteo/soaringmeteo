@@ -105,8 +105,6 @@ object NetCdf {
             val upwardHeatFlux = WattsPerSquareMeter(hfx.read(index3D))
             // FIXME Should we use the sensible net heat flux instead of the downward short-wave flux?
             val thermalVelocity = Thermals.velocity(upwardHeatFlux, boundaryLayerDepth)
-            val maybeConvectiveClouds = None // TODO
-            val soaringLayerDepth = Thermals.soaringLayerDepth(elevation, boundaryLayerDepth, maybeConvectiveClouds)
             val airData = {
               val airDataBuilder = SortedMap.newBuilder[Length, AirData]
               // Read the first elevation value (should be equal to the value read from the hgt variable)
@@ -130,13 +128,19 @@ object NetCdf {
               }
               airDataBuilder.result()
             }
+
+            val surfaceTemperature = Celsius(temperatureSurface.read(index3D))
+            val surfaceDewPoint = Celsius(dewPointSurface.read(index3D))
+            val maybeConvectiveClouds = ConvectiveClouds(surfaceTemperature, surfaceDewPoint, elevation, boundaryLayerDepth, airData)
+            val soaringLayerDepth = Thermals.soaringLayerDepth(elevation, boundaryLayerDepth, maybeConvectiveClouds)
             val winds = Winds(airData, elevation, soaringLayerDepth)
             val surfaceWind = Wind(
               MetersPerSecond(uSurface.read(index3D)),
               MetersPerSecond(vSurface.read(index3D))
             )
-            val latLon = coordinateSystem.getLatLon(x, y)
+//            val latLon = coordinateSystem.getLatLon(x, y) TODO Check grid coordinates
             val boundaryLayerWind = averageBoundaryLayerWind(airData, boundaryLayerDepth, elevation, surfaceWind)
+
             Forecast(
               time,
               elevation,
@@ -149,8 +153,8 @@ object NetCdf {
               airData,
               Pascals(mslp.read(index3D) * 100),
               Millimeters(0), // Snow depth (TODO)
-              Celsius(temperatureSurface.read(index3D)),
-              Celsius(dewPointSurface.read(index3D)),
+              surfaceTemperature,
+              surfaceDewPoint,
               surfaceWind,
               Millimeters(totalPrecipitation.read(index3D)),
               Millimeters(convectivePrecipitation.read(index3D)),

@@ -1,10 +1,10 @@
 package org.soaringmeteo
 
 import squants.Temperature
-import squants.motion.Pressure
 import squants.space.{Length, Meters}
 import squants.thermal.Celsius
 
+import scala.collection.SortedMap
 import scala.collection.immutable.ArraySeq
 
 case class ConvectiveClouds(
@@ -19,24 +19,22 @@ object ConvectiveClouds {
   def apply(
      surfaceTemperature: Temperature,
      surfaceDewPoint: Temperature,
-     elevation: Length,
+     groundLevel: Length,
      boundaryLayerDepth: Length,
-     atPressure: Map[Pressure, IsobaricVariables]
+    airData: SortedMap[Length, AirData]
    ): Option[ConvectiveClouds] = {
     // Cumuli base height is computed via Hennig formula
     val convectiveCloudsBottom: Length =
-      Meters(122.6 * (surfaceTemperature - surfaceDewPoint).toCelsiusScale) + elevation
+      Meters(122.6 * (surfaceTemperature - surfaceDewPoint).toCelsiusScale) + groundLevel
 
-    val boundaryLayerHeight = elevation + boundaryLayerDepth
+    val boundaryLayerHeight = groundLevel + boundaryLayerDepth
 
     val maybeVariables =
-      atPressure.view
-        .map { case (_, variables) => (variables.geopotentialHeight, (variables.temperature, variables.dewPoint)) }
+      airData.view
         // Keep only the values above the boundary layer height
         .filter { case (elevation, _) => elevation > boundaryLayerHeight }
-        .to(ArraySeq)
+        .map { case (elevation, data) => (elevation, (data.temperature, data.dewPoint)) }
         // Find the highest data where the temperature spread is less than 3°C
-        .sortBy { case (elevation, _) => elevation }
         .takeWhile { case (_, (temperature, dewPoint)) => temperature - dewPoint < Celsius(3) }
         .lastOption
 
