@@ -1,5 +1,5 @@
 import {LocationForecasts, LocationForecastsData} from "./LocationForecasts";
-import {Model} from "../State";
+import {Model, wrfModel} from "../State";
 import {toLonLat, fromLonLat} from "ol/proj";
 import {containsCoordinate} from "ol/extent";
 
@@ -137,16 +137,22 @@ export const fetchForecastRuns = async (model: Model): Promise<Array<ForecastMet
   const oldestForecastInitDate = new Date(data.init);
   oldestForecastInitDate.setDate(oldestForecastInitDate.getDate() - data.h);
   // Fetch the previous forecasts
-  const previousForecasts = await fetchPreviousRuns(model, oldestForecastInitDate, data.prev);
+  const previousForecasts =
+    await fetchPreviousRuns(model, oldestForecastInitDate, [latestForecast.firstTimeStep.getTime()], data.prev);
   return previousForecasts.concat([latestForecast]);
 }
 
-const fetchPreviousRuns = async (model: Model, oldestForecastInitDate: Date, maybePreviousData?: [string, string]): Promise<Array<ForecastMetadata>> => {
+const fetchPreviousRuns = async (model: Model, oldestForecastInitDate: Date, firstTimeSteps: Array<number>, maybePreviousData?: [string, string]): Promise<Array<ForecastMetadata>> => {
   if (maybePreviousData !== undefined && new Date(maybePreviousData[1]) >= oldestForecastInitDate) {
     const response = await fetch(`${dataPath}/${model}/${maybePreviousData[0]}`);
     const data     = await response.json() as ForecastMetadataData;
     const forecast = new ForecastMetadata(model, data);
-    return (await fetchPreviousRuns(model, oldestForecastInitDate, data.prev)).concat([forecast]);
+    // In the case of WRF, don’t include older runs for a day that is already covered by a more recent run
+    const filteredForecast =
+      model === wrfModel && firstTimeSteps.includes(forecast.firstTimeStep.getTime()) ? [] : [forecast]
+    const firstTimeStepsUpdated =
+      firstTimeSteps.concat(filteredForecast.map(forecast => forecast.firstTimeStep.getTime()))
+    return (await fetchPreviousRuns(model, oldestForecastInitDate, firstTimeStepsUpdated, data.prev)).concat(filteredForecast);
   } else {
     return []
   }
