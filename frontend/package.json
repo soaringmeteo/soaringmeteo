@@ -9,6 +9,7 @@
     "solid-js": "1.4.8"
   },
   "devDependencies": {
+    "@css-hooks/solid": "1.2.1",
     "@types/proj4": "2.5.4",
     "serve-static": "1.15.0",
     "typescript": "4.6.3",

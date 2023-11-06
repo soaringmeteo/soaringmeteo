@@ -1429,6 +1429,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@css-hooks/core@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@css-hooks/core@npm:1.2.1"
+  checksum: 769a1aa1cc26f60921e92325a1074e571b04251c3d5700c2251adf1a0fb9c4b52f83f9a1c5373271ea203d9720f5e3c05f8e67584ef9f24a8ff6b3b3fbbbfa3b
+  languageName: node
+  linkType: hard
+
+"@css-hooks/solid@npm:1.2.1":
+  version: 1.2.1
+  resolution: "@css-hooks/solid@npm:1.2.1"
+  dependencies:
+    "@css-hooks/core": ^1.2.1
+    ts-toolbelt: ^9.6.0
+  peerDependencies:
+    solid-js: ">=1.0.0 <2.0.0"
+  checksum: 53619d5a869ef04319937652e989288d5dd194ec4802b5840c764f104ab630cc186a658d2997e22134840f7c51e544bf3f5c268c21fa71248c6d62619702786b
+  languageName: node
+  linkType: hard
+
 "@esbuild/android-arm64@npm:0.16.17":
   version: 0.16.17
   resolution: "@esbuild/android-arm64@npm:0.16.17"
@@ -4444,6 +4463,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "soaringmeteo-v2@workspace:."
   dependencies:
+    "@css-hooks/solid": 1.2.1
     "@types/proj4": 2.5.4
     ol: 8.1.0
     proj4: 2.9.2
@@ -4759,6 +4779,13 @@ __metadata:
   dependencies:
     punycode: ^2.1.0
   checksum: 96d4ed46bc161db75dbf9247a236ea0bfcaf5758baae6749e92afab0bc5a09cb59af21788ede7e55080f2bf02dce3e4a8f2a484cc45164e29f4b5e68f7cbcc1a
+  languageName: node
+  linkType: hard
+
+"ts-toolbelt@npm:^9.6.0":
+  version: 9.6.0
+  resolution: "ts-toolbelt@npm:9.6.0"
+  checksum: 9f35fd95d895a5d32ea9fd2e532a695b0bae6cbff6832b77292efa188a0ed1ed6e54f63f74a8920390f3d909a7a3adb20a144686372a8e78b420246a9bd3d58a
   languageName: node
   linkType: hard
 

@@ -159,7 +159,7 @@ const fetchPreviousRuns = async (model: Model, oldestForecastInitDate: Date, fir
 }
 
 // We show three forecast periods per day: morning, noon, and afternoon
-export const periodsPerDay = 3;
+const periodsPerDay = 3;
 
 // TODO Return an array containing an array for each day instead of a flat array
 export const forecastOffsets = (gfsRunDateTime: Date, firstPeriodOffset: number, forecastMetadata: ForecastMetadata): Array<[number, Date]> => {

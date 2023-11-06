@@ -46,46 +46,27 @@ export const LayersSelector = (props: {
           key={ model => model }
         />
       </fieldset>
-      <fieldset style={ fieldsetPaddingStyle }>
-        <Switch>
-          <Match when={ state.model === gfsModel }>
-            <legend>Initialization Time</legend>
-            <Select
-              title="Initialization time of the forecast run"
-              options={
-                props.domain.gfsRuns.map(gfsRun => {
-                  const initTimeString =
-                    showDate(
-                      gfsRun.init,
-                      { showWeekDay: true, timeZone: props.domain.timeZone() }
-                    );
-                  return [initTimeString, gfsRun]
-                })
-              }
-              selectedOption={ state.forecastMetadata }
-              onChange={ forecastMetadata => props.domain.setForecastMetadata(forecastMetadata) }
-              key={ forecastMetadata => forecastMetadata.initS }
-            />
-          </Match>
-          <Match when={ state.model === wrfModel }>
-            <legend>Date</legend>
-            <Select
-              title="Forecast date"
-              options={
-                props.domain.wrfRuns.map(wrfRun =>
-                  [
-                    showDate(wrfRun.firstTimeStep, { showWeekDay: true, timeZone: props.domain.timeZone() }),
-                    wrfRun
-                  ]
-                )
-              }
-              selectedOption={ state.forecastMetadata }
-              onChange={ value => props.domain.setForecastMetadata(value) }
-              key={ forecastMetadata => forecastMetadata.initS }
-            />
-          </Match>
-        </Switch>
-      </fieldset>
+      <Show when={ state.model === gfsModel }>
+        <fieldset style={ fieldsetPaddingStyle }>
+          <legend>Initialization Time</legend>
+          <Select
+            title="Initialization time of the forecast run"
+            options={
+              props.domain.gfsRuns.map(gfsRun => {
+                const initTimeString =
+                  showDate(
+                    gfsRun.init,
+                    { showWeekDay: true, timeZone: props.domain.timeZone() }
+                  );
+                return [initTimeString, gfsRun]
+              })
+            }
+            selectedOption={ state.forecastMetadata }
+            onChange={ forecastMetadata => props.domain.setForecastMetadata(forecastMetadata) }
+            key={ forecastMetadata => forecastMetadata.initS }
+          />
+        </fieldset>
+      </Show>
       <fieldset style={ fieldsetPaddingStyle }>
         <legend>Zone</legend>
           <Select

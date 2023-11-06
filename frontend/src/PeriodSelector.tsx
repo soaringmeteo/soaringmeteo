@@ -1,25 +1,15 @@
-import {createEffect, createMemo, createSignal, JSX, Show} from 'solid-js';
+import {createEffect, createMemo, createSignal, JSX, Match, Show, Switch} from 'solid-js';
 
 import { forecastOffsets } from './data/ForecastMetadata';
 import {showCoordinates, showDate} from './shared';
-import {DetailedViewType, type Domain, gfsModel} from './State';
+import {type DetailedViewType, type Domain, gfsModel, wrfModel} from './State';
 import { closeButton, closeButtonSize, keyWidth, meteogramColumnWidth, periodSelectorHeight, surfaceOverMap } from './styles/Styles';
 import { LocationForecasts } from './data/LocationForecasts';
 import { Help } from './help/Help';
+import hooks from "./css-hooks";
 
 const marginLeft = keyWidth;
 const marginTop = periodSelectorHeight;
-
-const hover = (elm: JSX.Element): JSX.Element => {
-  const htmlEl = elm as HTMLElement;
-  let oldValue: string = 'inherit';
-  htmlEl.onmouseenter = () => {
-    oldValue = htmlEl.style.backgroundColor;
-    htmlEl.style.backgroundColor = 'lightGray';
-  }
-  htmlEl.onmouseleave = () => htmlEl.style.backgroundColor = oldValue;
-  return elm
-}
 
 const PeriodSelector = (props: {
   forecastOffsetAndDates: Array<[number, Date]>
@@ -35,16 +25,19 @@ const PeriodSelector = (props: {
         .map<[JSX.Element, number, Date]>(([hourOffset, date]) => {
           const htmlEl =
             <span
-              style={{
-                display: 'inline-block',
-                cursor: 'pointer',
-                border: 'thin solid darkGray',
-                width: `${meteogramColumnWidth}px`,
-                'line-height': '20px',
-                'box-sizing': 'border-box',
-                'text-align': 'center',
-                'background-color': state.hourOffset === hourOffset ? 'lightGray' : 'inherit'
-              }}
+              style={
+                hooks({
+                  display: 'inline-block',
+                  cursor: 'pointer',
+                  border: 'thin solid darkGray',
+                  width: `${meteogramColumnWidth}px`,
+                  'line-height': '20px',
+                  'box-sizing': 'border-box',
+                  'text-align': 'center',
+                  'background-color': state.hourOffset === hourOffset ? 'lightGray' : 'unset',
+                  'hover': {  'background-color': 'lightGray' }
+                })
+              }
               onClick={() => props.domain.setHourOffset(hourOffset)}
             >
               {
@@ -54,7 +47,6 @@ const PeriodSelector = (props: {
                 )
               }
             </span>;
-          hover(htmlEl);
           return [htmlEl, hourOffset, date]
         });
     })
@@ -89,26 +81,27 @@ const PeriodSelector = (props: {
 
       return periodSelectorsByDayValue.map(([periods, date]) => {
         const dayEl =
-          hover(
-            <div
-              style={{
+          <div
+            style={
+              hooks({
                 cursor: 'pointer',
                 width: `${periods.length * meteogramColumnWidth}px`,
                 'text-align': 'center',
                 'box-sizing': 'border-box',
                 'border-right': 'thin solid darkGray',
                 'border-left': 'thin solid darkGray',
-                'line-height': '13px'
-              }}
-              onClick={() => props.domain.setHourOffset(periods[Math.floor(maxPeriodsPerDay / 2)][1])}
-            >
+                'line-height': '13px',
+                'hover': { 'background-color': 'lightGray' }
+              })
+            }
+            onClick={() => props.domain.setHourOffset(periods[Math.floor(maxPeriodsPerDay / 2)][1])}
+          >
             {
               periods.length === maxPeriodsPerDay ?
                 date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', weekday: 'short', timeZone: props.domain.timeZone() }) :
                 '\xa0'
             }
-            </div>
-          );
+          </div>;
         return <div style={{ display: 'inline-block' }}>
           {dayEl}
           <div style={{ 'text-align': 'right' }}>{periods.map(tuple => tuple[0])}</div>
@@ -252,58 +245,123 @@ export const PeriodSelectors = (props: {
       { getDetailedView().key }
     </div>;
 
-  const buttonStyle = { padding: '0.3em', display: 'inline-block', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box' };
+  const buttonStyle = hooks({ padding: '0.3em 0.4em', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box', hover: { 'background-color': 'lightGray' } });
+  const inlineButtonStyle = { ...buttonStyle, display: 'inline-block' };
+
+  const [isDaySelectorVisible, makeDaySelectorVisible] = createSignal(false);
   const currentDayEl =
-    <div style={{ padding: '0.1em' }}>
-      {
-        showDate(
-          state.forecastMetadata.dateAtHourOffset(state.hourOffset),
-          { showWeekDay: true, timeZone: props.domain.timeZone() }
-        )
-      }
+    <div>
+      <Show when={ isDaySelectorVisible() }>
+        <Switch>
+          <Match when={ props.domain.state.model === gfsModel }>
+            {
+              (() => {
+                const run = props.domain.state.forecastMetadata;
+                const selectedTimeStep = props.domain.state.hourOffset;
+                const lastTimeStep = new Date(run.firstTimeStep);
+                lastTimeStep.setUTCHours(lastTimeStep.getUTCHours() + run.latest);
+                const numberOfPreviousDays =
+                  Math.floor((run.firstTimeStep.getHours() + selectedTimeStep) / 24);
+                const timeSteps: Array<number> =
+                  Array.from({ length: numberOfPreviousDays })
+                    .map((_, i) => selectedTimeStep - (numberOfPreviousDays - i) * 24);
+                timeSteps.push(selectedTimeStep);
+                const numberOfNextDays = (run.latest - selectedTimeStep + (23 - run.dateAtHourOffset(run.latest).getHours())) / 24;
+                const nextTimeSteps =
+                  Array.from({ length: numberOfNextDays })
+                    .map((_, i) => selectedTimeStep + (i + 1) * 24);
+                timeSteps.push(...nextTimeSteps);
+                return timeSteps.map(timeStep => {
+                  const date = props.domain.state.forecastMetadata.dateAtHourOffset(timeStep);
+                  const isSelected = timeStep === selectedTimeStep;
+                  return <div
+                    style={
+                      hooks({
+                        ...buttonStyle,
+                        'background-color': isSelected ? 'lightGray' : 'unset',
+                        hover: { 'background-color': 'lightGray' }
+                      })
+                    }
+                    onClick={ () => { props.domain.setHourOffset(timeStep); makeDaySelectorVisible(false); } }
+                  >
+                    { showDate(date, { showHour: false, showWeekDay: true, timeZone: props.domain.timeZone() }) }
+                  </div>
+                })
+              })()
+            }
+          </Match>
+          <Match when={ props.domain.state.model === wrfModel }>
+            {
+              props.domain.wrfRuns.map(run => {
+                const isSelected =
+                  run.firstTimeStep.getTime() === props.domain.state.forecastMetadata.firstTimeStep.getTime();
+                return <div
+                  style={
+                    hooks({
+                      ...buttonStyle,
+                      'background-color': isSelected ? 'lightgray' : 'unset',
+                      hover: { 'background-color': 'lightGray' }
+                    })
+                  }
+                  onClick={ () => { props.domain.setForecastMetadata(run, props.domain.state.hourOffset); makeDaySelectorVisible(false); } }
+                >
+                  { showDate(run.firstTimeStep, { showHour: false, showWeekDay: true, timeZone: props.domain.timeZone() }) }
+                </div>
+              })
+            }
+          </Match>
+        </Switch>
+      </Show>
+      <div
+        style={ hooks({ padding: '0.3em', cursor: 'pointer', hover: { 'background-color': 'lightGray' } }) }
+        onClick={ () => makeDaySelectorVisible(!isDaySelectorVisible()) }
+      >
+        {
+          showDate(
+            state.forecastMetadata.dateAtHourOffset(state.hourOffset),
+            { showWeekDay: true, timeZone: props.domain.timeZone() }
+          )
+        }
+      </div>
     </div>;
 
-  const previousDayBtn = hover(
+  const previousDayBtn =
     <div
       title='24 hours before'
-      style={{ ...buttonStyle }}
+      style={{ ...inlineButtonStyle }}
       onClick={ () => props.domain.previousDay() }
     >
       -24
-    </div>
-  );
+    </div>;
 
   // FIXME jump to previous day afternoon if we are on the morning period
-  const previousPeriodBtn = hover(
+  const previousPeriodBtn =
     <div
       title='Previous forecast period'
-      style={{ ...buttonStyle }}
+      style={{ ...inlineButtonStyle }}
       onClick={ () => props.domain.previousHourOffset() }
     >
       -{ props.domain.timeStep() }
-    </div>
-  );
+    </div>;
 
   // FIXME jump to next day morning if we are on the afternoon period
-  const nextPeriodBtn = hover(
+  const nextPeriodBtn =
     <div
       title='Next forecast period'
-      style={{ ...buttonStyle }}
+      style={{ ...inlineButtonStyle }}
       onClick={ () => props.domain.nextHourOffset() }
     >
       +{ props.domain.timeStep() }
-    </div>
-  );
+    </div>;
 
-  const nextDayBtn = hover(
+  const nextDayBtn =
     <div
       title='24 hours after'
-      style={{ ...buttonStyle }}
+      style={{ ...inlineButtonStyle }}
       onClick={ () => props.domain.nextDay() }
     >
       +24
-    </div>
-  );
+    </div>;
 
   const periodSelectorEl =
     <PeriodSelector
@@ -359,15 +417,15 @@ export const PeriodSelectors = (props: {
         'text-align': 'center',
         'user-select': 'none',
         cursor: 'default',
-        padding: '0.1rem 0.2rem 0 0.2rem'
+        padding: '0'
       }}
     >
       {currentDayEl}
       <div>
-        <Show when={ props.domain.state.model === gfsModel }>{previousDayBtn}</Show>
+        {previousDayBtn}
         {previousPeriodBtn}
         {nextPeriodBtn}
-        <Show when={ props.domain.state.model === gfsModel }>{nextDayBtn}</Show>
+        {nextDayBtn}
       </div>
     </div> as HTMLElement;
 

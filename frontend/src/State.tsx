@@ -196,11 +196,15 @@ export class Domain {
   }
 
   /** Set the forecast run to display */
-  setForecastMetadata(forecastMetadata: ForecastMetadata): void {
+  setForecastMetadata(forecastMetadata: ForecastMetadata, hourOffset?: number): void {
+    // Close the detailed view if we switch from GFS to WRF or vice versa or between GFS runs,
+    // but not between WRF runs
+    const maybeCloseDetailedView =
+      this.state.model === wrfModel && forecastMetadata.modelPath === 'wrf' ? {} : { detailedView: undefined }
     this.setState({
       forecastMetadata,
-      hourOffset: forecastMetadata.defaultHourOffset(),
-      detailedView: undefined
+      hourOffset: hourOffset !== undefined ? hourOffset : forecastMetadata.defaultHourOffset(),
+      ...maybeCloseDetailedView
     });
   }
 
@@ -219,31 +223,46 @@ export class Domain {
 
   /** Change the period to display in the current forecast run */
   setHourOffset(hourOffset: number): void {
-    this.setState({ hourOffset })
+    this.setState({
+      hourOffset: Math.max(Math.min(hourOffset, this.state.forecastMetadata.latest), this.state.model === gfsModel ? 3 : 0)
+    });
   }
 
   nextHourOffset(): void {
-    const hourOffset =
-      Math.min(this.state.hourOffset + this.timeStep(), this.state.forecastMetadata.latest);
-    this.setHourOffset(hourOffset);
+    this.setHourOffset(this.state.hourOffset + this.timeStep());
   }
 
   previousHourOffset(): void {
-    const hourOffset =
-      Math.max(this.state.hourOffset - this.timeStep(), this.state.model === 'gfs' ? 3 : 0);
-    this.setHourOffset(hourOffset);
+    this.setHourOffset(this.state.hourOffset - this.timeStep());
   }
 
   nextDay(): void {
-    const hourOffset =
-      Math.min(this.state.hourOffset + 24, this.state.forecastMetadata.latest);
-    this.setHourOffset(hourOffset);
+    if (this.state.model === gfsModel) {
+      this.setHourOffset(this.state.hourOffset + 24);
+    } else if (this.state.model === wrfModel) {
+      const maybeNextForecast =
+        this.wrfRuns.find(run =>
+          run.firstTimeStep > this.state.forecastMetadata.firstTimeStep
+        );
+      if (maybeNextForecast !== undefined) {
+        this.setForecastMetadata(maybeNextForecast, this.state.hourOffset);
+      }
+    }
   }
 
   previousDay(): void {
-    const hourOffset =
-      Math.max(this.state.hourOffset - 24, this.state.model === 'gfs' ? 3 : 0);
-    this.setHourOffset(hourOffset);
+    if (this.state.model === gfsModel) {
+      this.setHourOffset(this.state.hourOffset - 24);
+    } else if (this.state.model === wrfModel) {
+      const runs = this.wrfRuns.concat([]).reverse();
+      const i =
+        runs.findIndex(run =>
+          run.firstTimeStep < this.state.forecastMetadata.firstTimeStep
+        );
+      if (i >= 0) {
+        this.setForecastMetadata(runs[i], this.state.hourOffset);
+      }
+    }
   }
 
   /** Change which primary layer to show. Valid keys are defined above in the file */

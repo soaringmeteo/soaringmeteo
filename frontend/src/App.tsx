@@ -8,6 +8,7 @@ import {Domain, gfsModel, wrfModel} from './State';
 import { Burger } from './Burger';
 import { Attribution } from './map/Attribution';
 import {noLayer} from "./layers/None";
+import { css } from "./css-hooks";
 
 const Help = lazy(() => import('./help/Help').then(module => ({ default: module.Help })));
 const PeriodSelectors = lazy(() => import('./PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
@@ -73,6 +74,7 @@ export const start = (containerElement: HTMLElement): void => {
     // back to these components.
     // LayersSelector displays the configuration button and manages the canvas overlay.
     return <>
+      <style>{ css }</style>
       <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 200 /* must be above the “period selector” */ }}>
         <Burger domain={props.domain} />
       </span>
