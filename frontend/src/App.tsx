@@ -6,7 +6,6 @@ import { LayersSelector } from './LayersSelector';
 import { fetchForecastRuns } from './data/ForecastMetadata';
 import {Domain, gfsModel, wrfModel} from './State';
 import { Burger } from './Burger';
-import { Attribution } from './map/Attribution';
 import {noLayer} from "./layers/None";
 import { css } from "./css-hooks";
 
@@ -88,7 +87,6 @@ export const start = (containerElement: HTMLElement): void => {
         domain={props.domain}
       />
       <span style={{ position: 'absolute', right: '.5em', bottom: '5em', 'text-align': 'right' }}>
-        <Attribution domain={props.domain} />
         <Help domain={props.domain} />
       </span>
     </>

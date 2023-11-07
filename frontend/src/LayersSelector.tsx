@@ -166,19 +166,19 @@ export const LayersSelector = (props: {
   const layersBtn =
     <Switch>
       <Match when={ isMenuShown() }>
-        <div style={{ ...aboveMapStyle, right: '3px', bottom: '192px', 'background-color': 'white', 'font-size': '0.8125rem' } as JSX.CSSProperties}>
+        <div style={{ ...aboveMapStyle, right: '3px', bottom: '162px', 'background-color': 'white', 'font-size': '0.8125rem' } as JSX.CSSProperties}>
           {selectForecastEl}
           {layerEl}
         </div>
         <div
           onClick={ () => showMenu(false) }
-          style={{ ...aboveMapStyle, ...closeButton, right: '12px', bottom: '154px' } as JSX.CSSProperties}
+          style={{ ...aboveMapStyle, ...closeButton, right: '12px', bottom: '124px' } as JSX.CSSProperties}
         >⨯</div>
       </Match>
       <Match when={ !isMenuShown() }>
         <div
           onClick={ () => showMenu(true) }
-          style={{ ...aboveMapStyle, right: '5px', bottom: '150px', width: '44px', height: '44px', 'line-height': '44px', color: 'black', display: 'block', cursor: 'pointer', 'text-align': 'center', 'background-image': `url('${layersImg}')`, 'background-position': '50% 50%', 'background-repeat': 'no-repeat', 'background-color': 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '4px' } as JSX.CSSProperties}
+          style={{ ...aboveMapStyle, right: '5px', bottom: '120px', width: '44px', height: '44px', 'line-height': '44px', color: 'black', display: 'block', cursor: 'pointer', 'text-align': 'center', 'background-image': `url('${layersImg}')`, 'background-position': '50% 50%', 'background-repeat': 'no-repeat', 'background-color': 'white', border: '1px solid rgba(0, 0, 0, 0.2)', 'border-radius': '4px' } as JSX.CSSProperties}
         />
       </Match>
     </Switch>;
