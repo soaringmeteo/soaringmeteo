@@ -197,15 +197,19 @@ export class Domain {
 
   /** Set the forecast run to display */
   setForecastMetadata(forecastMetadata: ForecastMetadata, hourOffset?: number): void {
-    // Close the detailed view if we switch from GFS to WRF or vice versa or between GFS runs,
-    // but not between WRF runs
-    const maybeCloseDetailedView =
-      this.state.model === wrfModel && forecastMetadata.modelPath === 'wrf' ? {} : { detailedView: undefined }
+    const maybePreviousDetailedView =
+      this.state.model === wrfModel && forecastMetadata.modelPath === 'wrf' ? this.state.detailedView : undefined
     this.setState({
       forecastMetadata,
       hourOffset: hourOffset !== undefined ? hourOffset : forecastMetadata.defaultHourOffset(),
-      ...maybeCloseDetailedView
+      detailedView: undefined
     });
+    // In case we switched to another WRF run and there was already a detailed view that was open,
+    // refresh it.
+    if (maybePreviousDetailedView !== undefined) {
+      const [locationForecasts, detailedViewType] = maybePreviousDetailedView;
+      this.showLocationForecast(locationForecasts.latitude, locationForecasts.longitude, detailedViewType);
+    }
   }
 
   /** Set the zone (Europe, America, etc.) to cover */
