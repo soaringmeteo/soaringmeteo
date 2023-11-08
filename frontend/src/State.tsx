@@ -18,6 +18,7 @@ export type State = {
   hourOffset: number
   // Selected layer on the map (XC flying potential, thermal velocity, etc.)
   primaryLayer: Layer
+  primaryLayerEnabled: boolean
   // It is possible to also show a wind layer as an overlay
   windLayer: Layer
   windLayerEnabled: boolean
@@ -40,6 +41,7 @@ const selectedPrimaryLayerKey   = 'selected-primary-layer';
 const selectedWindLayerKey      = 'selected-wind-layer';
 const modelKey = 'model';
 const zoneKey = (model: Model): string => `zone-${model}`;
+const primaryLayerEnabledKey = 'primary-layer-enabled';
 const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 const utcTimeShownKey           = 'utc-time-shown';
@@ -64,6 +66,13 @@ const loadPrimaryLayer = (): Layer =>
 
 const savePrimaryLayer = (key: string): void => {
   window.localStorage.setItem(selectedPrimaryLayerKey, key);
+};
+
+const loadPrimaryLayerEnabled = (): boolean =>
+  loadStoredState(primaryLayerEnabledKey, raw => JSON.parse(raw), true);
+
+const savePrimaryLayerEnabled = (value: boolean): void => {
+  window.localStorage.setItem(primaryLayerEnabledKey, JSON.stringify(value));
 };
 
 const loadWindLayer = (): Layer => 
@@ -136,11 +145,12 @@ export class Domain {
     const model = loadModel();
     const forecastMetadata = model === gfsModel ? gfsRuns[gfsRuns.length - 1] : wrfRuns[wrfRuns.length - 1];
     const zone = loadZone(model, forecastMetadata.zones);
-    const primaryLayer           = loadPrimaryLayer();
-    const windLayer              = loadWindLayer();
-    const windLayerEnabled       = loadWindLayerEnabled();
+    const primaryLayer = loadPrimaryLayer();
+    const primaryLayerEnabled = loadPrimaryLayerEnabled();
+    const windLayer = loadWindLayer();
+    const windLayerEnabled = loadWindLayerEnabled();
     const windNumericValuesShown = loadWindNumericValuesShown();
-    const utcTimeShown           = loadUtcTimeShown();
+    const utcTimeShown = loadUtcTimeShown();
   
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
     const [get, set] = createStore<State>({
@@ -148,9 +158,10 @@ export class Domain {
       forecastMetadata: forecastMetadata,
       zone,
       primaryLayer: primaryLayer,
+      primaryLayerEnabled,
       windLayer: windLayer,
-      hourOffset: forecastMetadata.defaultHourOffset(),
       windLayerEnabled,
+      hourOffset: forecastMetadata.defaultHourOffset(),
       detailedView: undefined,
       windNumericValuesShown,
       utcTimeShown
@@ -197,15 +208,19 @@ export class Domain {
 
   /** Set the forecast run to display */
   setForecastMetadata(forecastMetadata: ForecastMetadata, hourOffset?: number): void {
-    // Close the detailed view if we switch from GFS to WRF or vice versa or between GFS runs,
-    // but not between WRF runs
-    const maybeCloseDetailedView =
-      this.state.model === wrfModel && forecastMetadata.modelPath === 'wrf' ? {} : { detailedView: undefined }
+    const maybePreviousDetailedView =
+      this.state.model === wrfModel && forecastMetadata.modelPath === 'wrf' ? this.state.detailedView : undefined
     this.setState({
       forecastMetadata,
       hourOffset: hourOffset !== undefined ? hourOffset : forecastMetadata.defaultHourOffset(),
-      ...maybeCloseDetailedView
+      detailedView: undefined
     });
+    // In case we switched to another WRF run and there was already a detailed view that was open,
+    // refresh it.
+    if (maybePreviousDetailedView !== undefined) {
+      const [locationForecasts, detailedViewType] = maybePreviousDetailedView;
+      this.showLocationForecast(locationForecasts.latitude, locationForecasts.longitude, detailedViewType);
+    }
   }
 
   /** Set the zone (Europe, America, etc.) to cover */
@@ -268,13 +283,20 @@ export class Domain {
   /** Change which primary layer to show. Valid keys are defined above in the file */
   setPrimaryLayer(layer: Layer): void {
     savePrimaryLayer(layer.key);
-    this.setState({ primaryLayer: layer });
+    savePrimaryLayerEnabled(true);
+    this.setState({ primaryLayer: layer, primaryLayerEnabled: true });
+  }
+
+  enablePrimaryLayer(enabled: boolean): void {
+    savePrimaryLayerEnabled(enabled);
+    this.setState({ primaryLayerEnabled: enabled });
   }
 
   /** Change which wind layer to show. Valid keys are defined above in the file */
   setWindLayer(layer: Layer): void {
     saveWindLayer(layer.key);
-    this.setState({ windLayer: layer });
+    saveWindLayerEnabled(true);
+    this.setState({ windLayer: layer, windLayerEnabled: true });
   }
 
   /** Whether the wind layer should be shown. */
