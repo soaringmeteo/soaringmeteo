@@ -143,7 +143,7 @@ export class Domain {
     readonly wrfRuns: Array<ForecastMetadata>
   ) {
     const model = loadModel();
-    const forecastMetadata = model === gfsModel ? gfsRuns[gfsRuns.length - 1] : wrfRuns[wrfRuns.length - 1];
+    const forecastMetadata = model === gfsModel ? gfsRuns[gfsRuns.length - 1] : selectWrfRun(wrfRuns);
     const zone = loadZone(model, forecastMetadata.zones);
     const primaryLayer = loadPrimaryLayer();
     const primaryLayerEnabled = loadPrimaryLayerEnabled();
@@ -356,3 +356,22 @@ export class Domain {
       );
 
 }
+
+/**
+ * Find the earliest run whose first time step is less than 8 hours before the current time.
+ * If the users open Soaringmeteo in the morning, they should get the forecast for the current day,
+ * but if they open it in the evening, they should get the forecast for the next day.
+ */
+const selectWrfRun = (runs: Array<ForecastMetadata>): ForecastMetadata => {
+  const now = new Date().getTime();
+  const heightHours = 8 * 60 * 60 * 1000;
+  const i =
+    runs.findIndex(run =>
+      now - run.firstTimeStep.getTime() < heightHours
+    )
+  if (i >= 0) {
+    return runs[i]
+  } else {
+    return runs[runs.length - 1]
+  }
+};

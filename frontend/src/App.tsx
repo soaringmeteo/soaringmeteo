@@ -94,7 +94,11 @@ export const start = (containerElement: HTMLElement): void => {
   const Loader = ((): JSX.Element => {
     const [loaded, setLoaded] = createSignal<Domain>();
     Promise
-      .all([fetchForecastRuns(gfsModel), fetchForecastRuns(wrfModel)])
+      .all([
+        fetchForecastRuns(gfsModel),
+        fetchForecastRuns(wrfModel)
+          .then(runs => runs.sort((run1, run2) => run1.firstTimeStep.getTime() - run2.firstTimeStep.getTime()))
+      ])
       .then(([gfsRuns, wrfRuns]) => {
         setLoaded(new Domain(gfsRuns, wrfRuns));
       })
