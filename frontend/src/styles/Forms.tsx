@@ -75,7 +75,6 @@ export const Labelled = (props: {
   labelPosition?: 'left' | 'right'
 }): JSX.Element =>
   <div style={{
-    'background-color': 'rgba(255, 255, 255, 0.5)',
     'text-align': props.labelPosition === 'right' ? 'left' : 'right'
   }}
   >

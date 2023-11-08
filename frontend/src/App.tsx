@@ -2,12 +2,11 @@ import {createEffect, createSignal, JSX, lazy, Show} from 'solid-js';
 import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap } from './map/Map';
-import { LayersSelector } from './LayersSelector';
 import { fetchForecastRuns } from './data/ForecastMetadata';
 import {Domain, gfsModel, wrfModel} from './State';
 import { Burger } from './Burger';
-import {noLayer} from "./layers/None";
 import { css } from "./css-hooks";
+import {LayerKeys} from "./LayerKeys";
 
 const Help = lazy(() => import('./help/Help').then(module => ({ default: module.Help })));
 const PeriodSelectors = lazy(() => import('./PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
@@ -31,10 +30,10 @@ export const start = (containerElement: HTMLElement): void => {
       const url = props.domain.urlOfRasterAtCurrentHourOffset();
       const projection = props.domain.state.zone.raster.proj;
       const extent = props.domain.state.zone.raster.extent;
-      if (props.domain.state.primaryLayer.key === noLayer.key) {
-        mapHooks.hidePrimaryLayer();
-      } else {
+      if (props.domain.state.primaryLayerEnabled) {
         mapHooks.setPrimaryLayerSource(url, projection, extent);
+      } else {
+        mapHooks.hidePrimaryLayer();
       }
     });
 
@@ -80,7 +79,7 @@ export const start = (containerElement: HTMLElement): void => {
       <PeriodSelectors
         domain={props.domain}
       />
-      <LayersSelector
+      <LayerKeys
         popupRequest={mapHooks.popupRequest}
         openLocationDetailsPopup={mapHooks.openPopup}
         closeLocationDetailsPopup={mapHooks.closePopup}
