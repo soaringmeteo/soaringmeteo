@@ -48,15 +48,15 @@ object Soaringmeteo {
   ): Unit = {
     val exitStatus =
       try {
-        Await.result(Store.ensureSchemaExists(), 30.seconds)
         val subgrids = Settings.gfsSubgrids
         val gfsRun = in.ForecastRun.findLatest(maybeGfsRunInitTime)
         if (!reusePreviousGribFiles) {
           logger.info("Removing old data")
           os.remove.all(gribsDir)
-          Await.result(Store.deleteAll(), 120.seconds)
+          deletePreviousStore()
           ()
         }
+        Await.result(Store.ensureSchemaExists(), 30.seconds)
         val forecastGribsDir = gfsRun.storagePath(gribsDir)
         val versionedTargetDir = versionedTargetPath(outputDir)
         val runTargetDir = runTargetPath(versionedTargetDir, InitDateString(gfsRun.initDateTime))
@@ -73,6 +73,10 @@ object Soaringmeteo {
         Store.close()
       }
     System.exit(exitStatus)
+  }
+
+  def deletePreviousStore(): Unit = {
+    os.remove(os.pwd / "data.mv.db", checkExists = false)
   }
 
 }
