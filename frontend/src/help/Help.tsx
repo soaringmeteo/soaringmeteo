@@ -4,6 +4,7 @@ import * as fakeData from './data';
 import { showDate, xcFlyingPotentialLayerName, inversionStyle } from '../shared';
 import { type Domain } from '../State';
 import { Overlay } from '../map/Overlay';
+import hooks from "../css-hooks";
 
 export const Help = (props: { domain: Domain }): JSX.Element => {
 
@@ -11,7 +12,7 @@ export const Help = (props: { domain: Domain }): JSX.Element => {
   const [isVisible, makeVisible] = createSignal(false);
 
   const expandButton =
-    <div style={{
+    <div style={hooks({
         ...surfaceOverMap,
         'cursor': 'pointer',
         display: 'inline-block',
@@ -21,8 +22,11 @@ export const Help = (props: { domain: Domain }): JSX.Element => {
         'text-align': 'center',
         'font-size': '18px',
         'border-radius': `${bottomButtonsSize / 2}px`,
-        'background-color': 'white'
-      }}
+        'border': '1px solid lightgray',
+        'box-sizing': 'border-box',
+        'background-color': 'white',
+        hover: { 'background-color': 'lightgray' }
+      })}
       onClick={ () => makeVisible(true) }
       title="Help"
     >
@@ -43,13 +47,13 @@ export const Help = (props: { domain: Domain }): JSX.Element => {
     >
       <span style="text-align: left">
         <Switch>
-          <Match when={ state.detailedView === undefined }>
+          <Match when={ state.detailedView === undefined || state.detailedView.viewType === 'summary' }>
             <MapHelp domain={props.domain} />
           </Match>
-          <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'meteogram' }>
+          <Match when={ state.detailedView !== undefined && state.detailedView.viewType === 'meteogram' }>
             <MeteogramHelp domain={props.domain} />
           </Match>
-          <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'sounding' }>
+          <Match when={ state.detailedView !== undefined && state.detailedView.viewType === 'sounding' }>
             <SoundingHelp domain={props.domain} />
           </Match>
         </Switch>

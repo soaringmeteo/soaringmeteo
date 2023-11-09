@@ -60,8 +60,7 @@ export const start = (containerElement: HTMLElement): void => {
     createEffect(() => {
       const detailedView = props.domain.state.detailedView;
       if (detailedView !== undefined) {
-        const selectedLocation = detailedView[0];
-        mapHooks.showMarker(selectedLocation.latitude, selectedLocation.longitude);
+        mapHooks.showMarker(detailedView.latitude, detailedView.longitude);
       } else {
         mapHooks.hideMarker();
       }
@@ -76,15 +75,8 @@ export const start = (containerElement: HTMLElement): void => {
       <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 200 /* must be above the “period selector” */ }}>
         <Burger domain={props.domain} />
       </span>
-      <PeriodSelectors
-        domain={props.domain}
-      />
-      <LayerKeys
-        popupRequest={mapHooks.popupRequest}
-        openLocationDetailsPopup={mapHooks.openPopup}
-        closeLocationDetailsPopup={mapHooks.closePopup}
-        domain={props.domain}
-      />
+      <PeriodSelectors domain={props.domain} locationClicks={mapHooks.locationClicks} />
+      <LayerKeys domain={props.domain} />
       <span style={{ position: 'absolute', right: '.5em', bottom: '5em', 'text-align': 'right' }}>
         <Help domain={props.domain} />
       </span>

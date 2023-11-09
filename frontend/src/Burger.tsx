@@ -69,7 +69,7 @@ export const Burger = (props: {
         cursor: 'auto', // otherwise we would inherit the value from the overlay container
         'font-size': '0.9rem',
         'max-height': '100%',
-        'overflow-y': 'scroll'
+        'overflow-y': 'auto'
       }}
       onClick={ e => e.stopPropagation() }
     >

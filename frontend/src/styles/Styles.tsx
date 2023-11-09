@@ -42,3 +42,4 @@ export const burgerOptionStyle = hooks({
 
 export const burgerBorderTopStyle = { 'border-top': '1px solid darkgray' };
 
+export const buttonStyle = hooks({ padding: '0.3em 0.4em', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box', hover: { 'background-color': 'lightGray' } });
