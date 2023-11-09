@@ -65,3 +65,14 @@ Before running the command, you need to fetch `.nc` files produced by the WRF mo
 ~~~
 makeWrfAssets
 ~~~
+
+## Deployment
+
+Deploy the content of your working directory by running the sbt task `deploy` in the project `gfs` or `wrf`:
+
+~~~
+gfs/deploy
+wrf/deploy
+~~~
+
+The task packages the app, uploads it to the server `soarwrf1.soaringmeteo.org`, and replaces the previous version of the app.
