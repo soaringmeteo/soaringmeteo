@@ -6,14 +6,14 @@ import { type Domain } from '../State';
 import { Overlay } from '../map/Overlay';
 import hooks from "../css-hooks";
 
-export const Help = (props: { domain: Domain }): JSX.Element => {
+export const Help = (props: { domain: Domain, overMap: boolean }): JSX.Element => {
 
   const state = props.domain.state;
   const [isVisible, makeVisible] = createSignal(false);
 
   const expandButton =
     <div style={hooks({
-        ...surfaceOverMap,
+        ...(props.overMap ? surfaceOverMap : {}),
         'cursor': 'pointer',
         display: 'inline-block',
         width: `${bottomButtonsSize}px`,
@@ -33,7 +33,7 @@ export const Help = (props: { domain: Domain }): JSX.Element => {
       ?
     </div>;
 
-  const help = <span
+  return <span
     style={{
       display: 'block',
       margin: '3px'
@@ -59,9 +59,7 @@ export const Help = (props: { domain: Domain }): JSX.Element => {
         </Switch>
       </span>
     </Overlay>
-  </span> as HTMLElement;
-
-  return help
+  </span>;
 };
 
 const MapHelp = (props: { domain: Domain }): JSX.Element => {

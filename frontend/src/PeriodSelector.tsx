@@ -119,7 +119,7 @@ const PeriodSelector = (props: {
 
   const length = () => periodSelectorsByDay().reduce((n, ss) => n + ss[0].length, 0);
   const scrollablePeriodSelector =
-    <div style={{ ...surfaceOverMap, 'border-radius': '0 0 3px 0', 'overflow-x': 'auto', 'background-color': 'white' }}>
+    <div style={{ ...surfaceOverMap, 'border-radius': '0 0 3px 0', 'overflow-x': 'auto', 'background-color': 'white', 'margin-left': `${marginLeft}px` }}>
       <div style={{ 'min-width': `${length() * meteogramColumnWidth + keyWidth}px` }}>
         <div>{periodSelectors}</div>
         {props.detailedView}
@@ -316,29 +316,11 @@ export const PeriodSelectors = (props: {
       domain={ props.domain }
     />;
 
-  const hideDetailedViewBtn =
-    <div
-      style={{
-        ...closeButton,
-        ...surfaceOverMap,
-        'margin-right': `${marginLeft - closeButtonSize}px`,
-        'flex-shrink': 0,
-        visibility: (state.detailedView !== undefined) ? 'visible' : 'hidden'
-      }}
-      title='Hide'
-      onClick={() => props.domain.hideLocationForecast() }
-    >
-      ⨯
-    </div>;
-
   // Period selector and close button for the meteogram
   const periodSelectorContainer =
     <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 100, 'max-width': '100%', 'user-select': 'none', cursor: 'default', 'font-size': '0.8125rem' }}>
+      {periodSelectorEl}
       {detailedViewKeyEl}
-      <div style={{ display: 'flex', 'align-items': 'flex-start' }}>
-        {hideDetailedViewBtn}
-        {periodSelectorEl}
-      </div>
       <LocationDetails locationClicks={props.locationClicks} domain={props.domain} /> {/* TODO Move out of PeriodSelector */}
     </span>;
 

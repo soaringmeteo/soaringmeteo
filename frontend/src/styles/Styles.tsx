@@ -7,7 +7,7 @@ export const surfaceOverMap = {
 // size of the buttons at the bottom of the screen (info and help)
 export const bottomButtonsSize = 24;
 // size of the button used for closing panels
-export const closeButtonSize = 32;
+export const closeButtonSize = 24;
 // width of the left key shown on the diagrams
 export const keyWidth = 40;
 // width of the sounding diagrams
@@ -21,10 +21,8 @@ export const closeButton = {
   width: `${closeButtonSize}px`,
   height: `${closeButtonSize}px`,
   'line-height': `${closeButtonSize}px`,
-  color: 'white',
   display: 'inline-block',
   cursor: 'pointer',
-  'background-color': 'darkGray',
   'text-align': 'center',
   'border-radius': `${closeButtonSize / 2}px`,
   'font-size': '18px'

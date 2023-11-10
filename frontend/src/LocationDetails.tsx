@@ -6,7 +6,8 @@ import {toLonLat} from "ol/proj";
 import {MapBrowserEvent} from "ol";
 import {Meteogram, Sounding} from "./DetailedView";
 import {Help} from "./help/Help";
-import {buttonStyle, surfaceOverMap} from "./styles/Styles";
+import {buttonStyle, closeButton, surfaceOverMap} from "./styles/Styles";
+import hooks from "./css-hooks";
 
 /**
  * Box showing the forecast details (summary, meteogram, or sounding) for the selected location.
@@ -44,7 +45,9 @@ export const LocationDetails = (props: {
           'display': 'inline-block',
           'background-color': 'white',
           'border-top': '1px solid darkgray',
-          padding: '.35em'
+          padding: '.35em',
+          'max-width': '100vw',
+          'box-sizing': 'border-box'
         }}
       >
         <Show
@@ -59,8 +62,14 @@ export const LocationDetails = (props: {
           </div>
         </Show>
 
-        {/* FIXME deal with width overflow */}
-        <div style={{ 'width': '22em',  display: 'flex', 'align-items': 'center', 'justify-content': 'space-around' }}>
+        <div
+          style={{
+            display: 'flex',
+            'flex-wrap': 'wrap',
+            'align-items': 'center',
+            'column-gap': '.3em'
+          }}
+        >
           <span
             style={{ ...buttonStyle, ...(detailedView.viewType === 'summary' ? { 'background-color': 'lightgray' } : {}) }}
             title="Summary of the forecast for this location"
@@ -85,7 +94,20 @@ export const LocationDetails = (props: {
             Sounding
           </span>
 
-          <Help domain={ props.domain } />
+          <Help domain={ props.domain } overMap={ false } />
+
+          <div
+            style={hooks({
+              ...closeButton,
+              'flex-shrink': 0,
+              'border': '1px solid lightgray',
+              hover: { 'background-color': 'lightgray' }
+            })}
+            title='Hide'
+            onClick={ () => props.domain.hideLocationForecast() }
+          >
+            ⨯
+          </div>
         </div>
       </div>
     }

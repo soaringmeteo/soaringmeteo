@@ -77,8 +77,14 @@ export const start = (containerElement: HTMLElement): void => {
       </span>
       <PeriodSelectors domain={props.domain} locationClicks={mapHooks.locationClicks} />
       <LayerKeys domain={props.domain} />
-      <span style={{ position: 'absolute', right: '.5em', bottom: '5em', 'text-align': 'right' }}>
-        <Help domain={props.domain} />
+      <span
+        style={{
+          position: 'absolute',
+          right: '.5rem',
+          bottom: '5rem',
+        }}
+      >
+        <Help domain={props.domain} overMap={true} />
       </span>
     </>
   }
