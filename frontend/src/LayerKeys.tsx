@@ -8,8 +8,8 @@ export const LayerKeys = (props: {
 
   return <div style={{
     position: 'absolute',
-    bottom: '45px',
-    left: '5px',
+    bottom: '3rem',
+    right: '.5rem',
     'background-color': 'rgba(255, 255,  255, 0.5',
     'font-size': '11px',
     'padding': '5px',

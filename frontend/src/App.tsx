@@ -81,7 +81,7 @@ export const start = (containerElement: HTMLElement): void => {
         style={{
           position: 'absolute',
           right: '.5rem',
-          bottom: '5rem',
+          bottom: '.5rem',
         }}
       >
         <Help domain={props.domain} overMap={true} />

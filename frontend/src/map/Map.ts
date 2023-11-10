@@ -2,7 +2,8 @@ import { Feature, Map, MapBrowserEvent, View } from 'ol';
 import { Tile as TileLayer, Image as ImageLayer, Vector as VectorLayer, VectorTile as VectorTileLayer } from 'ol/layer';
 import { ImageStatic, Vector as VectorSource, VectorTile as VectorTileSource, XYZ } from "ol/source";
 import { fromLonLat, get as getProjection, Projection, toLonLat } from "ol/proj";
-import { Rotate, ScaleLine, Zoom } from "ol/control";
+import { ScaleLine } from "ol/control";
+import { defaults as defaultInteractions } from "ol/interaction";
 import { Coordinate } from "ol/coordinate";
 import { Point } from 'ol/geom';
 import { GeoJSON } from "ol/format";
@@ -140,15 +141,14 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
       zoom: zoom
     }),
     controls: [
-      new Zoom(),
-      new Rotate(),
       new ScaleLine({
         units: 'metric',
         bar: true,
         steps: 2,
         text: false
       })
-    ]
+    ],
+    interactions: defaultInteractions({ pinchRotate: false })
   });
 
   map.on('moveend', () => {
