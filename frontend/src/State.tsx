@@ -84,20 +84,46 @@ const saveWindLayer = (key: string): void => {
   window.localStorage.setItem(selectedWindLayerKey, key);
 };
 
-const loadModel = (): Model =>
-  loadStoredState(modelKey, value => value === wrfModel ? wrfModel : gfsModel, gfsModel);
+const loadModel = (): Model => {
+  // First, try to read from the URL parameters
+  const params = new URLSearchParams(window.location.search);
+  const model = params.get('model');
+  if (model === gfsModel || model === wrfModel) {
+    return model
+  }
+  // Second, read from local storage
+  return loadStoredState(modelKey, value => value === wrfModel ? wrfModel : gfsModel, gfsModel);
+};
+
 const saveModel = (model: Model) => {
+  const url = new URL(window.location.toString());
+  url.searchParams.set('model', model);
+  window.history.replaceState(null, '', url);
   window.localStorage.setItem(modelKey, model);
 }
 
-const loadZone = (model: Model, zones: Array<Zone>): Zone =>
-  loadStoredState(
+const loadZone = (model: Model, zones: Array<Zone>): Zone => {
+  // Try to read from the query parameters
+  const params = new URLSearchParams(window.location.search);
+  const value = params.get('zone');
+  if (value !== null) {
+    const zone = zones.find(zone => zone.id === value);
+    if (zone !== undefined) {
+      return zone
+    }
+  }
+  // Read from local storage, and fallback to the first one otherwise
+  return loadStoredState(
     zoneKey(model),
     value => zones.find(zone => zone.id === value) || zones.find(zone => zone.id === 'europe') || zones[0],
     zones.find(zone => zone.id === 'europe') || zones[0]
   );
+};
 
 const saveZone = (model: Model, key: string): void => {
+  const url = new URL(window.location.toString());
+  url.searchParams.set('zone', key);
+  window.history.replaceState(null, '', url);
   window.localStorage.setItem(zoneKey(model), key);
 };
 
