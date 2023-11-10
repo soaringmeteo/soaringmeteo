@@ -141,7 +141,7 @@ const drawMeteogram = (
     forecasts.dayForecasts.map(x => x.forecasts).reduce((x, y) => x.concat(y), []); // Alternative to flatMap
   const maxBoundaryLayerDepth =
     flatForecasts.reduce((x, forecast) => Math.max(x, forecast.boundaryLayer.depth), -Infinity);
-  const airDiagramHeightAboveGroundLevel = maxBoundaryLayerDepth + 1000 /* meters */;
+  const airDiagramHeightAboveGroundLevel = Math.max(2000, maxBoundaryLayerDepth + 1000 /* meters */);
 
   const pressureScale     = new Scale([990, 1035 /* hPa */], [0, airDiagramHeight], false);
   const pressureLevels    = [990, 999, 1008, 1017, 1026, 1035];
