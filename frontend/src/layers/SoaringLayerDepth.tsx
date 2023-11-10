@@ -37,7 +37,7 @@ export const soaringLayerDepthLayer: Layer = {
         boundary layer</a>, otherwise (if there are cumulus clouds) it stops at the cloud base.
       </p>
       <p>
-        The color scale is shown on the bottom left of the screen.
+        The color scale is shown on the bottom right of the screen.
       </p>
     </>;
 

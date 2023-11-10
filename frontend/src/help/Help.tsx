@@ -15,6 +15,7 @@ export const Help = (props: { domain: Domain, overMap: boolean }): JSX.Element =
     <div style={hooks({
         ...(props.overMap ? surfaceOverMap : {}),
         'cursor': 'pointer',
+        'user-select': 'none',
         display: 'inline-block',
         width: `${bottomButtonsSize}px`,
         height: `${bottomButtonsSize}px`,
@@ -72,16 +73,19 @@ const MapHelp = (props: { domain: Domain }): JSX.Element => {
       a <a href='https://soaringmeteo.org/don.html'>donation</a> to help us cover our cost.
     </p>
     <p>
-      You are looking at the weather forecast for { showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { timeZone: props.domain.timeZone() }) },
+      What you see is the weather forecast for { showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { timeZone: props.domain.timeZone() }) },
       from the model { props.domain.modelName() } initialized at { showDate(state.forecastMetadata.init, { timeZone: props.domain.timeZone() }) }.
     </p>
     <p>
-      Select the information to display on the map, or the zone of the world to cover,
-      by clicking on the “layers” button at the bottom right of the screen.
+      Use the top-left menu to select which information to display on the map (cross-country flying potential,
+      thermal velocity, wind speed and direction, etc.). You can also select a different weather forecast model,
+      or a different area of the world.
     </p>
-    <p>
-      Currently, you see the <strong>{ state.primaryLayer.title }</strong>.
-    </p>
+    <Show when={ state.primaryLayerEnabled }>
+      <p>
+        Currently, you see the <strong>{ state.primaryLayer.title }</strong>.
+      </p>
+    </Show>
     { props.domain.primaryLayerReactiveComponents().help }
     <Show when={ state.windLayerEnabled }>
       <p>

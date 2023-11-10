@@ -28,7 +28,7 @@ export const rainLayer: Layer = {
     return {
       summarizer,
       mapKey: colorScaleEl(rainColorScale, value => `${value} mm `),
-      help: <p>The color scale is shown on the bottom left of the screen.</p>
+      help: <p>The color scale is shown on the bottom right of the screen.</p>
     }
   }
 };

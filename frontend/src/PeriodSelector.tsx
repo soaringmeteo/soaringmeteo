@@ -5,8 +5,6 @@ import {showDate} from './shared';
 import {type Domain, gfsModel, wrfModel} from './State';
 import {
   buttonStyle,
-  closeButton,
-  closeButtonSize,
   keyWidth,
   meteogramColumnWidth,
   periodSelectorHeight,
@@ -110,7 +108,9 @@ const PeriodSelector = (props: {
                 '\xa0'
             }
           </div>;
-        return <div style={{ display: 'inline-block' }}>
+        return <div
+          style={{ ...surfaceOverMap, 'background-color': 'white', display: 'inline-block' }}
+        >
           {dayEl}
           <div style={{ 'text-align': 'right' }}>{periods.map(tuple => tuple[0])}</div>
         </div>;
@@ -119,9 +119,17 @@ const PeriodSelector = (props: {
 
   const length = () => periodSelectorsByDay().reduce((n, ss) => n + ss[0].length, 0);
   const scrollablePeriodSelector =
-    <div style={{ ...surfaceOverMap, 'border-radius': '0 0 3px 0', 'overflow-x': 'auto', 'background-color': 'white', 'margin-left': `${marginLeft}px` }}>
+    <div
+      style={{
+        'border-radius': '0 0 3px 0',
+        'overflow-x': 'auto',
+        'margin-left': `${marginLeft}px`,
+        'user-select': 'none',
+        cursor: 'default'
+    }}
+    >
       <div style={{ 'min-width': `${length() * meteogramColumnWidth + keyWidth}px` }}>
-        <div>{periodSelectors}</div>
+        <div>{periodSelectors()}</div>
         {props.detailedView}
       </div>
     </div>;
@@ -149,7 +157,13 @@ const detailedView = (props: { domain: Domain }): (() => { key: JSX.Element, vie
     } else {
       if (detailedView.viewType === 'meteogram') {
         import('./diagrams/Meteogram').then(module => {
-          set(module.meteogram(detailedView.locationForecasts, state));
+          const { key, view } = module.meteogram(detailedView.locationForecasts, state);
+          set({
+            key,
+            view: <div style={{ ...surfaceOverMap, 'background-color': 'white' }}>
+              {view}
+            </div>
+          });
         });
       } else if (detailedView.viewType === 'sounding') {
         const forecast = detailedView.locationForecasts.atHourOffset(state.hourOffset);
@@ -318,11 +332,11 @@ export const PeriodSelectors = (props: {
 
   // Period selector and close button for the meteogram
   const periodSelectorContainer =
-    <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 100, 'max-width': '100%', 'user-select': 'none', cursor: 'default', 'font-size': '0.8125rem' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, 'z-index': 100, 'max-width': '100%', 'font-size': '0.8125rem' }}>
       {periodSelectorEl}
       {detailedViewKeyEl}
       <LocationDetails locationClicks={props.locationClicks} domain={props.domain} /> {/* TODO Move out of PeriodSelector */}
-    </span>;
+    </div>;
 
   // Current period
   const currentDayContainer =

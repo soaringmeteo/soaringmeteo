@@ -35,7 +35,7 @@ const windComponents = (
 export const boundaryLayerWindLayer: Layer = {
   key: 'boundary-layer-wind',
   name: 'Boundary Layer',
-  title: 'Average wind force and direction in the boundary layer',
+  title: 'Average wind speed and direction in the boundary layer',
   dataPath: 'wind-boundary-layer',
   reactiveComponents: windComponents(data => data.boundaryLayer.wind)
 };
@@ -43,7 +43,7 @@ export const boundaryLayerWindLayer: Layer = {
 export const surfaceWindLayer: Layer = {
   key: 'surface-wind',
   name: 'Surface',
-  title: 'Wind force and direction on the ground',
+  title: 'Wind speed and direction on the ground',
   dataPath: 'wind-surface',
   reactiveComponents: windComponents(data => data.surface.wind)
 };
@@ -51,7 +51,7 @@ export const surfaceWindLayer: Layer = {
 export const soaringLayerTopWindLayer: Layer = {
   key: 'soaring-layer-top-wind',
   name: 'Soaring Layer Top',
-  title: 'Wind force and direction at the top of the soaring layer',
+  title: 'Wind speed and direction at the top of the soaring layer',
   dataPath: 'wind-soaring-layer-top',
   reactiveComponents: windComponents(data => data.winds.soaringLayerTop)
 };
@@ -59,7 +59,7 @@ export const soaringLayerTopWindLayer: Layer = {
 export const _300MAGLWindLayer: Layer = {
   key: '300m-agl-wind',
   name: '300 m AGL',
-  title: 'Wind force and direction at 300 m above the ground level',
+  title: 'Wind speed and direction at 300 m above the ground level',
   dataPath: 'wind-300m-agl',
   reactiveComponents: windComponents(data => data.winds._300MAGL)
 };
@@ -67,7 +67,7 @@ export const _300MAGLWindLayer: Layer = {
 export const _2000MAMSLWindLayer: Layer = {
   key: '2000m-amsl-wind',
   name: '2000 m AMSL',
-  title: 'Wind force and direction at 2000 m above the mean sea level',
+  title: 'Wind speed and direction at 2000 m above the mean sea level',
   dataPath: 'wind-2000m-amsl',
   reactiveComponents: windComponents( data => data.winds._2000MAMSL)
 };
@@ -75,7 +75,7 @@ export const _2000MAMSLWindLayer: Layer = {
 export const _3000MAMSLWindLayer: Layer = {
   key: '3000m-amsl-wind',
   name: '3000 m AMSL',
-  title: 'Wind force and direction at 3000 m above the mean sea level',
+  title: 'Wind speed and direction at 3000 m above the mean sea level',
   dataPath: 'wind-3000m-amsl',
   reactiveComponents: windComponents(data => data.winds._3000MAMSL)
 };
@@ -83,7 +83,7 @@ export const _3000MAMSLWindLayer: Layer = {
 export const _4000MAMSLWindLayer: Layer = {
   key: '4000m-amsl-wind',
   name: '4000 m AMSL',
-  title: 'Wind force and direction at 4000 m above the mean sea level',
+  title: 'Wind speed and direction at 4000 m above the mean sea level',
   dataPath: 'wind-4000m-amsl',
   reactiveComponents: windComponents(data => data.winds._4000MAMSL)
 };

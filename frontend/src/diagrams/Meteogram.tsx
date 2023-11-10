@@ -4,12 +4,10 @@ import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, skyStyle, t
 import { colorScale as thqColorScale } from '../layers/ThQ';
 import { drawCloudCover } from './Clouds';
 import { createEffect, JSX } from 'solid-js';
-import { keyWidth, meteogramColumnWidth } from '../styles/Styles';
+import {diagramsAvailableHeight, keyWidth, meteogramColumnWidth} from '../styles/Styles';
 import { State } from '../State';
 import { thermalVelocityColorScale } from '../layers/ThermalVelocity';
 import { inversionStyle } from '../shared';
-
-const airDiagramHeightAboveGroundLevel = 3500; // m
 
 /**
  * @return [left key element, [meteogram element, right key element]]
@@ -34,10 +32,11 @@ export const meteogram = (forecasts: LocationForecasts, state: State): { key: JS
   const highAirDiagramHeight = 20; // px
   const highAirDiagramTop    = thermalVelocityDiagramTop + thermalVelocityDiagramHeight + 11 /* There needs to be enough space in case we display the isotherm 0°C */;
 
-  const airDiagramHeight = 400; // px
+  const rainDiagramHeight = 60; // px
+
+  const airDiagramHeight = Math.min(500, diagramsAvailableHeight - highAirDiagramHeight - thermalVelocityDiagramHeight - thqDiagramHeight - rainDiagramHeight - 11 - gutterHeight * 7); // px
   const airDiagramTop    = highAirDiagramTop + highAirDiagramHeight; // No gutter between high air diagram and air diagram
 
-  const rainDiagramHeight = 100; // px
   const rainDiagramTop    = airDiagramTop + airDiagramHeight + gutterHeight * 4;
 
   const canvasWidth   = meteogramColumnWidth * forecasts.dayForecasts.reduce((n, forecast) => n + forecast.forecasts.length, 0);
@@ -97,7 +96,10 @@ export const meteogram = (forecasts: LocationForecasts, state: State): { key: JS
 
   }
 
-  return { key: canvasLeftKey, view: [canvas, canvasRightKey] }
+  return {
+    key: canvasLeftKey,
+    view: [canvas, canvasRightKey]
+  }
 
 }
 
@@ -137,6 +139,9 @@ const drawMeteogram = (
   
   const flatForecasts: Array<DetailedForecast> =
     forecasts.dayForecasts.map(x => x.forecasts).reduce((x, y) => x.concat(y), []); // Alternative to flatMap
+  const maxBoundaryLayerDepth =
+    flatForecasts.reduce((x, forecast) => Math.max(x, forecast.boundaryLayer.depth), -Infinity);
+  const airDiagramHeightAboveGroundLevel = maxBoundaryLayerDepth + 1000 /* meters */;
 
   const pressureScale     = new Scale([990, 1035 /* hPa */], [0, airDiagramHeight], false);
   const pressureLevels    = [990, 999, 1008, 1017, 1026, 1035];
@@ -360,14 +365,21 @@ const drawMeteogram = (
   columns((forecast, columnStart, _) => {
     const windCenterX = columnStart + meteogramColumnWidth / 2;
     const windColor = `rgba(62, 0, 0, ${ windNumericValuesShown ? 0.5 : 0.25 })`;
+    const windArrowSize = meteogramColumnWidth - 12;
+    let windArrowY = elevationScale.apply(forecasts.elevation + 5 /* meters */);
     // Surface wind
-    drawWindArrow(ctx, windCenterX, airDiagram.projectY(0), meteogramColumnWidth - 12, windColor, forecast.surface.wind.u, forecast.surface.wind.v, windNumericValuesShown);
+    drawWindArrow(ctx, windCenterX, airDiagram.projectY(windArrowY), windArrowSize, windColor, forecast.surface.wind.u, forecast.surface.wind.v, windNumericValuesShown);
     // Air wind
     forecast.aboveGround
       // Keep enly the wind values that are above the ground + 125 meters (so that arrows don’t overlap)
       .filter((entry) => entry.elevation > forecasts.elevation + 125 && entry.elevation < forecasts.elevation + airDiagramHeightAboveGroundLevel)
       .forEach((wind) => {
-        drawWindArrow(ctx, windCenterX, airDiagram.projectY(elevationScale.apply(wind.elevation)), meteogramColumnWidth - 12, windColor, wind.u, wind.v, windNumericValuesShown);
+        const y = elevationScale.apply(wind.elevation);
+        // Show the arrow only if the density of wind arrows is not too high
+        if (y - windArrowY >= windArrowSize * 0.5) {
+          drawWindArrow(ctx, windCenterX, airDiagram.projectY(y), windArrowSize, windColor, wind.u, wind.v, windNumericValuesShown);
+          windArrowY = y;
+        }
       });
   });
 

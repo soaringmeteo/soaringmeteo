@@ -10,9 +10,9 @@ export const OverlayContainer = (props: {
     style={{
       position: 'fixed',
       inset: '0',
-      'background-color': 'rgb(0, 0, 0, 0.25)',
+      'background-color': 'rgb(0, 0, 0, 0.20)',
+      'backdrop-filter': 'blur(1px)',
       cursor: 'pointer',
-      'backdrop-filter': 'blur(2px)',
       display: 'flex',
       'align-items': 'center',
       'justify-content': 'center',

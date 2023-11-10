@@ -47,7 +47,8 @@ export const LocationDetails = (props: {
           'border-top': '1px solid darkgray',
           padding: '.35em',
           'max-width': '100vw',
-          'box-sizing': 'border-box'
+          'box-sizing': 'border-box',
+          'user-select': 'text'
         }}
       >
         <Show
@@ -55,9 +56,9 @@ export const LocationDetails = (props: {
           fallback={ <LocationSummary domain={props.domain} latitude={detailedView.latitude} longitude={detailedView.longitude} /> }
         >
           <div>
-            Location: { showCoordinates(detailedView.longitude, detailedView.latitude, props.domain.state.model) }, { (detailedView as Meteogram | Sounding).locationForecasts.elevation }m.
+            { showCoordinates(detailedView.longitude, detailedView.latitude, props.domain.state.model) }, { (detailedView as Meteogram | Sounding).locationForecasts.elevation }m.
             <Show when={ detailedView.viewType === 'sounding' }>
-              &nbsp;Time: { showDate(props.domain.state.forecastMetadata.dateAtHourOffset(props.domain.state.hourOffset), { showWeekDay: true, timeZone: props.domain.timeZone() }) }.
+              &nbsp;{ showDate(props.domain.state.forecastMetadata.dateAtHourOffset(props.domain.state.hourOffset), { showWeekDay: true, timeZone: props.domain.timeZone() }) }.
             </Show>
           </div>
         </Show>
@@ -153,7 +154,7 @@ const LocationSummary = (props: {
     };
     return <>
       <div>
-        Location: { showCoordinates(props.longitude, props.latitude, props.domain.state.model) }
+        { showCoordinates(props.longitude, props.latitude, props.domain.state.model) }
         <Show when={resource()}>
           { ([locationForecasts]) => <>, {locationForecasts.elevation}m</> }
         </Show>.
