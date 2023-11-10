@@ -1,19 +1,21 @@
 import { createSignal, JSX, lazy, Match, Show, Switch } from 'solid-js'
-import { bottomButtonsSize, keyWidth, soundingWidth, surfaceOverMap } from '../styles/Styles';
+import {bottomButtonsSize, keyWidth, meteogramColumnWidth, soundingWidth, surfaceOverMap} from '../styles/Styles';
 import * as fakeData from './data';
 import { showDate, xcFlyingPotentialLayerName, inversionStyle } from '../shared';
 import { type Domain } from '../State';
 import { Overlay } from '../map/Overlay';
+import hooks from "../css-hooks";
 
-export const Help = (props: { domain: Domain }): JSX.Element => {
+export const Help = (props: { domain: Domain, overMap: boolean }): JSX.Element => {
 
   const state = props.domain.state;
   const [isVisible, makeVisible] = createSignal(false);
 
   const expandButton =
-    <div style={{
-        ...surfaceOverMap,
+    <div style={hooks({
+        ...(props.overMap ? surfaceOverMap : {}),
         'cursor': 'pointer',
+        'user-select': 'none',
         display: 'inline-block',
         width: `${bottomButtonsSize}px`,
         height: `${bottomButtonsSize}px`,
@@ -21,15 +23,18 @@ export const Help = (props: { domain: Domain }): JSX.Element => {
         'text-align': 'center',
         'font-size': '18px',
         'border-radius': `${bottomButtonsSize / 2}px`,
-        'background-color': 'white'
-      }}
+        'border': '1px solid lightgray',
+        'box-sizing': 'border-box',
+        'background-color': 'white',
+        hover: { 'background-color': 'lightgray' }
+      })}
       onClick={ () => makeVisible(true) }
       title="Help"
     >
       ?
     </div>;
 
-  const help = <span
+  return <span
     style={{
       display: 'block',
       margin: '3px'
@@ -43,21 +48,19 @@ export const Help = (props: { domain: Domain }): JSX.Element => {
     >
       <span style="text-align: left">
         <Switch>
-          <Match when={ state.detailedView === undefined }>
+          <Match when={ state.detailedView === undefined || state.detailedView.viewType === 'summary' }>
             <MapHelp domain={props.domain} />
           </Match>
-          <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'meteogram' }>
+          <Match when={ state.detailedView !== undefined && state.detailedView.viewType === 'meteogram' }>
             <MeteogramHelp domain={props.domain} />
           </Match>
-          <Match when={ state.detailedView !== undefined && state.detailedView[1] === 'sounding' }>
+          <Match when={ state.detailedView !== undefined && state.detailedView.viewType === 'sounding' }>
             <SoundingHelp domain={props.domain} />
           </Match>
         </Switch>
       </span>
     </Overlay>
-  </span> as HTMLElement;
-
-  return help
+  </span>;
 };
 
 const MapHelp = (props: { domain: Domain }): JSX.Element => {
@@ -70,16 +73,19 @@ const MapHelp = (props: { domain: Domain }): JSX.Element => {
       a <a href='https://soaringmeteo.org/don.html'>donation</a> to help us cover our cost.
     </p>
     <p>
-      You are looking at the weather forecast for { showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { timeZone: props.domain.timeZone() }) },
+      What you see is the weather forecast for { showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { timeZone: props.domain.timeZone() }) },
       from the model { props.domain.modelName() } initialized at { showDate(state.forecastMetadata.init, { timeZone: props.domain.timeZone() }) }.
     </p>
     <p>
-      Select the information to display on the map, or the zone of the world to cover,
-      by clicking on the “layers” button at the bottom right of the screen.
+      Use the top-left menu to select which information to display on the map (cross-country flying potential,
+      thermal velocity, wind speed and direction, etc.). You can also select a different weather forecast model,
+      or a different area of the world.
     </p>
-    <p>
-      Currently, you see the <strong>{ state.primaryLayer.title }</strong>.
-    </p>
+    <Show when={ state.primaryLayerEnabled }>
+      <p>
+        Currently, you see the <strong>{ state.primaryLayer.title }</strong>.
+      </p>
+    </Show>
     { props.domain.primaryLayerReactiveComponents().help }
     <Show when={ state.windLayerEnabled }>
       <p>
@@ -116,7 +122,7 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     Meteograms show the weather forecast for the selected location over time. Here is an
     example of three days meteogram that we made up for documentation purpose:
   </p>
-  <div style={{ float: 'left', 'margin-right': '1em' }}>
+  <div style={{ float: 'left', 'margin-right': '1em', 'min-width': `${ keyWidth * 2 + meteogramColumnWidth * 3 * 3 }px` }}>
     { lazyMeteogram({ domain: props.domain }) }
   </div>
   <p>

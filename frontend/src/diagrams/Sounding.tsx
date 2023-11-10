@@ -3,8 +3,9 @@ import { AboveGround, DetailedForecast } from "../data/LocationForecasts";
 import { drawCloudCover } from './Clouds';
 import { drawWindArrow } from '../shapes';
 import { createEffect, createSignal, JSX } from 'solid-js';
-import { keyWidth, soundingWidth, surfaceOverMap } from '../styles/Styles';
+import {diagramsAvailableHeight, keyWidth, soundingWidth, surfaceOverMap} from '../styles/Styles';
 import { State } from '../State';
+import hooks from "../css-hooks";
 
 // Difference between two temperatures shown on the temperature axis
 const temperatureScaleStep = 10;
@@ -53,27 +54,24 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
   canvasLeftKey.setAttribute('height', `${canvasHeight}`);
   canvasLeftKey.style.width = `${keyWidth}px`;
   canvasLeftKey.style.height = `${canvasHeight}px`;
-  canvasLeftKey.style.flex = '0 0 auto';
   const leftCtx = canvasLeftKey.getContext('2d');
-
-  // For some reason, accessing the state from a separate module does not work, I have to pass it from the parent module
-  // const [state] = useState();
 
   const [zoomed, zoom] = createSignal(zoomedDefaultValue);
 
   const zoomButton = <div
-    style={{
+    style={hooks({
       position: 'absolute',
       top: `10px`,
-      right: `5px`,
+      right: `10px`,
       width: `32px`,
       height: `32px`,
       cursor: `pointer`,
       'text-align': `center`,
-      'background-color': 'lightGray',
+      'background-color': 'white',
+      hover: { 'background-color': 'lightgray' },
       ...surfaceOverMap,
       'border-radius': '16px'
-    }}
+    })}
     onClick={ () => zoom(!zoomed()) }
     title={ zoomed() ? 'Zoom out' : 'Zoom in' }
   >
@@ -86,13 +84,15 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
       'border-top': '2px solid black',
       'border-right': '2px solid black',
       transform: zoomed() ? 'translateY(-50%) rotate(-45deg)' : 'translateY(-50%) rotate(135deg)'
-      }} />
+    }} />
   </div>;
 
   const view = <div
     style={{
       position: `relative`,
-      display: `inline-block`
+      display: `inline-block`,
+      'background-color': 'white',
+      'padding-bottom': '4px', // For unknown reason, there is a small gap here…
     }}
   >
     { canvas }
@@ -158,12 +158,12 @@ const drawSounding = (
   leftCtx.restore();
 
   // Offset between the edge of the canvas and the edge of the diagram
-  // This offset let’s us write the axes names
+  // This offset lets us write the axes names
   const offset     = 16;
   const textOffset = offset / 2;
 
   // Dimensions of the sounding diagram
-  const width  = soundingWidth;
+  const width  = soundingWidth - 5;
   const height = canvasHeight - 5;
 
   const elevationScale = new Scale([elevation, maxElevation], [offset, height], false);
@@ -300,7 +300,7 @@ const drawSounding = (
 
   // --- Sounding Diagram
 
-  const windArrowSize = Math.max(Math.min(canvasHeight / (relevantData.length * 1.15), 35), 1);
+  const windArrowSize = 30;
   const windColor = `rgba(62, 0, 0, ${ windNumericValuesShown ? 0.5 : 0.3 })`;
   const windCenterX =
     temperatureScale.apply(
@@ -308,52 +308,58 @@ const drawSounding = (
         temperatureLevels[0] - temperatureScaleStep / 2 :
         forecast.surface.dewPoint
     );
+  const surfaceWindArrowY = elevationScale.apply(elevation + 5 /* meters */);
+  drawWindArrow(ctx, windCenterX, diagram.projectY(surfaceWindArrowY), windArrowSize, windColor, forecast.surface.wind.u, forecast.surface.wind.v, windNumericValuesShown);
   relevantData
-    .reduce(([previousTemperature, previousDewPoint, previousElevation], entry) => {
-      const y0 = elevationScale.apply(previousElevation);
-      const y1 = elevationScale.apply(entry.elevation);
+    .reduce(
+      ([previousTemperature, previousDewPoint, previousElevation, previousWindArrowY], entry) => {
+        const y0 = elevationScale.apply(previousElevation);
+        const y1 = elevationScale.apply(entry.elevation);
+        let windArrowY = previousWindArrowY;
 
-      // Wind
-      if (entry.elevation < maxElevation) {
-        drawWindArrow(ctx, windCenterX, diagram.projectY(y1), windArrowSize, windColor, entry.u, entry.v, windNumericValuesShown);
-      }
+        // Wind
+        // We skip some wind arrows in case they are too dense
+        if (entry.elevation < maxElevation && (y1 - previousWindArrowY >= windArrowSize * 0.4)) {
+          drawWindArrow(ctx, windCenterX, diagram.projectY(y1), windArrowSize, windColor, entry.u, entry.v, windNumericValuesShown);
+          windArrowY = y1;
+        }
 
-      // Temperature
-      // Note: this is approximate, see https://en.wikipedia.org/wiki/Lapse_rate
-      // TODO We should consider applying the most precise formulas
-      const lapseRate = (entry.temperature - previousTemperature) / ((entry.elevation - previousElevation) / 100);
-      const [color, width] =
-        lapseRate <= -0.98 ?
-          ['yellow', 4] :     // absolutely unstable air
-          (lapseRate <= -0.5 ?
-            ['orange', 3] :   // conditionally unstable air
-            (lapseRate < 0 ?
-              ['black', 2] :  // stable air
-              ['#f0f', 2]    // inversion
-            )
-          );
-      diagram.line(
-        [temperatureScale.apply(previousTemperature), y0],
-        [temperatureScale.apply(entry.temperature), y1],
-        color,
-        undefined,
-        true,
-        width
-      );
+        // Temperature
+        // Note: this is approximate, see https://en.wikipedia.org/wiki/Lapse_rate
+        // TODO We should consider applying the most precise formulas
+        const lapseRate = (entry.temperature - previousTemperature) / ((entry.elevation - previousElevation) / 100);
+        const [color, width] =
+          lapseRate <= -0.98 ?
+            ['yellow', 4] :     // absolutely unstable air
+            (lapseRate <= -0.5 ?
+              ['orange', 3] :   // conditionally unstable air
+              (lapseRate < 0 ?
+                ['black', 2] :  // stable air
+                ['#f0f', 2]    // inversion
+              )
+            );
+        diagram.line(
+          [temperatureScale.apply(previousTemperature), y0],
+          [temperatureScale.apply(entry.temperature), y1],
+          color,
+          undefined,
+          true,
+          width
+        );
 
-      // Dew point
-      diagram.line(
-        [temperatureScale.apply(previousDewPoint), y0],
-        [temperatureScale.apply(entry.dewPoint), y1],
-        'blue',
-        undefined,
-        true,
-        2
-      );
+        // Dew point
+        diagram.line(
+          [temperatureScale.apply(previousDewPoint), y0],
+          [temperatureScale.apply(entry.dewPoint), y1],
+          'blue',
+          undefined,
+          true,
+          2
+        );
 
-      return [entry.temperature, entry.dewPoint, entry.elevation]
-    },
-      [forecast.surface.temperature, forecast.surface.dewPoint, elevation]
+        return [entry.temperature, entry.dewPoint, entry.elevation, windArrowY]
+      },
+      [forecast.surface.temperature, forecast.surface.dewPoint, elevation, surfaceWindArrowY]
     );
 
   // pair containing the height (AMSL) of cloud base and the projected Y coordinate of that elevation on the diagram
@@ -404,8 +410,7 @@ const drawSounding = (
 const computeSoundingHeightAndMaxElevation = (zoomed: boolean, elevation: number, forecast: DetailedForecast): [number, number] => {
   const maxElevation = zoomed ? (elevation + forecast.boundaryLayer.soaringLayerDepth + 2000) : 12000; // m
 
-  const availableHeight = window.innerHeight - 38 /* top time selector */ - 50 /* bottom time selector */ - 27 /* text information and help */;
-  const preferredHeight = (maxElevation - elevation) / 10; // Arbitrary factor to make the diagram visually nice
-  const canvasHeight = Math.min(preferredHeight, availableHeight);
+  const preferredHeight = (maxElevation - elevation) / 5; // Arbitrary factor to make the diagram visually nice
+  const canvasHeight = Math.min(preferredHeight, diagramsAvailableHeight);
   return [canvasHeight, maxElevation];
 }

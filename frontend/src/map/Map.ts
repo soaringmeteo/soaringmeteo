@@ -1,8 +1,9 @@
-import { Feature, Map, MapBrowserEvent, Overlay, View } from 'ol';
+import { Feature, Map, MapBrowserEvent, View } from 'ol';
 import { Tile as TileLayer, Image as ImageLayer, Vector as VectorLayer, VectorTile as VectorTileLayer } from 'ol/layer';
 import { ImageStatic, Vector as VectorSource, VectorTile as VectorTileSource, XYZ } from "ol/source";
 import { fromLonLat, get as getProjection, Projection, toLonLat } from "ol/proj";
-import { Rotate, ScaleLine, Zoom } from "ol/control";
+import { ScaleLine } from "ol/control";
+import { defaults as defaultInteractions } from "ol/interaction";
 import { Coordinate } from "ol/coordinate";
 import { Point } from 'ol/geom';
 import { GeoJSON } from "ol/format";
@@ -82,9 +83,7 @@ const saveLocationAndZoom = (location: [number, number], zoom: number) => {
 };
 
 type MapHooks = {
-  popupRequest: Accessor<MapBrowserEvent<any> | undefined>
-  openPopup: (latitude: number, longitude: number, content: HTMLElement) => void
-  closePopup: () => void
+  locationClicks: Accessor<MapBrowserEvent<any> | undefined>
   setPrimaryLayerSource: (url: string, projection: string, extent: Extent) => void
   hidePrimaryLayer: () => void
   setWindLayerSource: (url: string, minViewZoom: number, extent: Extent, maxZoom: number) => void
@@ -127,12 +126,6 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     }),
   });
 
-  const locationDetailsOverlay =
-    new Overlay({
-      positioning: 'bottom-center',
-      position: undefined // initially, hide the overlay
-    });
-
   const [location, zoom] = loadLocationAndZoom();
   const map = new Map({
     target: element,
@@ -142,24 +135,20 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
       secondaryLayer,
       markerLayer
     ],
-    overlays: [
-      locationDetailsOverlay
-    ],
     view: new View({
       projection: viewProjection,
       center: location,
       zoom: zoom
     }),
     controls: [
-      new Zoom(),
-      new Rotate(),
       new ScaleLine({
         units: 'metric',
         bar: true,
         steps: 2,
         text: false
       })
-    ]
+    ],
+    interactions: defaultInteractions({ pinchRotate: false })
   });
 
   map.on('moveend', () => {
@@ -172,28 +161,13 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
 
   // Signal of “popup requests”: when the users click on the map, they request a popup
   // to be displayed with numerical information about the visible layer.
-  const [popupRequest, setPopupRequest] = createSignal<undefined | MapBrowserEvent<any>>(undefined);
+  const [locationClicks, setPopupRequest] = createSignal<undefined | MapBrowserEvent<any>>(undefined);
   map.on('click', (event) => {
     setPopupRequest(event);
   });
 
-  /**
-   * @param latitude  Latitude of the popup to open
-   * @param longitude Longitude of the popup to open
-   * @param content   Content of the popup (must be a root element)
-   */
-  const openLocationDetailsPopup = (latitude: number, longitude: number, content: HTMLElement): void => {
-    locationDetailsOverlay.setPosition(fromLonLat([longitude, latitude]));
-    locationDetailsOverlay.setElement(content);
-  };
-
   return {
-    popupRequest: popupRequest,
-    openPopup: openLocationDetailsPopup,
-    closePopup: (): void => {
-      setPopupRequest(undefined);
-      locationDetailsOverlay.setPosition(undefined);
-    },
+    locationClicks: locationClicks,
     setPrimaryLayerSource: (url: string, projection: string, extent: Extent): void => {
       primaryLayer.setSource(new ImageStatic({
         url: url,

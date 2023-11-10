@@ -40,7 +40,7 @@ export const cumuliDepthLayer: Layer = {
         means no thermals or blue thermals. Deep cumulus clouds means there is
         risk of over-development.
       </p>
-      <p>The color scale is shown on the bottom left of the screen.</p>
+      <p>The color scale is shown on the bottom right of the screen.</p>
     </>;
 
     return {

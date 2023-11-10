@@ -7,13 +7,17 @@ export const surfaceOverMap = {
 // size of the buttons at the bottom of the screen (info and help)
 export const bottomButtonsSize = 24;
 // size of the button used for closing panels
-export const closeButtonSize = 32;
+export const closeButtonSize = 24;
 // width of the left key shown on the diagrams
 export const keyWidth = 40;
 // width of the sounding diagrams
-export const soundingWidth = 600;
+export const soundingWidth = Math.max(Math.min(600, document.documentElement.clientWidth - keyWidth), 250);
+
+// available height in the viewport for drawing the diagrams (sounding and meteogram)
+export const diagramsAvailableHeight = document.documentElement.clientHeight - 35 /* top time selector */ - 52 /* bottom time selector */ - 58 /* text information and help */ - 5;
+
 // height of the period selector shown at the top of the screen
-export const periodSelectorHeight = 35; // Day height + hour height + 2 (wtf)
+export const periodSelectorHeight = 13 /* day height */ + 22 /* hour height */;
 // width of one time period in meteograms
 export const meteogramColumnWidth = 37;
 
@@ -21,10 +25,9 @@ export const closeButton = {
   width: `${closeButtonSize}px`,
   height: `${closeButtonSize}px`,
   'line-height': `${closeButtonSize}px`,
-  color: 'white',
   display: 'inline-block',
   cursor: 'pointer',
-  'background-color': 'darkGray',
+  'user-select': 'none',
   'text-align': 'center',
   'border-radius': `${closeButtonSize / 2}px`,
   'font-size': '18px'
@@ -42,3 +45,4 @@ export const burgerOptionStyle = hooks({
 
 export const burgerBorderTopStyle = { 'border-top': '1px solid darkgray' };
 
+export const buttonStyle = hooks({ padding: '0.3em 0.4em', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box', 'user-select': 'none', hover: { 'background-color': 'lightGray' } });

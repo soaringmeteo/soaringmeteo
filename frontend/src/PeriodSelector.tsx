@@ -1,12 +1,18 @@
-import {createEffect, createMemo, createSignal, JSX, Match, Show, Switch} from 'solid-js';
+import {Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Switch} from 'solid-js';
 
-import { forecastOffsets } from './data/ForecastMetadata';
-import {showCoordinates, showDate} from './shared';
-import {type DetailedViewType, type Domain, gfsModel, wrfModel} from './State';
-import { closeButton, closeButtonSize, keyWidth, meteogramColumnWidth, periodSelectorHeight, surfaceOverMap } from './styles/Styles';
-import { LocationForecasts } from './data/LocationForecasts';
-import { Help } from './help/Help';
+import {forecastOffsets, wrfForecastOffsets} from './data/ForecastMetadata';
+import {showDate} from './shared';
+import {type Domain, gfsModel, wrfModel} from './State';
+import {
+  buttonStyle,
+  keyWidth,
+  meteogramColumnWidth,
+  periodSelectorHeight,
+  surfaceOverMap
+} from './styles/Styles';
 import hooks from "./css-hooks";
+import {LocationDetails} from "./LocationDetails";
+import {MapBrowserEvent} from "ol";
 
 const marginLeft = keyWidth;
 const marginTop = periodSelectorHeight;
@@ -102,7 +108,9 @@ const PeriodSelector = (props: {
                 '\xa0'
             }
           </div>;
-        return <div style={{ display: 'inline-block' }}>
+        return <div
+          style={{ ...surfaceOverMap, 'background-color': 'white', display: 'inline-block' }}
+        >
           {dayEl}
           <div style={{ 'text-align': 'right' }}>{periods.map(tuple => tuple[0])}</div>
         </div>;
@@ -111,66 +119,22 @@ const PeriodSelector = (props: {
 
   const length = () => periodSelectorsByDay().reduce((n, ss) => n + ss[0].length, 0);
   const scrollablePeriodSelector =
-    <div style={{ 'overflow-x': 'auto', 'background-color': 'white' }}>
+    <div
+      style={{
+        'border-radius': '0 0 3px 0',
+        'overflow-x': 'auto',
+        'margin-left': `${marginLeft}px`,
+        'user-select': 'none',
+        cursor: 'default'
+    }}
+    >
       <div style={{ 'min-width': `${length() * meteogramColumnWidth + keyWidth}px` }}>
-        <div>{periodSelectors}</div>
+        <div>{periodSelectors()}</div>
         {props.detailedView}
       </div>
     </div>;
   return scrollablePeriodSelector
 }
-
-// Add location information below the detailed view, and additional buttons
-const decorateDetailedView = (
-  domain: Domain,
-  viewType: DetailedViewType,
-  forecasts: LocationForecasts,
-  hourOffset: () => number,
-  keyAndView: { key: JSX.Element, view: JSX.Element },
-  showLocationForecast: (viewType: DetailedViewType) => void
-): { key: JSX.Element, view: JSX.Element } => {
-  const locationCoordinates = showCoordinates(forecasts.longitude, forecasts.latitude, domain.state.model);
-  const extra =
-    viewType === 'meteogram' ?
-      <>
-        <span style="font-size: 12px">
-          Location: { locationCoordinates }. Model: { domain.modelName() }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false, timeZone: domain.timeZone() }) }.
-        </span>
-        <button
-          type="button"
-          onClick={ () => showLocationForecast('sounding') }
-          style="font-size: 12px"
-        >
-          Sounding for { showDate(domain.state.forecastMetadata.dateAtHourOffset(hourOffset()), { showWeekDay: true, timeZone: domain.timeZone() }) }
-        </button>
-      </> :
-      <>
-        <span style="font-size: 12px">
-          Location: { locationCoordinates }. Time: { showDate(domain.state.forecastMetadata.dateAtHourOffset(hourOffset()), { showWeekDay: true, timeZone: domain.timeZone() }) }. Model: { domain.modelName() }. Run: { showDate(domain.state.forecastMetadata.init, { showWeekDay: false, timeZone: domain.timeZone() }) }.
-        </span>
-        <button
-          type="button"
-          onClick={ () => showLocationForecast('meteogram') }
-          style="font-size: 12px"
-        >
-          Meteogram
-        </button>
-      </>;
-
-  return {
-    key: <>
-      {keyAndView.key}
-      <div style="height: 27px" /* help (24) + padding (3) */>&nbsp;</div>
-    </>,
-    view: <>
-      { keyAndView.view }
-      <div style="display: flex; gap: 1rem; align-items: baseline; padding-bottom: 3px">
-        { extra }
-        <Help domain={ domain } />
-      </div>
-    </>
-  }
-};
 
 /**
  * Note: this function has to be invoked _after_ the state has been initialized and registered.
@@ -188,35 +152,25 @@ const detailedView = (props: { domain: Domain }): (() => { key: JSX.Element, vie
 
   createEffect(() => {
     const detailedView = state.detailedView;
-    if (detailedView === undefined) {
+    if (detailedView === undefined || detailedView.viewType === 'summary') {
       set(noDetailedView);
     } else {
-      const [locationForecasts, viewType] = detailedView;
-      if (viewType === 'meteogram') {
+      if (detailedView.viewType === 'meteogram') {
         import('./diagrams/Meteogram').then(module => {
-          set(decorateDetailedView(
-            props.domain,
-            viewType,
-            locationForecasts,
-            () => state.hourOffset,
-            module.meteogram(locationForecasts, state),
-            viewType => props.domain.showLocationForecast(locationForecasts.latitude, locationForecasts.longitude, viewType)
-          ));
+          const { key, view } = module.meteogram(detailedView.locationForecasts, state);
+          set({
+            key,
+            view: <div style={{ ...surfaceOverMap, 'background-color': 'white' }}>
+              {view}
+            </div>
+          });
         });
-      }
-      else /*if (viewType === 'sounding')*/ {
-        const forecast = locationForecasts.atHourOffset(state.hourOffset);
+      } else if (detailedView.viewType === 'sounding') {
+        const forecast = detailedView.locationForecasts.atHourOffset(state.hourOffset);
         if (forecast === undefined) set(noDetailedView);
         else {
           import('./diagrams/Sounding').then(module => {
-            set(decorateDetailedView(
-              props.domain,
-              viewType,
-              locationForecasts,
-              () => state.hourOffset,
-              module.sounding(forecast, locationForecasts.elevation, true, state),
-              viewType => props.domain.showLocationForecast(locationForecasts.latitude, locationForecasts.longitude, viewType)
-            ));
+            set(module.sounding(forecast, detailedView.locationForecasts.elevation, true, state));
           });
         }
       }
@@ -234,6 +188,7 @@ const detailedView = (props: { domain: Domain }): (() => { key: JSX.Element, vie
  */
 export const PeriodSelectors = (props: {
   domain: Domain
+  locationClicks: Accessor<MapBrowserEvent<any> | undefined>
 }): JSX.Element => {
 
   const state = props.domain.state;
@@ -245,7 +200,6 @@ export const PeriodSelectors = (props: {
       { getDetailedView().key }
     </div>;
 
-  const buttonStyle = hooks({ padding: '0.3em 0.4em', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box', hover: { 'background-color': 'lightGray' } });
   const inlineButtonStyle = { ...buttonStyle, display: 'inline-block' };
 
   const [isDaySelectorVisible, makeDaySelectorVisible] = createSignal(false);
@@ -366,40 +320,23 @@ export const PeriodSelectors = (props: {
   const periodSelectorEl =
     <PeriodSelector
       forecastOffsetAndDates={
-        // If there is no selected forecast, infer the available periods from the forecast metadata
-        (state.detailedView === undefined) ?
-          state.model === 'wrf' ? [] : forecastOffsets(state.forecastMetadata.firstTimeStep, 9, state.forecastMetadata)
+        // If there is no selected location, infer the available periods from the forecast metadata
+        (state.detailedView === undefined || state.detailedView.viewType === 'summary') ?
+          state.model === 'wrf' ? wrfForecastOffsets(state.forecastMetadata) : forecastOffsets(state.forecastMetadata.firstTimeStep, 9, state.forecastMetadata)
         :
-          state.detailedView[0].offsetAndDates()
+          state.detailedView.locationForecasts.offsetAndDates()
       }
       detailedView={ getDetailedView().view }
       domain={ props.domain }
     />;
 
-  const hideDetailedViewBtn =
-    <div
-      style={{
-        ...closeButton,
-        ...surfaceOverMap,
-        'margin-right': `${marginLeft - closeButtonSize}px`,
-        'flex-shrink': 0,
-        visibility: (state.detailedView !== undefined) ? 'visible' : 'hidden'
-      }}
-      title='Hide'
-      onClick={() => props.domain.hideLocationForecast() }
-    >
-      ⨯
-    </div>;
-
   // Period selector and close button for the meteogram
   const periodSelectorContainer =
-    <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 100, 'max-width': '100%', 'user-select': 'none', cursor: 'default', 'font-size': '0.8125rem' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, 'z-index': 100, 'max-width': '100%', 'font-size': '0.8125rem' }}>
+      {periodSelectorEl}
       {detailedViewKeyEl}
-      <div style={{ display: 'flex', 'align-items': 'flex-start' }}>
-        {hideDetailedViewBtn}
-        {periodSelectorEl}
-      </div>
-    </span> as HTMLElement;
+      <LocationDetails locationClicks={props.locationClicks} domain={props.domain} /> {/* TODO Move out of PeriodSelector */}
+    </div>;
 
   // Current period
   const currentDayContainer =
@@ -412,7 +349,7 @@ export const PeriodSelectors = (props: {
         left: '50%',
         transform: 'translate(-50%,0)',
         'background-color': 'white',
-        'border-radius': '2px 2px 0 0',
+        'border-radius': '3px 3px 0 0',
         'font-size': '0.8125rem',
         'text-align': 'center',
         'user-select': 'none',
@@ -427,7 +364,7 @@ export const PeriodSelectors = (props: {
         {nextPeriodBtn}
         {nextDayBtn}
       </div>
-    </div> as HTMLElement;
+    </div>;
 
   return <>
     {periodSelectorContainer}

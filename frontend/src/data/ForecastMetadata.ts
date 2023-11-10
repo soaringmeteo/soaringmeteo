@@ -173,3 +173,11 @@ export const forecastOffsets = (gfsRunDateTime: Date, firstPeriodOffset: number,
       return [gfsOffset, date]
     })
 };
+
+export const wrfForecastOffsets = (wrfRun: ForecastMetadata): Array<[number, Date]> => {
+  return Array.from({ length: wrfRun.latest + 1 }).map((_, i) => {
+    const date = new Date(wrfRun.firstTimeStep);
+    date.setUTCHours(date.getUTCHours() + i);
+    return [i, date]
+  });
+};

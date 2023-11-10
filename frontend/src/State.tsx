@@ -1,11 +1,11 @@
 import { createStore, SetStoreFunction } from 'solid-js/store';
-import { LocationForecasts } from './data/LocationForecasts';
 import {ForecastMetadata, Zone} from './data/ForecastMetadata';
 import { Layer, ReactiveComponents } from './layers/Layer';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
 import { layerByKey } from './layers/Layers';
 import { boundaryLayerWindLayer } from './layers/Wind';
 import {Accessor, batch, createMemo, mergeProps, splitProps} from 'solid-js';
+import {DetailedView, DetailedViewType} from "./DetailedView";
 
 export type State = {
   // Currently selected numerical weather prediction model (GFS or WRF)
@@ -23,7 +23,7 @@ export type State = {
   windLayer: Layer
   windLayerEnabled: boolean
   // If defined, the detailed forecast data for the selected location, and the type of detailed view to display
-  detailedView: undefined | [LocationForecasts, DetailedViewType]
+  detailedView: undefined | DetailedView
   // --- Settings
   // Whether to show numerical values instead of showing a barb
   windNumericValuesShown: boolean
@@ -31,7 +31,6 @@ export type State = {
   utcTimeShown: boolean
 }
 
-export type DetailedViewType = 'meteogram' | 'sounding'
 export type Model = 'gfs' | 'wrf'
 export const gfsModel: Model = 'gfs'
 export const wrfModel: Model = 'wrf'
@@ -143,7 +142,7 @@ export class Domain {
     readonly wrfRuns: Array<ForecastMetadata>
   ) {
     const model = loadModel();
-    const forecastMetadata = model === gfsModel ? gfsRuns[gfsRuns.length - 1] : selectWrfRun(wrfRuns);
+    const forecastMetadata = selectRun(model, gfsRuns, wrfRuns);
     const zone = loadZone(model, forecastMetadata.zones);
     const primaryLayer = loadPrimaryLayer();
     const primaryLayerEnabled = loadPrimaryLayerEnabled();
@@ -187,14 +186,13 @@ export class Domain {
 
   /** Set the model (GFS vs WRF) to display */
   setModel(model: Model): void {
-    const runs = model === gfsModel ? this.gfsRuns : this.wrfRuns;
-    const defaultRun = runs[runs.length - 1];
-    const zone = loadZone(model, defaultRun.zones);
+    const run = selectRun(model, this.gfsRuns, this.wrfRuns);
+    const zone = loadZone(model, run.zones);
     saveModel(model);
     saveZone(model, zone.id);
     batch(() => {
       this.setState({ model, zone });
-      this.setForecastMetadata(defaultRun);
+      this.setForecastMetadata(run);
     });
   }
 
@@ -218,8 +216,8 @@ export class Domain {
     // In case we switched to another WRF run and there was already a detailed view that was open,
     // refresh it.
     if (maybePreviousDetailedView !== undefined) {
-      const [locationForecasts, detailedViewType] = maybePreviousDetailedView;
-      this.showLocationForecast(locationForecasts.latitude, locationForecasts.longitude, detailedViewType);
+      const detailedView = maybePreviousDetailedView;
+      this.showLocationForecast(detailedView.latitude, detailedView.longitude, detailedView.viewType);
     }
   }
 
@@ -324,14 +322,21 @@ export class Domain {
 
   /** Display the detailed view (meteogram or sounding) at the given location */
   showLocationForecast(latitude: number, longitude: number, viewType: DetailedViewType): void {
-    // TODO Optimization if state.detailedView already contains data for the given latitude,longitude
-    this.state.forecastMetadata
-      .fetchLocationForecasts(this.state.zone, latitude, longitude)
-      .then(locationForecasts => {
-        if (locationForecasts !== undefined) {
-          this.setState({ detailedView: [locationForecasts, viewType] });
-        }
-    });
+    if (viewType === 'summary') {
+      this.setState({
+        detailedView: { viewType, latitude, longitude }
+      })
+    } else {
+      this.state.forecastMetadata
+        .fetchLocationForecasts(this.state.zone, latitude, longitude)
+        .then(locationForecasts => {
+          if (locationForecasts !== undefined) {
+            this.setState({
+              detailedView: { viewType, locationForecasts, latitude, longitude }
+            });
+          }
+        });
+    }
   }
 
   /** Hide the detailed view */
@@ -375,3 +380,9 @@ const selectWrfRun = (runs: Array<ForecastMetadata>): ForecastMetadata => {
     return runs[runs.length - 1]
   }
 };
+
+/** Select the default forecast run to display */
+const selectRun = (model: Model, gfsRuns: Array<ForecastMetadata>, wrfRuns: Array<ForecastMetadata>): ForecastMetadata => {
+  if (model === gfsModel) return gfsRuns[gfsRuns.length - 1]
+  else return selectWrfRun(wrfRuns)
+}

@@ -11,6 +11,7 @@ import { surfaceOverMap } from "./styles/Styles";
 import { Settings } from "./Settings";
 import {LayersSelector} from "./LayersSelector";
 import {OverlayContainer} from "./map/Overlay";
+import hooks from "./css-hooks";
 
 /**
  * Burger menu with links to the other parts of the website.
@@ -22,7 +23,6 @@ export const Burger = (props: {
   domain: Domain
 }): JSX.Element => {
 
-  const state = props.domain.state;
   const [expanded, setExpanded] = createSignal(false);
   const [areSettingsVisible, makeSettingsVisible] = createSignal(false);
 
@@ -69,7 +69,7 @@ export const Burger = (props: {
         cursor: 'auto', // otherwise we would inherit the value from the overlay container
         'font-size': '0.9rem',
         'max-height': '100%',
-        'overflow-y': 'scroll'
+        'overflow-y': 'auto'
       }}
       onClick={ e => e.stopPropagation() }
     >
@@ -91,13 +91,13 @@ export const Burger = (props: {
         </div>
         <div
           onClick={ () => setExpanded(false) }
-          style={{
-            ...surfaceOverMap,
+          style={hooks({
             ...closeButton,
             position: 'absolute',
             top: '3px',
-            right: '3px'
-          }}
+            right: '3px',
+            hover: { 'background-color': 'darkgray' }
+          })}
         >
           ⨯
         </div>
@@ -118,17 +118,14 @@ export const Burger = (props: {
       }
     </div>;
 
-  // TODO Show the menu also when there is no detailed view
-  return <Show when={ state.detailedView === undefined }>
-    <Show when={ expanded() } fallback={ menuBtn }>
-      <OverlayContainer handleClick={ () => setExpanded(false) }>
-        {options}
-      </OverlayContainer>
-      <Settings
-        isVisible={ areSettingsVisible() }
-        close={ () => makeSettingsVisible(false) }
-        domain={ props.domain }
-      />
-    </Show>
+  return <Show when={ expanded() } fallback={ menuBtn }>
+    <OverlayContainer handleClick={ () => setExpanded(false) }>
+      {options}
+    </OverlayContainer>
+    <Settings
+      isVisible={ areSettingsVisible() }
+      close={ () => makeSettingsVisible(false) }
+      domain={ props.domain }
+    />
   </Show>
 };

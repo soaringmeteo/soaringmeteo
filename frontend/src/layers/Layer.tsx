@@ -5,7 +5,7 @@ import {DetailedForecast, LocationForecasts} from "../data/LocationForecasts";
 
 type Summarizer = {
   /** Create a summary of the forecast data on the point (shown in popups) */
-  summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined>
+  summary(lat: number, lng: number): Promise<[LocationForecasts, Array<[string, JSX.Element]> | undefined] | undefined>
 }
 
 // Non-static parts of layers
@@ -66,13 +66,16 @@ export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => 
       () => {}
     )();
     return {
-      async summary(lat: number, lng: number): Promise<Array<[string, JSX.Element]> | undefined> {
+      async summary(lat: number, lng: number): Promise<[LocationForecasts, Array<[string, JSX.Element]> | undefined] | undefined> {
         const locationForecasts = await props.forecastMetadata.fetchLocationForecasts(props.zone, lat, lng);
-        const detailedForecast = locationForecasts?.atHourOffset(props.hourOffset);
-        if (detailedForecast !== undefined) {
-          return summary(detailedForecast, locationForecasts as LocationForecasts)
-        } else {
+        if (locationForecasts === undefined) {
           return undefined
+        }
+        const detailedForecast = locationForecasts.atHourOffset(props.hourOffset);
+        if (detailedForecast === undefined) {
+          return [locationForecasts, undefined]
+        } else {
+          return [locationForecasts, summary(detailedForecast, locationForecasts)]
         }
       }
     }

@@ -80,14 +80,13 @@ export const xcFlyingPotentialLayer: Layer = {
 
     const help = <>
       <p>
-        The XC flying potential index is a single indicator that takes into account
+        It indicates the potential for cross-country flying, from 0% (poor thermals,
+        or very strong wind) to 100% (strong, high thermals, weak wind). Look for white
+        or blue areas (the full color scale is shown on the bottom right of the screen).
+        The XC flying potential index takes into account
         the soaring layer depth, the sunshine, and the average wind speed within the
         boundary layer. Deep soaring layer, strong sunshine, and low wind speeds
         increase the value of this indicator.
-      </p>
-      <p>
-        The color scale is shown on the bottom left of the screen. Click to a location
-        on the map to get numerical data.
       </p>
     </>;
 
