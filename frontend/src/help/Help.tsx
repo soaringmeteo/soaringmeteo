@@ -1,5 +1,5 @@
 import { createSignal, JSX, lazy, Match, Show, Switch } from 'solid-js'
-import { bottomButtonsSize, keyWidth, soundingWidth, surfaceOverMap } from '../styles/Styles';
+import {bottomButtonsSize, keyWidth, meteogramColumnWidth, soundingWidth, surfaceOverMap} from '../styles/Styles';
 import * as fakeData from './data';
 import { showDate, xcFlyingPotentialLayerName, inversionStyle } from '../shared';
 import { type Domain } from '../State';
@@ -118,7 +118,7 @@ const MeteogramHelp = (props: { domain: Domain }): JSX.Element => <>
     Meteograms show the weather forecast for the selected location over time. Here is an
     example of three days meteogram that we made up for documentation purpose:
   </p>
-  <div style={{ float: 'left', 'margin-right': '1em' }}>
+  <div style={{ float: 'left', 'margin-right': '1em', 'min-width': `${ keyWidth * 2 + meteogramColumnWidth * 3 * 3 }px` }}>
     { lazyMeteogram({ domain: props.domain }) }
   </div>
   <p>
