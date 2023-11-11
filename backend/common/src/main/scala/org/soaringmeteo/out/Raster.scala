@@ -125,7 +125,7 @@ object Raster {
         60  -> 0x0000007f,
         80  -> 0x000000bf,
         100 -> 0x000000ff
-      ),
+      ).withFallbackColor(0x000000ff),
       GreyaPngEncoding // FIXME Make it just Gray and handle transparency on the client-side
     ),
     Raster(
