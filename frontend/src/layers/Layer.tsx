@@ -48,7 +48,7 @@ export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => 
     )
   }
   </div>
-  };
+};
 
  export const summarizerFromLocationDetails = (props: {
   zone: Zone,

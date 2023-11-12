@@ -117,16 +117,35 @@ object Raster {
     ),
     // Clouds and Rain
     Raster(
-      "cloud-cover",
-      intData(_.totalCloudCover),
+      "clouds-rain",
+      doubleData { forecast =>
+        val rain = forecast.totalRain.toMillimeters
+        if (rain >= 0.2) {
+          rain + 100
+        } else {
+          forecast.totalCloudCover.toDouble
+        }
+      },
       ColorMap(
-        20  -> 0x00000000,
-        40  -> 0x0000003f,
-        60  -> 0x0000007f,
-        80  -> 0x000000bf,
-        100 -> 0x000000ff
-      ).withFallbackColor(0x000000ff),
-      GreyaPngEncoding // FIXME Make it just Gray and handle transparency on the client-side
+        // Clouds
+        5.0    -> 0xffffff00,
+        20.0   -> 0xffffffff,
+        40.0   -> 0xbdbdbdff,
+        60.0   -> 0x888888ff,
+        80.0   -> 0x4d4d4dff,
+        100.2  -> 0x111111ff, // we don’t show the rain unless it is higher than 0.2 millimeters
+        // Rain
+        101.0  -> 0x9df8f6ff,
+        102.0  -> 0x0000ffff,
+        104.0  -> 0x2a933bff,
+        106.0  -> 0x49ff36ff,
+        1010.0 -> 0xfcff2dff,
+        1020.0 -> 0xfaca1eff,
+        1030.0 -> 0xf87c00ff,
+        1050.0 -> 0xf70c00ff,
+        1100.0 -> 0xac00dbff,
+      ).withFallbackColor(0xac00dbff),
+      RgbaPngEncoding
     ),
     Raster(
       "cumulus-depth",
@@ -140,17 +159,6 @@ object Raster {
       ).withFallbackColor(0xff0000ff),
       RgbaPngEncoding
     ),
-    Raster(
-      "rain",
-      intData(_.totalRain.toMillimeters.round.toInt),
-      ColorMap(
-        1  -> 0x0000ff00,
-        3  -> 0x0000ff55,
-        7  -> 0x0000ffb3,
-        10 -> 0x0000ffff
-      ).withFallbackColor(0x0000ffff),
-      RgbaPngEncoding
-    )
   )
 
   /** Abstract over the type of data extracted from the forecast */

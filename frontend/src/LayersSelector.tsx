@@ -13,9 +13,8 @@ import {
   soaringLayerTopWindLayer,
   surfaceWindLayer
 } from './layers/Wind';
-import {cloudCoverLayer} from './layers/CloudCover';
+import {cloudsRainLayer} from './layers/CloudsRain';
 import {thermalVelocityLayer} from './layers/ThermalVelocity';
-import {rainLayer} from './layers/Rain';
 import {cumuliDepthLayer} from './layers/CumuliDepth';
 import {showDate} from './shared';
 import {Checkbox, Radio, Select} from './styles/Forms';
@@ -141,9 +140,8 @@ export const LayersSelector = (props: {
       {_4000MAMSLWindEl}
     </fieldset>;
 
-  const cloudCoverEl = setupLayerBtn(cloudCoverLayer, 'primary-layer');
+  const cloudsRainEl = setupLayerBtn(cloudsRainLayer, 'primary-layer');
   const cumuliDepthEl = setupLayerBtn(cumuliDepthLayer, 'primary-layer');
-  const rainEl = setupLayerBtn(rainLayer, 'primary-layer');
 
   const primaryLayerEl =
     <fieldset style={ fieldsetPaddingStyle }>
@@ -158,9 +156,8 @@ export const LayersSelector = (props: {
       {thqEl}
       {boundaryLayerHeightEl}
       {thermalVelocityEl}
-      {cloudCoverEl}
+      {cloudsRainEl}
       {cumuliDepthEl}
-      {rainEl}
     </fieldset>;
 
   return <>
