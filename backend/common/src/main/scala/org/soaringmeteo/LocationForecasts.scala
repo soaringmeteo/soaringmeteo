@@ -210,8 +210,8 @@ object LocationForecasts {
                     ),
                     "iso" -> forecast.isothermZero.fold(Json.Null)(elevation => Json.fromInt(elevation.toMeters.round.toInt)),
                     "r" -> Json.obj(
-                      "t" -> Json.fromInt(forecast.totalRain.toMillimeters.round.toInt),
-                      "c" -> Json.fromInt(forecast.convectiveRain.toMillimeters.round.toInt)
+                      "t" -> Json.fromBigDecimal(BigDecimal(forecast.totalRain.toMillimeters).setScale(1, BigDecimal.RoundingMode.HALF_UP)),
+                      "c" -> Json.fromBigDecimal(BigDecimal(forecast.convectiveRain.toMillimeters).setScale(1, BigDecimal.RoundingMode.HALF_UP))
                     ),
                     "mslet" -> Json.fromInt(forecast.mslet.toPascals.round.toInt / 100), // hPa
                     "c" -> Json.fromInt(forecast.totalCloudCover),
