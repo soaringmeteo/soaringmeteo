@@ -1,6 +1,14 @@
 import { LocationForecasts, DetailedForecast } from '../data/LocationForecasts';
 import { drawWindArrow, lightningShape } from '../shapes';
-import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, skyStyle, temperaturesRange } from './Diagram';
+import {
+  Diagram,
+  Scale,
+  boundaryLayerStyle,
+  computeElevationLevels,
+  skyStyle,
+  temperaturesRange,
+  setupCanvas
+} from './Diagram';
 import { colorScale as thqColorScale } from '../layers/ThQ';
 import { drawCloudCover } from './Clouds';
 import { createEffect, JSX } from 'solid-js';
@@ -42,26 +50,17 @@ export const meteogram = (forecasts: LocationForecasts, state: State): { key: JS
   const canvasWidth   = meteogramColumnWidth * forecasts.dayForecasts.reduce((n, forecast) => n + forecast.forecasts.length, 0);
   const canvasHeight  = rainDiagramTop + rainDiagramHeight + gutterHeight;
   const canvas = document.createElement('canvas');
-  canvas.setAttribute('width', `${canvasWidth}`);
-  canvas.setAttribute('height', `${canvasHeight}`);
-  canvas.style.width = `${canvasWidth}px`;
-  canvas.style.height = `${canvasHeight}px`;
+  setupCanvas(canvas, canvasWidth, canvasHeight);
   const ctx = canvas.getContext('2d');
 
   const canvasLeftKey = document.createElement('canvas');
-  canvasLeftKey.setAttribute('width', `${keyWidth}`);
-  canvasLeftKey.setAttribute('height', `${canvasHeight}`);
+  setupCanvas(canvasLeftKey, keyWidth, canvasHeight);
   canvasLeftKey.style.flex = '0 0 auto';
-  canvasLeftKey.style.width = `${keyWidth}px`;
-  canvasLeftKey.style.height = `${canvasHeight}px`;
   const leftKeyCtx = canvasLeftKey.getContext('2d');
 
   const canvasRightKey = document.createElement('canvas');
-  canvasRightKey.setAttribute('width', `${keyWidth}`);
-  canvasRightKey.setAttribute('height', `${canvasHeight}`);
+  setupCanvas(canvasRightKey, keyWidth, canvasHeight)
   canvasRightKey.style.flex = '0 0 auto';
-  canvasRightKey.style.width = `${keyWidth}px`;
-  canvasRightKey.style.height = `${canvasHeight}px`;
   const rightKeyCtx = canvasRightKey.getContext('2d');
 
   if (ctx !== null && forecasts.dayForecasts.length !== 0 && leftKeyCtx !== null && rightKeyCtx !== null) {
