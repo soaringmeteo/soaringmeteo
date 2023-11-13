@@ -371,8 +371,7 @@ const drawMeteogram = (
     drawWindArrow(ctx, windCenterX, airDiagram.projectY(windArrowY), windArrowSize, windColor, forecast.surface.wind.u, forecast.surface.wind.v, windNumericValuesShown);
     // Air wind
     forecast.aboveGround
-      // Keep enly the wind values that are above the ground + 125 meters (so that arrows don’t overlap)
-      .filter((entry) => entry.elevation > forecasts.elevation + 125 && entry.elevation < forecasts.elevation + airDiagramHeightAboveGroundLevel)
+      .filter((entry) => entry.elevation < forecasts.elevation + airDiagramHeightAboveGroundLevel)
       .forEach((wind) => {
         const y = elevationScale.apply(wind.elevation);
         // Show the arrow only if the density of wind arrows is not too high
