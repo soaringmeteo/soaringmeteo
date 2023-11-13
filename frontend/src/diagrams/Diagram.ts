@@ -174,7 +174,7 @@ export const temperaturesRange =
         temperatures.reduce((previousMax, temperature) => temperature > previousMax ? temperature : previousMax, Number.MIN_SAFE_INTEGER)
       );
     return [minTemperature, maxTemperature]
-  }
+  };
 
 export const skyStyle = '#91c7eb';
 export const boundaryLayerStyle = 'mediumspringgreen';

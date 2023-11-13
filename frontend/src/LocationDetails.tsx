@@ -4,7 +4,7 @@ import {Domain} from "./State";
 import {LocationForecasts} from "./data/LocationForecasts";
 import {toLonLat} from "ol/proj";
 import {MapBrowserEvent} from "ol";
-import {Meteogram, Sounding} from "./DetailedView";
+import {Diagram} from "./DetailedView";
 import {Help} from "./help/Help";
 import {buttonStyle, closeButton, surfaceOverMap} from "./styles/Styles";
 import hooks from "./css-hooks";
@@ -48,7 +48,8 @@ export const LocationDetails = (props: {
           padding: '.35em',
           'max-width': '100vw',
           'box-sizing': 'border-box',
-          'user-select': 'text'
+          'user-select': 'text',
+          ...((detailedView as any)?.useSmallScreenLayout ? { width: '100%' } : {})
         }}
       >
         <Show
@@ -56,7 +57,7 @@ export const LocationDetails = (props: {
           fallback={ <LocationSummary domain={props.domain} latitude={detailedView.latitude} longitude={detailedView.longitude} /> }
         >
           <div>
-            { showCoordinates(detailedView.longitude, detailedView.latitude, props.domain.state.model) }, { (detailedView as Meteogram | Sounding).locationForecasts.elevation }m.
+            { showCoordinates(detailedView.longitude, detailedView.latitude, props.domain.state.model) }, { (detailedView as Diagram).locationForecasts.elevation }m.
             <Show when={ detailedView.viewType === 'sounding' }>
               &nbsp;{ showDate(props.domain.state.forecastMetadata.dateAtHourOffset(props.domain.state.hourOffset), { showWeekDay: true, timeZone: props.domain.timeZone() }) }.
             </Show>
@@ -71,6 +72,19 @@ export const LocationDetails = (props: {
             'column-gap': '.3em'
           }}
         >
+          <div
+            style={hooks({
+              ...closeButton,
+              'flex-shrink': 0,
+              'border': '1px solid lightgray',
+              hover: { 'background-color': 'lightgray' }
+            })}
+            title='Hide'
+            onClick={ () => props.domain.hideLocationForecast() }
+          >
+            ⨯
+          </div>
+
           <span
             style={{ ...buttonStyle, ...(detailedView.viewType === 'summary' ? { 'background-color': 'lightgray' } : {}) }}
             title="Summary of the forecast for this location"
@@ -95,20 +109,9 @@ export const LocationDetails = (props: {
             Sounding
           </span>
 
-          <Help domain={ props.domain } overMap={ false } />
-
-          <div
-            style={hooks({
-              ...closeButton,
-              'flex-shrink': 0,
-              'border': '1px solid lightgray',
-              hover: { 'background-color': 'lightgray' }
-            })}
-            title='Hide'
-            onClick={ () => props.domain.hideLocationForecast() }
-          >
-            ⨯
-          </div>
+          <Show when={ (!(detailedView as any)?.useSmallScreenLayout) }>
+            <Help domain={ props.domain } overMap={ false } />
+          </Show>
         </div>
       </div>
     }

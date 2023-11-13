@@ -7,7 +7,7 @@ import {
   buttonStyle,
   keyWidth,
   meteogramColumnWidth,
-  periodSelectorHeight,
+  topPeriodSelectorHeight,
   surfaceOverMap
 } from './styles/Styles';
 import hooks from "./css-hooks";
@@ -15,7 +15,7 @@ import {LocationDetails} from "./LocationDetails";
 import {MapBrowserEvent} from "ol";
 
 const marginLeft = keyWidth;
-const marginTop = periodSelectorHeight;
+const marginTop = topPeriodSelectorHeight;
 
 const PeriodSelector = (props: {
   forecastOffsetAndDates: Array<[number, Date]>
@@ -128,7 +128,7 @@ const PeriodSelector = (props: {
         cursor: 'default'
     }}
     >
-      <div style={{ 'min-width': `${length() * meteogramColumnWidth + keyWidth}px` }}>
+      <div style={{ 'min-width': `${length() * meteogramColumnWidth}px` }}>
         <div>{periodSelectors()}</div>
         {props.detailedView}
       </div>
@@ -354,7 +354,8 @@ export const PeriodSelectors = (props: {
         'text-align': 'center',
         'user-select': 'none',
         cursor: 'default',
-        padding: '0'
+        padding: '0',
+        ...((props.domain.state.detailedView as any)?.useSmallScreenLayout ? { width: '100%' } : {})
       }}
     >
       {currentDayEl}

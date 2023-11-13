@@ -14,14 +14,21 @@ export const keyWidth = 40;
 export const soundingWidth =
   Math.max(Math.min(600, document.documentElement.clientWidth - keyWidth), 250);
 
+// height of the period selector shown at the top of the screen (HACK)
+export const topPeriodSelectorHeight = 13 /* day height */ + 22 /* hour height */;
+const bottomTimeSelectorHeight = 52;
+const infoBoxHeight = 58;
+
 // available height in the viewport for drawing the diagrams (sounding and meteogram)
 export const diagramsAvailableHeight =
-  document.documentElement.clientHeight - 35 /* top time selector */ - 52 /* bottom time selector */ - 58 /* text information and help */ - 5;
+  document.documentElement.clientHeight - topPeriodSelectorHeight - bottomTimeSelectorHeight - infoBoxHeight - 5;
 
-// height of the period selector shown at the top of the screen
-export const periodSelectorHeight = 13 /* day height */ + 22 /* hour height */;
 // width of one time period in meteograms
 export const meteogramColumnWidth = 37;
+
+export const useSmallScreenLayout = (diagramHeight: number): boolean => {
+  return document.documentElement.clientWidth - soundingWidth < 100 && document.documentElement.clientHeight - diagramHeight - 52 - 58 - 5 < 100
+};
 
 export const closeButton = {
   width: `${closeButtonSize}px`,

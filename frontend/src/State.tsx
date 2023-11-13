@@ -5,7 +5,8 @@ import { xcFlyingPotentialLayer } from './layers/ThQ';
 import { layerByKey } from './layers/Layers';
 import { boundaryLayerWindLayer } from './layers/Wind';
 import {Accessor, batch, createMemo, mergeProps, splitProps} from 'solid-js';
-import {DetailedView, DetailedViewType} from "./DetailedView";
+import {DetailedView, DetailedViewType, diagramHeight} from "./DetailedView";
+import {useSmallScreenLayout} from "./styles/Styles";
 
 export type State = {
   // Currently selected numerical weather prediction model (GFS or WRF)
@@ -357,8 +358,16 @@ export class Domain {
         .fetchLocationForecasts(this.state.zone, latitude, longitude)
         .then(locationForecasts => {
           if (locationForecasts !== undefined) {
+            const height = diagramHeight(viewType, locationForecasts);
             this.setState({
-              detailedView: { viewType, locationForecasts, latitude, longitude }
+              detailedView: {
+                viewType,
+                locationForecasts,
+                latitude,
+                longitude,
+                diagramHeight: height,
+                useSmallScreenLayout: useSmallScreenLayout(height)
+              }
             });
           }
         });

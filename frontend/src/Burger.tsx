@@ -5,7 +5,7 @@ import {
   burgerOptionStyle,
   closeButton,
   closeButtonSize,
-  periodSelectorHeight
+  topPeriodSelectorHeight
 } from "./styles/Styles";
 import { surfaceOverMap } from "./styles/Styles";
 import { Settings } from "./Settings";
@@ -30,8 +30,8 @@ export const Burger = (props: {
     <div
       style={{
         ...surfaceOverMap,
-        width: `${periodSelectorHeight}px`,
-        height: `${periodSelectorHeight}px`,
+        width: `${topPeriodSelectorHeight}px`,
+        height: `${topPeriodSelectorHeight}px`,
         cursor: 'pointer',
         'user-select': 'none',
         padding: '3px',
@@ -41,7 +41,7 @@ export const Burger = (props: {
         color: '#fff',
         'text-align': 'center',
         'font-weight': 'bold',
-        'font-size': `${periodSelectorHeight / 2}px`,
+        'font-size': `${topPeriodSelectorHeight / 2}px`,
         'line-height': `1.5`
       }}
       onClick={() => { setExpanded(!expanded()); }}
