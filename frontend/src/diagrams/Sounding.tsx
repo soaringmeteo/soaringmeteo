@@ -9,6 +9,7 @@ import hooks from "../css-hooks";
 
 // Difference between two temperatures shown on the temperature axis
 const temperatureScaleStep = 10;
+const windArrowSize = 30;
 
 const temperatureScaleAndLevels = (
   aboveGround: Array<AboveGround>,
@@ -300,7 +301,6 @@ const drawSounding = (
 
   // --- Sounding Diagram
 
-  const windArrowSize = 30;
   const windColor = `rgba(62, 0, 0, ${ windNumericValuesShown ? 0.5 : 0.3 })`;
   const windCenterX =
     temperatureScale.apply(
@@ -410,7 +410,9 @@ const drawSounding = (
 const computeSoundingHeightAndMaxElevation = (zoomed: boolean, elevation: number, forecast: DetailedForecast): [number, number] => {
   const maxElevation = zoomed ? (elevation + forecast.boundaryLayer.soaringLayerDepth + 2000) : 12000; // m
 
-  const preferredHeight = (maxElevation - elevation) / 5; // Arbitrary factor to make the diagram visually nice
+  const numberOfEntries = forecast.aboveGround.findIndex(aboveGround => aboveGround.elevation >= maxElevation)
+  const preferredHeight =
+    (numberOfEntries >= 0 ? numberOfEntries : forecast.aboveGround.length) * windArrowSize * 1.2;
   const canvasHeight = Math.min(preferredHeight, diagramsAvailableHeight);
   return [canvasHeight, maxElevation];
 }

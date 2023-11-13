@@ -14,6 +14,14 @@ import { inversionStyle } from '../shared';
  */
 export const meteogram = (forecasts: LocationForecasts, state: State): { key: JSX.Element, view: JSX.Element } => {
 
+  const flatForecasts: Array<DetailedForecast> =
+    forecasts.dayForecasts.map(x => x.forecasts).reduce((x, y) => x.concat(y), []); // Alternative to flatMap
+  const maxBoundaryLayerDepth =
+    flatForecasts.reduce((x, forecast) => Math.max(x, forecast.boundaryLayer.depth), -Infinity);
+
+  // In the air diagram, show 1000 meters above the boundary layer depth, and at least 2000 meters above the ground level
+  const airDiagramHeightAboveGroundLevel = Math.max(2000, maxBoundaryLayerDepth + 1000 /* meters */);
+
   const gutterHeight = 5; // px
 
   // Our meteogram is made of five diagrams stacked on top of each other.
@@ -34,7 +42,18 @@ export const meteogram = (forecasts: LocationForecasts, state: State): { key: JS
 
   const rainDiagramHeight = 60; // px
 
-  const airDiagramHeight = Math.min(500, diagramsAvailableHeight - highAirDiagramHeight - thermalVelocityDiagramHeight - thqDiagramHeight - rainDiagramHeight - 11 - gutterHeight * 7); // px
+  // Adjust the height of the air diagram depending on the available height
+  // Find the number of entries that will be shown in the diagram
+  const numberOfEntries =
+    // We assume that all the forecasts have similar density of information
+    flatForecasts[0].aboveGround
+      .findIndex(aboveGround => aboveGround.elevation > forecasts.elevation + airDiagramHeightAboveGroundLevel);
+  // The preferred height is the height where the density of information is optimal
+  const airDiagramPreferredHeight =
+    (numberOfEntries >= 0 ? numberOfEntries : flatForecasts[0].aboveGround.length) * meteogramColumnWidth;
+  const airDiagramAvailableHeight = diagramsAvailableHeight - highAirDiagramHeight - thermalVelocityDiagramHeight - thqDiagramHeight - rainDiagramHeight - 11 - gutterHeight * 7; // px
+  // If possible, use the preferred height, but if there is not enough space (e.g. on small screens), take the available height
+  const airDiagramHeight = Math.min(airDiagramPreferredHeight, airDiagramAvailableHeight);
   const airDiagramTop    = highAirDiagramTop + highAirDiagramHeight; // No gutter between high air diagram and air diagram
 
   const rainDiagramTop    = airDiagramTop + airDiagramHeight + gutterHeight * 4;
@@ -75,6 +94,7 @@ export const meteogram = (forecasts: LocationForecasts, state: State): { key: JS
             leftKeyCtx,
             rightKeyCtx,
             forecasts,
+            flatForecasts,
             thqDiagramTop,
             thqDiagramHeight,
             thermalVelocityDiagramTop,
@@ -83,6 +103,7 @@ export const meteogram = (forecasts: LocationForecasts, state: State): { key: JS
             highAirDiagramHeight,
             airDiagramTop,
             airDiagramHeight,
+            airDiagramHeightAboveGroundLevel,
             rainDiagramTop,
             rainDiagramHeight,
             canvasWidth,
@@ -108,6 +129,7 @@ const drawMeteogram = (
   leftCtx: CanvasRenderingContext2D,
   rightCtx: CanvasRenderingContext2D,
   forecasts: LocationForecasts,
+  flatForecasts: Array<DetailedForecast>,
   thqDiagramTop: number,
   thqDiagramHeight: number,
   thermalVelocityDiagramTop: number,
@@ -116,6 +138,7 @@ const drawMeteogram = (
   highAirDiagramHeight: number,
   airDiagramTop: number,
   airDiagramHeight: number,
+  airDiagramHeightAboveGroundLevel: number,
   rainDiagramTop: number,
   rainDiagramHeight: number,
   canvasWidth: number,
@@ -136,12 +159,6 @@ const drawMeteogram = (
   rightCtx.fillStyle = 'white';
   rightCtx.fillRect(0, 0, keyWidth, canvasHeight);
   rightCtx.restore();
-  
-  const flatForecasts: Array<DetailedForecast> =
-    forecasts.dayForecasts.map(x => x.forecasts).reduce((x, y) => x.concat(y), []); // Alternative to flatMap
-  const maxBoundaryLayerDepth =
-    flatForecasts.reduce((x, forecast) => Math.max(x, forecast.boundaryLayer.depth), -Infinity);
-  const airDiagramHeightAboveGroundLevel = Math.max(2000, maxBoundaryLayerDepth + 1000 /* meters */);
 
   const pressureScale     = new Scale([990, 1035 /* hPa */], [0, airDiagramHeight], false);
   const pressureLevels    = [990, 999, 1008, 1017, 1026, 1035];
@@ -174,14 +191,10 @@ const drawMeteogram = (
   const temperatureStyle  = 'black';
 
   const columns = (drawColumn: (forecast: DetailedForecast, columnStart: number, columnEnd: number, date: Date) => void): void => {
-    let i = 0;
-    forecasts.dayForecasts.forEach(dayForecast => {
-      dayForecast.forecasts.forEach(forecast => {
-        const columnStart = i * meteogramColumnWidth;
-        const columnEnd   = columnStart + meteogramColumnWidth;
-        drawColumn(forecast, columnStart, columnEnd, forecast.time);
-        i = i + 1;
-      });
+    flatForecasts.forEach((forecast, i) => {
+      const columnStart = i * meteogramColumnWidth;
+      const columnEnd   = columnStart + meteogramColumnWidth;
+      drawColumn(forecast, columnStart, columnEnd, forecast.time);
     });
   }
 
@@ -426,8 +439,8 @@ const drawMeteogram = (
   }
 
   // Elevation levels
-  elevationLevels.forEach(elevation => {
-    const y = elevationScale.apply(elevation);
+  elevationLevels.forEach(elevationLevel => {
+    const y = elevationScale.apply(elevationLevel);
     airDiagram.line([0, y], [canvasWidth, y], 'gray');
   });
 
@@ -541,14 +554,14 @@ const drawMeteogram = (
   );
   leftAirDiagram.text('m', [keyWidth - 5, airDiagramHeight - 15], 'black', 'right', 'middle');
 
-  elevationLevels.forEach(elevation => {
-    const y = elevationScale.apply(elevation);
+  elevationLevels.forEach(elevationLevel => {
+    const y = elevationScale.apply(elevationLevel);
     leftAirDiagram.line(
       [keyWidth - 8, y],
       [keyWidth,     y],
       'black'
     );
-    leftAirDiagram.text(`${Math.round(elevation)}`, [keyWidth - 10, y], 'black', 'right', 'middle');
+    leftAirDiagram.text(`${Math.round(elevationLevel)}`, [keyWidth - 10, y], 'black', 'right', 'middle');
   });
 
   // Rain
