@@ -147,10 +147,10 @@ const drawMeteogram = (
   const pressureLevels    = [990, 999, 1008, 1017, 1026, 1035];
   const pressureStyle     = '#CD5C5C'
 
-  // The main diagram shows the air from the ground level to 3500 m above ground level
+  // The main diagram shows the air from the ground level to “airDiagramHeightAboveGroundLevel”
   const middleCloudsTop  = forecasts.elevation + airDiagramHeightAboveGroundLevel; // m
-  // Thi high air diagram shows the air between 3500 and 5000 m above ground level, and then between 5000 and above
-  const highCloudsBottom = forecasts.elevation + 5000; // m
+  // The high air diagram shows the air in the next 1500 meters above the middle clouds top and then higher up
+  const highCloudsBottom = middleCloudsTop + 1500; // m
   const elevationScale  = new Scale([forecasts.elevation, middleCloudsTop], [0, airDiagramHeight], false);
   const elevationLevels = computeElevationLevels(forecasts.elevation, 500 /* m */, middleCloudsTop);
 
