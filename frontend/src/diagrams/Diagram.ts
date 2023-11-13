@@ -1,6 +1,20 @@
-import { cloudPattern, drawCumulusCloud } from "../shapes";
+import { drawCumulusCloud } from "../shapes";
 
 type Point = [/* x */ number, /* y */ number]
+
+/** Taken from https://dev.to/pahund/how-to-fix-blurry-text-on-html-canvases-on-mobile-phones-3iep */
+export const setupCanvas = (canvas: HTMLCanvasElement, width: number, height: number): void => {
+  const pixelRatio = Math.ceil(window.devicePixelRatio);
+  canvas.width = width * pixelRatio;
+  canvas.height = height * pixelRatio;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+  const ctx = canvas.getContext('2d');
+  if (ctx !== null) {
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  }
+};
+
 
 /**
  * A diagram within a canvas.

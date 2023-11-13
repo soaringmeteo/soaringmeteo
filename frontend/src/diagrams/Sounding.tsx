@@ -1,4 +1,14 @@
-import { Diagram, Scale, boundaryLayerStyle, computeElevationLevels, nextValue, previousValue, skyStyle, temperaturesRange } from './Diagram';
+import {
+  Diagram,
+  Scale,
+  boundaryLayerStyle,
+  computeElevationLevels,
+  nextValue,
+  previousValue,
+  skyStyle,
+  temperaturesRange,
+  setupCanvas
+} from './Diagram';
 import { AboveGround, DetailedForecast } from "../data/LocationForecasts";
 import { drawCloudCover } from './Clouds';
 import { drawWindArrow } from '../shapes';
@@ -43,18 +53,12 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
 
   // Main canvas contains the sounding diagram
   const canvas = document.createElement('canvas');
-  canvas.style.width = `100%`;
-  canvas.style.height = `100%`;
-  canvas.setAttribute('width', `${soundingWidth}`);
-  canvas.setAttribute('height', `${canvasHeight}`);
+  setupCanvas(canvas, soundingWidth, canvasHeight);
   const ctx = canvas.getContext('2d');
 
   // Left key contains the vertical axis of the sounding diagram
   const canvasLeftKey = document.createElement('canvas');
-  canvasLeftKey.setAttribute('width', `${keyWidth}`);
-  canvasLeftKey.setAttribute('height', `${canvasHeight}`);
-  canvasLeftKey.style.width = `${keyWidth}px`;
-  canvasLeftKey.style.height = `${canvasHeight}px`;
+  setupCanvas(canvasLeftKey, keyWidth, canvasHeight);
   const leftCtx = canvasLeftKey.getContext('2d');
 
   const [zoomed, zoom] = createSignal(zoomedDefaultValue);
@@ -142,11 +146,8 @@ const drawSounding = (
 
   rootView.style.width = `${soundingWidth}px`;
   rootView.style.height = `${canvasHeight}px`;
-
-  canvas.setAttribute('width', `${soundingWidth}`);
-  canvas.setAttribute('height', `${canvasHeight}`);
-  canvasLeftKey.setAttribute('height', `${canvasHeight}`);
-  canvasLeftKey.style.height = `${canvasHeight}px`;
+  setupCanvas(canvas, soundingWidth, canvasHeight);
+  setupCanvas(canvasLeftKey, keyWidth, canvasHeight);
 
   // Clear everything first
   ctx.save();
