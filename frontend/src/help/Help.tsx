@@ -2,7 +2,7 @@ import { createSignal, JSX, lazy, Match, Show, Switch } from 'solid-js'
 import {bottomButtonsSize, keyWidth, meteogramColumnWidth, soundingWidth, surfaceOverMap} from '../styles/Styles';
 import * as fakeData from './data';
 import { showDate, xcFlyingPotentialLayerName, inversionStyle } from '../shared';
-import { type Domain } from '../State';
+import {type Domain, gfsModel, wrfModel} from '../State';
 import { Overlay } from '../map/Overlay';
 import hooks from "../css-hooks";
 
@@ -75,11 +75,23 @@ const MapHelp = (props: { domain: Domain }): JSX.Element => {
     <p>
       What you see is the weather forecast for { showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { timeZone: props.domain.timeZone() }) },
       from the model { props.domain.modelName() } initialized at { showDate(state.forecastMetadata.init, { timeZone: props.domain.timeZone() }) }.
+      <Switch>
+        <Match when={ props.domain.state.model === gfsModel }>
+          {' '}The results of the <a href="https://www.ncei.noaa.gov/products/weather-climate-models/global-forecast" target="_blank">GFS model</a> are provided by the <a
+          href="https://www.noaa.gov/">NOAA</a>. The results are published every day around 07:00 and 19:00 CEST.
+        </Match>
+        <Match when={ props.domain.state.model === wrfModel }>
+          {' '}We operate the <a href="https://www.mmm.ucar.edu/models/wrf" target="_blank">WRF model</a> on our own
+          servers, and we configured it to cover the Alpine region. The results are published every day around 05:00,
+          11:00, 17:00, and 23:00 CEST.
+        </Match>
+      </Switch>
     </p>
     <p>
       Use the top-left menu to select which information to display on the map (cross-country flying potential,
       thermal velocity, wind speed and direction, etc.). You can also select a different weather forecast model,
-      or a different area of the world.
+      or a different area of the world (tip: bookmark the page after you selected your favorite model and
+      geographical zone).
     </p>
     <Show when={ state.primaryLayerEnabled }>
       <p>

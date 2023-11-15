@@ -53,7 +53,6 @@ export const Burger = (props: {
     ['Documents',            'https://soaringmeteo.org/docs.html'],
     ['soarGFS',              'https://soaringmeteo.org/GFSw/googleMap.html'],
     ['soarWRF',              'https://soaringmeteo.org/soarWRF'],
-    ['soarV2',               'https://soarwrf1.soaringmeteo.org/v2']
   ]
 
   const options =
