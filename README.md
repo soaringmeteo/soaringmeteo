@@ -8,7 +8,7 @@ the website.
 
 ![](images/soaringmeteo.png)
 
-## Architecture
+# Architecture
 
 On the one hand, SoaringMeteo produces weather forecast data
 relevant for soaring pilots. This data is produced either by
@@ -23,17 +23,24 @@ This repository contains two sub-projects:
 - [backend](backend/), which produces the forecast data,
 - [frontend](frontend/), which displays the forecast data.
 
+
+The backend part is made of three distinct programs:
+
+- `gfs`, the GFS pipeline, which process data from the GFS model
+- `wrf`, the WRF pipeline, which process data from the WRF model
+- `common`, common parts (e.g., GRIB extraction, etc.)
+
 Please refer to each sub-project for more details.
 
-## Contributing
+# Contributing
 
-Pull requests are welcome. See the [open issues].
+Pull requests are welcome. See the [CONTRIBUTING.MD](CONTRIBUTING.MD) file for more details.
 
-## Usage
+# Usage
 
 Go to https://soarwrf1.soaringmeteo.org/v2.
 
-## License
+# License
 
 [GPL-3.0-or-later]
 
