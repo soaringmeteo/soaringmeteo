@@ -3,8 +3,8 @@
 Soaringmeteo team is glad you are reading this, because we always need volunteers
 to keep this awesome service up to date.
 
-* Find a bug? Do not hesitate to open an issue using the bug template. **TODO: LINK HERE**
-* Have an awesome improvement idea? Do not hesitate to open an issue using the feature template **TODO: LINK HERE**
+* Find a bug? Do not hesitate to open an issue using the [bug template](../../issues/new?assignees=&labels=bug&projects=&template=bug-report.md&title=BUG).
+* Have an awesome improvement idea? Do not hesitate to open an issue using the [feature template](../../issues/new?assignees=&labels=&projects=&template=feature_request.md&title=).
 
 # Setup the development environment
 
@@ -31,11 +31,11 @@ sudo apt update
 sudo apt install sbt
 ```
 
-More informations are available [here](https://scala-sbt.org).
+More informations are available on the [scala website](https://scala-sbt.org).
 
 ## Tools install for the  frontend
 
-1. yarn3 (instructions taken from [here](https://yarnpkg.com/getting-started/install)
+1. yarn3 (instructions taken from the [yarnpkg website](https://yarnpkg.com/getting-started/install)
 ```bash
 corepack enable
 yarn set version 3
