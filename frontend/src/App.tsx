@@ -46,7 +46,8 @@ export const start = (containerElement: HTMLElement): void => {
           url,
           vectorTiles.minZoom,
           vectorTiles.extent,
-          vectorTiles.zoomLevels - 1
+          vectorTiles.zoomLevels - 1,
+          vectorTiles.tileSize
         );
       } else {
         mapHooks.hideWindLayer();

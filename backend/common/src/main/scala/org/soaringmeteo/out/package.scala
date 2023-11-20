@@ -8,7 +8,7 @@ package object out {
    * We need to bump this number everytime we introduce incompatibilities (e.g. adding a non-optional field).
    * Make sure to also bump the `formatVersion` in the frontend (see frontend/src/data/ForecastMetadata.ts).
    */
-  val formatVersion = 4
+  val formatVersion = 5
 
   /**
    * Delete the target directories older than the `oldestForecastToKeep`.

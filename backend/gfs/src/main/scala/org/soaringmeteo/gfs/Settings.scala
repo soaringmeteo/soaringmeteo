@@ -49,7 +49,8 @@ object Settings {
       val id = entryConfig.getString("id")
       val extent = entryConfig.getStringList("extent").asScala.map(BigDecimal(_))
       val label = entryConfig.getString("label")
-      Subgrid(id, label, extent(0), extent(1), extent(2), extent(3))
+      val vectorTileSize = entryConfig.getInt("vectorTileSize")
+      Subgrid(id, label, vectorTileSize, extent(0), extent(1), extent(2), extent(3))
     }.toSeq
 
   val gfsRootUrl = "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl"

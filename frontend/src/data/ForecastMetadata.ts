@@ -22,14 +22,15 @@ export type Zone = {
     proj: string
   }
   readonly vectorTiles: {
-    minZoom: number
-    zoomLevels: number
-    extent: [number, number, number, number]
+    readonly minZoom: number
+    readonly zoomLevels: number
+    readonly extent: [number, number, number, number]
+    readonly tileSize: number
   }
 }
 
 // Version of the forecast data format we consume (see backend/src/main/scala/org/soaringmeteo/package.scala)
-const formatVersion = 4
+const formatVersion = 5
 // Base path to access forecast data
 const dataPath = `data/${formatVersion}`
 export class ForecastMetadata {

@@ -34,13 +34,13 @@ object VectorTiles {
       // Vector tiles partition the extent into multiple tiles. At the zoom level 0, there is
       // just one tile that covers the whole extent. At zoom level 1, there are 4 tiles, at
       // zoom level 2 there are 16 tiles, and so on.
-      // OpenLayers assumes that 1 tile covers an area of 512 px on the map. So, if the projection
-      // of the extent is larger than 512 px, OpenLayers will try to “zoom” into the tiles to find
-      // only the points that are visible in the current view.
+      // By default, OpenLayers assumes that 1 tile covers an area of 512 px on the map. So, if the
+      // projection of the extent is larger than 512 px, OpenLayers will try to “zoom” into the tiles
+      // to find only the points that are visible in the current view.
       // We find that rendering at most 15 wind arrow per tile looks good, so we make sure that
       // our tiles don’t contain more points than that. We down-sample the grid by removing every
       // other point from the previous zoom level.
-      val threshold = 15 // Increase this value to show denser wind arrows
+      val threshold = 15
       var zoomLevelsValue = 1
       var maxPoints = math.max(width, height)
       while (maxPoints > threshold) {
