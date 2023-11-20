@@ -107,7 +107,8 @@ export const meteogram = (forecasts: LocationForecasts, state: State): { key: JS
             rainDiagramHeight,
             canvasWidth,
             canvasHeight,
-            state.windNumericValuesShown
+            state.windNumericValuesShown,
+            state.xcFlyingPotentialType
           );
         });
       },
@@ -142,7 +143,8 @@ const drawMeteogram = (
   rainDiagramHeight: number,
   canvasWidth: number,
   canvasHeight: number,
-  windNumericValuesShown: boolean
+  windNumericValuesShown: boolean,
+  xcFlyingPotentialType: 'mountains' | 'flatlands'
 ): void => {
 
   // Clear everything first
@@ -201,7 +203,7 @@ const drawMeteogram = (
   const thqDiagram = new Diagram([0, thqDiagramTop], thqDiagramHeight, ctx);
 
   columns((forecast, columnStart, columnEnd) => {
-    const thq = forecast.xcPotential;
+    const thq = xcFlyingPotentialType === 'mountains' ? forecast.xcPotential : forecast.xcPotentialFlatlands;
     thqDiagram.fillRect(
       [columnStart, 0],
       [columnEnd, thqDiagramHeight],

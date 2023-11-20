@@ -1,7 +1,7 @@
 package org.soaringmeteo.gfs.out
 
 import io.circe.{Codec, Decoder, DecodingFailure, Encoder, Json, JsonObject, parser}
-import org.soaringmeteo.{AirData, ConvectiveClouds, Forecast, Wind, Winds}
+import org.soaringmeteo.{AirData, ConvectiveClouds, Forecast, Wind, Winds, XCFlyingPotential}
 import org.soaringmeteo.gfs.Subgrid
 import slick.jdbc.H2Profile.api._
 import squants.energy.Grays
@@ -196,6 +196,21 @@ object Store {
       }
     )
 
+    val xcPotentialCodec: Codec[XCFlyingPotential] = Codec.from(
+      Decoder.instance { cursor =>
+        for {
+          mountainsPotential <- cursor.downField("mountains").as[Int]
+          flatlandsPotential <- cursor.downField("flatlands").as[Int]
+        } yield XCFlyingPotential(mountainsPotential, flatlandsPotential)
+      },
+      Encoder.instance { xcPotential =>
+        Json.obj(
+          "mountains" -> Json.fromInt(xcPotential.mountains),
+          "flatlands" -> Json.fromInt(xcPotential.flatlands)
+        )
+      }
+    )
+
     val encoder: Encoder[Forecast] = Encoder.instance { forecast =>
       Json.obj(
         "time" -> Encoder[OffsetDateTime].apply(forecast.time),
@@ -225,7 +240,7 @@ object Store {
         "irradiance" -> Json.fromInt(forecast.downwardShortWaveRadiationFlux.toWattsPerSquareMeter.round.intValue),
         "isothermZero" -> forecast.isothermZero.fold(Json.Null)(elevation => Json.fromInt(elevation.toMeters.round.intValue)),
         "winds" -> windsCodec(forecast.winds),
-        "xcFlyingPotential" -> Json.fromInt(forecast.xcFlyingPotential),
+        "xcFlyingPotential" -> xcPotentialCodec(forecast.xcFlyingPotential),
         "soaringLayerDepth" -> Json.fromInt(forecast.soaringLayerDepth.toMeters.round.intValue)
       )
     }
@@ -275,7 +290,7 @@ object Store {
           case json => Decoder[Int].decodeJson(json).map(elevation => Some(Meters(elevation)))
         }
         winds <- cursor.downField("winds").as(windsCodec)
-        xcFlyingPotential <- cursor.downField("xcFlyingPotential").as[Int]
+        xcFlyingPotential <- cursor.downField("xcFlyingPotential").as(xcPotentialCodec)
         soaringLayerDepth <- cursor.downField("soaringLayerDepth").as[Int].map(Meters(_))
       } yield
         Forecast(

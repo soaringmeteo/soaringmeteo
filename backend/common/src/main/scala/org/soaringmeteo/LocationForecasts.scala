@@ -33,7 +33,7 @@ case class DayForecast(
 
 case class DetailedForecast(
   time: OffsetDateTime,
-  xcFlyingPotential: Int, // Between 0 and 100
+  xcFlyingPotential: XCFlyingPotential,
   boundaryLayerDepth: Length, // m (AGL)
   boundaryLayerWind: Wind,
   thermalVelocity: Velocity,
@@ -176,7 +176,8 @@ object LocationForecasts {
                 dayForecast.hourForecasts.map { forecast =>
                   Json.obj(
                     "t" -> Json.fromString(forecast.time.format(DateTimeFormatter.ISO_DATE_TIME)),
-                    "xc" -> Json.fromInt(forecast.xcFlyingPotential),
+                    "xc" -> Json.fromInt(forecast.xcFlyingPotential.mountains),
+                    "xcf" -> Json.fromInt(forecast.xcFlyingPotential.flatlands),
                     "bl" -> Json.obj(Seq(
                       "h" -> Json.fromInt(forecast.boundaryLayerDepth.toMeters.round.toInt),
                       "u" -> Json.fromInt(forecast.boundaryLayerWind.u.toKilometersPerHour.round.toInt),

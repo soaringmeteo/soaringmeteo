@@ -19,7 +19,6 @@ export const thermalVelocityLayer: Layer = {
   key: 'thermal-velocity',
   name: 'Thermal Velocity',
   title: 'Thermal updraft velocity',
-  dataPath: 'thermal-velocity',
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
@@ -31,6 +30,7 @@ export const thermalVelocityLayer: Layer = {
     ]);
 
     return {
+      dataPath: () => 'thermal-velocity',
       summarizer,
       mapKey: colorScaleEl(thermalVelocityColorScale, value => `${value} m/s `),
       help: <p>

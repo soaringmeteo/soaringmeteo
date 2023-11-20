@@ -1,6 +1,6 @@
 package org.soaringmeteo.out
 
-import geotrellis.raster.render.png.{GreyaPngEncoding, PngColorEncoding, RgbPngEncoding, RgbaPngEncoding}
+import geotrellis.raster.render.png.{PngColorEncoding, RgbPngEncoding, RgbaPngEncoding}
 import geotrellis.raster.{DoubleArrayTile, IntArrayTile, Tile}
 import geotrellis.raster.render.{ColorMap, LessThan, Png}
 import org.slf4j.LoggerFactory
@@ -49,7 +49,7 @@ object Raster {
     forecasts: IndexedSeq[IndexedSeq[Forecast]]
   ): Unit = {
     logger.debug(s"Generating images for hour offset n°${hourOffset}")
-    for (raster <- gfsRasters) {
+    for (raster <- allRasters) {
       val fileName = s"${hourOffset}.png" // e.g., "3.png", "6.png", etc.
       val path = targetDir / raster.path / fileName
       logger.trace(s"Generating image ${path}")
@@ -61,23 +61,32 @@ object Raster {
     }
   }
 
-  val gfsRasters: List[Raster] = List(
+  private val xcFlyingPotentialColorMap = ColorMap(
+    10 -> 0x333333,
+    20 -> 0x990099,
+    30 -> 0xff0000,
+    40 -> 0xff9900,
+    50 -> 0xffcc00,
+    60 -> 0xffff00,
+    70 -> 0x66ff00,
+    80 -> 0x00ffff,
+    90 -> 0x99ffff,
+    100 -> 0xffffff
+  )
+
+  val allRasters: List[Raster] = List(
     // XC Flying potential
     Raster(
       "xc-potential",
-      intData(_.xcFlyingPotential),
-      ColorMap(
-        10  -> 0x333333,
-        20  -> 0x990099,
-        30  -> 0xff0000,
-        40  -> 0xff9900,
-        50  -> 0xffcc00,
-        60  -> 0xffff00,
-        70  -> 0x66ff00,
-        80  -> 0x00ffff,
-        90  -> 0x99ffff,
-        100 -> 0xffffff
-      ),
+      intData(_.xcFlyingPotential.mountains),
+      xcFlyingPotentialColorMap,
+      RgbPngEncoding
+    ),
+    // XC Flying potential in the flatlands
+    Raster(
+      "xc-potential-flatlands",
+      intData(_.xcFlyingPotential.flatlands),
+      xcFlyingPotentialColorMap,
       RgbPngEncoding
     ),
     // Thermals

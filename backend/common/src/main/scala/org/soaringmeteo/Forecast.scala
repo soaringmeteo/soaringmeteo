@@ -38,7 +38,7 @@ case class Forecast(
   downwardShortWaveRadiationFlux: Irradiance, // FIXME Remove
   isothermZero: Option[Length],
   winds: Winds, // wind value at some specific elevation levels
-  xcFlyingPotential: Int,
+  xcFlyingPotential: XCFlyingPotential,
   soaringLayerDepth: Length // m (AGL)
 )
 

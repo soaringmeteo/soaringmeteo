@@ -16,7 +16,28 @@ export const Settings = (props: {
   >
     <h1 style={{ margin: '.1em 0' }}>Settings</h1>
 
-    <fieldset style={{ 'margin-top': '.1em 0' }}>
+    <fieldset style={{ 'margin-top': '.1em' }}>
+      <legend>Flying type</legend>
+      <p>{ /* TODO */ }</p>
+      <Radio
+        label='Fly in the mountains'
+        labelPosition='right'
+        title='Fly in the mountains'
+        groupName='xc-flying-potential-type'
+        checked={ props.domain.state.xcFlyingPotentialType === 'mountains' }
+        onChange={ () => props.domain.setXcFlyingPotentialType('mountains') }
+      />
+      <Radio
+        label='Fly in the flatlands'
+        labelPosition='right'
+        title='Fly in the flatlands'
+        groupName='xc-flying-potential-type'
+        checked={ props.domain.state.xcFlyingPotentialType === 'flatlands' }
+        onChange={ () => props.domain.setXcFlyingPotentialType('flatlands') }
+      />
+    </fieldset>
+
+    <fieldset style={{ 'margin-top': '.1em' }}>
       <legend>Wind</legend>
       <p>By default, the wind speed is indicated by a numerical value next to each wind arrow. If you hide the numerical values, in the meteograms the wind speed will be indicated by wind barbs (with a precision of 2.5 km/h). See the help on the meteograms for more information on how to interpret the barbs.</p>
       <Checkbox

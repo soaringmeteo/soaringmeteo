@@ -25,7 +25,7 @@ export const start = (containerElement: HTMLElement): void => {
     domain: Domain
   }): JSX.Element => {
 
-    // Update primary layer
+    // Update primary layer (TODO maybe delay)
     createEffect(() => {
       const url = props.domain.urlOfRasterAtCurrentHourOffset();
       const projection = props.domain.state.zone.raster.proj;

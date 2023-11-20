@@ -46,6 +46,7 @@ export class DayForecasts {
 export class DetailedForecast {
   readonly time: Date;
   readonly xcPotential: number; // between 0 and 100
+  readonly xcPotentialFlatlands: number; // between 0 and 100
   readonly thermalVelocity: number; // m/s
   readonly boundaryLayer: DetailedBoundaryLayer;
   readonly surface: DetailedSurface;
@@ -59,6 +60,7 @@ export class DetailedForecast {
   constructor(data: DetailedForecastData, elevation: number) {
     this.time = new Date(data.t);
     this.xcPotential = data.xc;
+    this.xcPotentialFlatlands = data.xcf !== undefined ? data.xcf : 0 /* fallback to 0 on previous runs for smooth migration */;
     this.thermalVelocity = data.v / 10;
     this.boundaryLayer = {
       depth: data.bl.h,
@@ -170,7 +172,8 @@ type DayForecastsData = {
 
 export type DetailedForecastData = {
   t: string // Forecast time
-  xc: number // XC Potential, between 0 and 100
+  xc: number // XC Potential in the mountains, between 0 and 100
+  xcf: number // XC Potential in the flatlands, between 0 and 100
   // Boundary layer
   bl: {
     // Depth (m AGL)

@@ -247,6 +247,12 @@ object GfsGrib {
         }.to(SortedMap)
     val maybeConvectiveClouds = ConvectiveClouds(surfaceTemperature, surfaceDewPoint, elevation, boundaryLayerDepth, airData)
     val soaringLayerDepth: Length = Thermals.soaringLayerDepth(elevation, boundaryLayerDepth, maybeConvectiveClouds)
+    val xcFlyingPotential = XCFlyingPotential(
+      thermalVelocity,
+      soaringLayerDepth,
+      boundaryLayerWind.speed,
+      surfaceWind.speed
+    )
 
     org.soaringmeteo.Forecast(
       time,
@@ -272,7 +278,7 @@ object GfsGrib {
       downwardShortWaveRadiationFlux,
       Some(isothermZero),
       Winds(airData, elevation, soaringLayerDepth),
-      XCFlyingPotential(thermalVelocity, soaringLayerDepth, boundaryLayerWind),
+      xcFlyingPotential,
       soaringLayerDepth
     )
   }

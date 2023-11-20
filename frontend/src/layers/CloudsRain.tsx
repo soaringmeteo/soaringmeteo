@@ -27,7 +27,6 @@ export const cloudsRainLayer: Layer = {
   key: 'clouds-rain',
   name: 'Clouds an Rain',
   title: 'Clouds and rain',
-  dataPath: 'clouds-rain',
   reactiveComponents(props: {
     zone: Zone,
     forecastMetadata: ForecastMetadata,
@@ -50,6 +49,7 @@ export const cloudsRainLayer: Layer = {
     </p>;
 
     return {
+      dataPath: () => 'clouds-rain',
       summarizer,
       mapKey,
       help

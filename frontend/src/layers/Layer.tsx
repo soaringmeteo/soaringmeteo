@@ -10,6 +10,8 @@ type Summarizer = {
 
 // Non-static parts of layers
 export type ReactiveComponents = {
+  /** The path to the layer data (raster images or vector tiles) */
+  readonly dataPath: Accessor<string>
   /** The current summarizer (shown in popups) of a layer. */
   readonly summarizer: Accessor<Summarizer>
   /** The map key of the layer. */
@@ -25,12 +27,12 @@ export type ReactiveComponents = {
   readonly key: string
   readonly name: string
   readonly title: string
-  readonly dataPath: string
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number,
     windNumericValuesShown: boolean,
+    xcFlyingPotentialType: 'mountains' | 'flatlands'
     timeZone: string | undefined,
     setHourOffset: (value: number) => void
   }): ReactiveComponents

@@ -29,6 +29,8 @@ export type State = {
   windNumericValuesShown: boolean
   // Whether to show UTC time instead of using the user timezone
   utcTimeShown: boolean
+  // Type of XC flying potential index
+  xcFlyingPotentialType: 'mountains' | 'flatlands'
 }
 
 export type Model = 'gfs' | 'wrf'
@@ -42,6 +44,7 @@ const modelKey = 'model';
 const zoneKey = (model: Model): string => `zone-${model}`;
 const primaryLayerEnabledKey = 'primary-layer-enabled';
 const windLayerEnabledKey       = 'wind-layer-enabled';
+const xcFlyingPotentialTypeKey = 'xc-flying-potential-type';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 const utcTimeShownKey           = 'utc-time-shown';
 
@@ -134,6 +137,13 @@ const saveWindLayerEnabled = (value: boolean): void => {
   window.localStorage.setItem(windLayerEnabledKey, JSON.stringify(value));
 };
 
+const loadXcFlyingPotentialType = (): 'mountains' | 'flatlands' =>
+  loadStoredState(xcFlyingPotentialTypeKey, value => value === 'mountains' ? 'mountains' : (value === 'flatlands' ? 'flatlands': 'mountains'), 'mountains');
+
+const saveXcFlyingPotentialType = (value: 'mountains' | 'flatlands'): void => {
+  window.localStorage.setItem(xcFlyingPotentialTypeKey, value);
+};
+
 const loadWindNumericValuesShown = (): boolean =>
   loadStoredState(windNumericValuesShownKey, raw => JSON.parse(raw), true);
 
@@ -170,6 +180,7 @@ export class Domain {
     const model = loadModel();
     const forecastMetadata = selectRun(model, gfsRuns, wrfRuns);
     const zone = loadZone(model, forecastMetadata.zones);
+    const xcFlyingPotentialType = loadXcFlyingPotentialType();
     const primaryLayer = loadPrimaryLayer();
     const primaryLayerEnabled = loadPrimaryLayerEnabled();
     const windLayer = loadWindLayer();
@@ -189,7 +200,8 @@ export class Domain {
       hourOffset: forecastMetadata.defaultHourOffset(),
       detailedView: undefined,
       windNumericValuesShown,
-      utcTimeShown
+      utcTimeShown,
+      xcFlyingPotentialType,
     }, { name: 'state' }); // See https://github.com/solidjs/solid/discussions/1414
 
     this.state = get;
@@ -197,7 +209,7 @@ export class Domain {
     const self = this;
 
     const [projectedProps] =
-      splitProps(this.state, ['forecastMetadata', 'zone', 'hourOffset', 'windNumericValuesShown']);
+      splitProps(this.state, ['forecastMetadata', 'zone', 'hourOffset', 'windNumericValuesShown', 'xcFlyingPotentialType']);
     const props =
       mergeProps(projectedProps, {
         setHourOffset: (value: number) => this.setHourOffset(value),
@@ -329,6 +341,11 @@ export class Domain {
     this.setState({ windLayerEnabled: enabled });
   }
 
+  setXcFlyingPotentialType(value: 'mountains' | 'flatlands') {
+    saveXcFlyingPotentialType(value);
+    this.setState({ xcFlyingPotentialType: value });
+  }
+
   /** Whether numerical values should be displayed instead of wind barbs */
   showWindNumericValues(windNumericValuesShown: boolean): void {
     saveWindNumericValuesShown(windNumericValuesShown);
@@ -374,7 +391,7 @@ export class Domain {
     (): string =>
       this.state.forecastMetadata.urlOfRasterAtHourOffset(
         this.state.zone.id,
-        this.state.primaryLayer.dataPath,
+        this.primaryLayerReactiveComponents().dataPath(),
         this.state.hourOffset
       );
 
@@ -382,7 +399,7 @@ export class Domain {
     (): string =>
       this.state.forecastMetadata.urlOfVectorTilesAtHourOffset(
         this.state.zone.id,
-        this.state.windLayer.dataPath,
+        this.windLayerReactiveComponents().dataPath(),
         this.state.hourOffset
       );
 

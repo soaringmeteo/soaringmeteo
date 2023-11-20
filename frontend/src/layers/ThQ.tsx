@@ -3,7 +3,7 @@ import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} 
 import { JSX } from "solid-js";
 import { ForecastMetadata, Zone } from "../data/ForecastMetadata";
 import { showDate, xcFlyingPotentialLayerName } from "../shared";
-import { LocationForecasts } from "../data/LocationForecasts";
+import {DetailedForecast, LocationForecasts} from "../data/LocationForecasts";
 
 export const colorScale = new ColorScale([
   [10, new Color(0x33, 0x33, 0x33, 1)],
@@ -26,15 +26,19 @@ export const xcFlyingPotentialLayer: Layer = {
 
   title: 'XC flying potential',
 
-  dataPath: 'xc-potential',
-
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number,
     timeZone: string | undefined,
+    xcFlyingPotentialType: 'mountains' | 'flatlands',
     setHourOffset: (value: number) => void
   }): ReactiveComponents {
+
+    const data = (): ((forecast: DetailedForecast) => number) =>
+      props.xcFlyingPotentialType === 'mountains' ?
+        (forecast => forecast.xcPotential) :
+        (forecast => forecast.xcPotentialFlatlands);
 
     const nextDaysOverview = (locationForecasts: LocationForecasts): JSX.Element => {
       return locationForecasts.dayForecasts
@@ -46,13 +50,13 @@ export const xcFlyingPotentialLayer: Layer = {
               display: 'inline-block',
               height: '1.1em',
               width: '1.1em',
-              'background-color': colorScale.closest(medianForecast.xcPotential).css(),
+              'background-color': colorScale.closest(data()(medianForecast)).css(),
               'border': '1px solid dimgray',
               'margin-left': i === 0 ? '0' : '1px',
               'box-sizing': 'border-box',
               'cursor': 'pointer'
             }}
-            title={ `${ showDate(medianForecast.time, { showWeekDay: true, timeZone: props.timeZone }) }: ${ medianForecast.xcPotential }%` }
+            title={ `${ showDate(medianForecast.time, { showWeekDay: true, timeZone: props.timeZone }) }: ${ data()(medianForecast) }%` }
             onClick={ () => props.setHourOffset(medianForecast.hourOffsetSinceFirstTimeStep(props.forecastMetadata.firstTimeStep)) }
           />
         })
@@ -69,7 +73,7 @@ export const xcFlyingPotentialLayer: Layer = {
           [["Week overview", <span>{ nextDaysOverview(locationForecasts) }</span>]] :
           [/*["Day overview", <span>{ dayOverview(locationForecasts) }</span>]*/];
       return maybeOverview.concat([
-        ["XC Flying Potential", <span>{detailedForecast.xcPotential}%</span>],
+        ["XC Flying Potential", <span>{ data()(detailedForecast) }%</span>],
         ["Soaring layer depth", <span>{detailedForecast.boundaryLayer.soaringLayerDepth} m</span>],
         ["Thermal velocity", <span>{detailedForecast.thermalVelocity} m/s</span>],
         ["Total cloud cover", <span>{Math.round(detailedForecast.cloudCover * 100)}%</span>],
@@ -91,6 +95,7 @@ export const xcFlyingPotentialLayer: Layer = {
     </>;
 
     return {
+      dataPath: () => props.xcFlyingPotentialType === 'mountains' ? 'xc-potential' : 'xc-potential-flatlands',
       summarizer,
       mapKey,
       help

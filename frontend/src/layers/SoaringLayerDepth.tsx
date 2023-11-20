@@ -10,8 +10,6 @@ export const soaringLayerDepthLayer: Layer = {
 
   title: 'Soaring layer depth',
 
-  dataPath: 'soaring-layer-depth',
-
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
@@ -42,6 +40,7 @@ export const soaringLayerDepthLayer: Layer = {
     </>;
 
     return {
+      dataPath: () => 'soaring-layer-depth',
       summarizer,
       mapKey,
       help

@@ -2,15 +2,25 @@ package org.soaringmeteo
 
 import squants.{Length, Velocity}
 
+case class XCFlyingPotential(
+  mountains: Int, // Between 0 and 100
+  flatlands: Int  // Between 0 and 100
+)
+
 object XCFlyingPotential {
 
   /**
    * @param thermalVelocity   Thermal velocity
    * @param soaringLayerDepth Depth of the boundary layer
-   * @param boundaryLayerWind Wind in boundary layer
+   * @param boundaryLayerWindSpeed Wind velocity in boundary layer
    * @return A value between 0 and 100
    */
-  def apply(thermalVelocity: Velocity, soaringLayerDepth: Length, wind: Wind): Int = {
+  def apply(
+    thermalVelocity: Velocity,
+    soaringLayerDepth: Length,
+    boundaryLayerWindSpeed: Velocity,
+    surfaceWindSpeed: Velocity
+  ): XCFlyingPotential = {
     // Thermal velocity
     // coeff is 50% for a 1.55 m/s
     val thermalVelocityCoeff = logistic(thermalVelocity.toMetersPerSecond, 1.55, 5)
@@ -21,11 +31,19 @@ object XCFlyingPotential {
 
     val thermalCoeff = (2 * thermalVelocityCoeff + soaringLayerDepthCoeff) / 3
 
-    // Boundary Layer Wind
-    // coeff is 50% for a wind force of 16 km/h
-    val windCoeff = 1 - logistic(wind.speed.toKilometersPerHour, 16, 6)
+    // Wind
+    val mountainsWindCoeff =
+      // coeff is 50% for a wind force of 16 km/h
+      1 - logistic(boundaryLayerWindSpeed.toKilometersPerHour, 16, 6)
 
-    math.round(thermalCoeff * windCoeff * 100).intValue
+    val flatlandsWindCoeff =
+      (1 - logistic(surfaceWindSpeed.toKilometersPerHour, 30, 8)) *
+        (1 - logistic(boundaryLayerWindSpeed.toKilometersPerHour, 45, 7))
+
+    XCFlyingPotential(
+      math.round(thermalCoeff * mountainsWindCoeff * 100).intValue,
+      math.round(thermalCoeff * flatlandsWindCoeff * 100).intValue
+    )
   }
 
   /**

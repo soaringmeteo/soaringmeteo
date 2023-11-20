@@ -14,7 +14,6 @@ export const cumuliDepthLayer: Layer = {
   key: 'cumuli-depth',
   name: 'Cumulus Clouds',
   title: 'Cumulus clouds depth',
-  dataPath: 'cumulus-depth',
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
@@ -44,6 +43,7 @@ export const cumuliDepthLayer: Layer = {
     </>;
 
     return {
+      dataPath: () => 'cumulus-depth',
       summarizer,
       mapKey,
       help

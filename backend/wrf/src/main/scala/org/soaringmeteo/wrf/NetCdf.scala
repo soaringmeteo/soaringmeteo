@@ -137,8 +137,14 @@ object NetCdf {
               MetersPerSecond(uSurface.read(index3D)),
               MetersPerSecond(vSurface.read(index3D))
             )
-//            val latLon = coordinateSystem.getLatLon(x, y) TODO Check grid coordinates
             val boundaryLayerWind = averageBoundaryLayerWind(airData, boundaryLayerDepth, elevation, surfaceWind)
+
+            val xcFlyingPotential = XCFlyingPotential(
+              thermalVelocity,
+              soaringLayerDepth,
+              boundaryLayerWind.speed,
+              surfaceWind.speed
+            )
 
             Forecast(
               time,
@@ -164,7 +170,7 @@ object NetCdf {
               downwardShortWaveFlux,
               isothermZero = None,
               winds, // Winds
-              XCFlyingPotential(thermalVelocity, soaringLayerDepth, boundaryLayerWind),
+              xcFlyingPotential,
               soaringLayerDepth
             )
           }
