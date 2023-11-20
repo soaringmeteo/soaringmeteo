@@ -11,9 +11,9 @@ export const LayerKeys = (props: {
       position: 'absolute',
       bottom: '3rem',
       right: '.5rem',
-      'background-color': 'rgba(255, 255,  255, 0.5',
+      'background-color': '#d6d6c5', // “neutral” color in the basemap
       'font-size': '11px',
-      'padding': '5px',
+      'padding': '4px',
       'text-align': 'center'
     }}>
       {primaryLayerComponents().mapKey}

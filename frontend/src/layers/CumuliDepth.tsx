@@ -3,11 +3,11 @@ import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} 
 import {ForecastMetadata, Zone} from "../data/ForecastMetadata";
 
 const cumuliDepthColorScale = new ColorScale([
-  [50,   new Color(0xff, 0xff, 0xff, 0)],
-  [400,  new Color(0xff, 0xff, 0xff, 0.25)],
-  [800,  new Color(0xff, 0xff, 0xff, 0.5)],
-  [1500, new Color(0xff, 0xff, 0x00, 0.5)],
-  [3000, new Color(0xff, 0x00, 0x00, 0.5)]
+  [50,   new Color(0xff, 0xff, 0xff, 0.0)],
+  [400,  new Color(0xff, 0xff, 0xff, 0.5)],
+  [800,  new Color(0xff, 0xff, 0xff, 1.0)],
+  [1500, new Color(0xff, 0xff, 0x00, 1.0)],
+  [3000, new Color(0xff, 0x00, 0x00, 1.0)]
 ]);
 
 export const cumuliDepthLayer: Layer = {

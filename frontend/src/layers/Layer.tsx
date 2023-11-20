@@ -42,7 +42,7 @@ export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => 
   return <div style={{ width: `${length * 2 / 3}em`, 'padding-top': '0.3em' /* because text overflows */, margin: 'auto' }}>
   {
     colorsAndValues.map(([color, value]) =>
-      <div style={{ height: '2em', 'background-color': color.css(), position: 'relative' }}>
+      <div style={{ height: '2em', opacity: 0.7, 'background-color': color.css(), position: 'relative' }}>
         <span style={{ position: 'absolute', top: '-.6em', right: '0.5em', 'text-shadow': 'white 1px 1px 2px' }}>{value}</span>
       </div>
     )
