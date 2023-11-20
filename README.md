@@ -34,7 +34,7 @@ Please refer to each sub-project for more details.
 
 # Contributing
 
-Pull requests are welcome. See the [CONTRIBUTING.MD](CONTRIBUTING.MD) file for more details.
+Pull requests are welcome. See the [CONTRIBUTING.md](CONTRIBUTING.md) file for more details.
 
 # Usage
 
