@@ -7,9 +7,6 @@ assignees: ''
 
 ---
 
-**Commit version**
-
-The commit version goes here.
 
 **Describe the bug**
 A clear and concise description of what the bug is.
