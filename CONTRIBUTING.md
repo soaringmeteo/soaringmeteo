@@ -202,9 +202,9 @@ by the backend can evolve:
 However, to add non-optional fields we have to perform the following procedure:
 
 - Bump the format version both in the backend and the frontend
-	- `backend/common/src/main/scala/org/soaringmeteo/out/package.scala`
-	- `frontend/src/data/ForecastMetadata.ts`
+  - `backend/common/src/main/scala/org/soaringmeteo/out/package.scala`
+  - `frontend/src/data/ForecastMetadata.ts`
 - Perform a two-stage deployment
-	1. Deploy the backend,
-	2. Only after the backend has produced some data, we can deploy the frontend (in the meantime, the frontend
-	   still shows the older forecast data).
+  1. Deploy the backend,
+  2. Only after the backend has produced some data, we can deploy the frontend (in the meantime, the frontend
+     still shows the older forecast data).
