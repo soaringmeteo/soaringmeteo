@@ -2,49 +2,13 @@
 
 Produces raster images, vector tiles, and JSON documents containing relevant meteorological data for soaring pilots from the results of the GFS and WRF models.
 
-## Requirements
+# Setup
 
-Running the program requires a Java Runtime Environment (at least
-version 11).
+The setup procedure is detailed in [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-Building the program requires a JDK and [sbt](https://scala-sbt.org).
-
-## Overview
-
-The backend part is made of two distinct programs, `gfs` and `wrf`, which process data from the GFS and WRF models, respectively.
-
-## Build
-
-Start the `sbt` shell in the project root directory:
-
-~~~ sh
-sbt
-~~~
-
-Then, run the following command to build the `gfs` program:
+# GFS program
 
 ~~~
-gfs/Universal/packageZipTarball
-~~~
-
-Or, to build the `wrf` program:
-
-~~~
-wrf/Universal/packageZipTarball
-~~~
-
-It should create a tarball named `soaringmeteo-gfs.tgz` or `soaringmeteo-wrf.tgz` in the
-`target/universal/` directory of the corresponding subproject.
-
-## Run
-
-### GFS Pipeline
-
-Unpack the archive `gfs.tgz` created at the “Build” step above, and run the binaries located in the `bin` directory:
-
-~~~
-tar -xzf soaringmeteo-gfs.tgz
-cd soaringmeteo-gfs/
 bin/gfs <GRIBs directory> <output directory>
 ~~~
 
@@ -57,8 +21,29 @@ Optional flags and arguments are documented with `--help`:
 
 ~~~
 bin/gfs --help
+
+Usage: soaringmeteo-gfs [--gfs-run-init-time <string>] [--reuse-previous-grib-files] <GRIBs directory> <output directory>
+
+Download weather data from the GFS model, extract the relevant information for soaring pilots, and produce meteorological assets from it
+
+Options and flags:
+    --help
+        Display this help text.
+    --gfs-run-init-time <string>, -t <string>
+        Initialization time of the GFS forecast to download ('00', '06', '12', or '18').
+    --reuse-previous-grib-files, -r
+        Reuse the previously downloaded GRIB files instead of downloading them again.
 ~~~
 
-## Develop
+# WRF program
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+~~~
+bin/wrf <output directory> <run initialization time> <time of the forecast first time-step> <input files>...
+~~~
+
+The program takes the following arguments:
+
+- the directory where to write the produced assets (consumed by the frontend),
+- the initialization time of the WRF run (e.g. “2023-11-21T12:00Z”),
+- the time of the forecast first time-step (e.g. “2023-11-23T06:00Z”),
+- the `.nc` files produced by the WRF run.
