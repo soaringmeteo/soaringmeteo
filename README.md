@@ -26,8 +26,8 @@ This repository contains two sub-projects:
 
 The backend part is made of three distinct programs:
 
-- `gfs`, the GFS pipeline, which process data from the GFS model
-- `wrf`, the WRF pipeline, which process data from the WRF model
+- `gfs`, the GFS pipeline, which processes data from the GFS model
+- `wrf`, the WRF pipeline, which processes data from the WRF model
 - `common`, common parts (e.g., GRIB extraction, etc.)
 
 Please refer to each sub-project for more details.

@@ -6,9 +6,4 @@ Frontend that consumes the JSON files produced by the backend.
 
 See the [CONTRIBUTING.md](../CONTRIBUTING.md) file.
 
-# Code conventions
-
-# Test the code
-
-
 

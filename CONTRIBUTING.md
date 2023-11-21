@@ -6,6 +6,23 @@ to keep this awesome service up to date.
 * Find a bug? Do not hesitate to open an issue using the [bug template](../../issues/new?assignees=&labels=bug&projects=&template=bug-report.md&title=BUG).
 * Have an awesome improvement idea? Do not hesitate to open an issue using the [feature template](../../issues/new?assignees=&labels=&projects=&template=feature_request.md&title=).
 
+# Evolving the Format of the Forecast Data
+
+The frontend consumes the forecast data produced by the backend, so both parties need to agree on their format. Furthermore, the frontend also reads several forecast data in the past (users can show the data from the latest forecast run, or from older runs as well). This has consequences on how the format of the forecast data produced by the backend can evolve:
+
+    We can add or remove optional fields,
+    We can remove non-optional fields (the frontend will simply ignore those fields on the older forecast data).
+
+However, to add non-optional fields we have to perform the following procedure:
+
+    Bump the format version both in the backend and the frontend
+        backend/common/src/main/scala/org/soaringmeteo/out/package.scala
+        frontend/src/data/ForecastMetadata.ts
+    Perform a two-stage deployment
+        Deploy the backend,
+        Only after the backend has produced some data, we can deploy the frontend (in the meantime, the frontend still shows the older forecast data).
+
+
 # Setup the development environment
 
 The following steps assumes that you are running a debian based OS, and has been tested under Ubuntu 20.04 LTS.
@@ -61,25 +78,12 @@ cd backend
 ```
 sbt
 ```
-3. Build the `gfs` program: 
 
-```
-gfs/Universal/packageZipTarball
-tar -xzf soaringmeteo-gfs.tgz
-```
-
-4. Build the `wrf` program:
-
-```
-wrf/Universal/packageZipTarball
-tar -xzf soaringmeteo-wrf.tgz
-```
-
-5. Run the `gfs` and the `wrf` program:
+3. Run the `gfs` and the `wrf` program:
 
   * Put the `.nc` files given by the project maintainer in the `backend` folder.
   
-  * Generate the assets (in the `sbt` console in the `backend` folder)
+  * Run all the necessary steps and generate the assets (in the `sbt` console in the `backend` folder)
 
 	```
 	makeGfsAssets
@@ -94,6 +98,8 @@ The different backend options are documented [here](backend/README.md)
 
 # Run the frontend
 
+Move to the  `frontend` folder and run:
+
 ```
 yarn install --immutable
 yarn build
@@ -107,27 +113,35 @@ Congratulations! Your development environment is ready.
 
 ## Backend
 
-Open a console in the `backend folder` and run the `sbt` tool to get a `sbt` console.
-The following commands run all the available tests:
+Open a console in the `backend` folder and run the `sbt` tool to get a `sbt` console.
+The following command runs all the available tests:
 
 ~~~ sbt
 test
 ~~~
 
-**TODO insert typical output here** 
 
 ## Frontend
 
-No tests yet.
+No testing procedure yet.
 
-
-# Coding conventions
-
-**TODO: FILL THIS SECTION**
 
 
 # Submit your changes
 
 Please open a pull request with a clear and detailed list of the modification you have made.
 Please use one commit per modification and add a clear message.
+
+# Deployment on soaringmeteo servers (project maintainers only)
+
+## Deploy the backend
+
+Deploy the content of your working directory by running the sbt task `deploy` in the project `gfs` or `wrf`:
+
+~~~
+gfs/deploy
+wrf/deploy
+~~~
+
+The task packages the app, uploads it to the server `soarwrf1.soaringmeteo.org`, and replaces the previous version of the app.
 

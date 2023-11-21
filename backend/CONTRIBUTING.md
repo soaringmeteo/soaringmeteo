@@ -16,6 +16,15 @@ wrf/compile
 common/compile
 ~~~
 
+Or: 
+
+~~~
+gfs/Universal/packageZipTarball
+tar -xzf soaringmeteo-gfs.tgz
+wrf/Universal/packageZipTarball
+tar -xzf soaringmeteo-wrf.tgz
+~~~
+
 Run all the tests of all the subprojects:
 
 ~~~ sbt
