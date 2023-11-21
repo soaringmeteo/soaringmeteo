@@ -202,7 +202,7 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
           rotation: direction,
           rotateWithView: true,
           scale: windArrowScale(speed),
-          opacity: 0.75,
+          opacity: 0.7,
         });
         const offset = windNumericalValueOffset(speed);
         const textStyle = new Text({
