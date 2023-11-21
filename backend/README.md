@@ -4,11 +4,9 @@ Produces raster images, vector tiles, and JSON documents containing relevant met
 
 # Setup
 
-The setup procedure is detailed in [CONTRIBUTING.md](../CONTRIBUTING.md)
-
+The setup procedure is detailed in [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 # GFS program
-
 
 ~~~
 bin/gfs <GRIBs directory> <output directory>
@@ -39,8 +37,13 @@ Options and flags:
 
 # WRF program
 
-**TODO FILL THIS SECTION**
+~~~
+bin/wrf <output directory> <run initialization time> <time of the forecast first time-step> <input files>...
+~~~
 
-# Develop
+The program takes the following arguments:
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+- the directory where to write the produced assets (consumed by the frontend),
+- the initialization time of the WRF run (e.g. “2023-11-21T12:00Z”),
+- the time of the forecast first time-step (e.g. “2023-11-23T06:00Z”),
+- the `.nc` files produced by the WRF run.
