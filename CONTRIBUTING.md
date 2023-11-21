@@ -1,7 +1,7 @@
 # How to contribute
 
 Soaringmeteo team is glad you are reading this, because we always need volunteers
-to keep this awesome service up to date.
+to keep this service up to date.
 
 * Find a bug? Do not hesitate to open an issue using the [bug template](../../issues/new?template=bug-report.md).
 * Have an awesome improvement idea? Do not hesitate to open an issue using the [feature template](../../issues/new?template=feature_request.md).
