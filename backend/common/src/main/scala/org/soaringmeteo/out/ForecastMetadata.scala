@@ -40,15 +40,19 @@ object ForecastMetadata {
   case class Raster(projection: String, resolution: BigDecimal, extent: Extent)
   /** Description of the vector tiles of a zone. The `minZoom` is the minimum zoom level
    *  of the view for showing the vector tiles
+   * @param tileSize Number of pixels of a vector tile. By default, OpenLayers assumes a
+   *                 size of 512 px, but we can tune this value to adjust the density of
+   *                 wind arrows per zone.
    */
-  case class VectorTiles(extent: Extent, zoomLevels: Int, minZoom: Int)
+  case class VectorTiles(extent: Extent, zoomLevels: Int, minZoom: Int, tileSize: Int)
 
   object VectorTiles {
-    def apply(parameters: org.soaringmeteo.out.VectorTiles.Parameters): VectorTiles =
+    def apply(parameters: org.soaringmeteo.out.VectorTiles.Parameters, tileSize: Int): VectorTiles =
       VectorTiles(
         parameters.extent,
         parameters.zoomLevels,
-        parameters.minViewZoom
+        parameters.minViewZoom,
+        tileSize
       )
   }
 
@@ -144,13 +148,15 @@ object ForecastMetadata {
             extent  <- cursor.downField("extent").as(extentCodec)
             zoomLevels <- cursor.downField("zoomLevels").as[Int]
             minZoom <- cursor.downField("minZoom").as[Int]
-          } yield VectorTiles(extent, zoomLevels, minZoom)
+            tileSize <- cursor.downField("tileSize").as[Int]
+          } yield VectorTiles(extent, zoomLevels, minZoom, tileSize)
         },
         Encoder.instance { tiles =>
           Json.obj(
             "extent" -> extentCodec(tiles.extent),
             "zoomLevels" -> Json.fromInt(tiles.zoomLevels),
             "minZoom" -> Json.fromInt(tiles.minZoom),
+            "tileSize" -> Json.fromInt(tiles.tileSize),
           )
         }
       )

@@ -147,7 +147,7 @@ object JsonWriter {
               subgrid.topLatitude.doubleValue
             ).buffer((resolution / 2).doubleValue) // Add buffer because we draw rectangles, not points
           ),
-          ForecastMetadata.VectorTiles(subgrid.vectorTilesParameters)
+          ForecastMetadata.VectorTiles(subgrid.vectorTilesParameters, subgrid.vectorTileSize)
         )
       }
     ForecastMetadata.overwriteLatestForecastMetadata(

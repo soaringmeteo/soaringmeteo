@@ -12,7 +12,7 @@ import org.soaringmeteo.Point
  * @param id    Unique identifier (used to generate paths)
  * @param label Human-readable name
  */
-case class Subgrid(id: String, label: String, leftLongitude: BigDecimal, bottomLatitude: BigDecimal, rightLongitude: BigDecimal, topLatitude: BigDecimal) {
+case class Subgrid(id: String, label: String, vectorTileSize: Int, leftLongitude: BigDecimal, bottomLatitude: BigDecimal, rightLongitude: BigDecimal, topLatitude: BigDecimal) {
   private val k = gfsForecastSpaceResolution / BigDecimal(100)
   assert(
     Seq(leftLongitude, rightLongitude, topLatitude, bottomLatitude).forall(coordinate => coordinate % k == 0.0),

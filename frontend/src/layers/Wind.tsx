@@ -20,9 +20,10 @@ const windComponents = (
 
   const help =
     <p>
-      The wind speed and direction are shown with an arrow. The wind flows in the
+      The wind direction is shown with an arrow. The wind flows in the
       direction of the arrow. For instance, an arrow that points to the right means
-      that the wind comes from west and goes to east.
+      that the wind comes from west and goes to east. The wind speed is show in km/h
+      next to the arrow. You can hide the wind speed in the Settings (from the main menu).
     </p>;
 
   return {

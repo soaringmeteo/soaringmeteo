@@ -86,7 +86,7 @@ type MapHooks = {
   locationClicks: Accessor<MapBrowserEvent<any> | undefined>
   setPrimaryLayerSource: (url: string, projection: string, extent: Extent) => void
   hidePrimaryLayer: () => void
-  setWindLayerSource: (url: string, minViewZoom: number, extent: Extent, maxZoom: number) => void
+  setWindLayerSource: (url: string, minViewZoom: number, extent: Extent, maxZoom: number, tileSize: number) => void
   hideWindLayer: () => void
   enableWindNumericalValues: (value: boolean) => void
   showMarker: (latitude: number, longitude: number) => void
@@ -179,13 +179,13 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     hidePrimaryLayer: (): void => {
       primaryLayer.setSource(null);
     },
-    setWindLayerSource: (url: string, minViewZoom: number, extent: Extent, maxZoom: number): void => {
+    setWindLayerSource: (url: string, minViewZoom: number, extent: Extent, maxZoom: number, tileSize: number): void => {
       secondaryLayer.setMinZoom(minViewZoom);
       secondaryLayer.setSource(new VectorTileSource({
         url: url,
         extent: extent,
         maxZoom: maxZoom,
-        tileSize: 512,
+        tileSize: tileSize,
         format: new GeoJSON(),
         transition: 1000
       }));
@@ -202,7 +202,7 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
           rotation: direction,
           rotateWithView: true,
           scale: windArrowScale(speed),
-          opacity: 0.75,
+          opacity: 0.7,
         });
         const offset = windNumericalValueOffset(speed);
         const textStyle = new Text({
@@ -230,5 +230,5 @@ const linearRamp = (x0: number, y0: number, x1: number, y1: number) => (x: numbe
   else return y0 + (x - x0) * (y1 - y0) / (x1 - x0)
 };
 
-const windArrowScale = linearRamp(0, 0.7, 40, 1);
-const windNumericalValueOffset = linearRamp(0, 10, 40, 15);
+const windArrowScale = linearRamp(0, 0.5, 40, 0.8);
+const windNumericalValueOffset = linearRamp(0, 8, 40, 12);

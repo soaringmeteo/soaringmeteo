@@ -97,7 +97,7 @@ object DataPipeline {
             rasterResolution,
             rasterExtent
           ),
-          ForecastMetadata.VectorTiles(metadata.vectorTilesParameters)
+          ForecastMetadata.VectorTiles(metadata.vectorTilesParameters, grid.vectorTileSize)
         )
       }
     ForecastMetadata.overwriteLatestForecastMetadata(
