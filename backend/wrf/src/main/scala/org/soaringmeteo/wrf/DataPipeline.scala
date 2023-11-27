@@ -3,7 +3,7 @@ package org.soaringmeteo.wrf
 import cats.data.NonEmptyList
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.InitDateString
-import org.soaringmeteo.out.{ForecastMetadata, JsonData, Raster, VectorTiles}
+import org.soaringmeteo.out.{ForecastMetadata, JsonData, Raster, VectorTiles, deleteOldData}
 
 import java.time.OffsetDateTime
 
@@ -30,7 +30,7 @@ object DataPipeline {
         (grid, metadata)
       }
 
-    // Ultimately, write the forecast metadata for the run
+    // Ultimately, write the forecast metadata for the run and delete old data
     overwriteLatestForecastMetadata(
       modelTargetDir,
       initDateString,
@@ -38,6 +38,8 @@ object DataPipeline {
       firstTimeStep,
       results.toList
     )
+
+    deleteOldData(modelTargetDir, initDateTime.minusDays(4))
   }
 
   private def processFile(inputFile: os.Path, grid: Grid, runTargetDir: os.Path): NetCdf.Metadata = {
