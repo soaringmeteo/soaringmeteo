@@ -6,7 +6,6 @@ import com.monovore.decline.time.defaultOffsetDateTime
 import com.monovore.decline.{CommandApp, Opts}
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.PathArgument.pathArgument
-import org.soaringmeteo.out.formatVersion
 
 import java.time.OffsetDateTime
 import scala.util.control.NonFatal
@@ -35,11 +34,9 @@ object Program {
   ): Unit = {
     val exitStatus =
       try {
-        val modelTargetDir =
-          outputDir / formatVersion.toString / "wrf"
         DataPipeline.run(
           inputFiles,
-          modelTargetDir,
+          outputDir,
           initializationDate,
           firstTimeStep
         )

@@ -3,7 +3,7 @@ package org.soaringmeteo.wrf
 import cats.data.NonEmptyList
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.InitDateString
-import org.soaringmeteo.out.{ForecastMetadata, JsonData, Raster, VectorTiles, deleteOldData}
+import org.soaringmeteo.out.{ForecastMetadata, JsonData, Raster, VectorTiles, deleteOldData, formatVersion, touchMarkerFile}
 
 import java.time.OffsetDateTime
 
@@ -13,10 +13,14 @@ object DataPipeline {
 
   def run(
     inputFiles: NonEmptyList[os.Path],
-    modelTargetDir: os.Path,
+    outputDir: os.Path,
     initDateTime: OffsetDateTime,
     firstTimeStep: OffsetDateTime,
   ): Unit = {
+    // Output directory of the WRF results
+    val modelTargetDir =
+      outputDir / formatVersion.toString / "wrf"
+
     val initDateString = InitDateString(initDateTime)
     // Output directory of the current forecast run
     val runTargetDir = modelTargetDir / initDateString
@@ -40,6 +44,8 @@ object DataPipeline {
     )
 
     deleteOldData(modelTargetDir, initDateTime.minusDays(4))
+
+    touchMarkerFile(outputDir)
   }
 
   private def processFile(inputFile: os.Path, grid: Grid, runTargetDir: os.Path): NetCdf.Metadata = {

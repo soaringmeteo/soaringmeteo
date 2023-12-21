@@ -24,4 +24,20 @@ package object out {
     } os.remove.all(path)
   }
 
+  /**
+   * Update the last modification date of the marker file used by both GFS and WRF.
+   *
+   * External programs can use this information to know whether new forecast results
+   * have been published.
+   *
+   * @param outputDir Root output directory (without [[formatVersion]]).
+   */
+  def touchMarkerFile(outputDir: os.Path): Unit = {
+    try {
+      os.write.over(outputDir / "marker", "")
+    } catch {
+      case exception: Exception => () // Ignore exceptions
+    }
+  }
+
 }
