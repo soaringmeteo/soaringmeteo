@@ -6,10 +6,10 @@ import org.slf4j.LoggerFactory
 import org.soaringmeteo.InitDateString
 import org.soaringmeteo.PathArgument.pathArgument
 import org.soaringmeteo.gfs.out.{Store, runTargetPath, versionedTargetPath}
+import org.soaringmeteo.out.touchMarkerFile
 
-import java.util.concurrent.TimeoutException
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
 import scala.util.control.NonFatal
 
 object Main extends CommandApp(
@@ -63,6 +63,7 @@ object Soaringmeteo {
         os.makeDir.all(runTargetDir)
         DataPipeline(forecastGribsDir, runTargetDir, gfsRun, subgrids, reusePreviousGribFiles)
         JsonWriter.writeJsons(versionedTargetDir, gfsRun)
+        touchMarkerFile(outputDir)
         logger.info("Done")
         0
       } catch {
