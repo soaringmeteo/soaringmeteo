@@ -19,12 +19,12 @@ object Deploy extends AutoPlugin {
   }
 
   // Instances
-  val v2 = "v2"
-  val v2Dev = "v2-dev"
+  val soarwrf1 = "soarwrf1"
+  val soarwrf3 = "soarwrf3"
 
   private val instanceParser: Parser[String] = {
     import sbt.complete.DefaultParsers.*
-    Space ~> (literal(v2) | literal(v2Dev))
+    Space ~> (literal(soarwrf1) | literal(soarwrf3))
   }
 
   override lazy val projectSettings: Seq[Def.Setting[?]] = Seq(
@@ -45,7 +45,8 @@ object Deploy extends AutoPlugin {
           s"""#!/usr/bin/env sh
             |set -e
             |
-            |cd "/home/julienrf/${instance}/${appDir}"
+            |echo "Updating the application ${appName}..."
+            |cd "/home/soarv2/${appDir}"
             |rm -rf "${appName}.backup"
             |mv "${appName}" "${appName}.backup"
             |tar -xzf "$$(dirname "$$0")/${appTarball.name}"
@@ -63,10 +64,11 @@ object Deploy extends AutoPlugin {
         ))
 
         // Deploy
+        sbtOut.info("Uploading the .jar to the remote server...")
         val sshCmd = Process(Seq(
           "ssh",
-          "julienrf@soarwrf1.soaringmeteo.org",
-          "D=`mktemp -d`; tar xf - --directory=$D; $D/update.sh"
+          s"${instance}.soaringmeteo.org",
+          "D=`mktemp -d`; tar xf - --directory=$D; sudo su -c $D/update.sh soarv2"
         ))
         ((makeArchiveCmd #| sshCmd) ! sbtOut).ensuring(_ == 0)
       }

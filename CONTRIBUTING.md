@@ -166,15 +166,20 @@ It should create a tarball named `soaringmeteo-gfs.tgz` or `soaringmeteo-wrf.tgz
 tar -xzf soaringmeteo-gfs.tgz
 ~~~
 
-# Deployment on soaringmeteo servers (project maintainers only)
+# Deployment on Soaringmeteo servers (project maintainers only)
 
 ## Deploy the backend
 
 From the sbt shell (started in the `backend` directory), deploy the content of your working directory by running the task `deploy` in the project `gfs` or `wrf`:
 
 ~~~
-gfs/deploy
-wrf/deploy
+gfs/deploy soarwrf1
+# or
+gfs/deploy soarwrf3
+
+wrf/deploy soarwrf1
+# or
+wrf/deploy soarwrf3
 ~~~
 
 The task packages the app, uploads it to the server `soarwrf1.soaringmeteo.org`, and replaces the previous version of the app.
@@ -188,6 +193,12 @@ yarn deploy
 ~~~
 
 It type-checks the code source, build minified JavaScript bundles, and uploads them to the production server: https://soarwrf1.soaringmeteo.org/v2.
+
+To select which server to deploy to, use the `SERVER` variable:
+
+~~~
+SERVER=soarwrf3.soaringmeteo.org yarn deploy
+~~~
 
 # Evolving the Format of the Forecast Data
 
