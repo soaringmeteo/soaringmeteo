@@ -21,7 +21,7 @@
     "start": "vite --host=0.0.0.0",
     "build": "vite build",
     "compile": "tsc --noEmit",
-    "deploy": "yarn compile && yarn build && rsync --recursive --times --verbose --delete --exclude=data/ --exclude=wrf/ dist/ ${SERVER:-soarwrf1.soaringmeteo.org}:/home/soaringmeteo.org/v2/",
+    "deploy": "yarn compile && yarn build && rsync --recursive --times --verbose --delete --exclude=data/ dist/ ${SERVER:-soarwrf1.soaringmeteo.org}:/home/soaringmeteo.org/v2/",
     "preview": "vite preview"
   }
 }
