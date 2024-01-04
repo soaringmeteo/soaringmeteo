@@ -3,7 +3,7 @@ import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} 
 import { JSX } from "solid-js";
 import { ForecastMetadata, Zone } from "../data/ForecastMetadata";
 import { showDate, xcFlyingPotentialLayerName } from "../shared";
-import { LocationForecasts } from "../data/LocationForecasts";
+import type { LocationForecasts, DetailedForecast } from "../data/LocationForecasts";
 
 export const colorScale = new ColorScale([
   [10, new Color(0x33, 0x33, 0x33, 1)],
@@ -36,38 +36,39 @@ export const xcFlyingPotentialLayer: Layer = {
     setHourOffset: (value: number) => void
   }): ReactiveComponents {
 
-    const nextDaysOverview = (locationForecasts: LocationForecasts): JSX.Element => {
-      return locationForecasts.dayForecasts
-        .filter(dayForecast => dayForecast.forecasts.length === 3) // HACK Specific to GFS. Keep only full days.
-        .map((dayForecasts, i) => {
-          const medianForecast = dayForecasts.forecasts[1]; // HACK Specific to GFS.
-          return <div
+    const thqElement = (detailedForecast: DetailedForecast, addGutter: boolean): JSX.Element =>
+        <div
             style={{
               display: 'inline-block',
               height: '1.1em',
               width: '1.1em',
-              'background-color': colorScale.closest(medianForecast.xcPotential).css(),
+              'background-color': colorScale.closest(detailedForecast.xcPotential).css(),
               'border': '1px solid dimgray',
-              'margin-left': i === 0 ? '0' : '1px',
+              'margin-left': addGutter ? '1px' : '0',
               'box-sizing': 'border-box',
               'cursor': 'pointer'
             }}
-            title={ `${ showDate(medianForecast.time, { showWeekDay: true, timeZone: props.timeZone }) }: ${ medianForecast.xcPotential }%` }
-            onClick={ () => props.setHourOffset(medianForecast.hourOffsetSinceFirstTimeStep(props.forecastMetadata.firstTimeStep)) }
-          />
-        })
+            title={ `${ showDate(detailedForecast.time, { showWeekDay: true, timeZone: props.timeZone }) }: ${ detailedForecast.xcPotential }%` }
+            onClick={ () => props.setHourOffset(detailedForecast.hourOffsetSinceFirstTimeStep(props.forecastMetadata.firstTimeStep)) }
+        />;
+
+    const nextDaysOverview = (locationForecasts: LocationForecasts): JSX.Element => {
+      return locationForecasts.dayForecasts
+        .filter(dayForecast => dayForecast.forecasts.length === 3) // HACK Specific to GFS. Keep only full days.
+        .map((dayForecasts, i) => thqElement(dayForecasts.forecasts[1] /* HACK Specific to GFS */, i !== 0))
     };
 
-    // TODO Is it redundant with meteograms?
-    // const dayOverview = (locationForecasts: LocationForecasts): JSX.Element => {
-    //
-    // };
+    const dayOverview = (locationForecasts: LocationForecasts): JSX.Element => {
+      return locationForecasts
+          .dayForecasts[0] // HACK Assume WRF forecast is always for exactly one day
+          .forecasts.map((detailedForecast, i) => thqElement(detailedForecast, i !== 0));
+    };
 
     const summarizer = summarizerFromLocationDetails(props, (detailedForecast, locationForecasts) => {
       const maybeOverview: Array<[string, JSX.Element]> =
         props.forecastMetadata.modelPath === 'gfs' ?
           [["Week overview", <span>{ nextDaysOverview(locationForecasts) }</span>]] :
-          [/*["Day overview", <span>{ dayOverview(locationForecasts) }</span>]*/];
+          [["Day overview", <span>{ dayOverview(locationForecasts) }</span>]];
       return maybeOverview.concat([
         ["XC Flying Potential", <span>{detailedForecast.xcPotential}%</span>],
         ["Soaring layer depth", <span>{detailedForecast.boundaryLayer.soaringLayerDepth} m</span>],

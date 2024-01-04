@@ -168,7 +168,7 @@ const LocationSummary = (props: {
 const table = (data: Array<[string, JSX.Element]>): JSX.Element => {
   const rows =
     data.map(([label, value]) => {
-      return <tr><th>{label}:</th><td>{value}</td></tr>
+      return <tr><th style="text-align: right">{label}:</th><td>{value}</td></tr>
     });
   if (rows.length === 0) {
     return <div></div>
