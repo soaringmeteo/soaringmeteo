@@ -37,8 +37,8 @@ export const LayersSelector = (props: {
         <legend>Model</legend>
         {
           new Array<[string, string, Model]>(
-            ['GFS (25 km)', 'GFS model', gfsModel],
-            ['WRF (2-6 km)', 'WRF model', wrfModel]
+            ['soarGFS (25 km)', 'Forecast based on the GFS model', gfsModel],
+            ['soarWRF (2-6 km)', 'Forecast based on the WRF model', wrfModel]
           )
             .map(([label, title, model]) =>
               <Radio

@@ -48,11 +48,11 @@ export const Burger = (props: {
     >☰</div> as HTMLElement;
 
   const staticEntries = [
-    ['About',                'https://soaringmeteo.org/'],
-    ['Support Soaringmeteo', 'https://soaringmeteo.org/don.html'],
-    ['Documents',            'https://soaringmeteo.org/docs.html'],
-    ['soarGFS',              'https://soaringmeteo.org/GFSw/googleMap.html'],
-    ['soarWRF',              'https://soaringmeteo.org/soarWRF'],
+    ['About',                '/'],
+    ['Support Soaringmeteo', '/don.html'],
+    ['Documents',            '/docs.html'],
+    ['soarGFS (legacy)',     '/GFSw/googleMap.html'],
+    ['soarWRF (legacy)',     '/soarWRF'],
   ]
 
   const options =
