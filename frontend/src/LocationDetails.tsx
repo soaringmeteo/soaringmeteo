@@ -48,7 +48,8 @@ export const LocationDetails = (props: {
           padding: '.35em',
           'max-width': '100vw',
           'box-sizing': 'border-box',
-          'user-select': 'text'
+          'user-select': 'text',
+          'pointer-events': 'auto' // Disable 'pointer-events: none` from parent element
         }}
       >
         <Show
