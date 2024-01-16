@@ -125,7 +125,8 @@ const PeriodSelector = (props: {
         'overflow-x': 'auto',
         'margin-left': `${marginLeft}px`,
         'user-select': 'none',
-        cursor: 'default'
+        cursor: 'default',
+        'pointer-events': 'auto' // Disable 'pointer-events: none' from parent
     }}
     >
       <div style={{ 'min-width': `${length() * meteogramColumnWidth + keyWidth}px` }}>
@@ -196,7 +197,7 @@ export const PeriodSelectors = (props: {
   const getDetailedView = detailedView({ domain: props.domain });
 
   const detailedViewKeyEl = 
-    <div style={{ position: 'absolute', width: `${marginLeft}px`, left: 0, top: `${marginTop}px`, 'background-color': 'white' }}>
+    <div style={{ position: 'absolute', width: `${marginLeft}px`, left: 0, top: `${marginTop}px`, 'background-color': 'white', 'pointer-events': 'auto' }}>
       { getDetailedView().key }
     </div>;
 
@@ -331,8 +332,10 @@ export const PeriodSelectors = (props: {
     />;
 
   // Period selector and close button for the meteogram
+  // Note: we use 'pointer-events: none' to prevent the parent div from intercepting clicks on the map. As
+  // a consequence, we have to reset 'pointer-events: auto' on every child element.
   const periodSelectorContainer =
-    <div style={{ position: 'absolute', top: 0, left: 0, 'z-index': 100, 'max-width': '100%', 'font-size': '0.8125rem' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, 'z-index': 100, 'max-width': '100%', 'font-size': '0.8125rem', 'pointer-events': 'none' }}>
       {periodSelectorEl}
       {detailedViewKeyEl}
       <LocationDetails locationClicks={props.locationClicks} domain={props.domain} /> {/* TODO Move out of PeriodSelector */}
