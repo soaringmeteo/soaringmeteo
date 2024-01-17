@@ -30,7 +30,7 @@ export type Zone = {
 }
 
 // Version of the forecast data format we consume (see backend/src/main/scala/org/soaringmeteo/package.scala)
-const formatVersion = 5
+const formatVersion = 6
 // Base path to access forecast data
 const dataPath = `data/${formatVersion}`
 export class ForecastMetadata {
@@ -117,7 +117,7 @@ export class ForecastMetadata {
   }
 
   urlOfVectorTilesAtHourOffset(zone: string, variablePath: string, hourOffset: number): string {
-    return `${dataPath}/${this.modelPath}/${this.initS}/${zone}/${variablePath}/${hourOffset}/{z}-{x}-{y}.json`
+    return `${dataPath}/${this.modelPath}/${this.initS}/${zone}/${variablePath}/${hourOffset}/{z}-{x}-{y}.mvt`
   }
 
   defaultHourOffset(): number {

@@ -1,14 +1,14 @@
 package org.soaringmeteo.out
 
 import geotrellis.proj4.{LatLng, WebMercator}
-import geotrellis.vector.Extent
+import geotrellis.vector.{ Extent, Point => GeotrellisPoint }
 import geotrellis.vector.reproject.Reproject
-import io.circe.Json
+import geotrellis.vectortile.{MVTFeature, MVTFeatures, StrictLayer, VectorTile, VInt64, VFloat}
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.{Forecast, Point, Wind}
 
 /** Output of the model encoded as vector tiles */
-case class VectorTiles(path: String, feature: (Point, Forecast) => Json)
+case class VectorTiles(path: String, feature: Forecast => Wind)
 
 object VectorTiles {
 
@@ -57,31 +57,14 @@ object VectorTiles {
 
   }
 
-  def windFeature(wind: Forecast => Wind): (Point, Forecast) => Json = { (point, forecast) =>
-    val value = wind(forecast)
-    val speed = value.speed.toKilometersPerHour.round.intValue // km/h
-    val direction = value.direction
-    Json.obj(
-      "type" -> Json.fromString("Feature"),
-      "geometry" -> Json.obj(
-        "type" -> Json.fromString("Point"),
-        "coordinates" -> Json.arr(Json.fromBigDecimal(point.longitude), Json.fromBigDecimal(point.latitude))
-      ),
-      "properties" -> Json.obj(
-        "speed" -> Json.fromInt(speed),
-        "direction" -> Json.fromBigDecimal(direction)
-      )
-    )
-  }
-
   val allVectorTiles = List(
-    VectorTiles("wind-surface", windFeature(_.surfaceWind)),
-    VectorTiles("wind-boundary-layer", windFeature(_.boundaryLayerWind)),
-    VectorTiles("wind-soaring-layer-top", windFeature(_.winds.soaringLayerTop)),
-    VectorTiles("wind-300m-agl", windFeature(_.winds.`300m AGL`)),
-    VectorTiles("wind-2000m-amsl", windFeature(_.winds.`2000m AMSL`)),
-    VectorTiles("wind-3000m-amsl", windFeature(_.winds.`3000m AMSL`)),
-    VectorTiles("wind-4000m-amsl", windFeature(_.winds.`4000m AMSL`))
+    VectorTiles("wind-surface", _.surfaceWind),
+    VectorTiles("wind-boundary-layer", _.boundaryLayerWind),
+    VectorTiles("wind-soaring-layer-top", _.winds.soaringLayerTop),
+    VectorTiles("wind-300m-agl", _.winds.`300m AGL`),
+    VectorTiles("wind-2000m-amsl", _.winds.`2000m AMSL`),
+    VectorTiles("wind-3000m-amsl", _.winds.`3000m AMSL`),
+    VectorTiles("wind-4000m-amsl", _.winds.`4000m AMSL`)
   )
 
   // Cache the projection of the coordinates from LatLng to WebMercator
@@ -94,15 +77,19 @@ object VectorTiles {
     parameters: Parameters,
     forecasts: IndexedSeq[IndexedSeq[Forecast]]
   ): Unit = {
-    val boundingBox = parameters.extent
+    val rootTileExtent = parameters.extent
     val zoomLevels = parameters.zoomLevels
     val maxZoom = zoomLevels - 1
 
-    val size = boundingBox.maxExtent
     // Cache the computed features at their (longitude, latitude) coordinates
-    val featuresCache = collection.concurrent.TrieMap.empty[Point, Json]
+    val featuresCache = collection.concurrent.TrieMap.empty[(Double, Double), MVTFeature[GeotrellisPoint]]
 
     for (z <- 0 to maxZoom) {
+      // Number of rows and columns in the zoom level 'z'
+      val tilesCount = 1 << z
+      // FIXME The root tile extent may not necessarily be square, however we _have to_ use the same tile
+      // height and width in the following otherwise the position of the features is wrong.
+      val tileSize = rootTileExtent.maxExtent / tilesCount
       // Show all the points at the highest zoom level only,
       // otherwise show every other point from the previous zoom level
       val step = 1 << (maxZoom - z)
@@ -110,43 +97,71 @@ object VectorTiles {
       val visiblePoints = for {
         x <- 0 until parameters.width by step
         y <- 0 until parameters.height by step
-      } yield (parameters.gridCoordinates(x)(y), forecasts(x)(y))
+      } yield {
+        val lonLatPoint = parameters.gridCoordinates(x)(y)
+        val webMercatorPoint = coordinatesCache.getOrElseUpdate(
+          lonLatPoint,
+          Reproject((lonLatPoint.longitude.doubleValue, lonLatPoint.latitude.doubleValue), LatLng, WebMercator)
+            .ensuring(p => rootTileExtent.contains(p._1, p._2), "Features must be within the root tile extent")
+        )
+        (webMercatorPoint, forecasts(x)(y))
+      }
 
       val tiles =
         visiblePoints
           // Partition the visible points by tile
-          .groupBy { case (point, _) =>
-            // Compute the (x, y) tile coordinates this (lon, lat) point belongs too
-            val (webMercatorX, webMercatorY) =
-              coordinatesCache.getOrElseUpdate(
-                point,
-                Reproject((point.longitude.doubleValue, point.latitude.doubleValue), LatLng, WebMercator)
-              )
-            val k = 1 << z
-            val x = ((webMercatorX - boundingBox.xmin) / (size / k)).intValue
-            val y = ((boundingBox.ymax - webMercatorY) / (size / k)).intValue
-            assert(x < (1 << z), s"Bad x value: ${x}. ${parameters.gridCoordinates(x)(y)}.")
-            assert(y < (1 << z), s"Bad y value: ${y}. ${parameters.gridCoordinates(x)(y)}.")
+          .groupBy { case ((webMercatorX, webMercatorY), _) =>
+            // Compute the (x, y) tile coordinates this point belongs too
+            val x = ((webMercatorX - rootTileExtent.xmin) / tileSize).intValue
+            val y = ((rootTileExtent.ymax - webMercatorY) / tileSize).intValue
+            assert(x < tilesCount, s"Bad x value: ${x}. ${parameters.gridCoordinates(x)(y)}.")
+            assert(y < tilesCount, s"Bad y value: ${y}. ${parameters.gridCoordinates(x)(y)}.")
             (x, y)
           }
 
       logger.trace(s"Found points in tiles ${tiles.keys.toSeq.sorted.mkString(",")}")
 
       for (((x, y), features) <- tiles) {
-        val json = Json.obj(
-          "type" -> Json.fromString("FeatureCollection"),
-          "features" -> Json.arr(
-            features.map { case (point, feature) =>
-              featuresCache.getOrElseUpdate(
-                point,
-                vectorTiles.feature(point, feature)
+        val tileExtent = Extent(
+          rootTileExtent.xmin + x * tileSize,
+          rootTileExtent.ymax - (y + 1) * tileSize,
+          rootTileExtent.xmin + (x + 1) * tileSize,
+          rootTileExtent.ymax - y * tileSize,
+        )
+//        assert(features.forall { case ((pointX, pointY), _) => tileExtent.contains(pointX, pointY) })
+        val vectorTile = VectorTile(
+          layers = Map(
+            "points" -> StrictLayer(
+              name = "points",
+              tileWidth = 4096,
+              version = 2,
+              tileExtent = tileExtent,
+              mvtFeatures = MVTFeatures(
+                points = features.map { case (point @ (webMercatorX, webMercatorY), forecast) =>
+                  featuresCache.getOrElseUpdate(point, {
+                    val wind = vectorTiles.feature(forecast)
+                    MVTFeature(
+                      geom = GeotrellisPoint(webMercatorX, webMercatorY),
+                      data = Map(
+                        "speed" -> VInt64(wind.speed.toKilometersPerHour.round.intValue),
+                        "direction" -> VFloat(wind.direction.toFloat)
+                      )
+                    )
+                  })
+                },
+                multiPoints = Nil,
+                lines = Nil,
+                multiLines = Nil,
+                polygons = Nil,
+                multiPolygons = Nil
               )
-            }: _*
-          )
+            )
+          ),
+          tileExtent = tileExtent
         )
         os.write.over(
-          targetDir / s"${z}-${x}-${y}.json",
-          json.noSpaces,
+          targetDir / s"${z}-${x}-${y}.mvt",
+          vectorTile.toBytes,
           createFolders = true
         )
       }
