@@ -20,6 +20,7 @@ val common =
         Dependencies.decline,
         // Image generation
         Dependencies.geotrellisRaster,
+        Dependencies.geotrellisVectorTile,
         // grib2 and NetCDF files manipulation
         "edu.ucar" % "grib" % "5.5.3",
         // Quantities

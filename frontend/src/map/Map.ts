@@ -6,7 +6,7 @@ import { ScaleLine } from "ol/control";
 import { defaults as defaultInteractions } from "ol/interaction";
 import { Coordinate } from "ol/coordinate";
 import { Point } from 'ol/geom';
-import { GeoJSON } from "ol/format";
+import { MVT } from "ol/format";
 import { Style, Icon, Text, Fill } from 'ol/style';
 import { Accessor, createSignal } from 'solid-js';
 import windImg0 from '../images/wind-0.png';
@@ -186,7 +186,7 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
         extent: extent,
         maxZoom: maxZoom,
         tileSize: tileSize,
-        format: new GeoJSON(),
+        format: new MVT(),
         transition: 1000
       }));
     },

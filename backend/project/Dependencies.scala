@@ -16,7 +16,8 @@ object Dependencies {
   val decline = "com.monovore" %% "decline" % "2.4.1"
 
   // Raster images generation
-  val geotrellisRaster = "org.locationtech.geotrellis" %% "geotrellis-raster" % "3.7.0"
+  val geotrellisRaster     = "org.locationtech.geotrellis" %% "geotrellis-raster" % "3.7.1"
+  val geotrellisVectorTile = "org.locationtech.geotrellis" %% "geotrellis-vectortile" % "3.7.1"
 
   // Logging
   val logback = "ch.qos.logback" % "logback-classic" % "1.4.7"
