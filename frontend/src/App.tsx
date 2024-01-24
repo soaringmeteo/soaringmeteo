@@ -7,8 +7,8 @@ import {Domain, gfsModel, wrfModel} from './State';
 import { Burger } from './Burger';
 import { css } from "./css-hooks";
 import {LayerKeys} from "./LayerKeys";
+import { HelpButton } from './help/HelpButton';
 
-const Help = lazy(() => import('./help/Help').then(module => ({ default: module.Help })));
 const PeriodSelectors = lazy(() => import('./PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
 
 export const start = (containerElement: HTMLElement): void => {
@@ -85,7 +85,7 @@ export const start = (containerElement: HTMLElement): void => {
           bottom: '.5rem',
         }}
       >
-        <Help domain={props.domain} overMap={true} />
+        <HelpButton domain={props.domain} overMap={true} />
       </span>
     </>
   }
