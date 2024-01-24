@@ -1,11 +1,10 @@
-import {createSignal, JSX, Show} from "solid-js";
+import {createSignal, JSX} from "solid-js";
 import { Domain } from "./State";
 import {
   burgerBorderTopStyle,
   burgerOptionStyle,
   closeButton,
   closeButtonSize,
-  periodSelectorHeight
 } from "./styles/Styles";
 import { surfaceOverMap } from "./styles/Styles";
 import { Settings } from "./Settings";
@@ -21,31 +20,10 @@ import hooks from "./css-hooks";
  */
 export const Burger = (props: {
   domain: Domain
+  close: () => void
 }): JSX.Element => {
 
-  const [expanded, setExpanded] = createSignal(false);
   const [areSettingsVisible, makeSettingsVisible] = createSignal(false);
-
-  const menuBtn =
-    <div
-      style={{
-        ...surfaceOverMap,
-        width: `${periodSelectorHeight}px`,
-        height: `${periodSelectorHeight}px`,
-        cursor: 'pointer',
-        'user-select': 'none',
-        padding: '3px',
-        border: 'thin solid darkGray',
-        'box-sizing': 'border-box',
-        'background-color': '#009688',
-        color: '#fff',
-        'text-align': 'center',
-        'font-weight': 'bold',
-        'font-size': `${periodSelectorHeight / 2}px`,
-        'line-height': `1.5`
-      }}
-      onClick={() => { setExpanded(!expanded()); }}
-    >☰</div> as HTMLElement;
 
   const staticEntries = [
     ['About',                '/'],
@@ -89,7 +67,7 @@ export const Burger = (props: {
           Soaringmeteo
         </div>
         <div
-          onClick={ () => setExpanded(false) }
+          onClick={ () => props.close() }
           style={hooks({
             ...closeButton,
             position: 'absolute',
@@ -117,8 +95,8 @@ export const Burger = (props: {
       }
     </div>;
 
-  return <Show when={ expanded() } fallback={ menuBtn }>
-    <OverlayContainer handleClick={ () => setExpanded(false) }>
+  return <>
+    <OverlayContainer handleClick={ () => props.close() }>
       {options}
     </OverlayContainer>
     <Settings
@@ -126,5 +104,5 @@ export const Burger = (props: {
       close={ () => makeSettingsVisible(false) }
       domain={ props.domain }
     />
-  </Show>
+  </>
 };

@@ -4,7 +4,7 @@ import { insert, render, style } from 'solid-js/web';
 import { initializeMap } from './map/Map';
 import { fetchForecastRuns } from './data/ForecastMetadata';
 import {Domain, gfsModel, wrfModel} from './State';
-import { Burger } from './Burger';
+import { BurgerButton } from './BurgerButton';
 import { css } from "./css-hooks";
 import {LayerKeys} from "./LayerKeys";
 import { HelpButton } from './help/HelpButton';
@@ -74,7 +74,7 @@ export const start = (containerElement: HTMLElement): void => {
     return <>
       <style>{ css }</style>
       <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 200 /* must be above the “period selector” */ }}>
-        <Burger domain={props.domain} />
+        <BurgerButton domain={props.domain} />
       </span>
       <PeriodSelectors domain={props.domain} locationClicks={mapHooks.locationClicks} />
       <LayerKeys domain={props.domain} />
