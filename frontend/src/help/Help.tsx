@@ -1,67 +1,23 @@
-import { createSignal, JSX, lazy, Match, Show, Switch } from 'solid-js'
-import {bottomButtonsSize, keyWidth, meteogramColumnWidth, soundingWidth, surfaceOverMap} from '../styles/Styles';
+import { JSX, lazy, Match, Show, Switch } from 'solid-js'
+import { keyWidth, meteogramColumnWidth, soundingWidth } from '../styles/Styles';
 import * as fakeData from './data';
 import { showDate, xcFlyingPotentialLayerName, inversionStyle } from '../shared';
 import {type Domain, gfsModel, wrfModel} from '../State';
-import { Overlay } from '../map/Overlay';
-import hooks from "../css-hooks";
 
-export const Help = (props: { domain: Domain, overMap: boolean }): JSX.Element => {
-
+export const Help = (props: { domain: Domain }): JSX.Element => {
   const state = props.domain.state;
-  const [isVisible, makeVisible] = createSignal(false);
-
-  const expandButton =
-    <div style={hooks({
-        ...(props.overMap ? surfaceOverMap : {}),
-        'cursor': 'pointer',
-        'user-select': 'none',
-        display: 'inline-block',
-        width: `${bottomButtonsSize}px`,
-        height: `${bottomButtonsSize}px`,
-        'line-height': `${bottomButtonsSize}px`,
-        'text-align': 'center',
-        'font-size': '18px',
-        'border-radius': `${bottomButtonsSize / 2}px`,
-        'border': '1px solid lightgray',
-        'box-sizing': 'border-box',
-        'background-color': 'white',
-        hover: { 'background-color': 'lightgray' }
-      })}
-      onClick={ () => makeVisible(true) }
-      title="Help"
-    >
-      ?
-    </div>;
-
-  return <span
-    style={{
-      display: 'block',
-      margin: '3px'
-    }}
-  >
-    { expandButton }
-    <Overlay
-      isVisible={ isVisible() }
-      close={ () => makeVisible(false) }
-      maxWidth='80em'
-    >
-      <span style="text-align: left">
-        <Switch>
-          <Match when={ state.detailedView === undefined || state.detailedView.viewType === 'summary' }>
-            <MapHelp domain={props.domain} />
-          </Match>
-          <Match when={ state.detailedView !== undefined && state.detailedView.viewType === 'meteogram' }>
-            <MeteogramHelp domain={props.domain} />
-          </Match>
-          <Match when={ state.detailedView !== undefined && state.detailedView.viewType === 'sounding' }>
-            <SoundingHelp domain={props.domain} />
-          </Match>
-        </Switch>
-      </span>
-    </Overlay>
-  </span>;
-};
+  return <Switch>
+    <Match when={ state.detailedView === undefined || state.detailedView.viewType === 'summary' }>
+      <MapHelp domain={props.domain} />
+    </Match>
+    <Match when={ state.detailedView !== undefined && state.detailedView.viewType === 'meteogram' }>
+      <MeteogramHelp domain={props.domain} />
+    </Match>
+    <Match when={ state.detailedView !== undefined && state.detailedView.viewType === 'sounding' }>
+      <SoundingHelp domain={props.domain} />
+    </Match>
+  </Switch>
+}
 
 const MapHelp = (props: { domain: Domain }): JSX.Element => {
 

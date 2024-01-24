@@ -5,7 +5,7 @@ import {LocationForecasts} from "./data/LocationForecasts";
 import {toLonLat} from "ol/proj";
 import {MapBrowserEvent} from "ol";
 import {Meteogram, Sounding} from "./DetailedView";
-import {Help} from "./help/Help";
+import { HelpButton } from "./help/HelpButton";
 import {buttonStyle, closeButton, surfaceOverMap} from "./styles/Styles";
 import hooks from "./css-hooks";
 
@@ -96,7 +96,7 @@ export const LocationDetails = (props: {
             Sounding
           </span>
 
-          <Help domain={ props.domain } overMap={ false } />
+          <HelpButton domain={ props.domain } overMap={ false } />
 
           <div
             style={hooks({
