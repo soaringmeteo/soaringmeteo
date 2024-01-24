@@ -13,7 +13,7 @@
     "@types/proj4": "2.5.4",
     "serve-static": "1.15.0",
     "typescript": "4.6.3",
-    "vite": "4.0.5",
+    "vite": "4.5.2",
     "vite-plugin-pwa": "0.14.1",
     "vite-plugin-solid": "2.5.0"
   },
