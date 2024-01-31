@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import legacyPlugin from '@vitejs/plugin-legacy';
 import solidPlugin from 'vite-plugin-solid';
 import { VitePWA } from 'vite-plugin-pwa';
 import serveStatic from 'serve-static';
@@ -6,6 +7,9 @@ import serveStatic from 'serve-static';
 export default defineConfig(() => ({
   base: '/v2/',
   plugins: [
+    legacyPlugin({
+      renderModernChunks: false
+    }),
     solidPlugin(),
     VitePWA({
       // registerType: 'autoUpdate',
@@ -43,7 +47,6 @@ export default defineConfig(() => ({
     port: 3000
   },
   build: {
-    target: 'esnext',
     rollupOptions: {
       output: {
         manualChunks: {
