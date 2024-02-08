@@ -78,7 +78,7 @@ const lazyMeteogram = (props: { domain: Domain }): JSX.Element =>
       const { key, view } = module.meteogram(fakeData.locationForecasts, props.domain.state);
       return { default: () => <>{ key }{ view }</> }
     })
-  });
+  })();
 
 const lightTextStyle = (color: string) => ({
   color,
@@ -179,7 +179,7 @@ const lazySounding = (props: { domain: Domain }): JSX.Element =>
       const { key, view } = module.sounding(fakeData.detailedForecast, fakeData.groundLevel, true, props.domain.state);
       return { default: () => <>{ key }{ view }</> }
     })
-  });
+  })();
 
 const SoundingHelp = (props: { domain: Domain }): JSX.Element => <>
   <p>

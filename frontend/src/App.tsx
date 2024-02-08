@@ -5,7 +5,7 @@ import { initializeMap } from './map/Map';
 import { fetchForecastRuns } from './data/ForecastMetadata';
 import {Domain, gfsModel, wrfModel} from './State';
 import { BurgerButton } from './BurgerButton';
-import { css } from "./css-hooks";
+import { hooks } from "./css-hooks";
 import {LayerKeys} from "./LayerKeys";
 import { HelpButton } from './help/HelpButton';
 
@@ -72,7 +72,7 @@ export const start = (containerElement: HTMLElement): void => {
     // back to these components.
     // LayersSelector displays the configuration button and manages the canvas overlay.
     return <>
-      <style>{ css }</style>
+      <style innerHTML={ hooks } />
       <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 200 /* must be above the “period selector” */ }}>
         <BurgerButton domain={props.domain} />
       </span>
@@ -107,7 +107,7 @@ export const start = (containerElement: HTMLElement): void => {
       });
     return <Show when={ loaded() }>
       { (domain) => {
-        return <App domain={domain} />
+        return <App domain={domain()} />
       }}
     </Show>
   });

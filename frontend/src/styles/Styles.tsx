@@ -1,4 +1,4 @@
-import hooks from "../css-hooks";
+import { css } from "../css-hooks";
 
 export const surfaceOverMap = {
   'box-shadow': 'rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 3px 1px -2px, rgba(0, 0, 0, 0.2) 0px 1px 5px 0px'
@@ -37,7 +37,7 @@ export const closeButton = {
 
 export const burgerPaddingStyle = { padding: '.5em .75em' }
 
-export const burgerOptionStyle = hooks({
+export const burgerOptionStyle = css({
   ...burgerPaddingStyle,
   'line-height': '1.5',
   'font-family': 'sans-serif',
@@ -47,4 +47,4 @@ export const burgerOptionStyle = hooks({
 
 export const burgerBorderTopStyle = { 'border-top': '1px solid darkgray' };
 
-export const buttonStyle = hooks({ padding: '0.3em 0.4em', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box', 'user-select': 'none', hover: { 'background-color': 'lightGray' } });
+export const buttonStyle = css({ padding: '0.3em 0.4em', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box', 'user-select': 'none', hover: { 'background-color': 'lightGray' } });

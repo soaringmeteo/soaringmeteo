@@ -15,7 +15,7 @@ import { drawWindArrow } from '../shapes';
 import { createEffect, createSignal, JSX } from 'solid-js';
 import {diagramsAvailableHeight, keyWidth, soundingWidth, surfaceOverMap} from '../styles/Styles';
 import { State } from '../State';
-import hooks from "../css-hooks";
+import { css } from "../css-hooks";
 
 // Difference between two temperatures shown on the temperature axis
 const temperatureScaleStep = 10;
@@ -64,7 +64,7 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
   const [zoomed, zoom] = createSignal(zoomedDefaultValue);
 
   const zoomButton = <div
-    style={hooks({
+    style={css({
       position: 'absolute',
       top: `10px`,
       right: `10px`,

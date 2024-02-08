@@ -10,7 +10,7 @@ import { surfaceOverMap } from "./styles/Styles";
 import { Settings } from "./Settings";
 import {LayersSelector} from "./LayersSelector";
 import {OverlayContainer} from "./map/Overlay";
-import hooks from "./css-hooks";
+import { css } from "./css-hooks";
 
 /**
  * Burger menu with links to the other parts of the website.
@@ -68,13 +68,13 @@ export const Burger = (props: {
         </div>
         <div
           onClick={ () => props.close() }
-          style={hooks({
+          style={css({
             ...closeButton,
             position: 'absolute',
             top: '3px',
             right: '3px',
             hover: { 'background-color': 'darkgray' }
-          })}
+          } as JSX.CSSProperties)}
         >
           ⨯
         </div>

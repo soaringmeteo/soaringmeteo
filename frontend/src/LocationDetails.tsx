@@ -7,7 +7,7 @@ import {MapBrowserEvent} from "ol";
 import {Meteogram, Sounding} from "./DetailedView";
 import { HelpButton } from "./help/HelpButton";
 import {buttonStyle, closeButton, surfaceOverMap} from "./styles/Styles";
-import hooks from "./css-hooks";
+import { css } from "./css-hooks";
 
 /**
  * Box showing the forecast details (summary, meteogram, or sounding) for the selected location.
@@ -53,12 +53,12 @@ export const LocationDetails = (props: {
         }}
       >
         <Show
-          when={ detailedView.viewType !== 'summary' /* The summary view shows the location by itself */ }
-          fallback={ <LocationSummary domain={props.domain} latitude={detailedView.latitude} longitude={detailedView.longitude} /> }
+          when={ detailedView().viewType !== 'summary' /* The summary view shows the location by itself */ }
+          fallback={ <LocationSummary domain={props.domain} latitude={detailedView().latitude} longitude={detailedView().longitude} /> }
         >
           <div>
-            { showCoordinates(detailedView.longitude, detailedView.latitude, props.domain.state.model) }, { (detailedView as Meteogram | Sounding).locationForecasts.elevation }m.
-            <Show when={ detailedView.viewType === 'sounding' }>
+            { showCoordinates(detailedView().longitude, detailedView().latitude, props.domain.state.model) }, { (detailedView() as Meteogram | Sounding).locationForecasts.elevation }m.
+            <Show when={ detailedView().viewType === 'sounding' }>
               &nbsp;{ showDate(props.domain.state.forecastMetadata.dateAtHourOffset(props.domain.state.hourOffset), { showWeekDay: true, timeZone: props.domain.timeZone() }) }.
             </Show>
           </div>
@@ -73,25 +73,25 @@ export const LocationDetails = (props: {
           }}
         >
           <span
-            style={{ ...buttonStyle, ...(detailedView.viewType === 'summary' ? { 'background-color': 'lightgray' } : {}) }}
+            style={{ ...buttonStyle, ...(detailedView().viewType === 'summary' ? { 'background-color': 'lightgray' } : {}) }}
             title="Summary of the forecast for this location"
-            onClick={ () => props.domain.showLocationForecast(detailedView.latitude, detailedView.longitude, 'summary') }
+            onClick={ () => props.domain.showLocationForecast(detailedView().latitude, detailedView().longitude, 'summary') }
           >
             Summary
           </span>
 
           <span
-            style={{ ...buttonStyle, ...(detailedView.viewType === 'meteogram' ? { 'background-color': 'lightgray' } : {}) }}
+            style={{ ...buttonStyle, ...(detailedView().viewType === 'meteogram' ? { 'background-color': 'lightgray' } : {}) }}
             title="Meteogram for this location"
-            onClick={ () => props.domain.showLocationForecast(detailedView.latitude, detailedView.longitude, 'meteogram') }
+            onClick={ () => props.domain.showLocationForecast(detailedView().latitude, detailedView().longitude, 'meteogram') }
           >
             Meteogram
           </span>
 
           <span
-            style={{ ...buttonStyle, ...(detailedView.viewType === 'sounding' ? { 'background-color': 'lightgray' } : {}) }}
+            style={{ ...buttonStyle, ...(detailedView().viewType === 'sounding' ? { 'background-color': 'lightgray' } : {}) }}
             title="Sounding for this time and location"
-            onClick={ () => props.domain.showLocationForecast(detailedView.latitude, detailedView.longitude, 'sounding') }
+            onClick={ () => props.domain.showLocationForecast(detailedView().latitude, detailedView().longitude, 'sounding') }
           >
             Sounding
           </span>
@@ -99,12 +99,12 @@ export const LocationDetails = (props: {
           <HelpButton domain={ props.domain } overMap={ false } />
 
           <div
-            style={hooks({
+            style={css({
               ...closeButton,
               'flex-shrink': 0,
               'border': '1px solid lightgray',
               hover: { 'background-color': 'lightgray' }
-            })}
+            } as JSX.CSSProperties)}
             title='Hide'
             onClick={ () => props.domain.hideLocationForecast() }
           >
@@ -157,11 +157,11 @@ const LocationSummary = (props: {
       <div>
         { showCoordinates(props.longitude, props.latitude, props.domain.state.model) }
         <Show when={resource()}>
-          { ([locationForecasts]) => <>, {locationForecasts.elevation}m</> }
+          { resolvedResource => <>, {(resolvedResource())[0].elevation}m</> }
         </Show>.
       </div>
       <Show when={summaryResource()}>
-        { summary => table(summary)}
+        { summary => table(summary())}
       </Show>
     </>;
 };

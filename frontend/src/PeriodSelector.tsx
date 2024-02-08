@@ -10,7 +10,7 @@ import {
   periodSelectorHeight,
   surfaceOverMap
 } from './styles/Styles';
-import hooks from "./css-hooks";
+import { css } from "./css-hooks";
 import {LocationDetails} from "./LocationDetails";
 import {MapBrowserEvent} from "ol";
 
@@ -32,7 +32,7 @@ const PeriodSelector = (props: {
           const htmlEl =
             <span
               style={
-                hooks({
+                css({
                   display: 'inline-block',
                   cursor: 'pointer',
                   border: 'thin solid darkGray',
@@ -89,7 +89,7 @@ const PeriodSelector = (props: {
         const dayEl =
           <div
             style={
-              hooks({
+              css({
                 cursor: 'pointer',
                 width: `${periods.length * meteogramColumnWidth}px`,
                 'text-align': 'center',
@@ -231,7 +231,7 @@ export const PeriodSelectors = (props: {
                   const isSelected = timeStep === selectedTimeStep;
                   return <div
                     style={
-                      hooks({
+                      css({
                         ...buttonStyle,
                         'background-color': isSelected ? 'lightGray' : 'unset',
                         hover: { 'background-color': 'lightGray' }
@@ -252,7 +252,7 @@ export const PeriodSelectors = (props: {
                   run.firstTimeStep.getTime() === props.domain.state.forecastMetadata.firstTimeStep.getTime();
                 return <div
                   style={
-                    hooks({
+                    css({
                       ...buttonStyle,
                       'background-color': isSelected ? 'lightgray' : 'unset',
                       hover: { 'background-color': 'lightGray' }
@@ -268,7 +268,7 @@ export const PeriodSelectors = (props: {
         </Switch>
       </Show>
       <div
-        style={ hooks({ padding: '0.3em', cursor: 'pointer', hover: { 'background-color': 'lightGray' } }) }
+        style={ css({ padding: '0.3em', cursor: 'pointer', hover: { 'background-color': 'lightGray' } }) }
         onClick={ () => makeDaySelectorVisible(!isDaySelectorVisible()) }
       >
         {

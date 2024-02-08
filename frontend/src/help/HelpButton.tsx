@@ -1,6 +1,6 @@
 import type { Domain } from "../State";
 import { createSignal, JSX, lazy } from "solid-js";
-import hooks from "../css-hooks";
+import { css } from "../css-hooks";
 import { bottomButtonsSize, surfaceOverMap } from "../styles/Styles";
 import { Overlay } from "../map/Overlay";
 
@@ -11,7 +11,7 @@ export const HelpButton = (props: { domain: Domain, overMap: boolean }): JSX.Ele
     const [isVisible, makeVisible] = createSignal(false);
 
     const expandButton =
-      <div style={hooks({
+      <div style={css({
         ...(props.overMap ? surfaceOverMap : {}),
         'cursor': 'pointer',
         'user-select': 'none',
