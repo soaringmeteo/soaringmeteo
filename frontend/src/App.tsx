@@ -8,6 +8,7 @@ import { BurgerButton } from './BurgerButton';
 import { hooks } from "./css-hooks";
 import {LayerKeys} from "./LayerKeys";
 import { HelpButton } from './help/HelpButton';
+import {Localized} from "./i18n";
 
 const PeriodSelectors = lazy(() => import('./PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
 
@@ -107,7 +108,9 @@ export const start = (containerElement: HTMLElement): void => {
       });
     return <Show when={ loaded() }>
       { (domain) => {
-        return <App domain={domain()} />
+        return <Localized>
+          <App domain={domain()} />
+        </Localized>
       }}
     </Show>
   });

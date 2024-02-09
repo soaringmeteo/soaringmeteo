@@ -11,6 +11,7 @@ import { Settings } from "./Settings";
 import {LayersSelector} from "./LayersSelector";
 import {OverlayContainer} from "./map/Overlay";
 import { css } from "./css-hooks";
+import {useI18n} from "./i18n";
 
 /**
  * Burger menu with links to the other parts of the website.
@@ -23,15 +24,16 @@ export const Burger = (props: {
   close: () => void
 }): JSX.Element => {
 
+  const { m } = useI18n();
   const [areSettingsVisible, makeSettingsVisible] = createSignal(false);
 
-  const staticEntries = [
-    ['About',                '/'],
-    ['Support Soaringmeteo', '/don.html'],
-    ['Documents',            '/docs.html'],
-    ['soarGFS (legacy)',     '/GFSw/googleMap.html'],
-    ['soarWRF (legacy)',     '/soarWRF'],
-  ]
+  const staticEntries: Array<[() => string, string]> = [
+    [() => m().menuAbout(),     '/'],
+    [() => m().menuSupport(),   '/don.html'],
+    [() => m().menuDocuments(), '/docs.html'],
+    [() => m().menuSoarGFS(),   '/GFSw/googleMap.html'],
+    [() => m().menuSoarWRF(),   '/soarWRF'],
+  ];
 
   const options =
     <div
@@ -83,13 +85,13 @@ export const Burger = (props: {
       <div
         style={{...burgerOptionStyle, ...burgerBorderTopStyle, cursor: 'pointer' }}
         onClick={ () => makeSettingsVisible(true) }>
-          ⚙ Settings
+          ⚙ { m().menuSettings() }
       </div>
       {
         staticEntries.map(([label, href], i) => {
           const maybeBorderStyle = i === 0 ? burgerBorderTopStyle : {};
           return <a href={href} style={{ 'text-decoration': 'none' }}>
-            <div style={{ ...burgerOptionStyle, ...maybeBorderStyle }}>{label}</div>
+            <div style={{ ...burgerOptionStyle, ...maybeBorderStyle }}>{ label() }</div>
           </a>
         })
       }

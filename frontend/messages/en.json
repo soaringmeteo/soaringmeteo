@@ -1,0 +1,22 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "help": "Help",
+  "menuDisplayOnMap": "Display on map",
+  "menuOverlay": "Overlay",
+  "menuOverlayLegend": "Show an overlay on the map",
+  "menuWind": "Wind",
+  "menuWindLegend": "Show wind force and direction at a specific elevation level",
+  "menuForecastData": "Forecast data",
+  "menuModel": "Model",
+  "menuGFSLegend": "Forecast based on the GFS model",
+  "menuWRFLegend": "Forecast based on the WRF model",
+  "menuInitializationTime": "Initialization Time",
+  "menuInitializationTimeLegend": "Initialization time of the forecast run",
+  "menuZone": "Zone",
+  "menuSettings": "Settings",
+  "menuAbout": "About",
+  "menuSupport": "Support Soaringmeteo",
+  "menuDocuments": "Documents",
+  "menuSoarGFS": "soarGFS (legacy)",
+  "menuSoarWRF": "soarWRF (legacy)"
+}
