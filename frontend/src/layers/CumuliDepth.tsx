@@ -1,6 +1,7 @@
 import { ColorScale, Color } from "../ColorScale";
 import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
 import {ForecastMetadata, Zone} from "../data/ForecastMetadata";
+import {useI18n, usingMessages} from "../i18n";
 
 const cumuliDepthColorScale = new ColorScale([
   [50,   new Color(0xff, 0xff, 0xff, 0.0)],
@@ -12,14 +13,16 @@ const cumuliDepthColorScale = new ColorScale([
 
 export const cumuliDepthLayer: Layer = {
   key: 'cumuli-depth',
-  name: 'Cumulus Clouds',
-  title: 'Cumulus clouds depth',
+  name: usingMessages(m => m.layerCumulusDepth()),
+  title: usingMessages(m => m.layerCumulusDepthLegend()),
   dataPath: 'cumulus-depth',
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number
   }): ReactiveComponents {
+
+    const { m } = useI18n();
 
     const summarizer = summarizerFromLocationDetails(props, detailedForecast => {
       const cumulusClouds = detailedForecast.boundaryLayer.cumulusClouds
@@ -28,7 +31,7 @@ export const cumuliDepthLayer: Layer = {
           cumulusClouds.top - cumulusClouds.bottom :
           0
       return [
-        ["Cumuli depth", <span>{ depth } m</span>]
+        [() => m().summaryCumuliDepth(), <span>{ depth } m</span>]
       ]
     });
 
@@ -36,11 +39,9 @@ export const cumuliDepthLayer: Layer = {
 
     const help = <>
       <p>
-        Cumulus clouds are clouds caused by thermal activity. No cumulus clouds
-        means no thermals or blue thermals. Deep cumulus clouds means there is
-        risk of over-development.
+        { m().helpLayerCumuliDepth1() }
       </p>
-      <p>The color scale is shown on the bottom right of the screen.</p>
+      <p>{ m().helpLayerCumuliDepth2() }</p>
     </>;
 
     return {

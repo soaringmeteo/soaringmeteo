@@ -23,6 +23,4 @@ export const showCoordinates = (lng: number, lat: number, model: Model): string 
   return `${lng >= 0 ? 'E' : 'W'}${Math.abs(lng).toFixed(precision)} ${lat >= 0 ? 'N' : 'S'}${Math.abs(lat).toFixed(precision)}`
 }
 
-export const xcFlyingPotentialLayerName = 'XC Flying Potential';
-
 export const inversionStyle = '#d0a0e8';

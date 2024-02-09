@@ -5,7 +5,7 @@ import {DetailedForecast, LocationForecasts} from "../data/LocationForecasts";
 
 type Summarizer = {
   /** Create a summary of the forecast data on the point (shown in popups) */
-  summary(lat: number, lng: number): Promise<[LocationForecasts, Array<[string, JSX.Element]> | undefined] | undefined>
+  summary(lat: number, lng: number): Promise<[LocationForecasts, Array<[Accessor<string>, JSX.Element]> | undefined] | undefined>
 }
 
 // Non-static parts of layers
@@ -23,8 +23,8 @@ export type ReactiveComponents = {
  */
  export type Layer = {
   readonly key: string
-  readonly name: string
-  readonly title: string
+  readonly name: Accessor<string>
+  readonly title: Accessor<string>
   readonly dataPath: string
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
@@ -54,7 +54,7 @@ export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => 
   zone: Zone,
   forecastMetadata: ForecastMetadata,
   hourOffset: number
-}, summary: (detailedForecast: DetailedForecast, locationForecasts: LocationForecasts) => Array<[string, JSX.Element]>) => {
+}, summary: (detailedForecast: DetailedForecast, locationForecasts: LocationForecasts) => Array<[Accessor<string>, JSX.Element]>) => {
   return (): Summarizer => {
     // Make our dependencies explicit because accessing them from the summary method would be outside the tracking scope
     on(
@@ -66,7 +66,7 @@ export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => 
       () => {}
     )();
     return {
-      async summary(lat: number, lng: number): Promise<[LocationForecasts, Array<[string, JSX.Element]> | undefined] | undefined> {
+      async summary(lat: number, lng: number): Promise<[LocationForecasts, Array<[Accessor<string>, JSX.Element]> | undefined] | undefined> {
         const locationForecasts = await props.forecastMetadata.fetchLocationForecasts(props.zone, lat, lng);
         if (locationForecasts === undefined) {
           return undefined

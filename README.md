@@ -48,7 +48,7 @@ Go to https://soarwrf1.soaringmeteo.org/v2.
 
 # Contributing
 
-Pull requests are welcome. See the [CONTRIBUTING.md](CONTRIBUTING.md) file for more details.
+Pull requests are welcome. See the [CONTRIBUTING.md](CONTRIBUTING.md) file for more details, or the [TRANSLATING.md](./TRANSLATING.md) file if you want to help translate the user interface.
 
 # Donating
 

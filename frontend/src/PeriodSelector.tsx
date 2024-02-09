@@ -13,6 +13,7 @@ import {
 import { css } from "./css-hooks";
 import {LocationDetails} from "./LocationDetails";
 import {MapBrowserEvent} from "ol";
+import {useI18n} from "./i18n";
 
 const marginLeft = keyWidth;
 const marginTop = periodSelectorHeight;
@@ -192,6 +193,8 @@ export const PeriodSelectors = (props: {
   locationClicks: Accessor<MapBrowserEvent<any> | undefined>
 }): JSX.Element => {
 
+  const { m } = useI18n();
+
   const state = props.domain.state;
 
   const getDetailedView = detailedView({ domain: props.domain });
@@ -282,7 +285,7 @@ export const PeriodSelectors = (props: {
 
   const previousDayBtn =
     <div
-      title='24 hours before'
+      title={ m().period24HoursBefore() }
       style={{ ...inlineButtonStyle }}
       onClick={ () => props.domain.previousDay() }
     >
@@ -292,7 +295,7 @@ export const PeriodSelectors = (props: {
   // FIXME jump to previous day afternoon if we are on the morning period
   const previousPeriodBtn =
     <div
-      title='Previous forecast period'
+      title={ m().periodPrevious() }
       style={{ ...inlineButtonStyle }}
       onClick={ () => props.domain.previousHourOffset() }
     >
@@ -302,7 +305,7 @@ export const PeriodSelectors = (props: {
   // FIXME jump to next day morning if we are on the afternoon period
   const nextPeriodBtn =
     <div
-      title='Next forecast period'
+      title={ m().periodNext() }
       style={{ ...inlineButtonStyle }}
       onClick={ () => props.domain.nextHourOffset() }
     >
@@ -311,7 +314,7 @@ export const PeriodSelectors = (props: {
 
   const nextDayBtn =
     <div
-      title='24 hours after'
+      title={ m().period24HoursAfter() }
       style={{ ...inlineButtonStyle }}
       onClick={ () => props.domain.nextDay() }
     >

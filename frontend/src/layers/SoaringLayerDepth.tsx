@@ -1,14 +1,15 @@
 import { ColorScale, Color } from "../ColorScale";
 import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from './Layer';
 import {ForecastMetadata, Zone} from '../data/ForecastMetadata';
+import {useI18n, usingMessages} from "../i18n";
 
 export const soaringLayerDepthLayer: Layer = {
 
   key: 'soaring-layer-depth',
 
-  name: 'Soaring Layer Depth',
+  name: usingMessages(m => m.layerSoaringLayerDepth()),
 
-  title: 'Soaring layer depth',
+  title: usingMessages(m => m.layerSoaringLayerDepthLegend()),
 
   dataPath: 'soaring-layer-depth',
 
@@ -18,26 +19,24 @@ export const soaringLayerDepthLayer: Layer = {
     hourOffset: number
   }): ReactiveComponents {
 
+    const { m } = useI18n();
+
     const summarizer = summarizerFromLocationDetails(props, detailedForecast => [
-      ["Soaring layer depth", <span>{ detailedForecast.boundaryLayer.soaringLayerDepth } m</span>]
+      [() => m().summarySoaringLayerDepth(), <span>{ detailedForecast.boundaryLayer.soaringLayerDepth } m</span>]
     ]);
 
     const mapKey = colorScaleEl(soaringLayerDepthColorScale, value => `${value} m `);
 
     const help = <>
       <p>
-        The soaring layer is the area of the atmosphere where we can expect to find thermals and
-        soar. The depth of the soaring layer tells us how high we can soar. For instance, a value
-        of 850 m means that we can soar up to 850 m above the ground level. Values higher than
-        750 m are preferable to fly cross-country.
+        <a href="https://wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">{ m().helpLayerSoaringLayerDepth1() }</a>
+        {' '}{ m().helpLayerSoaringLayerDepth2() }
       </p>
       <p>
-        In case of “blue thermals”, the soaring layer is
-        the <a href="https://wikipedia.org/wiki/Planetary_boundary_layer" target="_blank">planetary
-        boundary layer</a>, otherwise (if there are cumulus clouds) it stops at the cloud base.
+        { m().helpLayerSoaringLayerDepth3() }
       </p>
       <p>
-        The color scale is shown on the bottom right of the screen.
+        { m().helpLayerSoaringLayerDepth4() }
       </p>
     </>;
 

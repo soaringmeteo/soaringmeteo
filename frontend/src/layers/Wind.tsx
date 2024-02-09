@@ -1,6 +1,7 @@
 import {Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
 import {ForecastMetadata, Zone} from "../data/ForecastMetadata";
 import {DetailedForecast, Wind} from "../data/LocationForecasts";
+import {useI18n, usingMessages} from "../i18n";
 
 const windComponents = (
   windValue: (detailedForecast: DetailedForecast) => Wind
@@ -10,21 +11,19 @@ const windComponents = (
   hourOffset: number,
 }): ReactiveComponents => {
 
+  const { m } = useI18n();
+
   const summarizer = summarizerFromLocationDetails(props, detailedForecast => {
     const { u, v } = windValue(detailedForecast);
     const windSpeed = Math.sqrt(u * u + v * v);
     return [
-      ["Wind speed", <span>{ Math.round(windSpeed) } km/h</span>]
+      [() => m().summaryWindSpeed(), <span>{ Math.round(windSpeed) } km/h</span>]
     ]
   });
 
-  const help =
-    <p>
-      The wind direction is shown with an arrow. The wind flows in the
-      direction of the arrow. For instance, an arrow that points to the right means
-      that the wind comes from west and goes to east. The wind speed is show in km/h
-      next to the arrow. You can hide the wind speed in the Settings (from the main menu).
-    </p>;
+  const help = <p>
+    { m().helpLayerWind() }
+  </p>;
 
   return {
     summarizer,
@@ -35,56 +34,56 @@ const windComponents = (
 
 export const boundaryLayerWindLayer: Layer = {
   key: 'boundary-layer-wind',
-  name: 'Boundary Layer',
-  title: 'Average wind speed and direction in the boundary layer',
+  name: usingMessages(m => m.layerWindBoundaryLayer()),
+  title: usingMessages(m => m.layerWindBoundaryLayerLegend()),
   dataPath: 'wind-boundary-layer',
   reactiveComponents: windComponents(data => data.boundaryLayer.wind)
 };
 
 export const surfaceWindLayer: Layer = {
   key: 'surface-wind',
-  name: 'Surface',
-  title: 'Wind speed and direction on the ground',
+  name: usingMessages(m => m.layerWindSurface()),
+  title: usingMessages(m => m.layerWindSurfaceLegend()),
   dataPath: 'wind-surface',
   reactiveComponents: windComponents(data => data.surface.wind)
 };
 
 export const soaringLayerTopWindLayer: Layer = {
   key: 'soaring-layer-top-wind',
-  name: 'Soaring Layer Top',
-  title: 'Wind speed and direction at the top of the soaring layer',
+  name: usingMessages(m => m.layerWindSoaringLayerTop()),
+  title: usingMessages(m => m.layerWindSoaringLayerTopLegend()),
   dataPath: 'wind-soaring-layer-top',
   reactiveComponents: windComponents(data => data.winds.soaringLayerTop)
 };
 
 export const _300MAGLWindLayer: Layer = {
   key: '300m-agl-wind',
-  name: '300 m AGL',
-  title: 'Wind speed and direction at 300 m above the ground level',
+  name: usingMessages(m => m.layerWind300MAGL()),
+  title: usingMessages(m => m.layerWind300MAGLLegend()),
   dataPath: 'wind-300m-agl',
   reactiveComponents: windComponents(data => data.winds._300MAGL)
 };
 
 export const _2000MAMSLWindLayer: Layer = {
   key: '2000m-amsl-wind',
-  name: '2000 m AMSL',
-  title: 'Wind speed and direction at 2000 m above the mean sea level',
+  name: usingMessages(m => m.layerWind2000AMSL()),
+  title: usingMessages(m => m.layerWind2000AMSLLegend()),
   dataPath: 'wind-2000m-amsl',
   reactiveComponents: windComponents( data => data.winds._2000MAMSL)
 };
 
 export const _3000MAMSLWindLayer: Layer = {
   key: '3000m-amsl-wind',
-  name: '3000 m AMSL',
-  title: 'Wind speed and direction at 3000 m above the mean sea level',
+  name: usingMessages(m => m.layerWind3000AMSL()),
+  title: usingMessages(m => m.layerWind3000AMSLLegend()),
   dataPath: 'wind-3000m-amsl',
   reactiveComponents: windComponents(data => data.winds._3000MAMSL)
 };
 
 export const _4000MAMSLWindLayer: Layer = {
   key: '4000m-amsl-wind',
-  name: '4000 m AMSL',
-  title: 'Wind speed and direction at 4000 m above the mean sea level',
+  name: usingMessages(m => m.layerWind4000AMSL()),
+  title: usingMessages(m => m.layerWind4000AMSLLegend()),
   dataPath: 'wind-4000m-amsl',
   reactiveComponents: windComponents(data => data.winds._4000MAMSL)
 };

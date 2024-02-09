@@ -1,4 +1,4 @@
-import {createEffect, createSignal, JSX, lazy, Show} from 'solid-js';
+import {createEffect, createResource, getOwner, JSX, lazy, runWithOwner, Show } from 'solid-js';
 import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap } from './map/Map';
@@ -8,6 +8,7 @@ import { BurgerButton } from './BurgerButton';
 import { hooks } from "./css-hooks";
 import {LayerKeys} from "./LayerKeys";
 import { HelpButton } from './help/HelpButton';
+import {Localized} from "./i18n";
 
 const PeriodSelectors = lazy(() => import('./PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
 
@@ -91,26 +92,27 @@ export const start = (containerElement: HTMLElement): void => {
   }
 
   const Loader = ((): JSX.Element => {
-    const [loaded, setLoaded] = createSignal<Domain>();
-    Promise
-      .all([
-        fetchForecastRuns(gfsModel),
-        fetchForecastRuns(wrfModel)
-          .then(runs => runs.sort((run1, run2) => run1.firstTimeStep.getTime() - run2.firstTimeStep.getTime()))
-      ])
-      .then(([gfsRuns, wrfRuns]) => {
-        setLoaded(new Domain(gfsRuns, wrfRuns));
-      })
-      .catch(error => {
-        console.log(error);
-        alert('Unable to retrieve forecast data. Try again later or contact equipe@soaringmeteo.org if the problem persists.');
-      });
-    return <Show when={ loaded() }>
-      { (domain) => {
-        return <App domain={domain()} />
-      }}
+    const owner = getOwner(); // Remember the tracking scope because it is lost when the promise callback is called
+    const [loadedDomain] = createResource(() =>
+      Promise
+          .all([
+            fetchForecastRuns(gfsModel),
+            fetchForecastRuns(wrfModel)
+                .then(runs => runs.sort((run1, run2) => run1.firstTimeStep.getTime() - run2.firstTimeStep.getTime()))
+          ])
+          .then(([gfsRuns, wrfRuns]) => {
+            return runWithOwner(owner, () => new Domain(gfsRuns, wrfRuns));
+          })
+          .catch(error => {
+            console.log(error);
+            alert('Unable to retrieve forecast data. Try again later or contact equipe@soaringmeteo.org if the problem persists.');
+            return undefined
+          })
+    );
+    return <Show when={ loadedDomain() }>
+      { domain => <App domain={domain()} /> }
     </Show>
   });
 
-  render(() => <Loader />, mapElement);
+  render(() => <Localized><Loader /></Localized>, mapElement);
 };

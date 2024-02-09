@@ -1,9 +1,10 @@
 import { ColorScale, Color } from "../ColorScale";
 import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
-import { JSX } from "solid-js";
+import {Accessor, JSX} from "solid-js";
 import { ForecastMetadata, Zone } from "../data/ForecastMetadata";
-import { showDate, xcFlyingPotentialLayerName } from "../shared";
+import { showDate } from "../shared";
 import type { LocationForecasts, DetailedForecast } from "../data/LocationForecasts";
+import {useI18n, usingMessages} from "../i18n";
 
 export const colorScale = new ColorScale([
   [10, new Color(0x33, 0x33, 0x33, 1)],
@@ -22,9 +23,9 @@ export const xcFlyingPotentialLayer: Layer = {
 
   key: 'xc-flying-potential',
 
-  name: xcFlyingPotentialLayerName,
+  name: usingMessages(m => m.layerThQ()),
 
-  title: 'XC flying potential',
+  title: usingMessages(m => m.layerThQLegend()),
 
   dataPath: 'xc-potential',
 
@@ -35,6 +36,8 @@ export const xcFlyingPotentialLayer: Layer = {
     timeZone: string | undefined,
     setHourOffset: (value: number) => void
   }): ReactiveComponents {
+
+    const { m } = useI18n();
 
     const thqElement = (detailedForecast: DetailedForecast, addGutter: boolean): JSX.Element =>
         <div
@@ -65,31 +68,23 @@ export const xcFlyingPotentialLayer: Layer = {
     };
 
     const summarizer = summarizerFromLocationDetails(props, (detailedForecast, locationForecasts) => {
-      const maybeOverview: Array<[string, JSX.Element]> =
+      const maybeOverview: Array<[Accessor<string>, JSX.Element]> =
         props.forecastMetadata.modelPath === 'gfs' ?
-          [["Week overview", <span>{ nextDaysOverview(locationForecasts) }</span>]] :
-          [["Day overview", <span>{ dayOverview(locationForecasts) }</span>]];
+          [[() => m().summaryWeekOverview(), <span>{ nextDaysOverview(locationForecasts) }</span>]] :
+          [[() => m().summaryDayOverview(), <span>{ dayOverview(locationForecasts) }</span>]];
       return maybeOverview.concat([
-        ["XC Flying Potential", <span>{detailedForecast.xcPotential}%</span>],
-        ["Soaring layer depth", <span>{detailedForecast.boundaryLayer.soaringLayerDepth} m</span>],
-        ["Thermal velocity", <span>{detailedForecast.thermalVelocity} m/s</span>],
-        ["Total cloud cover", <span>{Math.round(detailedForecast.cloudCover * 100)}%</span>],
+        [() => m().summaryThQ(), <span>{detailedForecast.xcPotential}%</span>],
+        [() => m().summaryThermalVelocity(), <span>{detailedForecast.thermalVelocity} m/s</span>],
+        [() => m().summarySoaringLayerDepth(), <span>{detailedForecast.boundaryLayer.soaringLayerDepth} m</span>],
+        [() => m().summaryTotalCloudCover(), <span>{Math.round(detailedForecast.cloudCover * 100)}%</span>],
       ]);
     });
 
     const mapKey = colorScaleEl(colorScale, value => `${value}% `);
 
-    const help = <>
-      <p>
-        It indicates the potential for cross-country flying, from 0% (poor thermals,
-        or very strong wind) to 100% (strong, high thermals, weak wind). Look for white
-        or blue areas (the full color scale is shown on the bottom right of the screen).
-        The XC flying potential index takes into account
-        the soaring layer depth, the sunshine, and the average wind speed within the
-        boundary layer. Deep soaring layer, strong sunshine, and low wind speeds
-        increase the value of this indicator.
-      </p>
-    </>;
+    const help = <p>
+      { m().helpLayerThQ() }
+    </p>;
 
     return {
       summarizer,

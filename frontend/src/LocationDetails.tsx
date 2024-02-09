@@ -8,6 +8,7 @@ import {Meteogram, Sounding} from "./DetailedView";
 import { HelpButton } from "./help/HelpButton";
 import {buttonStyle, closeButton, surfaceOverMap} from "./styles/Styles";
 import { css } from "./css-hooks";
+import {useI18n} from "./i18n";
 
 /**
  * Box showing the forecast details (summary, meteogram, or sounding) for the selected location.
@@ -16,6 +17,8 @@ export const LocationDetails = (props: {
   locationClicks: Accessor<MapBrowserEvent<any> | undefined>
   domain: Domain
 }): JSX.Element => {
+
+  const { m } = useI18n();
 
   // Open the detailed view when the users click on the map
   createEffect(on(props.locationClicks, (event) => {
@@ -36,7 +39,9 @@ export const LocationDetails = (props: {
     props.domain.showLocationForecast(latitude, longitude, detailedViewType);
   }));
 
-  return <Show when={ props.domain.state.detailedView }>
+  // For now use 'keyed' to re-compute the whole detailed view because I could
+  // not manage to make it work with fine-grained reactivity
+  return <Show when={ props.domain.state.detailedView } keyed>
     { detailedView =>
       <div
         style={{
@@ -53,12 +58,12 @@ export const LocationDetails = (props: {
         }}
       >
         <Show
-          when={ detailedView().viewType !== 'summary' /* The summary view shows the location by itself */ }
-          fallback={ <LocationSummary domain={props.domain} latitude={detailedView().latitude} longitude={detailedView().longitude} /> }
+          when={ detailedView.viewType !== 'summary' /* The summary view shows the location by itself */ }
+          fallback={ <LocationSummary domain={props.domain} latitude={detailedView.latitude} longitude={detailedView.longitude} /> }
         >
           <div>
-            { showCoordinates(detailedView().longitude, detailedView().latitude, props.domain.state.model) }, { (detailedView() as Meteogram | Sounding).locationForecasts.elevation }m.
-            <Show when={ detailedView().viewType === 'sounding' }>
+            { showCoordinates(detailedView.longitude, detailedView.latitude, props.domain.state.model) }, { (detailedView as Meteogram | Sounding).locationForecasts.elevation }m.
+            <Show when={ detailedView.viewType === 'sounding' }>
               &nbsp;{ showDate(props.domain.state.forecastMetadata.dateAtHourOffset(props.domain.state.hourOffset), { showWeekDay: true, timeZone: props.domain.timeZone() }) }.
             </Show>
           </div>
@@ -73,27 +78,27 @@ export const LocationDetails = (props: {
           }}
         >
           <span
-            style={{ ...buttonStyle, ...(detailedView().viewType === 'summary' ? { 'background-color': 'lightgray' } : {}) }}
-            title="Summary of the forecast for this location"
-            onClick={ () => props.domain.showLocationForecast(detailedView().latitude, detailedView().longitude, 'summary') }
+            style={{ ...buttonStyle, ...(detailedView.viewType === 'summary' ? { 'background-color': 'lightgray' } : {}) }}
+            title={ m().locationSummaryLegend() }
+            onClick={ () => props.domain.showLocationForecast(detailedView.latitude, detailedView.longitude, 'summary') }
           >
-            Summary
+            { m().locationSummary() }
           </span>
 
           <span
-            style={{ ...buttonStyle, ...(detailedView().viewType === 'meteogram' ? { 'background-color': 'lightgray' } : {}) }}
-            title="Meteogram for this location"
-            onClick={ () => props.domain.showLocationForecast(detailedView().latitude, detailedView().longitude, 'meteogram') }
+            style={{ ...buttonStyle, ...(detailedView.viewType === 'meteogram' ? { 'background-color': 'lightgray' } : {}) }}
+            title={ m().locationMeteogramLegend() }
+            onClick={ () => props.domain.showLocationForecast(detailedView.latitude, detailedView.longitude, 'meteogram') }
           >
-            Meteogram
+            { m().locationMeteogram() }
           </span>
 
           <span
-            style={{ ...buttonStyle, ...(detailedView().viewType === 'sounding' ? { 'background-color': 'lightgray' } : {}) }}
-            title="Sounding for this time and location"
-            onClick={ () => props.domain.showLocationForecast(detailedView().latitude, detailedView().longitude, 'sounding') }
+            style={{ ...buttonStyle, ...(detailedView.viewType === 'sounding' ? { 'background-color': 'lightgray' } : {}) }}
+            title={ m().locationSoundingLegend() }
+            onClick={ () => props.domain.showLocationForecast(detailedView.latitude, detailedView.longitude, 'sounding') }
           >
-            Sounding
+            { m().locationSounding() }
           </span>
 
           <HelpButton domain={ props.domain } overMap={ false } />
@@ -135,7 +140,7 @@ const LocationSummary = (props: {
             primaryLayerSummarizer.summary(props.latitude, props.longitude),
             windLayerSummarizer.summary(props.latitude, props.longitude)
           ])
-            .then<[LocationForecasts, Array<[string, JSX.Element]> | undefined] | undefined>(([primarySummary, windSummary]) =>
+            .then<[LocationForecasts, Array<[Accessor<string>, JSX.Element]> | undefined] | undefined>(([primarySummary, windSummary]) =>
               (primarySummary === undefined || windSummary === undefined) ?
                 undefined :
                 [primarySummary[0], primarySummary[1]?.concat(windSummary[1] || [])]
@@ -146,7 +151,7 @@ const LocationSummary = (props: {
       }
     );
     const summaryResource = () => {
-      const result: [LocationForecasts, Array<[string, JSX.Element]> | undefined] | undefined = resource();
+      const result: [LocationForecasts, Array<[Accessor<string>, JSX.Element]> | undefined] | undefined = resource();
       if (result !== undefined && result[1] !== undefined && result[1].length !== 0) {
         return result[1]
       } else {
@@ -166,10 +171,10 @@ const LocationSummary = (props: {
     </>;
 };
 
-const table = (data: Array<[string, JSX.Element]>): JSX.Element => {
+const table = (data: Array<[Accessor<string>, JSX.Element]>): JSX.Element => {
   const rows =
     data.map(([label, value]) => {
-      return <tr><th style="text-align: right">{label}:</th><td>{value}</td></tr>
+      return <tr><th style="text-align: right">{label()}:</th><td>{value}</td></tr>
     });
   if (rows.length === 0) {
     return <div></div>

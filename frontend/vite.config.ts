@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { paraglide } from "@inlang/paraglide-js-adapter-vite"
 import solidPlugin from 'vite-plugin-solid';
 import { VitePWA } from 'vite-plugin-pwa';
 import serveStatic from 'serve-static';
@@ -7,6 +8,10 @@ export default defineConfig(() => ({
   base: '/v2/',
   plugins: [
     solidPlugin(),
+    paraglide({
+      project: "./project.inlang", //Path to your inlang project
+      outdir: "./src/generated-i18n", //Where you want the generated files to be placed
+    }),
     VitePWA({
       // registerType: 'autoUpdate',
       injectRegister: null,

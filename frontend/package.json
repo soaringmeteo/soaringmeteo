@@ -11,6 +11,8 @@
   "type": "module",
   "devDependencies": {
     "@css-hooks/solid": "1.8.2",
+    "@inlang/paraglide-js": "1.2.5",
+    "@inlang/paraglide-js-adapter-vite": "1.2.14",
     "@types/proj4": "2.5.4",
     "serve-static": "1.15.0",
     "typescript": "5.3.3",
@@ -21,7 +23,7 @@
   "scripts": {
     "start": "vite --host=0.0.0.0",
     "build": "vite build",
-    "compile": "tsc --noEmit",
+    "compile": "paraglide-js compile --project ./project.inlang --outdir ./src/generated-i18n && tsc --noEmit",
     "deploy": "yarn compile && yarn build && rsync --recursive --times --verbose --delete --exclude=data/ dist/ ${SERVER:-soarwrf1.soaringmeteo.org}:/home/soaringmeteo.org/v2/",
     "preview": "vite preview"
   }

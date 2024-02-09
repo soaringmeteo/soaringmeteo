@@ -1,4 +1,4 @@
-import {JSX, Show} from 'solid-js';
+import {Accessor, JSX, Show} from 'solid-js';
 
 import {Domain, gfsModel, type Model, wrfModel} from './State';
 import {Layer} from './layers/Layer';
@@ -19,6 +19,8 @@ import {cumuliDepthLayer} from './layers/CumuliDepth';
 import {showDate} from './shared';
 import {Checkbox, Radio, Select} from './styles/Forms';
 import {burgerBorderTopStyle, burgerPaddingStyle} from "./styles/Styles";
+import {useI18n} from "./i18n";
+import {Zone} from "./data/ForecastMetadata";
 
 /**
  * Overlay on the map that displays the soaring forecast.
@@ -27,23 +29,25 @@ export const LayersSelector = (props: {
   domain: Domain
 }): JSX.Element => {
 
+  const { m, zoneLabel } = useI18n();
+
   const fieldsetPaddingStyle =
     { padding: '0.2em 0.75em', margin: '.25em .5em' };
 
   const selectForecastEl =
     <>
-      <div style={{ ...burgerPaddingStyle, ...burgerBorderTopStyle, 'padding-bottom': 0 }}>Forecast data</div>
+      <div style={{ ...burgerPaddingStyle, ...burgerBorderTopStyle, 'padding-bottom': 0 }}>{ m().menuForecastData() }</div>
       <fieldset style={ fieldsetPaddingStyle}>
-        <legend>Model</legend>
+        <legend>{ m().menuModel() }</legend>
         {
-          new Array<[string, string, Model]>(
-            ['soarGFS (25 km)', 'Forecast based on the GFS model', gfsModel],
-            ['soarWRF (2-6 km)', 'Forecast based on the WRF model', wrfModel]
+          new Array<[string, () => string, Model]>(
+            ['soarGFS (25 km)', () => m().menuGFSLegend(), gfsModel],
+            ['soarWRF (2-6 km)', () => m().menuWRFLegend(), wrfModel]
           )
             .map(([label, title, model]) =>
               <Radio
-                label={label}
-                title={title}
+                label={ label }
+                title={ title() }
                 checked={ model === props.domain.state.model }
                 groupName="model"
                 onChange={ () => props.domain.setModel(model) }
@@ -53,9 +57,9 @@ export const LayersSelector = (props: {
       </fieldset>
       <Show when={ props.domain.state.model === gfsModel }>
         <fieldset style={ fieldsetPaddingStyle }>
-          <legend>Initialization Time</legend>
+          <legend>{ m().menuInitializationTime() }</legend>
           <Select
-            title="Initialization time of the forecast run"
+            title={ m().menuInitializationTimeLegend() }
             options={
               props.domain.gfsRuns.map(gfsRun => {
                 const initTimeString =
@@ -73,14 +77,15 @@ export const LayersSelector = (props: {
         </fieldset>
       </Show>
       <fieldset style={ fieldsetPaddingStyle }>
-        <legend>Zone</legend>
+        <legend>{ m().menuZone() }</legend>
         {
           props.domain.state.forecastMetadata.zones
-            .sort((zone1, zone2) => zone1.label.localeCompare(zone2.label))
-            .map(zone =>
+            .map<[Accessor<string>, Zone]>(zone => [zoneLabel(zone.id), zone])
+            .sort(([label1, zone1], [label2, zone2]) => label1().localeCompare(label2()))
+            .map(([label, zone]) =>
               <Radio
-                label={zone.label}
-                title={zone.label}
+                label={label()}
+                title={label()}
                 checked={ zone.id === props.domain.state.zone.id }
                 groupName="zone"
                 onChange={ () => props.domain.setZone(zone) }
@@ -92,8 +97,8 @@ export const LayersSelector = (props: {
 
   function setupLayerBtn(layer: Layer, layerType: 'primary-layer' | 'wind-layer'): JSX.Element {
     return <Radio
-      label={ layer.name }
-      title={ layer.title }
+      label={ layer.name() }
+      title={ layer.title() }
       checked={ props.domain.state.primaryLayer.key === layer.key || props.domain.state.windLayer.key === layer.key } // Note: for some reason, comparing the layers does not work but comparing the keys does.
       groupName={ layerType }
       onChange={ () => {
@@ -123,8 +128,8 @@ export const LayersSelector = (props: {
   const _4000MAMSLWindEl = setupLayerBtn(_4000MAMSLWindLayer, 'wind-layer');
   const windCheckBox =
     <Checkbox
-        label="Wind"
-        title="Show wind force and direction at various elevation levels"
+        label={ m().menuWind() }
+        title={ m().menuWindLegend() }
         checked={ props.domain.state.windLayerEnabled }
         onChange={ (value) => props.domain.enableWindLayer(value) }
     />;
@@ -147,8 +152,8 @@ export const LayersSelector = (props: {
     <fieldset style={ fieldsetPaddingStyle }>
       <legend>
         <Checkbox
-          label="Overlay"
-          title="Show an overlay on the map"
+          label={ m().menuOverlay() }
+          title={ m().menuOverlayLegend() }
           checked={ props.domain.state.primaryLayerEnabled }
           onChange={ (value) => props.domain.enablePrimaryLayer(value) }
         />
@@ -161,7 +166,7 @@ export const LayersSelector = (props: {
     </fieldset>;
 
   return <>
-    <div style={{ ...burgerPaddingStyle, ...burgerPaddingStyle, 'padding-bottom': 0 }}>Display on map</div>
+    <div style={{ ...burgerPaddingStyle, ...burgerPaddingStyle, 'padding-bottom': 0 }}>{ m().menuDisplayOnMap() }</div>
     {primaryLayerEl}
     {windLayersEl}
     {selectForecastEl}

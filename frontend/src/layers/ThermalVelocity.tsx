@@ -1,6 +1,7 @@
 import { ColorScale, Color } from "../ColorScale";
 import {ForecastMetadata, Zone} from '../data/ForecastMetadata';
 import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from './Layer';
+import {useI18n, usingMessages} from "../i18n";
 
 export const thermalVelocityColorScale = new ColorScale([
   [0.25, new Color(0x33, 0x33, 0x33, 1)],
@@ -17,8 +18,8 @@ export const thermalVelocityColorScale = new ColorScale([
 
 export const thermalVelocityLayer: Layer = {
   key: 'thermal-velocity',
-  name: 'Thermal Velocity',
-  title: 'Thermal updraft velocity',
+  name: usingMessages(m => m.layerThermalVelocity()),
+  title: usingMessages(m => m.layerThermalVelocityLegend()),
   dataPath: 'thermal-velocity',
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
@@ -26,17 +27,17 @@ export const thermalVelocityLayer: Layer = {
     hourOffset: number
   }): ReactiveComponents {
 
+    const { m } = useI18n();
+
     const summarizer = summarizerFromLocationDetails(props, detailedForecast => [
-      ["Thermal velocity", <span>{ detailedForecast.thermalVelocity } m/s</span>]
+      [() => m().summaryThermalVelocity(), <span>{ detailedForecast.thermalVelocity } m/s</span>]
     ]);
 
     return {
       summarizer,
       mapKey: colorScaleEl(thermalVelocityColorScale, value => `${value} m/s `),
       help: <p>
-        The thermal updraft velocity is estimated from the depth of the boundary
-        layer and the sunshine. The color scale is shown on the bottom right of the
-        screen.
+        { m().helpLayerThermalVelocity() }
       </p>
     }
   }

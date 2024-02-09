@@ -5,6 +5,7 @@ to keep this service up to date.
 
 * Find a bug? Do not hesitate to open an issue using the [bug template](../../issues/new?template=bug-report.md).
 * Have an awesome improvement idea? Do not hesitate to open an issue using the [feature template](../../issues/new?template=feature_request.md).
+* Want to help translate the user interface in another language, or fix an existing translation? Please see the [translating](./TRANSLATING.md) guide.
 
 # Setup the development environment
 

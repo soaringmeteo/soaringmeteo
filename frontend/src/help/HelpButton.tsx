@@ -3,11 +3,13 @@ import { createSignal, JSX, lazy } from "solid-js";
 import { css } from "../css-hooks";
 import { bottomButtonsSize, surfaceOverMap } from "../styles/Styles";
 import { Overlay } from "../map/Overlay";
+import {useI18n} from "../i18n";
 
 const Help = lazy(() => import('./Help').then(module => ({ default: module.Help })));
 
 export const HelpButton = (props: { domain: Domain, overMap: boolean }): JSX.Element => {
 
+    const { m } = useI18n();
     const [isVisible, makeVisible] = createSignal(false);
 
     const expandButton =
@@ -28,7 +30,7 @@ export const HelpButton = (props: { domain: Domain, overMap: boolean }): JSX.Ele
         hover: { 'background-color': 'lightgray' }
       })}
        onClick={ () => makeVisible(true) }
-       title="Help"
+       title={ m().help() }
       >
         ?
       </div>;

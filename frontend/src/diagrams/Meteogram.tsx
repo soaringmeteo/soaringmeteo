@@ -529,7 +529,7 @@ const drawMeteogram = (
 
   // Thq
   const leftThqDiagram = new Diagram([0, thqDiagramTop], thqDiagramHeight, leftCtx);
-  leftThqDiagram.text('XC?', [keyWidth / 2, 8], 'black', 'center', 'middle');
+  leftThqDiagram.text('ThQ', [keyWidth / 2, 8], 'black', 'center', 'middle');
 
   // Thermal velocity
   const leftThermalVelocityDiagram = new Diagram([0, thermalVelocityDiagramTop], thermalVelocityDiagramHeight, leftCtx);

@@ -15,7 +15,6 @@ type ForecastMetadataData = {
 
 export type Zone = {
   readonly id: string
-  readonly label: string
   readonly raster: {
     extent: [number, number, number, number]
     resolution: number
@@ -86,6 +85,7 @@ export class ForecastMetadata {
 
   /**
    * Return the closest point within the `zone`, if the zone contains the provided coordinates.
+   * @return The points coordinates in the zone coordinates
    */
   closestPoint(zone: Zone, longitude: number, latitude: number): [number, number] | undefined {
     const proj = zone.raster.proj;

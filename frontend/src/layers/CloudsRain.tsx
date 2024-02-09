@@ -1,6 +1,7 @@
 import { ColorScale, Color } from "../ColorScale";
 import {ForecastMetadata, Zone} from '../data/ForecastMetadata';
 import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
+import {useI18n, usingMessages} from "../i18n";
 
 // TODO Make sure this is consistent with what the backend does (consider providing the scale from the backend)
 const cloudCoverColorScale = new ColorScale([
@@ -25,8 +26,8 @@ const rainColorScale = new ColorScale([
 
 export const cloudsRainLayer: Layer = {
   key: 'clouds-rain',
-  name: 'Clouds an Rain',
-  title: 'Clouds and rain',
+  name: usingMessages(m => m.layerCloudsAndRain()),
+  title: usingMessages(m => m.layerCloudsAndRainLegend()),
   dataPath: 'clouds-rain',
   reactiveComponents(props: {
     zone: Zone,
@@ -34,9 +35,11 @@ export const cloudsRainLayer: Layer = {
     hourOffset: number
   }): ReactiveComponents {
 
+    const { m } = useI18n();
+
     const summarizer = summarizerFromLocationDetails(props, detailedForecast => [
-      ["Total cloud cover", <span>{ Math.round(detailedForecast.cloudCover * 100) }%</span>],
-      ["Rainfall", <span>{ detailedForecast.rain.total } mm</span>]
+      [() => m().summaryTotalCloudCover(), <span>{ Math.round(detailedForecast.cloudCover * 100) }%</span>],
+      [() => m().summaryRainfall(), <span>{ detailedForecast.rain.total } mm</span>]
     ]);
 
     const mapKey = <>
@@ -44,9 +47,7 @@ export const cloudsRainLayer: Layer = {
       { colorScaleEl(cloudCoverColorScale, value => ` ${value}% `) }
     </>;
     const help = <p>
-      It indicates the cloud cover as well as the amount of precipitation in the time period.
-      The cloud cover is displayed with white and gray shadings, and the precipitation in
-      millimeters is displayed with colours as indicated in the map legend.
+      { m().helpLayerCloudsAndRain() }
     </p>;
 
     return {
