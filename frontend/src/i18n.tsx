@@ -71,15 +71,31 @@ function fetchMessages (lang: AvailableLanguageTag): Promise<Messages> {
 
 type Localized = Component<{ children: JSX.Element }>;
 
-export const Localized: Localized = lazy(() => {
-  let initLang = window.localStorage.getItem(langKey);
-  if (initLang === null || !availableLangs.some(l => l === initLang)) {
-    initLang = sourceLanguageTag;
+const detectLang = (): AvailableLanguageTag => {
+  // 1. Look in the local storage
+  const initLangFromLocalStorage = window.localStorage.getItem(langKey);
+  if (initLangFromLocalStorage !== null && availableLangs.some(lang => lang === initLangFromLocalStorage)) {
+    return initLangFromLocalStorage as AvailableLanguageTag
   }
+
+  // 2. Look in the browser preferences
+  if (window.navigator && window.navigator.language && Intl && Intl.Locale) {
+    const locale = new Intl.Locale(window.navigator.language);
+    if (availableLangs.some(lang => lang === locale.language)) {
+      return locale.language as AvailableLanguageTag
+    }
+  }
+
+  // 3. Fallback to the default lang
+  return sourceLanguageTag as AvailableLanguageTag
+};
+
+export const Localized: Localized = lazy(() => {
+  let initLang = detectLang();
   const owner = getOwner(); // Remember the tracking scope because it is lost when the promise callback is called
-  return fetchMessages(initLang as AvailableLanguageTag).then(initMessages =>
+  return fetchMessages(initLang).then(initMessages =>
     runWithOwner(owner, () => {
-      const [getLang, setLang] = createSignal(initLang as AvailableLanguageTag);
+      const [getLang, setLang] = createSignal(initLang);
       const [getMessages, setMessages] = createSignal(initMessages, { equals: false });
       // Sync our signals with the paraglide runtime
       // 1. Update our messages when the language changes
