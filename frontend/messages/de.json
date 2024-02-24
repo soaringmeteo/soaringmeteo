@@ -1,4 +1,9 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"help": "Hilfe"
+	"help": "Hilfe",
+	"menuDisplayOnMap": "Auf der Karte anzeigen",
+	"menuOverlayLegend": "Overlay auf der Karte anzeigen",
+	"menuWind": "Wind",
+	"menuWindLegend": "Windstärke und -richtung auf einer bestimmten Höhenstufe an",
+	"menuForecastData": "Prognosen"
 }
