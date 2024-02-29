@@ -31,9 +31,18 @@ The Fink tool displays all the messages used by the Soaringmeteo user interface,
 3. Log in to GitHub, and then accept to install and authorize the inlang app on your account.
 
    ![](./images/i18n-sign-in-2.png)
-4. At the bottom of the page, click to “Fork” (this action is necessary only once).
+4. If this is the first time you contribute, at the bottom of the page, click to “Fork” (this action is necessary only once).
 
    ![](./images/i18n-fork.png)
+
+   Otherwise, if you already have a fork, make sure to synchronize it with the upstream repository before you start translating. If you see a message that tells you your fork is out of sync, click to “Open GitHub”:
+
+   ![](./images/i18n-out-sync.png)
+
+   And then, in GitHub, click “Sync fork” and “Discard X commits” if there are conflicts:
+
+   ![](./images/i18n-sync.png)
+
 5. Fix any existing translated message, or translate any missing message.
 
    ![](./images/i18n-translate.png)
