@@ -119,7 +119,7 @@
 	"helpMeteogramScndRow1": "Die",
 	"helpMeteogramScndRow2": "zweite Linie",
 	"helpMeteogramScndRow3": "(„m/s“) zeigt die geschätzte durchschnittliche Geschwindigkeit der Thermik (in m/s) innerhalb der Grenzschicht. Werte über 1 m/s bedeuten normalerweise, dass die Thermik gerade stark genug sein sollte, um in der Luft zu bleiben. Werte über 2 m/s bedeuten gute Thermik.",
-	"helpMeteogramAirgram": "Unterhalb dieser Zahlen zeigt das „Airgram“ verschiedene Eigenschaften der Luft am ausgewählten Ort im Zeitverlauf. Die Skala links zeigt die Höhe an. In diesem Beispiel beginnt es bei {groundLevel} m, was der Höhe des ausgewählten Standorts entspricht, wie vom aktuellen Vorhersagemodell aus gesehen.",
+	"helpMeteogramAirgram": "Unterhalb dieser Zahlen zeigt eine Grafik verschiedene Eigenschaften der Luft am ausgewählten Ort im Zeitverlauf. Die Skala links zeigt die Höhe an. In diesem Beispiel beginnt es bei {groundLevel} m, was der Höhe des ausgewählten Standorts entspricht, wie vom aktuellen Vorhersagemodell aus gesehen.",
 	"helpMeteogramBoundaryLayer1": "Die",
 	"helpMeteogramBoundaryLayer2": "grüne Zone",
 	"helpMeteogramBoundaryLayer3": "zeigt die Veränderung der",
@@ -173,8 +173,14 @@
 	"helpSounding13": "zeigt den Verlauf der Taupunkttemperatur mit der Höhe.",
 	"helpSoundingBoundaryLayer1": "Die",
 	"helpSoundingBoundaryLayer2": "grüne Zone",
-	"helpSoundingBoundaryLayer3": "zeigt die konvektive Grenzschicht, der Teil der Atmosphäre, in dem wir mit Aufwinden und Höhenflügen rechnen können.",
+	"helpSoundingBoundaryLayer3": "zeigt die konvektive Grenzschicht, der Teil der Atmosphäre, in der wir mit Aufwinden und Höhenflügen rechnen können.",
 	"helpSoundingCloudCover1": "Auf der rechten Seite die",
 	"helpSoundingCloudCover2": "weißen oder grauen Streifen",
-	"helpSoundingCloudCover3": "zeigen die Bewölkung auf verschiedenen Höhenniveaus an. Je breiter der Streifen, desto stärker die Bewölkun. Wenn der Streifen so groß ist wie die rechte Spalte, bedeutet dies eine Bewölkung von 100 %."
+	"helpSoundingCloudCover3": "zeigen die Bewölkung auf verschiedenen Höhenniveaus an. Je breiter der Streifen, desto stärker die Bewölkun. Wenn der Streifen so groß ist wie die rechte Spalte, bedeutet dies eine Bewölkung von 100 %.",
+	"helpSoundingCumulus1": "Das Vorhandensein von Kumuluswolken wird angezeigt durch",
+	"helpSoundingCumulus2": "ein weisses Wolkenbild als Piktogramm",
+	"helpSoundingCumulus3": "Die Höhe der Basis der Cumuluswolken ist ebenfalls unterhalb des Bildes, rechts vom Diagramm angegeben.",
+	"helpSoundingWind": "Auf der linken Seite werden die Windgeschwindigkeit und -richtung in verschiedenen Höhenstufen durch Windfahnen angezeigt.",
+	"helpSoundingThermalVelocity": "Der Text „2.1 m/s“ (in der Mitte der konvektiven Schicht, rechts im Diagramm) gibt die geschätzte durchschnittliche vertikale Geschwindigkeit der Thermik an. Werte über 1 m/s bedeuten normalerweise, dass die Thermik gerade stark genug sein sollte, um in der Luft zu bleiben. Werte über 2 m/s bedeuten gute Thermik.",
+	"helpSoundingExpand": "Standardmäßig zeigt das Diagramm nur die Luftmasse innerhalb der konvektiven Grenzschicht und einige tausend Meter darüber. Sie können das Emagramm erweitern, um die gesamte Troposphäre anzuzeigen, indem Sie auf die Schaltfläche in der oberen rechten Ecke klicken."
 }
