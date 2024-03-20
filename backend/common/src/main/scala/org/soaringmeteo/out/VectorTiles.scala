@@ -6,9 +6,10 @@ import geotrellis.vector.reproject.Reproject
 import geotrellis.vectortile.{MVTFeature, MVTFeatures, StrictLayer, VectorTile, VInt64, VFloat}
 import org.slf4j.LoggerFactory
 import org.soaringmeteo.{Forecast, Point, Wind}
+import squants.Meters
 
 /** Output of the model encoded as vector tiles */
-case class VectorTiles(path: String, feature: Forecast => Wind)
+case class VectorTiles(path: String, feature: Forecast => Wind, excluded: Forecast => Boolean = _ => false)
 
 object VectorTiles {
 
@@ -62,9 +63,9 @@ object VectorTiles {
     VectorTiles("wind-boundary-layer", _.boundaryLayerWind),
     VectorTiles("wind-soaring-layer-top", _.winds.soaringLayerTop),
     VectorTiles("wind-300m-agl", _.winds.`300m AGL`),
-    VectorTiles("wind-2000m-amsl", _.winds.`2000m AMSL`),
-    VectorTiles("wind-3000m-amsl", _.winds.`3000m AMSL`),
-    VectorTiles("wind-4000m-amsl", _.winds.`4000m AMSL`)
+    VectorTiles("wind-2000m-amsl", _.winds.`2000m AMSL`, excluded = _.elevation > Meters(2000)),
+    VectorTiles("wind-3000m-amsl", _.winds.`3000m AMSL`, excluded = _.elevation > Meters(3000)),
+    VectorTiles("wind-4000m-amsl", _.winds.`4000m AMSL`, excluded = _.elevation > Meters(4000))
   )
 
   // Cache the projection of the coordinates from LatLng to WebMercator
@@ -137,7 +138,9 @@ object VectorTiles {
               version = 2,
               tileExtent = tileExtent,
               mvtFeatures = MVTFeatures(
-                points = features.map { case (point @ (webMercatorX, webMercatorY), forecast) =>
+                points = features
+                  .filterNot { case (_, forecast) => vectorTiles.excluded(forecast) }
+                  .map { case (point @ (webMercatorX, webMercatorY), forecast) =>
                   featuresCache.getOrElseUpdate(point, {
                     val wind = vectorTiles.feature(forecast)
                     MVTFeature(
