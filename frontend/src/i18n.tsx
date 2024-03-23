@@ -57,9 +57,9 @@ const availableLangs: Array<AvailableLanguageTag> = availableLanguageTags as unk
 
 // WARN: make sure to update this list to keep it consistent with `availableLangs`
 export const availableLangsAndLabels: Array<[AvailableLanguageTag, string]> = [
+  ['de', 'Deutsch'],
   ['en', 'English'],
-  ['fr', 'Français'],
-  // ['de', 'German'] // Uncomment this line when the German translation is ready
+  ['fr', 'Français']
 ];
 
 const langKey = 'lang';
