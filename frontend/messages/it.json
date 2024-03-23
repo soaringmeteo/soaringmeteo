@@ -182,5 +182,4 @@
 	"helpSoundingWind": "A sinistra, la velocità e la direzione del vento sono mostrate a vari livelli di elevazione dalle punte del vento.",
 	"helpSoundingThermalVelocity": "Il testo “2,1 m/s” (al centro dello strato impennato, a destra del diagramma) indica la velocità termica media stimata all'interno dello strato limite. Valori superiori a 1 m/s di solito significano che le termiche dovrebbero essere abbastanza forti da rimanere nell'aria. Valori superiori a 2 m/s indicano buone termiche.",
 	"helpSoundingExpand": "Per impostazione predefinita, il diagramma mostra solo la massa d’aria all’interno dello strato limite e un paio di migliaia di metri sopra di esso. Puoi espandere il diagramma per vedere l'intera troposfera facendo clic sul pulsante nell'angolo in alto a destra."
->>>>>>> main
 }
