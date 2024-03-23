@@ -1,5 +1,17 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
 	"help": "Aiuto",
+	"menuDisplayOnMap": "Visualizza sulla mappa",
+	"menuOverlay": "Sovrapposizione",
+	"menuOverlayLegend": "Mostra una sovrapposizione sulla mappa",
+	"menuWind": "Vento",
+	"menuWindLegend": "Mostra la forza e la direzione del vento a un livello di elevazione specifico",
+	"menuForecastData": "Dati previsionali",
+	"menuModel": "Modello",
+	"menuGFSLegend": "Previsione basata sul modello GFS",
+	"menuWRFLegend": "Previsione basata sul modello WRF",
+	"menuInitializationTime": "Tempo di inizializzazione",
+	"menuInitializationTimeLegend": "Ora di inizializzazione dell'esecuzione della previsione",
+	"menuZone": "Zona",
 	"summaryDayOverview": "Panoramica della giornata"
 }
