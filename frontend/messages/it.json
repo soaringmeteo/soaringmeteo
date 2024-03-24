@@ -180,6 +180,6 @@
 	"helpSoundingCumulus2": "simbolo di nuvola bianca",
 	"helpSoundingCumulus3": "L'altitudine della base dei cumuli è indicata sotto il simbolo, a destra del grafico.",
 	"helpSoundingWind": "A sinistra, la velocità e la direzione del vento sono mostrate a diverse altitudini da frecce con aste.",
-	"helpSoundingThermalVelocity": "Il testo “2,1 m/s” (al centro dello strato convettivo, a destra del grafico) indica la velocità termica media stimata all'interno dello strato convettivo. Valori superiori a 1 m/s di solito significano che le termiche dovrebbero essere abbastanza forti da rimanere nell'aria. Valori superiori a 2 m/s indicano buone termiche.",
-	"helpSoundingExpand": "Per impostazione predefinita, il diagramma mostra solo la massa d’aria all’interno dello strato limite e un paio di migliaia di metri sopra di esso. Puoi espandere il diagramma per vedere l'intera troposfera facendo clic sul pulsante nell'angolo in alto a destra."
+	"helpSoundingThermalVelocity": "Il testo “2,1 m/s” (al centro dello strato convettivo, sulla destra del grafico) indica la velocità media delle termiche nello strato convettivo. Valori oltre 1 m/s significano che le termiche saranno sufficienti per rimanere in aria. Valori superiori a 2 m/s indicano buone termiche.",
+	"helpSoundingExpand": "Per impostazione, il grafico si ferma qualche migliaia di metri oltre lo strato convettivo. È possibile visualizzare l'emagramma completo dell'atmosfera facendo clic sul pulsante in alto a destra."
 }
