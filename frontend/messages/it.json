@@ -1,6 +1,6 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"help": "Aiuto",
+	"help": "Aiutiamo",
 	"menuDisplayOnMap": "Visualizza sulla mappa",
 	"menuOverlay": "Sovrapposizione",
 	"menuOverlayLegend": "Mostra una sovrapposizione sulla mappa",
