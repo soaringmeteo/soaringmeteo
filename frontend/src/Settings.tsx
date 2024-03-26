@@ -2,7 +2,7 @@ import { JSX } from "solid-js";
 import { Domain } from "./State";
 import { Overlay } from "./map/Overlay";
 import {Checkbox, Radio} from "./styles/Forms";
-import {availableLangsAndLabels, useI18n} from "./i18n";
+import {supportedLangsAndLabels, useI18n} from "./i18n";
 
 /** User settings */
 export const Settings = (props: {
@@ -22,7 +22,7 @@ export const Settings = (props: {
       <legend>{ m().settingsLanguage() }</legend>
       <select onChange={ event => { setLang(event.currentTarget.value as any) } }>
         {
-          availableLangsAndLabels.map(([langTag, label]) => {
+          supportedLangsAndLabels.map(([langTag, label]) => {
             return (langTag === lang()) ?
               <option value={ langTag } selected>{ label }</option> :
               <option value={ langTag }>{ label }</option>
