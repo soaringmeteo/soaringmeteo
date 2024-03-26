@@ -59,7 +59,8 @@ const availableLangs: Array<AvailableLanguageTag> = availableLanguageTags as unk
 export const availableLangsAndLabels: Array<[AvailableLanguageTag, string]> = [
   ['de', 'Deutsch'],
   ['en', 'English'],
-  ['fr', 'Français']
+  ['fr', 'Français'],
+  ['it', 'Italiano']
 ];
 
 const langKey = 'lang';
