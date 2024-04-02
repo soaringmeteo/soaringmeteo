@@ -25,6 +25,12 @@ The Fink tool displays all the messages used by the Soaringmeteo user interface,
    - German:
      - [overview](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lang=en&lang=de)
      - [missing translations only](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lint=messageLintRule.inlang.missingTranslation&lang=en&lang=de) 
+   - Italian:
+     - [overview](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lang=en&lang=it)
+     - [missing translations only](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lint=messageLintRule.inlang.missingTranslation&lang=en&lang=it) 
+   - Polish:
+     - [overview](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lang=en&lang=pl)
+     - [missing translations only](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lint=messageLintRule.inlang.missingTranslation&lang=en&lang=pl) 
 2. At the bottom of the page, click to “Sign In” to start making changes.
 
    ![](./images/i18n-sign-in.png)
