@@ -136,5 +136,12 @@
 	"helpMeteogramWindBarbs": "Wiatr jest pokazywany przez chorągiewki. Liczba „flag” chorągiewki na strzałce wskazuje prędkość z dokładnością do 2,5 km/h. Na przykład strzałka z pojedynczą krótką flagą wskazuje prędkość od 0 do 2,5 km/h. Jeśli ma dwie krótkie flagi, oznacza to prędkość od 2,5 do 5 km/h. Dwie długie flagi oznaczają prędkość od 7,5 do 10 km/h. Cztery długie flagi oznaczają prędkość od 17,5 do 20 km/h i tak dalej. Alternatywnie możesz wyświetlić prędkość wiatru jako wartość liczbową, przechodząc do Ustawień w lewym górnym menu.",
 	"helpMeteogramCumulus1": "Chmury Cumulus są pokazane jako",
 	"helpMeteogramCumulus2": "ikony białej chmury",
-	"helpMeteogramCumulus3": "Szybujący piloci nie mogą latać wyżej niż podstawa chmur. Jeśli w ogóle nie ma ikon chmur, oznacza to, że będzie termika bezchmurna. Chmury cumulusowe są pomocne podczas przelotów, ale jeśli rozwiną się zbyt wysoko, mogą spowodować przelotne opady deszczu lub burze."
+	"helpMeteogramCumulus3": "Szybujący piloci nie mogą latać wyżej niż podstawa chmur. Jeśli w ogóle nie ma ikon chmur, oznacza to, że będzie termika bezchmurna. Chmury cumulusowe są pomocne podczas przelotów, ale jeśli rozwiną się zbyt wysoko, mogą spowodować przelotne opady deszczu lub burze.",
+	"helpMeteogramCloudCover": "Szare paski przedstawiają zachmurzenie na różnych poziomach wysokości: im szerszy pasek, tym większe zachmurzenie. Jeżeli pas zajmuje połowę kolumny, oznacza to zachmurzenie rzędu 50%. Jeśli zajmie całą kolumnę, oznacza to zachmurzenie rzędu 100%. Należy zwrócić uwagę, że w górnej części diagramu pokazano zachmurzenie wysokie (kiedy oś skali pionowej zostaje przerwana). W naszym przykładzie niebo będzie dość zachmurzone pierwszego dnia, szczególnie w południe. Drugiego dnia pojawią się chmury cumulusowe. Trzeciego dnia chmur cumulusowych będzie niewiele, ale po południu pojawią się cirrusy.",
+	"helpMeteogramIsotherm1": "Wysokość izotermy 0°C jest pokazana",
+	"helpMeteogramIsotherm2": "czarną linią",
+	"helpMeteogramIsotherm3": "W tym przykładzie zaczyna się około 3500 m pierwszego dnia i wzrasta do {maxIso} m trzeciego dnia.",
+	"helpMeteogramPressure1": "Ciśnienie atmosferyczne jest pokazane",
+	"helpMeteogramPressure2": "czerwoną linią",
+	"helpMeteogramPressure3": "Skala znajduje się po prawej stronie diagramu. Tutaj oscyluje wokół 1010 hPa."
 }
