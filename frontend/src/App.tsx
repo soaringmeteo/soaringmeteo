@@ -1,7 +1,7 @@
 import {createEffect, createResource, getOwner, JSX, lazy, runWithOwner, Show } from 'solid-js';
 import { insert, render, style } from 'solid-js/web';
 
-import { initializeMap } from './map/Map';
+import { initializeMap, MapHooks } from './map/Map';
 import { fetchForecastRuns } from './data/ForecastMetadata';
 import {Domain, gfsModel, wrfModel} from './State';
 import { BurgerButton } from './BurgerButton';
@@ -12,88 +12,81 @@ import {Localized} from "./i18n";
 
 const PeriodSelectors = lazy(() => import('./PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
 
-export const start = (containerElement: HTMLElement): void => {
+const App = (props: {
+  domain: Domain,
+  mapHooks: MapHooks
+}): JSX.Element => {
 
-  // The map *must* be initialized before we call the other constructors
-  // It *must* also be mounted before we initialize it
-  style(containerElement, { display: 'flex', 'align-items': 'stretch', 'align-content': 'stretch' });
-  const mapElement = <div style={ { flex: 1 } } /> as HTMLElement;
-  insert(containerElement, mapElement);
+  // Update primary layer
+  createEffect(() => {
+    const url = props.domain.urlOfRasterAtCurrentHourOffset();
+    const projection = props.domain.state.zone.raster.proj;
+    const extent = props.domain.state.zone.raster.extent;
+    if (props.domain.state.primaryLayerEnabled) {
+      props.mapHooks.setPrimaryLayerSource(url, projection, extent);
+    } else {
+      props.mapHooks.hidePrimaryLayer();
+    }
+  });
 
-  const mapHooks = initializeMap(mapElement);
-
-  const App = (props: {
-    domain: Domain
-  }): JSX.Element => {
-
-    // Update primary layer
-    createEffect(() => {
-      const url = props.domain.urlOfRasterAtCurrentHourOffset();
-      const projection = props.domain.state.zone.raster.proj;
-      const extent = props.domain.state.zone.raster.extent;
-      if (props.domain.state.primaryLayerEnabled) {
-        mapHooks.setPrimaryLayerSource(url, projection, extent);
-      } else {
-        mapHooks.hidePrimaryLayer();
-      }
-    });
-
-    // Update wind layer
-    createEffect(() => {
-      const vectorTiles = props.domain.state.zone.vectorTiles;
-      const url = props.domain.urlOfVectorTilesAtCurrentHourOffset();
-      if (props.domain.state.windLayerEnabled) {
-        mapHooks.setWindLayerSource(
+  // Update wind layer
+  createEffect(() => {
+    const vectorTiles = props.domain.state.zone.vectorTiles;
+    const url = props.domain.urlOfVectorTilesAtCurrentHourOffset();
+    if (props.domain.state.windLayerEnabled) {
+      props.mapHooks.setWindLayerSource(
           url,
           vectorTiles.minZoom,
           vectorTiles.extent,
           vectorTiles.zoomLevels - 1,
           vectorTiles.tileSize
-        );
-      } else {
-        mapHooks.hideWindLayer();
-      }
-    });
-    createEffect(() => {
-      mapHooks.enableWindNumericalValues(props.domain.state.windNumericValuesShown);
-    });
+      );
+    } else {
+      props.mapHooks.hideWindLayer();
+    }
+  });
+  createEffect(() => {
+    props.mapHooks.enableWindNumericalValues(props.domain.state.windNumericValuesShown);
+  });
 
-    // Marker when detailed view is open
-    createEffect(() => {
-      const detailedView = props.domain.state.detailedView;
-      if (detailedView !== undefined) {
-        mapHooks.showMarker(detailedView.latitude, detailedView.longitude);
-      } else {
-        mapHooks.hideMarker();
-      }
-    });
+  // Marker when detailed view is open
+  createEffect(() => {
+    const detailedView = props.domain.state.detailedView;
+    if (detailedView !== undefined) {
+      props.mapHooks.showMarker(detailedView.latitude, detailedView.longitude);
+    } else {
+      props.mapHooks.hideMarker();
+    }
+  });
 
-    // PeriodSelectors displays the buttons to move over time. When we click on those buttons, it
-    // calls `onHourOffsetChanged`, which we handle by updating our `state`, which is propagated
-    // back to these components.
-    // LayersSelector displays the configuration button and manages the canvas overlay.
-    return <>
-      <style innerHTML={ hooks } />
-      <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 200 /* must be above the “period selector” */ }}>
+  // PeriodSelectors displays the buttons to move over time. When we click on those buttons, it
+  // calls `onHourOffsetChanged`, which we handle by updating our `state`, which is propagated
+  // back to these components.
+  // LayersSelector displays the configuration button and manages the canvas overlay.
+  return <>
+    <style innerHTML={ hooks } />
+    <span style={{ position: 'absolute', top: 0, left: 0, 'z-index': 200 /* must be above the “period selector” */ }}>
         <BurgerButton domain={props.domain} />
       </span>
-      <PeriodSelectors domain={props.domain} locationClicks={mapHooks.locationClicks} />
-      <LayerKeys domain={props.domain} />
-      <span
+    <PeriodSelectors domain={props.domain} locationClicks={props.mapHooks.locationClicks} />
+    <LayerKeys domain={props.domain} />
+    <span
         style={{
           position: 'absolute',
           right: '.5rem',
           bottom: '.5rem',
         }}
-      >
+    >
         <HelpButton domain={props.domain} overMap={true} />
       </span>
-    </>
-  }
+  </>
+};
 
-  const Loader = ((): JSX.Element => {
-    const owner = getOwner(); // Remember the tracking scope because it is lost when the promise callback is called
-    const [loadedDomain] = createResource(() =>
+const Loader = ((props: {
+  mapHooks: MapHooks
+}): JSX.Element => {
+  const owner = getOwner(); // Remember the tracking scope because it is lost when the promise callback is called
+  const [loadedDomain] = createResource(() =>
       Promise
           .all([
             fetchForecastRuns(gfsModel),
@@ -108,11 +101,20 @@ export const start = (containerElement: HTMLElement): void => {
             alert('Unable to retrieve forecast data. Try again later or contact equipe@soaringmeteo.org if the problem persists.');
             return undefined
           })
-    );
-    return <Show when={ loadedDomain() }>
-      { domain => <App domain={domain()} /> }
-    </Show>
-  });
+  );
+  return <Show when={ loadedDomain() }>
+    { domain => <App domain={domain()} mapHooks={props.mapHooks} /> }
+  </Show>
+});
 
-  render(() => <Localized><Loader /></Localized>, mapElement);
+export const start = (containerElement: HTMLElement): void => {
+  // The map *must* be initialized before we call the other constructors
+  // It *must* also be mounted before we initialize it
+  style(containerElement, { display: 'flex', 'align-items': 'stretch', 'align-content': 'stretch' });
+  const mapElement = <div style={ { flex: 1 } } /> as HTMLElement;
+  insert(containerElement, mapElement);
+
+  const mapHooks = initializeMap(mapElement);
+
+  render(() => <Localized><Loader mapHooks={mapHooks} /></Localized>, mapElement);
 };

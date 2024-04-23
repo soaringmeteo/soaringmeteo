@@ -82,7 +82,7 @@ const saveLocationAndZoom = (location: [number, number], zoom: number) => {
   window.localStorage.setItem(locationAndZoomKey, JSON.stringify([[lat, lng], zoom]));
 };
 
-type MapHooks = {
+export type MapHooks = {
   locationClicks: Accessor<MapBrowserEvent<any> | undefined>
   setPrimaryLayerSource: (url: string, projection: string, extent: Extent) => void
   hidePrimaryLayer: () => void
