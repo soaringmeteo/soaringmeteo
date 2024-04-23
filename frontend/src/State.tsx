@@ -6,6 +6,7 @@ import { layerByKey } from './layers/Layers';
 import { boundaryLayerWindLayer } from './layers/Wind';
 import {Accessor, batch, createMemo, mergeProps, splitProps} from 'solid-js';
 import {DetailedView, DetailedViewType} from "./DetailedView";
+import {Plausible} from "./Plausible";
 
 export type State = {
   // Currently selected numerical weather prediction model (GFS or WRF)
@@ -155,9 +156,10 @@ const saveUtcTimeShown = (value: boolean): void => {
  * To update the state, use the methods defined here.
  */
 export class Domain {
-  
+
   readonly state: State;
   private readonly setState: SetStoreFunction<State>;
+  private readonly plausible: Plausible;
 
   // Since those reactive components depend on the state, we can not make them part of the state
   readonly primaryLayerReactiveComponents: Accessor<ReactiveComponents>;
@@ -167,6 +169,7 @@ export class Domain {
     readonly gfsRuns: Array<ForecastMetadata>,
     readonly wrfRuns: Array<ForecastMetadata>
   ) {
+    this.plausible = new Plausible();
     const model = loadModel();
     const forecastMetadata = selectRun(model, gfsRuns, wrfRuns);
     const zone = loadZone(model, forecastMetadata.zones);
@@ -208,6 +211,9 @@ export class Domain {
       createMemo(() => this.state.primaryLayer.reactiveComponents(props));
     this.windLayerReactiveComponents =
       createMemo(() => this.state.windLayer.reactiveComponents(props));
+
+    // Fire a page view event for the initial page view
+    this.plausible.trackPageView(model);
   }
 
   /** Set the model (GFS vs WRF) to display */
@@ -215,6 +221,7 @@ export class Domain {
     const run = selectRun(model, this.gfsRuns, this.wrfRuns);
     const zone = loadZone(model, run.zones);
     saveModel(model);
+    this.plausible.trackPageView(model);
     saveZone(model, zone.id);
     batch(() => {
       this.setState({ model, zone });
