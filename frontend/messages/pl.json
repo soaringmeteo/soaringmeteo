@@ -143,5 +143,15 @@
 	"helpMeteogramIsotherm3": "W tym przykładzie zaczyna się około 3500 m pierwszego dnia i wzrasta do {maxIso} m trzeciego dnia.",
 	"helpMeteogramPressure1": "Ciśnienie atmosferyczne jest pokazane",
 	"helpMeteogramPressure2": "czerwoną linią",
-	"helpMeteogramPressure3": "Skala znajduje się po prawej stronie diagramu. Tutaj oscyluje wokół 1010 hPa."
+	"helpMeteogramPressure3": "Skala znajduje się po prawej stronie diagramu. Tutaj oscyluje wokół 1010 hPa.",
+	"helpMeteogramTemperature1": "Na dole widzimy rozwój temperatury na ziemi",
+	"helpMeteogramTemperature2": "czerwona linia",
+	"helpMeteogramTemperature3": "i temperaturę punktu rosy",
+	"helpMeteogramTemperature4": "niebieską linią",
+	"helpMeteogramTemperature5": "i ilość opadów. Opady konwekcyjne są pokazane w",
+	"helpMeteogramTemperature6": "turkusowym",
+	"helpMeteogramTemperature7": "a inne opady deszczu",
+	"helpMeteogramTemperature8": "niebieskim",
+	"helpMeteogramTemperature9": "Skala opadów znajduje się po lewej stronie, a temperatury po prawej. W przykładzie: pierwszego dnia spodziewana jest kilkumilimetrowa ilość deszczu, a trzeciego dnia powietrze staje się bardziej suche (temperatura punktu rosy spada).",
+	"helpMeteogramThunderstorm": "Wreszcie obecność błyskawicy wskazuje na ryzyko burzy w ciągu dnia. Im większy obraz, tym większe ryzyko burzy."
 }
