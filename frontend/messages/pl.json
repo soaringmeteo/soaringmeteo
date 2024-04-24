@@ -48,7 +48,7 @@
 	"layerSoaringLayerDepth": "Wysokość warstwy gr.",
 	"layerSoaringLayerDepthLegend": "Wysokość warstwy granicznej",
 	"layerThermalVelocity": "Prędkość termiki",
-	"layerThermalVelocityLegend": "prędkość prądu termicznego",
+	"layerThermalVelocityLegend": "prędkość pionowa termiki",
 	"layerThQ": "Jakość termiki",
 	"layerThQLegend": "jakość termiki",
 	"layerWindBoundaryLayer": "Warstwa graniczna",
