@@ -16,19 +16,24 @@ export default defineConfig(() => ({
       // registerType: 'autoUpdate',
       injectRegister: null,
       manifest: {
-        name: 'Soaring Meteo',
+        name: 'Soaringmeteo',
         description: 'Meteorology for soaring pilots',
-        short_name: 'SoaringMeteoV2',
+        short_name: 'Soaringmeteo',
         start_url: '/v2/',
         theme_color: '#ffffff',
         icons: [
           {
-            src: './favicoSoaringMeteo.scaled.png',
+            src: './favicon.192.png',
             size: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: './favicon.512.png',
+            size: '512x512',
             type: 'image/png'
           }
         ],
-        display: 'fullscreen'
+        display: 'standalone'
       }
     }),
     {
