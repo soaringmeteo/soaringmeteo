@@ -13,22 +13,28 @@ export default defineConfig(() => ({
       outdir: "./src/generated-i18n", //Where you want the generated files to be placed
     }),
     VitePWA({
-      // registerType: 'autoUpdate',
-      injectRegister: null,
+      registerType: 'autoUpdate',
+      injectRegister: 'script-defer',
+      // devOptions: { enabled: true },
       manifest: {
-        name: 'Soaring Meteo',
+        name: 'Soaringmeteo',
         description: 'Meteorology for soaring pilots',
-        short_name: 'SoaringMeteoV2',
+        short_name: 'Soaringmeteo',
         start_url: '/v2/',
         theme_color: '#ffffff',
         icons: [
           {
-            src: './favicoSoaringMeteo.scaled.png',
-            size: '192x192',
+            src: './favicon.192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: './favicon.512.png',
+            sizes: '512x512',
             type: 'image/png'
           }
         ],
-        display: 'fullscreen'
+        display: 'standalone'
       }
     }),
     {
