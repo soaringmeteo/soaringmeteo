@@ -61,6 +61,7 @@ const supportedLangs: Array<AvailableLanguageTag> = availableLanguageTags as unk
 export const supportedLangsAndLabels: Array<[AvailableLanguageTag, string]> = [
   ['de', 'Deutsch'],
   ['en', 'English'],
+  ['es', 'Español'],
   ['fr', 'Français'],
   ['it', 'Italiano'],
   ['pl', 'Polski']
