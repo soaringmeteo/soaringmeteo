@@ -60,7 +60,7 @@
   "layerWind300MAGL": "300 m AGL",
   "layerWind300MAGLLegend": "la velocidad y dirección del viento a 300 m sobre el nivel del suelo",
   "layerWind2000AMSL": "2000 m AMSL",
-  "layerWind2000AMSLLegend": "la velocidad y dirección del viento a 2000 m sobre el nivel medio del mar",
+  "layerWind2000AMSLLegend": "la velocidad y dirección del viento a 2000 m sobre el nivel del mar",
   "layerWind3000AMSL": "3000 m AMSL",
   "layerWind3000AMSLLegend": "la velocidad y dirección del viento a 3000 m sobre el nivel medio del mar",
   "layerWind4000AMSL": "4000 m AMSL",
