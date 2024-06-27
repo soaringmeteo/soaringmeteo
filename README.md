@@ -35,7 +35,7 @@ Please refer to each sub-project for more details.
 
 # Usage
 
-Go to https://soarwrf1.soaringmeteo.org/v2.
+Go to https://soaringmeteo.org/v2.
 
 # License
 
