@@ -11,7 +11,7 @@ to keep this service up to date.
 
 The following steps assumes that you are running a debian based OS, and has been tested under Ubuntu 20.04 LTS.
 
-## Tools install for the  backend
+## Tools install for the backend
 
 You need to install a JDK 17 (such as [OpenJDK](https://openjdk.org/)) and the build tool [sbt](https://scala-sbt.org).
 
@@ -166,6 +166,14 @@ It should create a tarball named `soaringmeteo-gfs.tgz` or `soaringmeteo-wrf.tgz
 ~~~
 tar -xzf soaringmeteo-gfs.tgz
 ~~~
+
+# Adding support for a new language
+
+To translate the user interface in a new language, we need to 1) add the language to the Inlang configuration, 2) translate all the messages, and 3) enable the language in the user interface:
+
+1. Add the language to the Inlang configuration by modifying the file [settings.json](frontend/project.inlang/settings.json) (add the language tag to the list), or from [Fink’s Settings](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo).
+2. Perform the translation by following the [guide](TRANSLATING.md).
+3. Once the translation is ready, enable the language in the user interface by adding it to the list `supportedLangsAndLabels` in file [i18n.tsx](frontend/src/i18n.tsx).
 
 # Deployment on Soaringmeteo servers (project maintainers only)
 

@@ -58,6 +58,7 @@ export const usingMessages = (f: (messages: Messages) => string): Accessor<strin
 const supportedLangs: Array<AvailableLanguageTag> = availableLanguageTags as unknown as Array<AvailableLanguageTag>;
 
 // WARN: make sure to update this list to keep it consistent with `supportedLangs`
+// Also, please keep the list lexicographically ordered by language label
 export const supportedLangsAndLabels: Array<[AvailableLanguageTag, string]> = [
   ['de', 'Deutsch'],
   ['en', 'English'],
