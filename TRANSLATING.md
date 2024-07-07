@@ -31,6 +31,12 @@ The Fink tool displays all the messages used by the Soaringmeteo user interface,
    - Polish:
      - [overview](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lang=en&lang=pl)
      - [missing translations only](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lint=messageLintRule.inlang.missingTranslation&lang=en&lang=pl) 
+   - Portuguese:
+     - [overview](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lang=en&lang=pt)
+     - [missing translations only](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lint=messageLintRule.inlang.missingTranslation&lang=en&lang=pt) 
+   - Slovak:
+     - [overview](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lang=en&lang=sk)
+     - [missing translations only](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lint=messageLintRule.inlang.missingTranslation&lang=en&lang=sk) 
    - Spanish:
      - [overview](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lang=en&lang=es)
      - [missing translations only](https://fink.inlang.com/github.com/soaringmeteo/soaringmeteo?project=%2Ffrontend%2Fproject.inlang&lint=messageLintRule.inlang.missingTranslation&lang=en&lang=es) 
