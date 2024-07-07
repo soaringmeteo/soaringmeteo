@@ -7,7 +7,9 @@
     "es",
     "fr",
     "it",
-    "pl"
+    "pl",
+    "pt",
+    "sk"
   ],
   "modules": [
     "https://cdn.jsdelivr.net/npm/@inlang/message-lint-rule-empty-pattern@latest/dist/index.js",
