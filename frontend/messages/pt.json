@@ -12,5 +12,14 @@
 	"menuWRFLegend": "Previsão baseada no modelo WRF",
 	"menuInitializationTime": "Tempo de inicialização",
 	"menuInitializationTimeLegend": "Tempo de inicialização da execução da previsão",
-	"menuZone": "Zona"
+	"menuZone": "Zona",
+	"menuSettings": "Configurações",
+	"menuAbout": "Sobre",
+	"menuSupport": "Apoie o Soaringmeteo",
+	"menuDocuments": "Documentos",
+	"menuSoarGFS": "soarGFS (antigo)",
+	"settingsLanguage": "Linguagem",
+	"settingsHelpTranslate": "Ajude-nos a traduzir!",
+	"settingsWind": "Vento",
+	"settingsWindExplanation": "Por padrão, a velocidade do vento é indicada por um valor numérico próximo a cada seta de vento. Se ocultar os valores numéricos, nos meteogramas a velocidade do vento será indicada por farpas de vento (com precisão de 2,5 km/h). Consulte a ajuda dos meteogramas para obter mais informações sobre como interpretar as farpas."
 }
