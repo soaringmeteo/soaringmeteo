@@ -1,0 +1,8 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"help": "Ajuda",
+	"menuDisplayOnMap": "Exibir no mapa",
+	"menuOverlay": "Sobreposição",
+	"menuOverlayLegend": "Mostrar uma sobreposição no mapa",
+	"menuWind": "Vento"
+}
