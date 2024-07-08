@@ -4,5 +4,11 @@
 	"menuDisplayOnMap": "Exibir no mapa",
 	"menuOverlay": "Sobreposição",
 	"menuOverlayLegend": "Mostrar uma sobreposição no mapa",
-	"menuWind": "Vento"
+	"menuWind": "Vento",
+	"menuWindLegend": "Mostrar a força e a direção do vento a uma altitude específica",
+	"menuForecastData": "Dados de previsão",
+	"menuModel": "Modelo",
+	"menuGFSLegend": "Previsão baseada no modelo GFS",
+	"menuWRFLegend": "Previsão baseada no modelo WRF",
+	"menuInitializationTime": "Tempo de inicialização"
 }
