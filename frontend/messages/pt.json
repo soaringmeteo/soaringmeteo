@@ -10,5 +10,7 @@
 	"menuModel": "Modelo",
 	"menuGFSLegend": "Previsão baseada no modelo GFS",
 	"menuWRFLegend": "Previsão baseada no modelo WRF",
-	"menuInitializationTime": "Tempo de inicialização"
+	"menuInitializationTime": "Tempo de inicialização",
+	"menuInitializationTimeLegend": "Tempo de inicialização da execução da previsão",
+	"menuZone": "Zona"
 }
