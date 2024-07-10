@@ -1,6 +1,6 @@
 {
     "$schema": "https://inlang.com/schema/inlang-message-format",
-    "help": "nápoveda",
+    "help": "Nápoveda",
     "menuDisplayOnMap": "Zobraziť na mape",
     "menuOverlay": "Prekrytie",
     "menuOverlayLegend": "Zobraziť prekrytie na mape",
@@ -104,7 +104,7 @@
     "helpFeedback2": "V prípade ďalších otázok nám pošlite",
     "helpLayerThQ": "Naznačuje potenciál termického lietania, od 0 % (slabá termika alebo veľmi silný vietor) do 100 % (silná, vysoká termika, slabý vietor). Hľadajte biele alebo modré plochy (celá farebná škála je zobrazená vpravo dole na obrazovke). Termická kvalita zohľadňuje hĺbku stúpajúcej vrstvy, otepľovanie zeme a priemernú rýchlosť vetra v rámci hraničnej vrstvy tohto ukazovateľa.",
     "helpLayerWind": "Smer vetra je znázornený šípkou. Vietor prúdi v smere šípky. Napríklad šípka, ktorá ukazuje doprava znamená, že vietor prichádza zo západu a smeruje na východ. Rýchlosť vetra je zobraziť v km/h vedľa šípky Rýchlosť vetra môžete skryť v Nastaveniach (z hlavného menu).",
-    "helpLayerCloudsAndRain": "Označuje oblačnosť, ako aj množstvo zrážok v danom časovom období. Oblačnosť sa zobrazuje s bielymi a sivými odtieňmi a zrážky v milimetroch sa zobrazujú farbami, ako je uvedené v legende mapy." ,
+    "helpLayerCloudsAndRain": "Označuje oblačnosť, ako aj množstvo zrážok v danom časovom období. Oblačnosť sa zobrazuje s bielymi a sivými odtieňmi a zrážky v milimetroch sa zobrazujú farbami, ako je uvedené v legende mapy.",
     "helpLayerCumuliDepth1": "Komulové oblaky sú oblaky spôsobené tepelnou aktivitou. Žiadne kopovité oblaky neznamená žiadne stúpanie alebo modré stúpanie. Hlboké kopovité oblaky znamenajú riziko nadmerného rozvoja.",
     "helpLayerCumuliDepth2": "Farebná škála je zobrazená v pravom dolnom rohu obrazovky.",
     "helpLayerSoaringLayerDepth1": "Hraničná vrstva",
@@ -170,7 +170,6 @@
     "helpSounding10": "fialová čiara",
     "helpSounding11": "označuje inverznú vrstvu.",
     "helpSounding12": "modrá čiara",
-
     "helpSounding13": "zobrazuje vývoj teploty rosného bodu s nadmorskou výškou.",
     "helpSoundingBoundaryLayer1": "",
     "helpSoundingBoundaryLayer2": "Zelená plocha",
@@ -184,4 +183,4 @@
     "helpSoundingWind": "Vľavo je rýchlosť a smer vetra zobrazená v rôznych nadmorských výškach pomocou veterných ostňov.",
     "helpSoundingThermalVelocity": "Text „2,1 m/s“ (v strede stúpajúcej vrstvy, vpravo na diagrame) vám hovorí o odhadovanej priemernej tepelnej rýchlosti v rámci hraničnej vrstvy. Hodnoty nad 1 m/s zvyčajne znamenajú, že stúpanie by malo byť dostatočne silné na to, aby sa udržalo vo vzduchu, hodnoty nad 2 m/s znamenajú dobré stúpanie.",
     "helpSoundingExpand": "V predvolenom nastavení diagram zobrazuje iba vzduchovú hmotu v hraničnej vrstve a niekoľko tisíc metrov nad ňou. Kliknutím na tlačidlo v pravom hornom rohu môžete diagram rozbaliť a zobraziť celú troposféru."
-   }
+}
