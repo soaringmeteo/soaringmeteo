@@ -1,5 +1,4 @@
 import {LocationForecasts, LocationForecastsData} from "./LocationForecasts";
-import {Model, wrfModel} from "../State";
 import {toLonLat, fromLonLat} from "ol/proj";
 import {containsCoordinate} from "ol/extent";
 
@@ -28,7 +27,7 @@ export type Zone = {
   }
 }
 
-// Version of the forecast data format we consume (see backend/src/main/scala/org/soaringmeteo/package.scala)
+// Version of the forecast data format we consume (see backend/common/src/main/scala/org/soaringmeteo/out/package.scala)
 const formatVersion = 6
 // Base path to access forecast data
 const dataPath = `data/${formatVersion}`
@@ -39,14 +38,20 @@ export class ForecastMetadata {
   readonly latest: number
   readonly modelPath: string
   readonly zones: Array<Zone>
+  readonly history: number // Number of days in the past to fetch earlier runs
+  readonly previousRun?: [string, Date] // Possible coordinates [file, initDate] of a previous run
 
-  constructor(model: Model, data: ForecastMetadataData) {
+  constructor(modelPath: string, data: ForecastMetadataData) {
     this.initS = data.initS;
     this.init = new Date(data.init);
     this.firstTimeStep = data.first ? new Date(data.first) : this.init;
     this.latest = data.latest;
-    this.modelPath = model;
+    this.modelPath = modelPath;
     this.zones = data.zones;
+    this.history = data.h;
+    if (data.prev !== undefined) {
+      this.previousRun = [data.prev[0], new Date(data.prev[1])];
+    }
   }
 
   /**
@@ -130,34 +135,26 @@ export class ForecastMetadata {
 
 }
 
-export const fetchForecastRuns = async (model: Model): Promise<Array<ForecastMetadata>> => {
-  const response       = await fetch(`${dataPath}/${model}/forecast.json`);
-  const data           = await response.json() as ForecastMetadataData;
-  const latestForecast = new ForecastMetadata(model, data);
-  // Compute date of the oldest forecast we want to show
-  const oldestForecastInitDate = new Date(data.init);
-  oldestForecastInitDate.setDate(oldestForecastInitDate.getDate() - data.h);
-  // Fetch the previous forecasts
-  const previousForecasts =
-    await fetchPreviousRuns(model, oldestForecastInitDate, [latestForecast.firstTimeStep.getTime()], data.prev);
-  return previousForecasts.concat([latestForecast]);
-}
+export const fetchGfsForecastRun = async (file: string): Promise<ForecastMetadata> => {
+  const response = await fetch(`${dataPath}/gfs/${file}`);
+  const data = await response.json() as ForecastMetadataData;
+  return new ForecastMetadata('gfs', data);
+};
 
-const fetchPreviousRuns = async (model: Model, oldestForecastInitDate: Date, firstTimeSteps: Array<number>, maybePreviousData?: [string, string]): Promise<Array<ForecastMetadata>> => {
-  if (maybePreviousData !== undefined && new Date(maybePreviousData[1]) >= oldestForecastInitDate) {
-    const response = await fetch(`${dataPath}/${model}/${maybePreviousData[0]}`);
-    const data     = await response.json() as ForecastMetadataData;
-    const forecast = new ForecastMetadata(model, data);
-    // In the case of WRF, don’t include older runs for a day that is already covered by a more recent run
-    const filteredForecast =
-      model === wrfModel && firstTimeSteps.includes(forecast.firstTimeStep.getTime()) ? [] : [forecast]
-    const firstTimeStepsUpdated =
-      firstTimeSteps.concat(filteredForecast.map(forecast => forecast.firstTimeStep.getTime()))
-    return (await fetchPreviousRuns(model, oldestForecastInitDate, firstTimeStepsUpdated, data.prev)).concat(filteredForecast);
+export const fetchWrfForecastRun = async (file: string): Promise<[ForecastMetadata, ForecastMetadata | undefined]> => {
+  const response = await fetch(`${dataPath}/wrf/${file}`);
+  const data = await response.json() as ForecastMetadataData;
+  if (data.zones.some(zone => zone.id !== 'alps-overview')) {
+    // If the runs contain zones other the Alps overview, duplicate it into a WRF6 run and a WRF2 run
+    const wrf6OnlyData = JSON.parse(JSON.stringify(data)) as ForecastMetadataData;
+    wrf6OnlyData.zones = wrf6OnlyData.zones.filter(zone => zone.id === 'alps-overview');
+    data.zones = data.zones.filter(zone => zone.id !== 'alps-overview');
+    return [new ForecastMetadata('wrf', wrf6OnlyData), new ForecastMetadata('wrf', data)];
   } else {
-    return []
+    // The data covers only the WRF6 zone, no need to duplicate
+    return [new ForecastMetadata('wrf', data), undefined];
   }
-}
+};
 
 // We show three forecast periods per day: morning, noon, and afternoon
 const periodsPerDay = 3;
