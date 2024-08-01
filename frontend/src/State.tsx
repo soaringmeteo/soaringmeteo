@@ -9,7 +9,7 @@ import {DetailedView, DetailedViewType} from "./DetailedView";
 import {Plausible} from "./Plausible";
 
 export type State = {
-  // Currently selected numerical weather prediction model (GFS or WRF)
+  // Currently selected numerical weather prediction model (GFS, WRF2, or WRF6)
   model: Model
   // Currently selected forecast run
   forecastMetadata: ForecastMetadata
@@ -32,9 +32,10 @@ export type State = {
   utcTimeShown: boolean
 }
 
-export type Model = 'gfs' | 'wrf'
-export const gfsModel: Model = 'gfs'
-export const wrfModel: Model = 'wrf'
+export type Model = 'gfs' | 'wrf2' | 'wrf6';
+export const gfsModel: Model = 'gfs';
+export const wrf2Model: Model = 'wrf2';
+export const wrf6Model: Model = 'wrf6';
 
 // Keys used to store the current display settings in the local storage
 const selectedPrimaryLayerKey   = 'selected-primary-layer';
@@ -89,11 +90,15 @@ const loadModel = (): Model => {
   // First, try to read from the URL parameters
   const params = new URLSearchParams(window.location.search);
   const model = params.get('model');
-  if (model === gfsModel || model === wrfModel) {
+  if (model === gfsModel || model === wrf2Model || model === wrf6Model) {
     return model
   }
   // Second, read from local storage
-  return loadStoredState(modelKey, value => value === wrfModel ? wrfModel : gfsModel, gfsModel);
+  return loadStoredState(
+    modelKey,
+    value => value === wrf2Model ? wrf2Model : (value === wrf6Model ? wrf6Model : gfsModel),
+    gfsModel
+  );
 };
 
 const saveModel = (model: Model) => {
@@ -167,11 +172,12 @@ export class Domain {
 
   constructor (
     readonly gfsRuns: Array<ForecastMetadata>,
-    readonly wrfRuns: Array<ForecastMetadata>
+    readonly wrf6Runs: Array<ForecastMetadata>,
+    readonly wrf2Runs: Array<ForecastMetadata>
   ) {
     this.plausible = new Plausible();
     const model = loadModel();
-    const forecastMetadata = selectRun(model, gfsRuns, wrfRuns);
+    const forecastMetadata = selectRun(model, gfsRuns, wrf6Runs, wrf2Runs);
     const zone = loadZone(model, forecastMetadata.zones);
     const primaryLayer = loadPrimaryLayer();
     const primaryLayerEnabled = loadPrimaryLayerEnabled();
@@ -216,9 +222,9 @@ export class Domain {
     this.plausible.trackPageView(model);
   }
 
-  /** Set the model (GFS vs WRF) to display */
+  /** Set the model (GFS, WRF2, WRF6) to display */
   setModel(model: Model): void {
-    const run = selectRun(model, this.gfsRuns, this.wrfRuns);
+    const run = selectRun(model, this.gfsRuns, this.wrf6Runs, this.wrf2Runs);
     const zone = loadZone(model, run.zones);
     saveModel(model);
     this.plausible.trackPageView(model);
@@ -232,15 +238,17 @@ export class Domain {
   modelName(): string {
     if (this.state.model === gfsModel) {
       return 'GFS (25 km)'
+    } else if (this.state.model === wrf6Model) {
+      return 'WRF (6 km)'
     } else {
-      return 'WRF (2-6 km)'
+      return 'WRF (2 km)'
     }
   }
 
   /** Set the forecast run to display */
   setForecastMetadata(forecastMetadata: ForecastMetadata, hourOffset?: number): void {
     const maybePreviousDetailedView =
-      this.state.model === wrfModel && forecastMetadata.modelPath === 'wrf' ? this.state.detailedView : undefined
+      (this.state.model === wrf2Model || this.state.model === wrf6Model) && forecastMetadata.modelPath === 'wrf' ? this.state.detailedView : undefined;
     this.setState({
       forecastMetadata,
       hourOffset: hourOffset !== undefined ? hourOffset : forecastMetadata.defaultHourOffset(),
@@ -285,9 +293,9 @@ export class Domain {
   nextDay(): void {
     if (this.state.model === gfsModel) {
       this.setHourOffset(this.state.hourOffset + 24);
-    } else if (this.state.model === wrfModel) {
+    } else if (this.state.model === wrf2Model || this.state.model === wrf6Model) {
       const maybeNextForecast =
-        this.wrfRuns.find(run =>
+        (this.state.model === wrf2Model ? this.wrf2Runs : this.wrf6Runs).find(run =>
           run.firstTimeStep > this.state.forecastMetadata.firstTimeStep
         );
       if (maybeNextForecast !== undefined) {
@@ -299,8 +307,8 @@ export class Domain {
   previousDay(): void {
     if (this.state.model === gfsModel) {
       this.setHourOffset(this.state.hourOffset - 24);
-    } else if (this.state.model === wrfModel) {
-      const runs = this.wrfRuns.concat([]).reverse();
+    } else if (this.state.model === wrf2Model || this.state.model === wrf6Model) {
+      const runs = (this.state.model === wrf2Model ? this.wrf2Runs : this.wrf6Runs).concat([]).reverse();
       const i =
         runs.findIndex(run =>
           run.firstTimeStep < this.state.forecastMetadata.firstTimeStep
@@ -415,7 +423,7 @@ const selectWrfRun = (runs: Array<ForecastMetadata>): ForecastMetadata => {
 };
 
 /** Select the default forecast run to display */
-const selectRun = (model: Model, gfsRuns: Array<ForecastMetadata>, wrfRuns: Array<ForecastMetadata>): ForecastMetadata => {
+const selectRun = (model: Model, gfsRuns: Array<ForecastMetadata>, wrf6Runs: Array<ForecastMetadata>, wrf2Runs: Array<ForecastMetadata>): ForecastMetadata => {
   if (model === gfsModel) return gfsRuns[gfsRuns.length - 1]
-  else return selectWrfRun(wrfRuns)
+  else return selectWrfRun(model === wrf6Model ? wrf6Runs : wrf2Runs)
 }
