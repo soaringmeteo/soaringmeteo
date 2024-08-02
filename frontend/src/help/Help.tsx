@@ -2,7 +2,7 @@ import { JSX, lazy, Match, Show, Switch } from 'solid-js'
 import { keyWidth, meteogramColumnWidth, soundingWidth } from '../styles/Styles';
 import * as fakeData from './data';
 import { showDate, inversionStyle } from '../shared';
-import {type Domain, gfsModel, wrf2Model, wrf6Model} from '../State';
+import {type Domain, gfsModel} from '../State';
 import {useI18n} from "../i18n";
 
 export const Help = (props: { domain: Domain }): JSX.Element => {
@@ -40,7 +40,7 @@ const MapHelp = (props: { domain: Domain }): JSX.Element => {
           {' '}{ m().helpGfsModel1() } <a href="https://www.ncei.noaa.gov/products/weather-climate-models/global-forecast" target="_blank">{ m().helpGfsModel2() }</a> { m().helpGfsModel3() } <a
           href="https://www.noaa.gov/" target="_blank">NOAA</a>. { m().helpGfsModel4() }
         </Match>
-        <Match when={ props.domain.state.model === wrf2Model || props.domain.state.model === wrf6Model }>
+        <Match when={ props.domain.isWrfModel() }>
           {' '}{ m().helpWrfModel1() } <a href="https://www.mmm.ucar.edu/models/wrf" target="_blank">{ m().helpWrfModel2() }</a> { m().helpWrfModel3() }
         </Match>
       </Switch>
