@@ -2,7 +2,7 @@ import {Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Swit
 
 import {forecastOffsets, wrfForecastOffsets} from './data/ForecastMetadata';
 import {showDate} from './shared';
-import {type Domain, gfsModel, wrf2Model, wrf6Model} from './State';
+import {type Domain, gfsModel} from './State';
 import {
   buttonStyle,
   keyWidth,
@@ -248,9 +248,9 @@ export const PeriodSelectors = (props: {
               })()
             }
           </Match>
-          <Match when={ props.domain.state.model === wrf2Model || props.domain.state.model === wrf6Model }>
+          <Match when={ props.domain.isWrfModel() }>
             {
-              (props.domain.state.model === wrf6Model ? props.domain.wrf6Runs : props.domain.wrf2Runs).map(run => {
+              props.domain.currentWrfRuns().map(run => {
                 const isSelected =
                   run.firstTimeStep.getTime() === props.domain.state.forecastMetadata.firstTimeStep.getTime();
                 return <div

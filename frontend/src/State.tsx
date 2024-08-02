@@ -248,7 +248,7 @@ export class Domain {
   /** Set the forecast run to display */
   setForecastMetadata(forecastMetadata: ForecastMetadata, hourOffset?: number): void {
     const maybePreviousDetailedView =
-      (this.state.model === wrf2Model || this.state.model === wrf6Model) && forecastMetadata.modelPath === 'wrf' ? this.state.detailedView : undefined;
+      this.isWrfModel() && forecastMetadata.modelPath === 'wrf' ? this.state.detailedView : undefined;
     this.setState({
       forecastMetadata,
       hourOffset: hourOffset !== undefined ? hourOffset : forecastMetadata.defaultHourOffset(),
@@ -293,9 +293,9 @@ export class Domain {
   nextDay(): void {
     if (this.state.model === gfsModel) {
       this.setHourOffset(this.state.hourOffset + 24);
-    } else if (this.state.model === wrf2Model || this.state.model === wrf6Model) {
+    } else if (this.isWrfModel()) {
       const maybeNextForecast =
-        (this.state.model === wrf2Model ? this.wrf2Runs : this.wrf6Runs).find(run =>
+        this.currentWrfRuns().find(run =>
           run.firstTimeStep > this.state.forecastMetadata.firstTimeStep
         );
       if (maybeNextForecast !== undefined) {
@@ -307,8 +307,8 @@ export class Domain {
   previousDay(): void {
     if (this.state.model === gfsModel) {
       this.setHourOffset(this.state.hourOffset - 24);
-    } else if (this.state.model === wrf2Model || this.state.model === wrf6Model) {
-      const runs = (this.state.model === wrf2Model ? this.wrf2Runs : this.wrf6Runs).concat([]).reverse();
+    } else if (this.isWrfModel()) {
+      const runs = this.currentWrfRuns().concat([]).reverse();
       const i =
         runs.findIndex(run =>
           run.firstTimeStep < this.state.forecastMetadata.firstTimeStep
@@ -400,6 +400,16 @@ export class Domain {
         this.state.windLayer.dataPath,
         this.state.hourOffset
       );
+
+  /** @return Whether the current model is a WRF model (WRF2 or WRF6) or not */
+  isWrfModel(): boolean {
+    return this.state.model === wrf6Model || this.state.model === wrf2Model
+  }
+
+  /** @return The WRF runs of the current model. Assumes the current model is either WRF2 or WRF6. */
+  currentWrfRuns(): Array<ForecastMetadata> {
+    return this.state.model === wrf6Model ? this.wrf6Runs : this.wrf2Runs;
+  }
 
 }
 
