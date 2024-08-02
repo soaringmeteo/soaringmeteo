@@ -2,7 +2,7 @@ import {Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Swit
 
 import {forecastOffsets, wrfForecastOffsets} from './data/ForecastMetadata';
 import {showDate} from './shared';
-import {type Domain, gfsModel, wrfModel} from './State';
+import {type Domain, gfsModel} from './State';
 import {
   buttonStyle,
   keyWidth,
@@ -248,9 +248,9 @@ export const PeriodSelectors = (props: {
               })()
             }
           </Match>
-          <Match when={ props.domain.state.model === wrfModel }>
+          <Match when={ props.domain.isWrfModel() }>
             {
-              props.domain.wrfRuns.map(run => {
+              props.domain.currentWrfRuns().map(run => {
                 const isSelected =
                   run.firstTimeStep.getTime() === props.domain.state.forecastMetadata.firstTimeStep.getTime();
                 return <div
@@ -326,7 +326,7 @@ export const PeriodSelectors = (props: {
       forecastOffsetAndDates={
         // If there is no selected location, infer the available periods from the forecast metadata
         (state.detailedView === undefined || state.detailedView.viewType === 'summary') ?
-          state.model === 'wrf' ? wrfForecastOffsets(state.forecastMetadata) : forecastOffsets(state.forecastMetadata.firstTimeStep, 9, state.forecastMetadata)
+          state.model === gfsModel ? forecastOffsets(state.forecastMetadata.firstTimeStep, 9, state.forecastMetadata) : wrfForecastOffsets(state.forecastMetadata)
         :
           state.detailedView.locationForecasts.offsetAndDates()
       }

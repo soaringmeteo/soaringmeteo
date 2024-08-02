@@ -2,13 +2,13 @@ import {createEffect, createResource, getOwner, JSX, lazy, runWithOwner, Show } 
 import { insert, render, style } from 'solid-js/web';
 
 import { initializeMap, MapHooks } from './map/Map';
-import { fetchForecastRuns } from './data/ForecastMetadata';
-import {Domain, gfsModel, wrfModel} from './State';
+import {Domain} from './State';
 import { BurgerButton } from './BurgerButton';
 import { hooks } from "./css-hooks";
 import {LayerKeys} from "./LayerKeys";
 import { HelpButton } from './help/HelpButton';
 import {Localized} from "./i18n";
+import {fetchGfsForecastRuns, fetchWrfForecastRuns} from "./data/FetchForecastRuns";
 
 const PeriodSelectors = lazy(() => import('./PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
 
@@ -89,12 +89,11 @@ const Loader = ((props: {
   const [loadedDomain] = createResource(() =>
       Promise
           .all([
-            fetchForecastRuns(gfsModel),
-            fetchForecastRuns(wrfModel)
-                .then(runs => runs.sort((run1, run2) => run1.firstTimeStep.getTime() - run2.firstTimeStep.getTime()))
+            fetchGfsForecastRuns(),
+            fetchWrfForecastRuns()
           ])
-          .then(([gfsRuns, wrfRuns]) => {
-            return runWithOwner(owner, () => new Domain(gfsRuns, wrfRuns));
+          .then(([gfsRuns, [wrf6Runs, wrf2Runs]]) => {
+            return runWithOwner(owner, () => new Domain(gfsRuns, wrf6Runs, wrf2Runs));
           })
           .catch(error => {
             console.log(error);

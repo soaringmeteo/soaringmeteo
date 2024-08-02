@@ -1,6 +1,6 @@
 import {Accessor, JSX, Show} from 'solid-js';
 
-import {Domain, gfsModel, type Model, wrfModel} from './State';
+import {Domain, gfsModel, type Model, wrf2Model, wrf6Model} from './State';
 import {Layer} from './layers/Layer';
 import {xcFlyingPotentialLayer} from './layers/ThQ';
 import {soaringLayerDepthLayer} from './layers/SoaringLayerDepth';
@@ -42,7 +42,8 @@ export const LayersSelector = (props: {
         {
           new Array<[string, () => string, Model]>(
             ['soarGFS (25 km)', () => m().menuGFSLegend(), gfsModel],
-            ['soarWRF (2-6 km)', () => m().menuWRFLegend(), wrfModel]
+            ['soarWRF (6 km)', () => m().menuWRFLegend(), wrf6Model],
+            ['soarWRF (2 km)', () => m().menuWRFLegend(), wrf2Model]
           )
             .map(([label, title, model]) =>
               <Radio
