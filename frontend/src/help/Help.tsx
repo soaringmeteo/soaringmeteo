@@ -2,7 +2,7 @@ import { JSX, lazy, Match, Show, Switch } from 'solid-js'
 import { keyWidth, meteogramColumnWidth, soundingWidth } from '../styles/Styles';
 import * as fakeData from './data';
 import { showDate, inversionStyle } from '../shared';
-import {type Domain, gfsModel} from '../State';
+import {type Domain, gfsModel, wrf6Model} from '../State';
 import {useI18n} from "../i18n";
 
 export const Help = (props: { domain: Domain }): JSX.Element => {
@@ -33,7 +33,8 @@ const MapHelp = (props: { domain: Domain }): JSX.Element => {
       { m().helpCurrentForecast({
         forecastDate: showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { timeZone: props.domain.timeZone() }),
         model: props.domain.modelName(),
-        initializationTime: showDate(state.forecastMetadata.init, { timeZone: props.domain.timeZone() })
+        initializationTime: showDate(state.forecastMetadata.init, { timeZone: props.domain.timeZone() }),
+        resolution: props.domain.modelResolution()
       }) }
       <Switch>
         <Match when={ props.domain.state.model === gfsModel }>

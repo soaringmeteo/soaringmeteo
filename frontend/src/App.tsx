@@ -8,7 +8,7 @@ import { hooks } from "./css-hooks";
 import {LayerKeys} from "./LayerKeys";
 import { HelpButton } from './help/HelpButton';
 import {Localized} from "./i18n";
-import {fetchGfsForecastRuns, fetchWrfForecastRuns} from "./data/FetchForecastRuns";
+import {fetchGfsForecastRuns, fetchWrfForecastRuns} from "./data/ForecastMetadata";
 
 const PeriodSelectors = lazy(() => import('./PeriodSelector').then(module => ({ default: module.PeriodSelectors })));
 

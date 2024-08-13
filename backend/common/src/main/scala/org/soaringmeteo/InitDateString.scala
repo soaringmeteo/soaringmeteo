@@ -11,16 +11,4 @@ object InitDateString {
   def apply(dateTime: OffsetDateTime): String =
     dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH"))
 
-  def parse(str: String): Option[OffsetDateTime] = str match {
-    case dateTimeStringPrefix(year, month, day, hour) =>
-      Some(
-        OffsetDateTime.of(
-          LocalDate.of(year.toInt, month.toInt, day.toInt),
-          LocalTime.of(hour.toInt, 0),
-          ZoneOffset.UTC
-        )
-      )
-    case _ => None
-  }
-
 }

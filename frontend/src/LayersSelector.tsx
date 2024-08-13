@@ -73,7 +73,7 @@ export const LayersSelector = (props: {
             }
             selectedOption={ props.domain.state.forecastMetadata }
             onChange={ forecastMetadata => props.domain.setForecastMetadata(forecastMetadata) }
-            key={ forecastMetadata => forecastMetadata.initS }
+            key={ forecastMetadata => forecastMetadata.runPath }
           />
         </fieldset>
       </Show>

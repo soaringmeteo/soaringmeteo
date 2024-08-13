@@ -53,11 +53,11 @@ object JsonWriter {
 
     // Update the file `forecast.json` in the root target directory
     // and rename the old `forecast.json`, if any
-    overwriteLatestForecastMetadata(initDateString, gfsRun, versionedTargetDir)
+    val currentForecasts =
+      overwriteLatestForecastMetadata(initDateString, gfsRun, versionedTargetDir)
 
-    // Finally, we remove files older than five days ago from the target directory
-    val oldestForecastToKeep = gfsRun.initDateTime.minus(Settings.forecastHistory)
-    deleteOldData(versionedTargetDir, oldestForecastToKeep)
+    // Finally, we remove the expired forecast data from the target directory
+    deleteOldData(versionedTargetDir, currentForecasts)
   }
 
   /**
@@ -130,7 +130,7 @@ object JsonWriter {
    * @param gfsRun         GFS run
    * @param targetDir      Target directory
    */
-  private def overwriteLatestForecastMetadata(initDateString: String, gfsRun: in.ForecastRun, targetDir: os.Path): Unit = {
+  private def overwriteLatestForecastMetadata(initDateString: String, gfsRun: in.ForecastRun, targetDir: os.Path): Seq[ForecastMetadata] = {
     val zones =
       for (subgrid <- Settings.gfsSubgrids) yield {
         val resolution = BigDecimal("0.25")
@@ -152,7 +152,7 @@ object JsonWriter {
       }
     ForecastMetadata.overwriteLatestForecastMetadata(
       targetDir,
-      Settings.forecastHistory.getDays,
+      Settings.forecastHistory,
       initDateString,
       gfsRun.initDateTime,
       maybeFirstTimeStep = None, // In GFS, the first time-step is always the same as the initialization time
