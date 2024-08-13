@@ -13,8 +13,9 @@ export default defineConfig(() => ({
       outdir: "./src/generated-i18n", //Where you want the generated files to be placed
     }),
     VitePWA({
+      strategies: 'generateSW',
       registerType: 'autoUpdate',
-      injectRegister: 'script-defer',
+      injectRegister: null,
       // devOptions: { enabled: true },
       manifest: {
         name: 'Soaringmeteo',
