@@ -89,7 +89,9 @@ const saveWindLayer = (key: string): void => {
 const loadModel = (): Model => {
   // First, try to read from the URL parameters
   const params = new URLSearchParams(window.location.search);
-  const model = params.get('model');
+  // Backward compatibility: accept 'wrf' as an alias to 'wrf2'
+  const model =
+    params.get('model') === 'wrf' ? wrf2Model : params.get('model');
   if (model === gfsModel || model === wrf2Model || model === wrf6Model) {
     return model
   }
@@ -237,11 +239,19 @@ export class Domain {
 
   modelName(): string {
     if (this.state.model === gfsModel) {
-      return 'GFS (25 km)'
-    } else if (this.state.model === wrf6Model) {
-      return 'WRF (6 km)'
+      return 'GFS'
     } else {
-      return 'WRF (2 km)'
+      return 'WRF'
+    }
+  }
+
+  modelResolution(): number {
+    if (this.state.model === gfsModel) {
+      return 25
+    } else if (this.state.model === wrf6Model) {
+      return 6
+    } else {
+      return 2
     }
   }
 

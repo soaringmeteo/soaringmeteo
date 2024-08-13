@@ -35,15 +35,16 @@ object DataPipeline {
       }
 
     // Ultimately, write the forecast metadata for the run and delete old data
-    overwriteLatestForecastMetadata(
-      modelTargetDir,
-      initDateString,
-      initDateTime,
-      firstTimeStep,
-      results.toList
-    )
+    val currentForecasts =
+      overwriteLatestForecastMetadata(
+        modelTargetDir,
+        initDateString,
+        initDateTime,
+        firstTimeStep,
+        results.toList
+      )
 
-    deleteOldData(modelTargetDir, initDateTime.minusDays(4))
+    deleteOldData(modelTargetDir, currentForecasts)
 
     touchMarkerFile(outputDir)
   }
@@ -85,13 +86,14 @@ object DataPipeline {
     }
   }
 
+  /** @return the exposed forecast runs */
   private def overwriteLatestForecastMetadata(
     outputDir: os.Path,
     initDateString: String,
     initializationDate: OffsetDateTime,
     firstTimeStep: OffsetDateTime,
     results: Seq[(Grid, NetCdf.Metadata)]
-  ): Unit = {
+  ): Seq[ForecastMetadata] = {
     logger.info(s"Writing forecast metadata in ${outputDir}")
     val latestHourOffset = results.head._2.latestHourOffset // Assume all the grids have the same time-steps
     val zones =
@@ -110,7 +112,7 @@ object DataPipeline {
       }
     ForecastMetadata.overwriteLatestForecastMetadata(
       outputDir,
-      history = 4 /* days */,
+      Settings.forecastHistory,
       initDateString,
       initializationDate,
       Some(firstTimeStep),

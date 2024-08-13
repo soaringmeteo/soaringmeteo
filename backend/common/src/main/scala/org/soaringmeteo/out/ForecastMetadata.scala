@@ -3,31 +3,36 @@ package org.soaringmeteo.out
 import geotrellis.vector.Extent
 import io.circe
 
-import java.time.OffsetDateTime
+import java.time.{OffsetDateTime, Period}
 import io.circe.{Codec, Decoder, Encoder, Json}
-import org.soaringmeteo.InitDateString
 
 import scala.util.Try
 
 /**
  * Description of the forecast data (consumed by the frontend).
- * @param history          How far in the past (in number of days) the previous forecasts have been kept on the server (used by the frontend to load the previous forecast runs)
- * @param initDateString   Formatted initialization time of the forecast (used as a prefix for generated file names)
+ * @param dataPath         Path prefix for generated file names
  * @param initDateTime     Initialization time of the forecast
  * @param latestHourOffset Offset (in number of hours from the init time) of the latest period of forecast
  * @param maybeFirstTimeStep Time of the first time-step (when hourOffset is zero), if different from the initialization time
- * @param maybePreviousForecastInitDateTime Path of the previous forecast
  * @param zones Zones covered by the forecast
  */
 case class ForecastMetadata(
-  history: Int,
-  initDateString: String,
+  dataPath: String,
   initDateTime: OffsetDateTime,
   maybeFirstTimeStep: Option[OffsetDateTime],
   latestHourOffset: Int,
-  maybePreviousForecastInitDateTime: Option[OffsetDateTime],
   zones: Seq[ForecastMetadata.Zone]
-)
+) {
+
+  /**
+   * @return The first date-time covered by the forecast. Typically,
+   *         the first date-time of GFS forecasts is their
+   *         initialization time, whereas the first date-time of WRF
+   *         forecasts is defined by `maybeFirstTimeStep`.
+   */
+  def firstDateTime: OffsetDateTime = maybeFirstTimeStep.getOrElse(initDateTime)
+
+}
 
 object ForecastMetadata {
   /** Description of the zones covered */
@@ -57,50 +62,95 @@ object ForecastMetadata {
   }
 
   /**
-   * Overwrite the content of the file `forecast.json` to describe to the latest forecast run.
+   * Overwrite the content of the file `forecast.json` to describe the forecasts currently
+   * exposed to the frontend.
    *
-   * @param targetDir      Model target directory (e.g., /data/3/gfs or /data/3/wrf)
+   * @param targetDir Model target directory (e.g., /data/3/gfs or /data/3/wrf)
+   * @param history   Retention period of previous forecast runs
+   * @return The collection of forecasts (previous and latest) exposed to the frontend,
+   *         sorted by first date-time.
    */
   def overwriteLatestForecastMetadata(
     targetDir: os.Path,
-    history: Int,
+    history: Period,
     initDateString: String,
     initDateTime: OffsetDateTime,
     maybeFirstTimeStep: Option[OffsetDateTime],
     latestHourOffset: Int,
     zones: Seq[Zone]
-  ): Unit = {
+  ): Seq[ForecastMetadata] = {
     val latestForecastPath = targetDir / "forecast.json"
-    // If a previous forecast is found, rename its metadata file
-    val maybePreviousForecastInitDateTime =
+    val maybePreviousForecasts =
       for {
         _ <- Option.when(os.exists(latestForecastPath))(())
         str <- Try(os.read(latestForecastPath)).toOption // FIXME Log more errors
         json <- circe.parser.parse(str).toOption
-        metadata <- ForecastMetadata.jsonCodec.decodeJson(json).toOption
-        path = ForecastMetadata.archivedForecastFileName(metadata.initDateTime)
-        _ <- Try(os.move(latestForecastPath, targetDir / path)).toOption
-      } yield metadata.initDateTime
+        metadata <- Decoder.decodeSeq(ForecastMetadata.jsonCodec).decodeJson(json).toOption
+      } yield metadata
 
-    val metadata =
+    val latestForecast =
       ForecastMetadata(
-        history,
         initDateString,
         initDateTime,
         maybeFirstTimeStep,
         latestHourOffset,
-        maybePreviousForecastInitDateTime,
         zones
       )
 
+    val mergedForecasts: Seq[ForecastMetadata] =
+      updateForecasts(latestForecast, maybePreviousForecasts.getOrElse(Nil), history)
+
     os.write.over(
       latestForecastPath,
-      jsonCodec(metadata).deepDropNullValues.noSpaces
+      Encoder.encodeSeq(jsonCodec)(mergedForecasts).deepDropNullValues.noSpaces
     )
+    mergedForecasts
   }
 
-  private def archivedForecastFileName(forecastInitDateTime: OffsetDateTime): String =
-    s"${InitDateString(forecastInitDateTime)}-forecast.json"
+  /**
+   * @return The updated list of forecasts to expose to the frontend. The list is sorted by forecast start time, it
+   *         includes the latest forecast and removes any of the previous forecasts for the same start time as the
+   *         latest one, and any forecast whose initialization date is older than `oldestForecastToKeep`.
+   * @param latestForecast    Latest forecast to insert into the collection
+   * @param previousForecasts Previous forecasts. We assume the previous forecasts are also sorted.
+   * @param forecastHistory   Retention period for old forecasts
+   */
+  private[out] def updateForecasts(
+    latestForecast: ForecastMetadata,
+    previousForecasts: Seq[ForecastMetadata],
+    forecastHistory: Period
+  ): Seq[ForecastMetadata] = {
+    val oldestForecastToKeep = latestForecast.initDateTime.minus(forecastHistory)
+    val builder = Seq.newBuilder[ForecastMetadata]
+    var inserted: Boolean = false
+    for {
+      forecast <- previousForecasts
+      if !forecast.initDateTime.isBefore(oldestForecastToKeep)
+     } {
+      if (inserted) {
+        // We already inserted the latest forecast, just copy the remaining forecasts
+        builder += forecast
+      } else if (forecast.firstDateTime == latestForecast.firstDateTime) {
+        // Replace `forecast` with `latestForecast` in the result
+        builder += latestForecast
+        inserted = true
+      } else if (forecast.firstDateTime.isAfter(latestForecast.firstDateTime)) {
+        // Insert `latestForecast` before `forecast`
+        builder += latestForecast
+        inserted = true
+        builder += forecast
+      } else {
+        // Only insert `forecast`
+        builder += forecast
+      }
+    }
+    // In case we did not insert the `latestForecast` in the result (because it is after all the previous forecasts, or there were no previous forecasts),
+    // insert it at the end.
+    if (!inserted) {
+      builder += latestForecast
+    }
+    builder.result()
+  }
 
   // JSON encoding of the forecast metadata. Must be consistent with the frontend.
   // See `frontend/src/data/ForecastMetadata.ts`
@@ -183,35 +233,20 @@ object ForecastMetadata {
     Codec.from(
       Decoder.instance { cursor =>
         for {
-          h      <- cursor.downField("h").as[Int]
-          initS  <- cursor.downField("initS").as[String]
+          path  <- cursor.downField("path").as[String]
           init   <- cursor.downField("init").as[OffsetDateTime]
           first  <- cursor.downField("first").as[Option[OffsetDateTime]]
           latest <- cursor.downField("latest").as[Int]
-          prev   <- cursor.downField("prev").as[Option[(String, OffsetDateTime)]]
           zones  <- cursor.downField("zones").as[Seq[Zone]](Decoder.decodeSeq(zoneCodec))
-        } yield ForecastMetadata(h, initS, init, first, latest, prev.map(_._2), zones)
+        } yield ForecastMetadata(path, init, first, latest, zones)
       },
       Encoder.instance { forecastMetadata =>
         Json.obj(
-          "h" -> Json.fromInt(forecastMetadata.history),
-          "initS"  -> Json.fromString(forecastMetadata.initDateString),
+          "path"  -> Json.fromString(forecastMetadata.dataPath),
           "init"   -> Encoder[OffsetDateTime].apply(forecastMetadata.initDateTime),
           "first"  -> Encoder.encodeOption[OffsetDateTime].apply(forecastMetadata.maybeFirstTimeStep),
           "latest" -> Json.fromInt(forecastMetadata.latestHourOffset),
           "zones"  -> Encoder.encodeSeq(zoneCodec)(forecastMetadata.zones)
-        ).deepMerge(
-          forecastMetadata.maybePreviousForecastInitDateTime match {
-            case Some(previousForecastInitDateTime) =>
-              Json.obj("prev" ->
-                Json.arr(
-                  Json.fromString(archivedForecastFileName(previousForecastInitDateTime)),
-                  Encoder[OffsetDateTime].apply(previousForecastInitDateTime)
-                )
-              )
-            case None =>
-              Json.obj()
-          }
         )
       }
     )

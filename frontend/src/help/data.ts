@@ -2,8 +2,7 @@ import { DetailedForecast, DetailedForecastData, LocationForecasts, LocationFore
 import { ForecastMetadata } from "../data/ForecastMetadata";
 
 const metadata = {
-  h: 0,
-  initS: '2030-05-14T00',
+  path: '2030-05-14T00',
   init: '2030-05-14T00:00:00Z',
   latest: 42,
   zones: []
