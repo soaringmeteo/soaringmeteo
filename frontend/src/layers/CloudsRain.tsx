@@ -1,7 +1,8 @@
 import { ColorScale, Color } from "../ColorScale";
-import {ForecastMetadata, Zone} from '../data/ForecastMetadata';
+import {ForecastMetadata} from '../data/ForecastMetadata';
 import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
 import {useI18n, usingMessages} from "../i18n";
+import {Zone} from "../data/Model";
 
 // TODO Make sure this is consistent with what the backend does (consider providing the scale from the backend)
 const cloudCoverColorScale = new ColorScale([

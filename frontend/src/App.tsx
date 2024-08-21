@@ -20,8 +20,9 @@ const App = (props: {
   // Update primary layer
   createEffect(() => {
     const url = props.domain.urlOfRasterAtCurrentHourOffset();
-    const projection = props.domain.state.zone.raster.proj;
-    const extent = props.domain.state.zone.raster.extent;
+    const zone = props.domain.effectiveZone();
+    const projection = zone.raster.proj;
+    const extent = zone.raster.extent;
     if (props.domain.state.primaryLayerEnabled) {
       props.mapHooks.setPrimaryLayerSource(url, projection, extent);
     } else {
@@ -31,7 +32,7 @@ const App = (props: {
 
   // Update wind layer
   createEffect(() => {
-    const vectorTiles = props.domain.state.zone.vectorTiles;
+    const vectorTiles = props.domain.effectiveZone().vectorTiles;
     const url = props.domain.urlOfVectorTilesAtCurrentHourOffset();
     if (props.domain.state.windLayerEnabled) {
       props.mapHooks.setWindLayerSource(
@@ -92,8 +93,8 @@ const Loader = ((props: {
             fetchGfsForecastRuns(),
             fetchWrfForecastRuns()
           ])
-          .then(([gfsRuns, [wrf6Runs, wrf2Runs]]) => {
-            return runWithOwner(owner, () => new Domain(gfsRuns, wrf6Runs, wrf2Runs));
+          .then(([[gfsRuns, gfsZones], [wrfRuns, wrfZones]]) => {
+            return runWithOwner(owner, () => new Domain(gfsRuns, gfsZones, wrfRuns, wrfZones));
           })
           .catch(error => {
             console.log(error);

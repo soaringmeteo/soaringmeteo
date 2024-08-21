@@ -1,28 +1,19 @@
 import {LocationForecasts, LocationForecastsData} from "./LocationForecasts";
 import {toLonLat, fromLonLat} from "ol/proj";
 import {containsCoordinate} from "ol/extent";
+import {Zone} from "./Model";
+
+type ForecastsMetadataData = {
+  zones: Array<Zone>
+  forecasts: Array<ForecastMetadataData>
+}
 
 type ForecastMetadataData = {
   path: string   // e.g., "2020-04-14T06"
   init: string   // e.g., "2020-04-14T06:00:00Z"
   first?: string // e.g., "2020-04-15T06:00Z"
   latest: number // e.g., 189 (number of hours between the first time step and the last one)
-  zones: Array<Zone>
-}
-
-export type Zone = {
-  readonly id: string
-  readonly raster: {
-    extent: [number, number, number, number]
-    resolution: number
-    proj: string
-  }
-  readonly vectorTiles: {
-    readonly minZoom: number
-    readonly zoomLevels: number
-    readonly extent: [number, number, number, number]
-    readonly tileSize: number
-  }
+  zones: Array<string>
 }
 
 // Version of the forecast data format we consume (see backend/common/src/main/scala/org/soaringmeteo/out/package.scala)
@@ -40,16 +31,16 @@ export class ForecastMetadata {
   readonly latest: number
   /** Path of the assets for this NWP model */
   readonly modelPath: string
-  /** Zone covered by this forecast */
-  readonly zones: Array<Zone>
+  /** Zones available for this forecast run */
+  readonly availableZones: Array<Zone>
 
-  constructor(modelPath: string, data: ForecastMetadataData) {
+  constructor(modelPath: string, data: ForecastMetadataData, modelZones: Array<Zone>) {
     this.runPath = data.path;
     this.init = new Date(data.init);
     this.firstTimeStep = data.first ? new Date(data.first) : this.init;
     this.latest = data.latest;
     this.modelPath = modelPath;
-    this.zones = data.zones;
+    this.availableZones = modelZones.filter(zone => data.zones.includes(zone.id));
   }
 
   /**
@@ -133,34 +124,20 @@ export class ForecastMetadata {
 
 }
 
-export const fetchGfsForecastRuns = async (): Promise<Array<ForecastMetadata>> => {
-  const response = await fetch(`${dataPath}/gfs/forecast.json`);
-  const data = await response.json() as Array<ForecastMetadataData>;
-  return data.map(data => new ForecastMetadata('gfs', data));
-};
+export const fetchGfsForecastRuns = async (): Promise<[Array<ForecastMetadata>, Array<Zone>]> =>
+  fetchForecastRuns('gfs');
 
-export const fetchWrfForecastRuns = async (): Promise<[Array<ForecastMetadata>, Array<ForecastMetadata>]> => {
-  const response = await fetch(`${dataPath}/wrf/forecast.json`);
-  const data = await response.json() as Array<ForecastMetadataData>;
-  const wrf6Runs: Array<ForecastMetadata> = [];
-  const wrf2Runs: Array<ForecastMetadata> = [];
-  data.forEach(data => {
-    // If the run contains other zones than 'alps-overview', it means it also contains WRF2 data
-    if (data.zones.some(zone => zone.id !== 'alps-overview')) {
-      // Duplicate the data into a WRF6 run and a WRF2 run
-      const wrf6OnlyData = JSON.parse(JSON.stringify(data)) as ForecastMetadataData;
-      // Keep only the 'alps-overview' zone in the WRF6 data
-      wrf6OnlyData.zones = wrf6OnlyData.zones.filter(zone => zone.id === 'alps-overview');
-      // Remove the 'alps-overview' zone from the WRF2 data
-      data.zones = data.zones.filter(zone => zone.id !== 'alps-overview');
-      wrf2Runs.push(new ForecastMetadata('wrf', data));
-      wrf6Runs.push(new ForecastMetadata('wrf', wrf6OnlyData));
-    } else {
-      // The data covers only the WRF6 zone
-      wrf6Runs.push(new ForecastMetadata('wrf', data));
-    }
-  });
-  return [wrf6Runs, wrf2Runs]
+export const fetchWrfForecastRuns = async (): Promise<[Array<ForecastMetadata>, Array<Zone>]> =>
+  fetchForecastRuns('wrf');
+
+const fetchForecastRuns = async (modelPath: string): Promise<[Array<ForecastMetadata>, Array<Zone>]> => {
+  const response = await fetch(`${dataPath}/${modelPath}/forecast.json`);
+  const data = await response.json() as ForecastsMetadataData;
+  const forecastsMetadata =
+    data.forecasts.map(forecastMetadataData =>
+      new ForecastMetadata(modelPath, forecastMetadataData, data.zones)
+    );
+  return [forecastsMetadata, data.zones]
 };
 
 // We show three forecast periods per day: morning, noon, and afternoon

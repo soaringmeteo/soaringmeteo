@@ -85,7 +85,7 @@ object ForecastMetadata {
         _ <- Option.when(os.exists(latestForecastPath))(())
         str <- Try(os.read(latestForecastPath)).toOption // FIXME Log more errors
         json <- circe.parser.parse(str).toOption
-        metadata <- Decoder.decodeSeq(ForecastMetadata.jsonCodec).decodeJson(json).toOption
+        metadata <- ForecastMetadata.jsonCodec.decodeJson(json).toOption
       } yield metadata
 
     val latestForecast =
@@ -102,7 +102,7 @@ object ForecastMetadata {
 
     os.write.over(
       latestForecastPath,
-      Encoder.encodeSeq(jsonCodec)(mergedForecasts).deepDropNullValues.noSpaces
+      jsonCodec(mergedForecasts).deepDropNullValues.noSpaces
     )
     mergedForecasts
   }
@@ -152,104 +152,169 @@ object ForecastMetadata {
     builder.result()
   }
 
-  // JSON encoding of the forecast metadata. Must be consistent with the frontend.
-  // See `frontend/src/data/ForecastMetadata.ts`
-  val jsonCodec: Codec[ForecastMetadata] = {
-    val extentCodec: Codec[Extent] =
-      Codec.from(
-        Decoder.instance { cursor =>
-          for {
-            xmin <- cursor.downN(0).as[Double]
-            ymin <- cursor.downN(1).as[Double]
-            xmax <- cursor.downN(2).as[Double]
-            ymax <- cursor.downN(3).as[Double]
-          } yield Extent(xmin, ymin, xmax, ymax)
-        },
-        Encoder.instance { extent =>
-          Json.arr(
-            Json.fromBigDecimal(extent.xmin),
-            Json.fromBigDecimal(extent.ymin),
-            Json.fromBigDecimal(extent.xmax),
-            Json.fromBigDecimal(extent.ymax)
-          )
-        }
-      )
-    val rasterCodec: Codec[Raster] =
-      Codec.from(
-        Decoder.instance { cursor =>
-          for {
-            projection <- cursor.downField("proj").as[String]
-            resolution <- cursor.downField("resolution").as[BigDecimal]
-            extent <- cursor.downField("extent").as(extentCodec)
-          } yield Raster(projection, resolution, extent)
-        },
-        Encoder.instance { raster =>
-          Json.obj(
-            "proj" -> Json.fromString(raster.projection),
-            "resolution" -> Json.fromBigDecimal(raster.resolution),
-            "extent" -> extentCodec(raster.extent)
-          )
-        }
-      )
-    val vectorTilesCodec: Codec[VectorTiles] =
-      Codec.from(
-        Decoder.instance { cursor =>
-          for {
-            extent  <- cursor.downField("extent").as(extentCodec)
-            zoomLevels <- cursor.downField("zoomLevels").as[Int]
-            minZoom <- cursor.downField("minZoom").as[Int]
-            tileSize <- cursor.downField("tileSize").as[Int]
-          } yield VectorTiles(extent, zoomLevels, minZoom, tileSize)
-        },
-        Encoder.instance { tiles =>
-          Json.obj(
-            "extent" -> extentCodec(tiles.extent),
-            "zoomLevels" -> Json.fromInt(tiles.zoomLevels),
-            "minZoom" -> Json.fromInt(tiles.minZoom),
-            "tileSize" -> Json.fromInt(tiles.tileSize),
-          )
-        }
-      )
-    val zoneCodec: Codec[Zone] =
-      Codec.from(
-        Decoder.instance { cursor =>
-          for {
-            id <- cursor.downField("id").as[String]
-            label <- cursor.downField("label").as[String]
-            raster <- cursor.downField("raster").as(rasterCodec)
-            vectorTiles <- cursor.downField("vectorTiles").as(vectorTilesCodec)
-          } yield Zone(id, label, raster, vectorTiles)
-        },
-        Encoder.instance { zone =>
-          Json.obj(
-            "id" -> Json.fromString(zone.id),
-            "label" -> Json.fromString(zone.label),
-            "raster" -> rasterCodec(zone.raster),
-            "vectorTiles" -> vectorTilesCodec(zone.vectorTiles)
-          )
-        }
+  // Like ForecastMetadata, but zones are substituted with their ID
+  case class ForecastMetadataJson(
+    dataPath: String,
+    initDateTime: OffsetDateTime,
+    maybeFirstTimeStep: Option[OffsetDateTime],
+    latestHourOffset: Int,
+    zoneIds: Seq[String]
+  )
+
+  object ForecastMetadataJson {
+
+    def apply(metadata: ForecastMetadata): ForecastMetadataJson =
+      ForecastMetadataJson(
+        metadata.dataPath,
+        metadata.initDateTime,
+        metadata.maybeFirstTimeStep,
+        metadata.latestHourOffset,
+        metadata.zones.map(_.id)
       )
 
-    Codec.from(
-      Decoder.instance { cursor =>
-        for {
-          path  <- cursor.downField("path").as[String]
-          init   <- cursor.downField("init").as[OffsetDateTime]
-          first  <- cursor.downField("first").as[Option[OffsetDateTime]]
-          latest <- cursor.downField("latest").as[Int]
-          zones  <- cursor.downField("zones").as[Seq[Zone]](Decoder.decodeSeq(zoneCodec))
-        } yield ForecastMetadata(path, init, first, latest, zones)
-      },
-      Encoder.instance { forecastMetadata =>
-        Json.obj(
-          "path"  -> Json.fromString(forecastMetadata.dataPath),
-          "init"   -> Encoder[OffsetDateTime].apply(forecastMetadata.initDateTime),
-          "first"  -> Encoder.encodeOption[OffsetDateTime].apply(forecastMetadata.maybeFirstTimeStep),
-          "latest" -> Json.fromInt(forecastMetadata.latestHourOffset),
-          "zones"  -> Encoder.encodeSeq(zoneCodec)(forecastMetadata.zones)
-        )
-      }
-    )
+    implicit val jsonCodec: Codec[ForecastMetadataJson] =
+      Codec.from(
+        Decoder.instance { cursor =>
+          for {
+            path    <- cursor.downField("path").as[String]
+            init    <- cursor.downField("init").as[OffsetDateTime]
+            first   <- cursor.downField("first").as[Option[OffsetDateTime]]
+            latest  <- cursor.downField("latest").as[Int]
+            zoneIds <- cursor.downField("zones").as[Seq[String]]
+          } yield ForecastMetadataJson(path, init, first, latest, zoneIds)
+        },
+        Encoder.instance { forecastMetadata =>
+          Json.obj(
+            "path"  -> Json.fromString(forecastMetadata.dataPath),
+            "init"   -> Encoder[OffsetDateTime].apply(forecastMetadata.initDateTime),
+            "first"  -> Encoder.encodeOption[OffsetDateTime].apply(forecastMetadata.maybeFirstTimeStep),
+            "latest" -> Json.fromInt(forecastMetadata.latestHourOffset),
+            "zones"  -> Encoder.encodeSeq[String].apply(forecastMetadata.zoneIds)
+          )
+        }
+      )
   }
+
+  case class ForecastsMetadataJson(
+    zones: Seq[Zone],
+    forecastsMetadata: Seq[ForecastMetadataJson]
+  )
+
+  object ForecastsMetadataJson {
+
+    // JSON encoding of the forecast metadata. Must be consistent with the frontend.
+    // See `frontend/src/data/ForecastMetadata.ts`
+    val jsonCodec: Codec[ForecastsMetadataJson] = {
+
+      val extentCodec: Codec[Extent] =
+        Codec.from(
+          Decoder.instance { cursor =>
+            for {
+              xmin <- cursor.downN(0).as[Double]
+              ymin <- cursor.downN(1).as[Double]
+              xmax <- cursor.downN(2).as[Double]
+              ymax <- cursor.downN(3).as[Double]
+            } yield Extent(xmin, ymin, xmax, ymax)
+          },
+          Encoder.instance { extent =>
+            Json.arr(
+              Json.fromBigDecimal(extent.xmin),
+              Json.fromBigDecimal(extent.ymin),
+              Json.fromBigDecimal(extent.xmax),
+              Json.fromBigDecimal(extent.ymax)
+            )
+          }
+        )
+      val rasterCodec: Codec[Raster] =
+        Codec.from(
+          Decoder.instance { cursor =>
+            for {
+              projection <- cursor.downField("proj").as[String]
+              resolution <- cursor.downField("resolution").as[BigDecimal]
+              extent <- cursor.downField("extent").as(extentCodec)
+            } yield Raster(projection, resolution, extent)
+          },
+          Encoder.instance { raster =>
+            Json.obj(
+              "proj" -> Json.fromString(raster.projection),
+              "resolution" -> Json.fromBigDecimal(raster.resolution),
+              "extent" -> extentCodec(raster.extent)
+            )
+          }
+        )
+      val vectorTilesCodec: Codec[VectorTiles] =
+        Codec.from(
+          Decoder.instance { cursor =>
+            for {
+              extent  <- cursor.downField("extent").as(extentCodec)
+              zoomLevels <- cursor.downField("zoomLevels").as[Int]
+              minZoom <- cursor.downField("minZoom").as[Int]
+              tileSize <- cursor.downField("tileSize").as[Int]
+            } yield VectorTiles(extent, zoomLevels, minZoom, tileSize)
+          },
+          Encoder.instance { tiles =>
+            Json.obj(
+              "extent" -> extentCodec(tiles.extent),
+              "zoomLevels" -> Json.fromInt(tiles.zoomLevels),
+              "minZoom" -> Json.fromInt(tiles.minZoom),
+              "tileSize" -> Json.fromInt(tiles.tileSize),
+            )
+          }
+        )
+      implicit val zoneCodec: Codec[Zone] =
+        Codec.from(
+          Decoder.instance { cursor =>
+            for {
+              id <- cursor.downField("id").as[String]
+              label <- cursor.downField("label").as[String]
+              raster <- cursor.downField("raster").as(rasterCodec)
+              vectorTiles <- cursor.downField("vectorTiles").as(vectorTilesCodec)
+            } yield Zone(id, label, raster, vectorTiles)
+          },
+          Encoder.instance { zone =>
+            Json.obj(
+              "id" -> Json.fromString(zone.id),
+              "label" -> Json.fromString(zone.label),
+              "raster" -> rasterCodec(zone.raster),
+              "vectorTiles" -> vectorTilesCodec(zone.vectorTiles)
+            )
+          }
+        )
+
+      Codec.from(
+        Decoder.instance { cursor =>
+          for {
+            zones     <- cursor.downField("zones").as[Seq[Zone]]
+            forecasts <- cursor.downField("forecasts").as[Seq[ForecastMetadataJson]]
+          } yield ForecastsMetadataJson(zones, forecasts)
+        },
+        Encoder.instance { metadata =>
+          Json.obj(
+            "zones" -> Encoder.encodeSeq[Zone].apply(metadata.zones),
+            "forecasts" -> Encoder.encodeSeq[ForecastMetadataJson].apply(metadata.forecastsMetadata)
+          )
+        }
+      )
+    }
+
+  }
+
+  val jsonCodec: Codec[Seq[ForecastMetadata]] =
+    ForecastsMetadataJson.jsonCodec.iemap[Seq[ForecastMetadata]] { forecastsMetadataJson =>
+      val zones = forecastsMetadataJson.zones
+      Right(forecastsMetadataJson.forecastsMetadata.map { metadata =>
+        ForecastMetadata(
+          metadata.dataPath,
+          metadata.initDateTime,
+          metadata.maybeFirstTimeStep,
+          metadata.latestHourOffset,
+          metadata.zoneIds.map(id => zones.find(_.id == id).getOrElse(sys.error(s"Invalid content on forecast.json. Zone ${id} not found.")))
+        )
+      })
+    } { forecastsMetadata =>
+      val zones = forecastsMetadata.flatMap(_.zones).distinct
+      val forecastMetadataJsons = forecastsMetadata.map(ForecastMetadataJson(_))
+      ForecastsMetadataJson(zones, forecastMetadataJsons)
+    }
 
 }

@@ -1,7 +1,8 @@
 import { ColorScale, Color } from "../ColorScale";
 import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
-import {ForecastMetadata, Zone} from "../data/ForecastMetadata";
+import {ForecastMetadata} from "../data/ForecastMetadata";
 import {useI18n, usingMessages} from "../i18n";
+import {Zone} from "../data/Model";
 
 const cumuliDepthColorScale = new ColorScale([
   [50,   new Color(0xff, 0xff, 0xff, 0.0)],

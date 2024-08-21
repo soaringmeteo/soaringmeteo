@@ -1,7 +1,8 @@
 import { ColorScale, Color } from "../ColorScale";
 import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from './Layer';
-import {ForecastMetadata, Zone} from '../data/ForecastMetadata';
+import {type ForecastMetadata} from '../data/ForecastMetadata';
 import {useI18n, usingMessages} from "../i18n";
+import {type Zone} from "../data/Model";
 
 export const soaringLayerDepthLayer: Layer = {
 

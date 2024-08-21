@@ -1,6 +1,6 @@
 import {Accessor, JSX, Show} from 'solid-js';
 
-import {Domain, gfsModel, type Model, wrf2Model, wrf6Model} from './State';
+import {type Domain} from './State';
 import {Layer} from './layers/Layer';
 import {xcFlyingPotentialLayer} from './layers/ThQ';
 import {soaringLayerDepthLayer} from './layers/SoaringLayerDepth';
@@ -20,7 +20,7 @@ import {showDate} from './shared';
 import {Checkbox, Radio, Select} from './styles/Forms';
 import {burgerBorderTopStyle, burgerPaddingStyle} from "./styles/Styles";
 import {useI18n} from "./i18n";
-import {Zone} from "./data/ForecastMetadata";
+import {gfsName, ModelName, wrfName, Zone} from "./data/Model";
 
 /**
  * Overlay on the map that displays the soaring forecast.
@@ -40,23 +40,22 @@ export const LayersSelector = (props: {
       <fieldset style={ fieldsetPaddingStyle}>
         <legend>{ m().menuModel() }</legend>
         {
-          new Array<[string, () => string, Model]>(
-            ['soarGFS (25 km)', () => m().menuGFSLegend(), gfsModel],
-            ['soarWRF (6 km)', () => m().menuWRFLegend(), wrf6Model],
-            ['soarWRF (2 km)', () => m().menuWRFLegend(), wrf2Model]
+          new Array<[string, () => string, ModelName]>(
+            ['soarGFS (25 km)', () => m().menuGFSLegend(), gfsName],
+            ['soarWRF (2-6 km)', () => m().menuWRFLegend(), wrfName]
           )
-            .map(([label, title, model]) =>
+            .map(([label, title, modelName]) =>
               <Radio
                 label={ label }
                 title={ title() }
-                checked={ model === props.domain.state.model }
+                checked={ modelName === props.domain.state.model.name }
                 groupName="model"
-                onChange={ () => props.domain.setModel(model) }
+                onChange={ () => props.domain.setModel(modelName) }
               />
             )
         }
       </fieldset>
-      <Show when={ props.domain.state.model === gfsModel }>
+      <Show when={ props.domain.state.model.name === gfsName }>
         <fieldset style={ fieldsetPaddingStyle }>
           <legend>{ m().menuInitializationTime() }</legend>
           <Select
@@ -80,16 +79,17 @@ export const LayersSelector = (props: {
       <fieldset style={ fieldsetPaddingStyle }>
         <legend>{ m().menuZone() }</legend>
         {
-          props.domain.state.forecastMetadata.zones
+          props.domain.state.model.zones
             .map<[Accessor<string>, Zone]>(zone => [zoneLabel(zone.id), zone])
             .sort(([label1, zone1], [label2, zone2]) => label1().localeCompare(label2()))
             .map(([label, zone]) =>
               <Radio
                 label={label()}
                 title={label()}
-                checked={ zone.id === props.domain.state.zone.id }
+                checked={ zone.id === props.domain.state.selectedZone.id }
                 groupName="zone"
                 onChange={ () => props.domain.setZone(zone) }
+                disabled={ !props.domain.state.forecastMetadata.availableZones.some(availableZone => availableZone.id === zone.id) }
               />
             )
         }
