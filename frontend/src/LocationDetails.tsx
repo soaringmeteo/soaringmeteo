@@ -27,12 +27,12 @@ export const LocationDetails = (props: {
     }
     const [eventLng, eventLat] = toLonLat(event.coordinate);
     const maybePoint =
-      props.domain.state.forecastMetadata.closestPoint(props.domain.state.zone, eventLng, eventLat);
+      props.domain.state.forecastMetadata.closestPoint(props.domain.effectiveZone(), eventLng, eventLat);
     if (maybePoint === undefined) {
       return
     }
     const [longitude, latitude] =
-      props.domain.state.forecastMetadata.toLonLat(props.domain.state.zone, maybePoint);
+      props.domain.state.forecastMetadata.toLonLat(props.domain.effectiveZone(), maybePoint);
 
     const detailedViewType =
       props.domain.state.detailedView?.viewType || 'summary'
@@ -62,7 +62,7 @@ export const LocationDetails = (props: {
           fallback={ <LocationSummary domain={props.domain} latitude={detailedView.latitude} longitude={detailedView.longitude} /> }
         >
           <div>
-            { showCoordinates(detailedView.longitude, detailedView.latitude, props.domain.state.model) }, { (detailedView as Meteogram | Sounding).locationForecasts.elevation }m.
+            { showCoordinates(detailedView.longitude, detailedView.latitude, props.domain.state.model.name) }, { (detailedView as Meteogram | Sounding).locationForecasts.elevation }m.
             <Show when={ detailedView.viewType === 'sounding' }>
               &nbsp;{ showDate(props.domain.state.forecastMetadata.dateAtHourOffset(props.domain.state.hourOffset), { showWeekDay: true, timeZone: props.domain.timeZone() }) }.
             </Show>
@@ -160,7 +160,7 @@ const LocationSummary = (props: {
     };
     return <>
       <div>
-        { showCoordinates(props.longitude, props.latitude, props.domain.state.model) }
+        { showCoordinates(props.longitude, props.latitude, props.domain.state.model.name) }
         <Show when={resource()}>
           { resolvedResource => <>, {(resolvedResource())[0].elevation}m</> }
         </Show>.

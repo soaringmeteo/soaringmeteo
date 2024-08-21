@@ -2,8 +2,9 @@ import { JSX, lazy, Match, Show, Switch } from 'solid-js'
 import { keyWidth, meteogramColumnWidth, soundingWidth } from '../styles/Styles';
 import * as fakeData from './data';
 import { showDate, inversionStyle } from '../shared';
-import {type Domain, gfsModel, wrf6Model} from '../State';
+import {type Domain} from '../State';
 import {useI18n} from "../i18n";
+import {gfsName, wrfName} from "../data/Model";
 
 export const Help = (props: { domain: Domain }): JSX.Element => {
   const state = props.domain.state;
@@ -32,16 +33,16 @@ const MapHelp = (props: { domain: Domain }): JSX.Element => {
     <p>
       { m().helpCurrentForecast({
         forecastDate: showDate(state.forecastMetadata.dateAtHourOffset(state.hourOffset), { timeZone: props.domain.timeZone() }),
-        model: props.domain.modelName(),
+        model: props.domain.state.model.name === gfsName ? 'GFS' : 'WRF',
         initializationTime: showDate(state.forecastMetadata.init, { timeZone: props.domain.timeZone() }),
-        resolution: props.domain.modelResolution()
+        resolution: props.domain.effectiveResolution()
       }) }
       <Switch>
-        <Match when={ props.domain.state.model === gfsModel }>
+        <Match when={ props.domain.state.model.name === gfsName }>
           {' '}{ m().helpGfsModel1() } <a href="https://www.ncei.noaa.gov/products/weather-climate-models/global-forecast" target="_blank">{ m().helpGfsModel2() }</a> { m().helpGfsModel3() } <a
           href="https://www.noaa.gov/" target="_blank">NOAA</a>. { m().helpGfsModel4() }
         </Match>
-        <Match when={ props.domain.isWrfModel() }>
+        <Match when={ props.domain.state.model.name === wrfName }>
           {' '}{ m().helpWrfModel1() } <a href="https://www.mmm.ucar.edu/models/wrf" target="_blank">{ m().helpWrfModel2() }</a> { m().helpWrfModel3() }
         </Match>
       </Switch>

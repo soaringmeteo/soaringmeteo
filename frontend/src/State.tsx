@@ -1,5 +1,5 @@
 import { createStore, SetStoreFunction } from 'solid-js/store';
-import {ForecastMetadata, Zone} from './data/ForecastMetadata';
+import { ForecastMetadata } from './data/ForecastMetadata';
 import { Layer, ReactiveComponents } from './layers/Layer';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
 import { layerByKey } from './layers/Layers';
@@ -7,6 +7,7 @@ import { boundaryLayerWindLayer } from './layers/Wind';
 import {Accessor, batch, createMemo, mergeProps, splitProps} from 'solid-js';
 import {DetailedView, DetailedViewType} from "./DetailedView";
 import {Plausible} from "./Plausible";
+import { gfsName, Model, ModelName, wrfName, Zone } from "./data/Model";
 
 export type State = {
   // Currently selected numerical weather prediction model (GFS, WRF2, or WRF6)
@@ -14,7 +15,7 @@ export type State = {
   // Currently selected forecast run
   forecastMetadata: ForecastMetadata
   // Currently selected zone. Must be included in `forecastMetadata.zones`
-  zone: Zone
+  selectedZone: Zone
   // Delta with the forecast initialization time
   hourOffset: number
   // Selected layer on the map (XC flying potential, thermal velocity, etc.)
@@ -32,16 +33,11 @@ export type State = {
   utcTimeShown: boolean
 }
 
-export type Model = 'gfs' | 'wrf2' | 'wrf6';
-export const gfsModel: Model = 'gfs';
-export const wrf2Model: Model = 'wrf2';
-export const wrf6Model: Model = 'wrf6';
-
 // Keys used to store the current display settings in the local storage
 const selectedPrimaryLayerKey   = 'selected-primary-layer';
 const selectedWindLayerKey      = 'selected-wind-layer';
 const modelKey = 'model';
-const zoneKey = (model: Model): string => `zone-${model}`;
+const zoneKey = (name: ModelName): string => `zone-${name}`;
 const primaryLayerEnabledKey = 'primary-layer-enabled';
 const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
@@ -86,31 +82,29 @@ const saveWindLayer = (key: string): void => {
   window.localStorage.setItem(selectedWindLayerKey, key);
 };
 
-const loadModel = (): Model => {
+const loadModelName = (): ModelName => {
   // First, try to read from the URL parameters
   const params = new URLSearchParams(window.location.search);
-  // Backward compatibility: accept 'wrf' as an alias to 'wrf2'
-  const model =
-    params.get('model') === 'wrf' ? wrf2Model : params.get('model');
-  if (model === gfsModel || model === wrf2Model || model === wrf6Model) {
+  const model = params.get('model');
+  if (model === gfsName || model === wrfName) {
     return model
   }
   // Second, read from local storage
   return loadStoredState(
     modelKey,
-    value => value === wrf2Model ? wrf2Model : (value === wrf6Model ? wrf6Model : gfsModel),
-    gfsModel
+    value => value === wrfName ? wrfName : gfsName,
+    gfsName
   );
 };
 
-const saveModel = (model: Model) => {
+const saveModelName = (name: ModelName) => {
   const url = new URL(window.location.toString());
-  url.searchParams.set('model', model);
+  url.searchParams.set('model', name);
   window.history.replaceState(null, '', url);
-  window.localStorage.setItem(modelKey, model);
+  window.localStorage.setItem(modelKey, name);
 }
 
-const loadZone = (model: Model, zones: Array<Zone>): Zone => {
+const loadZone = (modelName: ModelName, zones: Array<Zone>): Zone => {
   // Try to read from the query parameters
   const params = new URLSearchParams(window.location.search);
   const value = params.get('zone');
@@ -122,17 +116,17 @@ const loadZone = (model: Model, zones: Array<Zone>): Zone => {
   }
   // Read from local storage, and fallback to the first one otherwise
   return loadStoredState(
-    zoneKey(model),
+    zoneKey(modelName),
     value => zones.find(zone => zone.id === value) || zones.find(zone => zone.id === 'europe') || zones[0],
     zones.find(zone => zone.id === 'europe') || zones[0]
   );
 };
 
-const saveZone = (model: Model, key: string): void => {
+const saveZone = (modelName: ModelName, key: string): void => {
   const url = new URL(window.location.toString());
   url.searchParams.set('zone', key);
   window.history.replaceState(null, '', url);
-  window.localStorage.setItem(zoneKey(model), key);
+  window.localStorage.setItem(zoneKey(modelName), key);
 };
 
 const loadWindLayerEnabled = (): boolean =>
@@ -167,6 +161,8 @@ export class Domain {
   readonly state: State;
   private readonly setState: SetStoreFunction<State>;
   private readonly plausible: Plausible;
+  private readonly gfsModel: Model;
+  private readonly wrfModel: Model;
 
   // Since those reactive components depend on the state, we can not make them part of the state
   readonly primaryLayerReactiveComponents: Accessor<ReactiveComponents>;
@@ -174,13 +170,24 @@ export class Domain {
 
   constructor (
     readonly gfsRuns: Array<ForecastMetadata>,
-    readonly wrf6Runs: Array<ForecastMetadata>,
-    readonly wrf2Runs: Array<ForecastMetadata>
+    gfsZones: Array<Zone>,
+    readonly wrfRuns: Array<ForecastMetadata>,
+    wrfZones: Array<Zone>
   ) {
     this.plausible = new Plausible();
-    const model = loadModel();
-    const forecastMetadata = selectRun(model, gfsRuns, wrf6Runs, wrf2Runs);
-    const zone = loadZone(model, forecastMetadata.zones);
+    this.gfsModel = {
+      name: gfsName,
+      zones: gfsZones,
+      timeStep: 3
+    };
+    this.wrfModel = {
+      name: wrfName,
+      zones: wrfZones,
+      timeStep: 1
+    };
+    const modelName = loadModelName();
+    const forecastMetadata = selectRun(modelName, gfsRuns, wrfRuns);
+    const selectedZone = loadZone(modelName, forecastMetadata.availableZones);
     const primaryLayer = loadPrimaryLayer();
     const primaryLayerEnabled = loadPrimaryLayerEnabled();
     const windLayer = loadWindLayer();
@@ -190,9 +197,9 @@ export class Domain {
   
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
     const [get, set] = createStore<State>({
-      model: model,
+      model: modelName === wrfName ? this.wrfModel : this.gfsModel,
       forecastMetadata: forecastMetadata,
-      zone,
+      selectedZone,
       primaryLayer: primaryLayer,
       primaryLayerEnabled,
       windLayer: windLayer,
@@ -208,11 +215,12 @@ export class Domain {
     const self = this;
 
     const [projectedProps] =
-      splitProps(this.state, ['forecastMetadata', 'zone', 'hourOffset', 'windNumericValuesShown']);
+      splitProps(this.state, ['forecastMetadata', 'hourOffset', 'windNumericValuesShown']);
     const props =
       mergeProps(projectedProps, {
         setHourOffset: (value: number) => this.setHourOffset(value),
-        get timeZone(): string | undefined { return self.timeZone() }
+        get timeZone(): string | undefined { return self.timeZone() },
+        get zone(): Zone { return self.effectiveZone() }
       });
 
     this.primaryLayerReactiveComponents =
@@ -221,44 +229,35 @@ export class Domain {
       createMemo(() => this.state.windLayer.reactiveComponents(props));
 
     // Fire a page view event for the initial page view
-    this.plausible.trackPageView(model);
+    this.plausible.trackPageView(modelName);
   }
 
-  /** Set the model (GFS, WRF2, WRF6) to display */
-  setModel(model: Model): void {
-    const run = selectRun(model, this.gfsRuns, this.wrf6Runs, this.wrf2Runs);
-    const zone = loadZone(model, run.zones);
-    saveModel(model);
-    this.plausible.trackPageView(model);
-    saveZone(model, zone.id);
+  /** Set the model (GFS, WRF) to display */
+  setModel(modelName: ModelName): void {
+    const run = selectRun(modelName, this.gfsRuns, this.wrfRuns);
+    const selectedZone = loadZone(modelName, run.availableZones);
+    saveModelName(modelName);
+    this.plausible.trackPageView(modelName);
+    saveZone(modelName, selectedZone.id);
     batch(() => {
-      this.setState({ model, zone });
+      this.setState({ model: modelName === wrfName ? this.wrfModel : this.gfsModel, selectedZone });
       this.setForecastMetadata(run);
     });
   }
 
-  modelName(): string {
-    if (this.state.model === gfsModel) {
-      return 'GFS'
-    } else {
-      return 'WRF'
-    }
-  }
-
-  modelResolution(): number {
-    if (this.state.model === gfsModel) {
+  /** The grid resolution of the model / zone effectively displayed */
+  effectiveResolution(): number {
+    if (this.state.model.name === gfsName) {
       return 25
-    } else if (this.state.model === wrf6Model) {
-      return 6
     } else {
-      return 2
+      return this.effectiveZone().id === 'alps-overview' ? 6 : 2
     }
   }
 
   /** Set the forecast run to display */
   setForecastMetadata(forecastMetadata: ForecastMetadata, hourOffset?: number): void {
     const maybePreviousDetailedView =
-      this.isWrfModel() && forecastMetadata.modelPath === 'wrf' ? this.state.detailedView : undefined;
+      this.state.model.name === wrfName && forecastMetadata.modelPath === 'wrf' ? this.state.detailedView : undefined;
     this.setState({
       forecastMetadata,
       hourOffset: hourOffset !== undefined ? hourOffset : forecastMetadata.defaultHourOffset(),
@@ -273,39 +272,35 @@ export class Domain {
   }
 
   /** Set the zone (Europe, America, etc.) to cover */
-  setZone(zone: Zone): void {
-    saveZone(this.state.model, zone.id);
+  setZone(selectedZone: Zone): void {
+    saveZone(this.state.model.name, selectedZone.id);
     this.setState({
-      zone,
+      selectedZone,
       detailedView: undefined
     });
-  }
-
-  timeStep(): number {
-    return this.state.model === 'gfs' ? 3 : 1
   }
 
   /** Change the period to display in the current forecast run */
   setHourOffset(hourOffset: number): void {
     this.setState({
-      hourOffset: Math.max(Math.min(hourOffset, this.state.forecastMetadata.latest), this.state.model === gfsModel ? 3 : 0)
+      hourOffset: Math.max(Math.min(hourOffset, this.state.forecastMetadata.latest), this.state.model.name === gfsName ? 3 : 0)
     });
   }
 
   nextHourOffset(): void {
-    this.setHourOffset(this.state.hourOffset + this.timeStep());
+    this.setHourOffset(this.state.hourOffset + this.state.model.timeStep);
   }
 
   previousHourOffset(): void {
-    this.setHourOffset(this.state.hourOffset - this.timeStep());
+    this.setHourOffset(this.state.hourOffset - this.state.model.timeStep);
   }
 
   nextDay(): void {
-    if (this.state.model === gfsModel) {
+    if (this.state.model.name === gfsName) {
       this.setHourOffset(this.state.hourOffset + 24);
-    } else if (this.isWrfModel()) {
+    } else if (this.state.model.name === wrfName) {
       const maybeNextForecast =
-        this.currentWrfRuns().find(run =>
+        this.wrfRuns.find(run =>
           run.firstTimeStep > this.state.forecastMetadata.firstTimeStep
         );
       if (maybeNextForecast !== undefined) {
@@ -315,10 +310,10 @@ export class Domain {
   }
 
   previousDay(): void {
-    if (this.state.model === gfsModel) {
+    if (this.state.model.name === gfsName) {
       this.setHourOffset(this.state.hourOffset - 24);
-    } else if (this.isWrfModel()) {
-      const runs = this.currentWrfRuns().concat([]).reverse();
+    } else if (this.state.model.name === wrfName) {
+      const runs = this.wrfRuns.concat([]).reverse();
       const i =
         runs.findIndex(run =>
           run.firstTimeStep < this.state.forecastMetadata.firstTimeStep
@@ -379,7 +374,7 @@ export class Domain {
       })
     } else {
       this.state.forecastMetadata
-        .fetchLocationForecasts(this.state.zone, latitude, longitude)
+        .fetchLocationForecasts(this.effectiveZone(), latitude, longitude)
         .then(locationForecasts => {
           if (locationForecasts !== undefined) {
             this.setState({
@@ -395,10 +390,25 @@ export class Domain {
     this.setState({ detailedView: undefined })
   }
 
+  /**
+   * Zone effectively displayed on the map.
+   *
+   * It can be different from the selected zone, for instance if we display a WRF run in 4 days
+   * we always fall back to the 6-km resolution zone even if a 2-km resolution zone was selected.
+   */
+  readonly effectiveZone: Accessor<Zone> = () => {
+    // In case of WRF, fallback to the Alps Overview when the selected forecast run does
+    // not contain the 2-km resolution zones.
+    if (this.state.model.name === wrfName && !this.state.forecastMetadata.availableZones.some(zone => zone.id === this.state.selectedZone.id)) {
+      return this.state.forecastMetadata.availableZones[0] // Currently, WRF6 runs contain only one zone
+    } else {
+      return this.state.selectedZone
+    }
+  };
+
   readonly urlOfRasterAtCurrentHourOffset: Accessor<string> =
-    (): string =>
-      this.state.forecastMetadata.urlOfRasterAtHourOffset(
-        this.state.zone.id,
+    (): string => this.state.forecastMetadata.urlOfRasterAtHourOffset(
+        this.effectiveZone().id,
         this.state.primaryLayer.dataPath,
         this.state.hourOffset
       );
@@ -406,20 +416,10 @@ export class Domain {
   readonly urlOfVectorTilesAtCurrentHourOffset: Accessor<string> =
     (): string =>
       this.state.forecastMetadata.urlOfVectorTilesAtHourOffset(
-        this.state.zone.id,
+        this.effectiveZone().id,
         this.state.windLayer.dataPath,
         this.state.hourOffset
       );
-
-  /** @return Whether the current model is a WRF model (WRF2 or WRF6) or not */
-  isWrfModel(): boolean {
-    return this.state.model === wrf6Model || this.state.model === wrf2Model
-  }
-
-  /** @return The WRF runs of the current model. Assumes the current model is either WRF2 or WRF6. */
-  currentWrfRuns(): Array<ForecastMetadata> {
-    return this.state.model === wrf6Model ? this.wrf6Runs : this.wrf2Runs;
-  }
 
 }
 
@@ -443,7 +443,7 @@ const selectWrfRun = (runs: Array<ForecastMetadata>): ForecastMetadata => {
 };
 
 /** Select the default forecast run to display */
-const selectRun = (model: Model, gfsRuns: Array<ForecastMetadata>, wrf6Runs: Array<ForecastMetadata>, wrf2Runs: Array<ForecastMetadata>): ForecastMetadata => {
-  if (model === gfsModel) return gfsRuns[gfsRuns.length - 1]
-  else return selectWrfRun(model === wrf6Model ? wrf6Runs : wrf2Runs)
+const selectRun = (name: ModelName, gfsRuns: Array<ForecastMetadata>, wrfRuns: Array<ForecastMetadata>): ForecastMetadata => {
+  if (name === gfsName) return gfsRuns[gfsRuns.length - 1]
+  else return selectWrfRun(wrfRuns)
 }

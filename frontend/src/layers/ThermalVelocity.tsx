@@ -1,7 +1,8 @@
 import { ColorScale, Color } from "../ColorScale";
-import {ForecastMetadata, Zone} from '../data/ForecastMetadata';
+import {type ForecastMetadata} from '../data/ForecastMetadata';
 import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from './Layer';
 import {useI18n, usingMessages} from "../i18n";
+import {type Zone} from "../data/Model";
 
 export const thermalVelocityColorScale = new ColorScale([
   [0.25, new Color(0x33, 0x33, 0x33, 1)],

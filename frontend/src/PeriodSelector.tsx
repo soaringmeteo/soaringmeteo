@@ -2,7 +2,7 @@ import {Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Swit
 
 import {forecastOffsets, wrfForecastOffsets} from './data/ForecastMetadata';
 import {showDate} from './shared';
-import {type Domain, gfsModel} from './State';
+import {type Domain} from './State';
 import {
   buttonStyle,
   keyWidth,
@@ -14,6 +14,7 @@ import { css } from "./css-hooks";
 import {LocationDetails} from "./LocationDetails";
 import {MapBrowserEvent} from "ol";
 import {useI18n} from "./i18n";
+import {gfsName, wrfName} from "./data/Model";
 
 const marginLeft = keyWidth;
 const marginTop = periodSelectorHeight;
@@ -211,7 +212,7 @@ export const PeriodSelectors = (props: {
     <div>
       <Show when={ isDaySelectorVisible() }>
         <Switch>
-          <Match when={ props.domain.state.model === gfsModel }>
+          <Match when={ props.domain.state.model.name === gfsName }>
             {
               (() => {
                 const run = props.domain.state.forecastMetadata;
@@ -248,9 +249,9 @@ export const PeriodSelectors = (props: {
               })()
             }
           </Match>
-          <Match when={ props.domain.isWrfModel() }>
+          <Match when={ props.domain.state.model.name === wrfName }>
             {
-              props.domain.currentWrfRuns().map(run => {
+              props.domain.wrfRuns.map(run => {
                 const isSelected =
                   run.firstTimeStep.getTime() === props.domain.state.forecastMetadata.firstTimeStep.getTime();
                 return <div
@@ -299,7 +300,7 @@ export const PeriodSelectors = (props: {
       style={{ ...inlineButtonStyle }}
       onClick={ () => props.domain.previousHourOffset() }
     >
-      -{ props.domain.timeStep() }
+      -{ props.domain.state.model.timeStep }
     </div>;
 
   // FIXME jump to next day morning if we are on the afternoon period
@@ -309,7 +310,7 @@ export const PeriodSelectors = (props: {
       style={{ ...inlineButtonStyle }}
       onClick={ () => props.domain.nextHourOffset() }
     >
-      +{ props.domain.timeStep() }
+      +{ props.domain.state.model.timeStep }
     </div>;
 
   const nextDayBtn =
@@ -326,7 +327,7 @@ export const PeriodSelectors = (props: {
       forecastOffsetAndDates={
         // If there is no selected location, infer the available periods from the forecast metadata
         (state.detailedView === undefined || state.detailedView.viewType === 'summary') ?
-          state.model === gfsModel ? forecastOffsets(state.forecastMetadata.firstTimeStep, 9, state.forecastMetadata) : wrfForecastOffsets(state.forecastMetadata)
+          state.model.name === gfsName ? forecastOffsets(state.forecastMetadata.firstTimeStep, 9, state.forecastMetadata) : wrfForecastOffsets(state.forecastMetadata)
         :
           state.detailedView.locationForecasts.offsetAndDates()
       }

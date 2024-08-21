@@ -1,10 +1,11 @@
 import { ColorScale, Color } from "../ColorScale";
 import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
 import {Accessor, JSX} from "solid-js";
-import { ForecastMetadata, Zone } from "../data/ForecastMetadata";
+import { type ForecastMetadata } from "../data/ForecastMetadata";
 import { showDate } from "../shared";
 import type { LocationForecasts, DetailedForecast } from "../data/LocationForecasts";
 import {useI18n, usingMessages} from "../i18n";
+import {type Zone} from "../data/Model";
 
 export const colorScale = new ColorScale([
   [10, new Color(0x33, 0x33, 0x33, 1)],

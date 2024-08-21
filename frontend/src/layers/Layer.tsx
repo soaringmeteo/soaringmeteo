@@ -1,7 +1,8 @@
 import {Accessor, JSX, on} from "solid-js";
 import { Color, ColorScale } from "../ColorScale";
-import {ForecastMetadata, Zone} from "../data/ForecastMetadata";
+import {type ForecastMetadata} from "../data/ForecastMetadata";
 import {DetailedForecast, LocationForecasts} from "../data/LocationForecasts";
+import {type Zone} from "../data/Model";
 
 type Summarizer = {
   /** Create a summary of the forecast data on the point (shown in popups) */

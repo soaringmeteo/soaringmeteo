@@ -1,7 +1,8 @@
 import {Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
-import {ForecastMetadata, Zone} from "../data/ForecastMetadata";
+import {type ForecastMetadata} from "../data/ForecastMetadata";
 import {DetailedForecast, Wind} from "../data/LocationForecasts";
 import {useI18n, usingMessages} from "../i18n";
+import {type Zone} from "../data/Model";
 
 const windComponents = (
   windValue: (detailedForecast: DetailedForecast) => Wind

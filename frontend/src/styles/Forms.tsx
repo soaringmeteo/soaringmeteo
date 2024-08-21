@@ -5,6 +5,7 @@ export const Radio = (props: {
   labelPosition?: 'left' | 'right'
   title: string
   checked: boolean
+  disabled?: boolean
   groupName: string
   onChange: () => void
 }): JSX.Element =>
@@ -18,6 +19,7 @@ export const Radio = (props: {
       type='radio'
       checked={ props.checked }
       onChange={ () => props.onChange() }
+      disabled={ props.disabled === true }
     />
   </Labelled>;
 

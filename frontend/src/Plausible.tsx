@@ -1,4 +1,4 @@
-import { type Model } from "./State";
+import {type ModelName} from "./data/Model";
 
 /** Wrapper around the plausible-tracker package that loads it in the background */
 export class Plausible {
@@ -18,7 +18,7 @@ export class Plausible {
   }
 
   /** Register a “page view” event and attach the provided Model to it */
-  trackPageView(model: Model): void {
+  trackPageView(model: ModelName): void {
     this.plausible.then(plausible => {
       plausible.trackPageview({}, { props: { model } })
     });
