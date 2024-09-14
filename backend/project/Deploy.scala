@@ -21,10 +21,11 @@ object Deploy extends AutoPlugin {
   // Instances
   val soarwrf1 = "soarwrf1"
   val soarwrf3 = "soarwrf3"
+  val soarwrf4 = "soarwrf4"
 
   private val instanceParser: Parser[String] = {
     import sbt.complete.DefaultParsers.*
-    Space ~> (literal(soarwrf1) | literal(soarwrf3))
+    Space ~> (literal(soarwrf1) | literal(soarwrf3) | literal(soarwrf4))
   }
 
   override lazy val projectSettings: Seq[Def.Setting[?]] = Seq(
