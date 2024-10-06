@@ -66,9 +66,8 @@ export const supportedLangsAndLabels: Array<[AvailableLanguageTag, string]> = [
   ['fr', 'Français'],
   ['it', 'Italiano'],
   ['pl', 'Polski'],
+  ['pt', 'Português'],
   ['sk', 'Slovak'],
-// In preparation:
-//  ['pt', 'Português'],
 ];
 
 const langKey = 'lang';
