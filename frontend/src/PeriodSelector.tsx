@@ -4,6 +4,7 @@ import {forecastOffsets, wrfForecastOffsets} from './data/ForecastMetadata';
 import {showDate} from './shared';
 import {type Domain} from './State';
 import {
+  buttonBorderSizePx,
   buttonStyle,
   keyWidth,
   meteogramColumnWidth,
@@ -205,7 +206,14 @@ export const PeriodSelectors = (props: {
       { getDetailedView().key }
     </div>;
 
-  const inlineButtonStyle = { ...buttonStyle, display: 'inline-block' };
+  const inlineButtonStyle = { ...buttonStyle, padding: '0.5em 0.5em', display: 'inline-block' };
+  const daySelectorButttonStyle = (isSelected: boolean): JSX.CSSProperties => css({
+    ...buttonStyle,
+    'padding': '0.4em 0.4em',
+    'margin-bottom': `-${buttonBorderSizePx}px`,
+    'background-color': isSelected ? 'lightGray' : 'unset',
+    hover: { 'background-color': 'lightGray' },
+  });
 
   const [isDaySelectorVisible, makeDaySelectorVisible] = createSignal(false);
   const currentDayEl =
@@ -234,13 +242,7 @@ export const PeriodSelectors = (props: {
                   const date = props.domain.state.forecastMetadata.dateAtHourOffset(timeStep);
                   const isSelected = timeStep === selectedTimeStep;
                   return <div
-                    style={
-                      css({
-                        ...buttonStyle,
-                        'background-color': isSelected ? 'lightGray' : 'unset',
-                        hover: { 'background-color': 'lightGray' }
-                      })
-                    }
+                    style={ daySelectorButttonStyle(isSelected) }
                     onClick={ () => { props.domain.setHourOffset(timeStep); makeDaySelectorVisible(false); } }
                   >
                     { showDate(date, { showHour: false, showWeekDay: true, timeZone: props.domain.timeZone() }) }
@@ -255,13 +257,7 @@ export const PeriodSelectors = (props: {
                 const isSelected =
                   run.firstTimeStep.getTime() === props.domain.state.forecastMetadata.firstTimeStep.getTime();
                 return <div
-                  style={
-                    css({
-                      ...buttonStyle,
-                      'background-color': isSelected ? 'lightgray' : 'unset',
-                      hover: { 'background-color': 'lightGray' }
-                    })
-                  }
+                  style={ daySelectorButttonStyle(isSelected) }
                   onClick={ () => { props.domain.setForecastMetadata(run, props.domain.state.hourOffset); makeDaySelectorVisible(false); } }
                 >
                   { showDate(run.firstTimeStep, { showHour: false, showWeekDay: true, timeZone: props.domain.timeZone() }) }
@@ -272,7 +268,7 @@ export const PeriodSelectors = (props: {
         </Switch>
       </Show>
       <div
-        style={ css({ padding: '0.3em', cursor: 'pointer', hover: { 'background-color': 'lightGray' } }) }
+        style={ daySelectorButttonStyle(false) }
         onClick={ () => makeDaySelectorVisible(!isDaySelectorVisible()) }
       >
         {
@@ -297,7 +293,7 @@ export const PeriodSelectors = (props: {
   const previousPeriodBtn =
     <div
       title={ m().periodPrevious() }
-      style={{ ...inlineButtonStyle }}
+      style={{ ...inlineButtonStyle, 'margin-left': `-${buttonBorderSizePx}px` }}
       onClick={ () => props.domain.previousHourOffset() }
     >
       -{ props.domain.state.model.timeStep }
@@ -307,7 +303,7 @@ export const PeriodSelectors = (props: {
   const nextPeriodBtn =
     <div
       title={ m().periodNext() }
-      style={{ ...inlineButtonStyle }}
+      style={{ ...inlineButtonStyle, 'margin-left': `-${buttonBorderSizePx}px` }}
       onClick={ () => props.domain.nextHourOffset() }
     >
       +{ props.domain.state.model.timeStep }
@@ -316,7 +312,7 @@ export const PeriodSelectors = (props: {
   const nextDayBtn =
     <div
       title={ m().period24HoursAfter() }
-      style={{ ...inlineButtonStyle }}
+      style={{ ...inlineButtonStyle, 'margin-left': `-${buttonBorderSizePx}px` }}
       onClick={ () => props.domain.nextDay() }
     >
       +24
