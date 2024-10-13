@@ -47,4 +47,6 @@ export const burgerOptionStyle = css({
 
 export const burgerBorderTopStyle = { 'border-top': '1px solid darkgray' };
 
-export const buttonStyle = css({ padding: '0.3em 0.4em', cursor: 'pointer', border: 'thin solid darkGray', 'box-sizing': 'border-box', 'user-select': 'none', hover: { 'background-color': 'lightGray' } });
+export const buttonBorderSizePx = 1;
+
+export const buttonStyle = css({ padding: '0.3em 0.4em', cursor: 'pointer', border: `${buttonBorderSizePx}px solid darkGray`, 'box-sizing': 'border-box', 'user-select': 'none', hover: { 'background-color': 'lightGray' } });
