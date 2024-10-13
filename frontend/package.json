@@ -27,5 +27,6 @@
     "compile": "paraglide-js compile --project ./project.inlang --outdir ./src/generated-i18n && tsc --noEmit",
     "deploy": "yarn compile && yarn build && rsync --recursive --times --omit-dir-times --verbose --delete --exclude=data/ dist/ ${SERVER:-soarwrf1.soaringmeteo.org}:/home/soaringmeteo.org/v2/",
     "preview": "vite preview"
-  }
+  },
+  "packageManager": "yarn@3.6.4"
 }
