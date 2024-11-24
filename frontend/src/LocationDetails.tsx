@@ -9,6 +9,7 @@ import { HelpButton } from "./help/HelpButton";
 import {buttonStyle, closeButton, surfaceOverMap} from "./styles/Styles";
 import { css } from "./css-hooks";
 import {useI18n} from "./i18n";
+import {gfsName} from "./data/Model";
 
 /**
  * Box showing the forecast details (summary, meteogram, or sounding) for the selected location.
@@ -160,6 +161,8 @@ const LocationSummary = (props: {
     };
     return <>
       <div>
+        { props.domain.state.model.name === gfsName ? 'GFS' : 'WRF' }
+        { ` (init ${showDate(props.domain.state.forecastMetadata.init, { timeZone: props.domain.timeZone(), showWeekDay: true })}) — ` }
         { showCoordinates(props.longitude, props.latitude, props.domain.state.model.name) }
         <Show when={resource()}>
           { resolvedResource => <>, {(resolvedResource())[0].elevation}m</> }
