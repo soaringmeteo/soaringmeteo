@@ -38,14 +38,7 @@ More information is available on the [sbt website](https://scala-sbt.org).
 
 ## Tools install for the  frontend
 
-1. yarn 3 (instructions taken from the [Yarn website](https://yarnpkg.com/getting-started/install)
-```bash
-corepack enable
-yarn set version 3
-yarn --version
-```
-
-2. node 18 (managed through  nvm)
+1. node 18 (managed through  nvm)
 ```
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 
@@ -87,9 +80,8 @@ The different backend options are documented [here](backend/README.md)
 Move to the  `frontend` folder and run:
 
 ```
-yarn install --immutable
-yarn build
-yarn start
+npm ci
+npm run start
 ```
 
 Open a browser to the address suggested in your console (by default `127.0.0.1:3000`).
@@ -198,7 +190,7 @@ The task packages the app, uploads it to the server `soarwrf1.soaringmeteo.org`,
 In the `frontend` directory, run the following command:
 
 ~~~
-yarn deploy
+npm run deploy
 ~~~
 
 It type-checks the code source, build minified JavaScript bundles, and uploads them to the production server: https://soarwrf1.soaringmeteo.org/v2.
@@ -206,7 +198,7 @@ It type-checks the code source, build minified JavaScript bundles, and uploads t
 To select which server to deploy to, use the `SERVER` variable:
 
 ~~~
-SERVER=soarwrf3.soaringmeteo.org yarn deploy
+SERVER=soarwrf3.soaringmeteo.org npm run deploy
 ~~~
 
 # Evolving the Format of the Forecast Data
