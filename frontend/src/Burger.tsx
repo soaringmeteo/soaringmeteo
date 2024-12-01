@@ -2,9 +2,8 @@ import {createSignal, JSX} from "solid-js";
 import { Domain } from "./State";
 import {
   burgerBorderTopStyle,
-  burgerOptionStyle,
-  closeButton,
-  closeButtonSize,
+  burgerOptionStyle, roundButtonSize,
+  roundButtonStyle,
 } from "./styles/Styles";
 import { surfaceOverMap } from "./styles/Styles";
 import { Settings } from "./Settings";
@@ -60,8 +59,8 @@ export const Burger = (props: {
       >
         <div
           style={{
-            height: `${closeButtonSize + 6}px`,
-            'line-height': `${closeButtonSize + 6}px`, // Trick to center text vertically
+            height: `${roundButtonSize + 6}px`,
+            'line-height': `${roundButtonSize + 6}px`, // Trick to center text vertically
             'font-size': '1rem',
             'padding-left': '.5em'
         }}
@@ -71,12 +70,12 @@ export const Burger = (props: {
         <div
           onClick={ () => props.close() }
           style={css({
-            ...closeButton,
+            ...roundButtonStyle,
             position: 'absolute',
             top: '3px',
             right: '3px',
             hover: { 'background-color': 'darkgray' }
-          } as JSX.CSSProperties)}
+          })}
         >
           ⨯
         </div>

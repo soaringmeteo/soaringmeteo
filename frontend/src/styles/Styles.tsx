@@ -1,13 +1,12 @@
 import { css } from "../css-hooks";
+import { JSX } from 'solid-js';
 
 export const surfaceOverMap = {
   'box-shadow': 'rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 3px 1px -2px, rgba(0, 0, 0, 0.2) 0px 1px 5px 0px'
 };
 
-// size of the buttons at the bottom of the screen (info and help)
-export const bottomButtonsSize = 24;
-// size of the button used for closing panels
-export const closeButtonSize = 24;
+// size of the round buttons (help and close buttons)
+export const roundButtonSize = 24;
 // width of the left key shown on the diagrams
 export const keyWidth = 40;
 // width of the sounding diagrams
@@ -23,15 +22,15 @@ export const periodSelectorHeight = 13 /* day height */ + 22 /* hour height */;
 // width of one time period in meteograms
 export const meteogramColumnWidth = 37;
 
-export const closeButton = {
-  width: `${closeButtonSize}px`,
-  height: `${closeButtonSize}px`,
-  'line-height': `${closeButtonSize}px`,
+export const roundButtonStyle: JSX.CSSProperties = {
+  width: `${roundButtonSize}px`,
+  height: `${roundButtonSize}px`,
+  'line-height': `${roundButtonSize}px`,
   display: 'inline-block',
   cursor: 'pointer',
   'user-select': 'none',
   'text-align': 'center',
-  'border-radius': `${closeButtonSize / 2}px`,
+  'border-radius': `${roundButtonSize / 2}px`,
   'font-size': '18px'
 };
 
