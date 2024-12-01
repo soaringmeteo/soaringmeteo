@@ -4,19 +4,19 @@ import { surfaceOverMap } from '../styles/Styles'
 /** Reusable component for creating overlays */
 export const OverlayContainer = (props: {
   handleClick: () => void
+  extraStyle?: JSX.CSSProperties
   children: JSX.Element
 }): JSX.Element => {
   return <div
     style={{
       position: 'fixed',
       inset: '0',
-      'background-color': 'rgb(0, 0, 0, 0.20)',
-      'backdrop-filter': 'blur(1px)',
       cursor: 'pointer',
       display: 'flex',
       'align-items': 'center',
       'justify-content': 'center',
-      'z-index': 1000
+      'z-index': 1000,
+      ...(props.extraStyle ?? {})
     }}
     onClick={ () => props.handleClick() }
   >
@@ -34,7 +34,13 @@ export const Overlay = (props: {
   maxWidth: string
 }): JSX.Element => {
   return <Show when={props.isVisible}>
-    <OverlayContainer handleClick={props.close}>
+    <OverlayContainer
+      handleClick={props.close}
+      extraStyle={{
+        'background-color': 'rgb(0, 0, 0, 0.20)',
+        'backdrop-filter': 'blur(1px)',
+      }}
+    >
       <div
         style={{
           ...surfaceOverMap,
