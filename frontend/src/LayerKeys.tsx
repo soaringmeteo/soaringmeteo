@@ -6,7 +6,9 @@ export const LayerKeys = (props: {
 }): JSX.Element => {
   const primaryLayerComponents = () => props.domain.primaryLayerReactiveComponents();
 
-  return <Show when={ props.domain.state.primaryLayerEnabled }>
+  return <Show when={
+    props.domain.state.primaryLayerEnabled && props.domain.state.mapKeyShown
+  }>
     <div style={{
       position: 'absolute',
       bottom: '3rem',

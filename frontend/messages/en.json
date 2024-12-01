@@ -31,6 +31,8 @@
   "settingsTimeUserTimezoneLegend": "Show time using my current timezone instead of UTC",
   "settingsTimeUTC": "Show time according to UTC",
   "settingsTimeUTCLegend": "Show UTC time instead of using my current timezone",
+  "settingsMapKey": "Map Key",
+  "settingsShowMapKey": "Show the map overlay key",
   "locationSummary": "Summary",
   "locationSummaryLegend": "Summary of the forecast for this location",
   "locationMeteogram": "Meteogram",

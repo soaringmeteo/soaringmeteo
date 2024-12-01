@@ -30,6 +30,8 @@
 	"settingsTimeUserTimezoneLegend": "Mostra l'ora nel tuo fuso orario anziché in UTC",
 	"settingsTimeUTC": "Mostra l'ora in UTC",
 	"settingsTimeUTCLegend": "Mostra l'ora in UTC anziché nel tuo fuso orario",
+	"settingsMapKey": "Legenda",
+	"settingsShowMapKey": "Mostra la legenda della mappa",
 	"locationSummary": "Riepilogo",
 	"locationSummaryLegend": "Riepilogo delle previsioni per questo luogo",
 	"locationMeteogram": "Meteogramma",

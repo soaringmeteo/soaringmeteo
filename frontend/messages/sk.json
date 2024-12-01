@@ -31,6 +31,8 @@
     "settingsTimeUserTimezoneLegend": "Zobraziť čas pomocou môjho aktuálneho časového pásma namiesto UTC",
     "settingsTimeUTC": "Zobraziť čas podľa UTC",
     "settingsTimeUTCLegend": "Zobraziť čas UTC namiesto použitia môjho aktuálneho časového pásma",
+    "settingsMapKey": "Legenda",
+    "settingsShowMapKey": "Zobraziť legendu mapy",
     "locationSummary": "Súhrn",
     "locationSummaryLegend": "Súhrn predpovede pre toto miesto",
     "locationMeteogram": "Meteogram",

@@ -31,6 +31,8 @@
   "settingsTimeUserTimezoneLegend": "Mostrar la hora usando mi zona horaria actual en lugar de UTC",
   "settingsTimeUTC": "Mostrar hora según UTC",
   "settingsTimeUTCLegend": "Mostrar la hora UTC en lugar de usar mi zona horaria actual",
+  "settingsMapKey": "Leyenda",
+  "settingsShowMapKey": "Mostrar leyenda del mapa",
   "locationSummary": "Resumen",
   "locationSummaryLegend": "Resumen del pronóstico para esta ubicación",
   "locationMeteogram": "Meteograma",

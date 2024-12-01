@@ -26,7 +26,7 @@ export const Radio = (props: {
 export const Checkbox = (props: {
   label: string
   labelPosition?: 'left' | 'right'
-  title: string
+  title?: string
   checked: boolean
   onChange: (checked: boolean) => void
 }): JSX.Element =>
@@ -72,7 +72,7 @@ export const Select = <A,>(props: {
 
 export const Labelled = (props: {
   label: string
-  title: string
+  title?: string
   children: JSX.Element
   labelPosition?: 'left' | 'right'
 }): JSX.Element =>
