@@ -60,10 +60,14 @@ export const LocationDetails = (props: {
       >
         <Show
           when={ detailedView.viewType !== 'summary' /* The summary view shows the location by itself */ }
-          fallback={ <LocationSummary domain={props.domain} latitude={detailedView.latitude} longitude={detailedView.longitude} /> }
+          fallback={ <ForecastSummary domain={props.domain} latitude={detailedView.latitude} longitude={detailedView.longitude} /> }
         >
           <div>
-            { showCoordinates(detailedView.longitude, detailedView.latitude, props.domain.state.model.name) }, { (detailedView as Meteogram | Sounding).locationForecasts.elevation }m.
+            <ModelAndLocationDetail
+              domain={ props.domain }
+              longitude={ detailedView.longitude }
+              latitude={ detailedView.latitude }
+            />, { (detailedView as Meteogram | Sounding).locationForecasts.elevation }m.
             <Show when={ detailedView.viewType === 'sounding' }>
               &nbsp;{ showDate(props.domain.state.forecastMetadata.dateAtHourOffset(props.domain.state.hourOffset), { showWeekDay: true, timeZone: props.domain.timeZone() }) }.
             </Show>
@@ -124,7 +128,7 @@ export const LocationDetails = (props: {
 };
 
 /** Forecast summary (wind speed, thermal velocity, etc.) at the selected location */
-const LocationSummary = (props: {
+const ForecastSummary = (props: {
   domain: Domain
   latitude: number
   longitude: number
@@ -161,9 +165,7 @@ const LocationSummary = (props: {
     };
     return <>
       <div>
-        { props.domain.state.model.name === gfsName ? 'GFS' : 'WRF' }
-        { ` (init ${showDate(props.domain.state.forecastMetadata.init, { timeZone: props.domain.timeZone(), showWeekDay: true })}) — ` }
-        { showCoordinates(props.longitude, props.latitude, props.domain.state.model.name) }
+        <ModelAndLocationDetail domain={ props.domain } longitude={ props.longitude } latitude={ props.latitude } />
         <Show when={resource()}>
           { resolvedResource => <>, {(resolvedResource())[0].elevation}m</> }
         </Show>.
@@ -173,6 +175,21 @@ const LocationSummary = (props: {
       </Show>
     </>;
 };
+
+/** The model name and initialization time, and the selected location’s coordinates */
+const ModelAndLocationDetail = (props: {
+  domain: Domain
+  longitude: number
+  latitude: number
+}): JSX.Element => {
+  return <>
+    <div>
+      { props.domain.state.model.name === gfsName ? 'GFS' : 'WRF' }
+      { ` (init. ${showDate(props.domain.state.forecastMetadata.init, { timeZone: props.domain.timeZone(), showWeekDay: true })}).` }
+    </div>
+    { showCoordinates(props.longitude, props.latitude, props.domain.state.model.name) }
+  </>
+}
 
 const table = (data: Array<[Accessor<string>, JSX.Element]>): JSX.Element => {
   const rows =

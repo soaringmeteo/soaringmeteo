@@ -15,7 +15,7 @@ export const soundingWidth =
 
 // available height in the viewport for drawing the diagrams (sounding and meteogram)
 export const diagramsAvailableHeight =
-  document.documentElement.clientHeight - 35 /* top time selector */ - 52 /* bottom time selector */ - 58 /* text information and help */ - 5;
+  document.documentElement.clientHeight - 35 /* top time selector */ - 52 /* bottom time selector */ - 74 /* text information and help */ - 5;
 
 // height of the period selector shown at the top of the screen
 export const periodSelectorHeight = 13 /* day height */ + 22 /* hour height */;
