@@ -60,3 +60,7 @@ We promise to continue to publish the CSM annual accounts on this website. So, w
 
 
 [![paypal](https://www.paypalobjects.com/fr_FR/CH/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=UZWD5HJX7ZVM6)
+
+# Powered by
+
+[![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSourceSupport)
