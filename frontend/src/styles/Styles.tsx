@@ -13,12 +13,12 @@ export const keyWidth = 40;
 export const soundingWidth =
   Math.max(Math.min(600, document.documentElement.clientWidth - keyWidth), 250);
 
-// available height in the viewport for drawing the diagrams (sounding and meteogram)
-export const diagramsAvailableHeight =
-  document.documentElement.clientHeight - 35 /* top time selector */ - 52 /* bottom time selector */ - 74 /* text information and help */ - 5;
-
 // height of the period selector shown at the top of the screen
 export const periodSelectorHeight = 13 /* day height */ + 22 /* hour height */;
+// available height in the viewport for drawing the diagrams (sounding and meteogram)
+export const diagramsAvailableHeight =
+  document.documentElement.clientHeight - periodSelectorHeight - 61 /* bottom time selector */ - 64 /* text information and help */ - 10 /* arbitrary margin */;
+
 // width of one time period in meteograms
 export const meteogramColumnWidth = 37;
 
@@ -49,3 +49,7 @@ export const burgerBorderTopStyle = { 'border-top': '1px solid darkgray' };
 export const buttonBorderSizePx = 1;
 
 export const buttonStyle = css({ padding: '0.3em 0.4em', cursor: 'pointer', border: `${buttonBorderSizePx}px solid darkGray`, 'box-sizing': 'border-box', 'user-select': 'none', hover: { 'background-color': 'lightGray' } });
+
+export const menuZIndex = 1000;
+export const diagramsIndex = 100;
+export const mapIndex = 10;

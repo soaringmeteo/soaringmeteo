@@ -1,4 +1,4 @@
-import {Accessor, createEffect, createResource, JSX, on, Show} from "solid-js";
+import {Accessor, createEffect, createResource, createSignal, JSX, on, Show} from "solid-js";
 import {showCoordinates, showDate} from "./shared";
 import {Domain} from "./State";
 import {LocationForecasts} from "./data/LocationForecasts";
@@ -6,7 +6,7 @@ import {toLonLat} from "ol/proj";
 import {MapBrowserEvent} from "ol";
 import {Meteogram, Sounding} from "./DetailedView";
 import { HelpButton } from "./help/HelpButton";
-import {buttonStyle, roundButtonStyle, surfaceOverMap} from "./styles/Styles";
+import {buttonStyle, diagramsIndex, roundButtonStyle, surfaceOverMap} from "./styles/Styles";
 import { css } from "./css-hooks";
 import {useI18n} from "./i18n";
 import {gfsName} from "./data/Model";
@@ -55,7 +55,6 @@ export const LocationDetails = (props: {
           'max-width': '100vw',
           'box-sizing': 'border-box',
           'user-select': 'text',
-          'pointer-events': 'auto' // Disable 'pointer-events: none` from parent element
         }}
       >
         <Show
@@ -206,3 +205,37 @@ const table = (data: Array<[Accessor<string>, JSX.Element]>): JSX.Element => {
     </table>;
   }
 };
+
+export const SoundingDiagram = (props: { domain: Domain }): JSX.Element => {
+  const noDiagram: { element: JSX.Element } = { element: <div /> };
+  const [accessor, set] = createSignal(noDiagram);
+
+  createEffect(() => {
+    const detailedView = props.domain.state.detailedView;
+    if (detailedView !== undefined && detailedView.viewType === 'sounding') {
+      const forecast = detailedView.locationForecasts.atHourOffset(props.domain.state.hourOffset);
+      if (forecast === undefined) set(noDiagram);
+      else {
+        import('./diagrams/Sounding').then(module => {
+          const { key, view } = module.sounding(forecast, detailedView.locationForecasts.elevation, true, props.domain.state);
+          const element = <div style={{
+            'z-index': diagramsIndex,
+            position: 'relative',
+            display: 'inline-block',
+            'margin-bottom': '-4px', // WTF
+            'pointer-events': 'auto',
+          }}
+          >
+            {key}
+            {view}
+          </div>;
+          set({ element });
+        });
+      }
+    } else {
+      set(noDiagram);
+    }
+  });
+
+  return <>{ accessor().element }</>
+}

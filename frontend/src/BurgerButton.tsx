@@ -1,6 +1,6 @@
 import {createSignal, JSX, Show, lazy} from "solid-js";
 import { Domain } from "./State";
-import { periodSelectorHeight } from "./styles/Styles";
+import {menuZIndex, periodSelectorHeight} from "./styles/Styles";
 import { surfaceOverMap } from "./styles/Styles";
 
 const Burger = lazy(() => import('./Burger').then(module => ({ default: module.Burger })));
@@ -21,6 +21,9 @@ export const BurgerButton = (props: {
     <div
       style={{
         ...surfaceOverMap,
+        position: 'absolute',
+        top: '0',
+        left: '0',
         width: `${periodSelectorHeight}px`,
         height: `${periodSelectorHeight}px`,
         cursor: 'pointer',
@@ -33,7 +36,8 @@ export const BurgerButton = (props: {
         'text-align': 'center',
         'font-weight': 'bold',
         'font-size': `${periodSelectorHeight / 2}px`,
-        'line-height': `1.5`
+        'line-height': `1.5`,
+        'z-index': menuZIndex,
       }}
       onClick={() => { setExpanded(!expanded()); }}
     >☰</div> as HTMLElement;
