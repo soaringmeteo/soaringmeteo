@@ -41,14 +41,21 @@ export const burgerOptionStyle = css({
   'line-height': '1.5',
   'font-family': 'sans-serif',
   'color': 'black',
-  'hover': { 'background-color': 'lightGray' }
+  on: $ => [$('hover', { 'background-color': 'lightGray' })]
 });
 
 export const burgerBorderTopStyle = { 'border-top': '1px solid darkgray' };
 
 export const buttonBorderSizePx = 1;
 
-export const buttonStyle = css({ padding: '0.3em 0.4em', cursor: 'pointer', border: `${buttonBorderSizePx}px solid darkGray`, 'box-sizing': 'border-box', 'user-select': 'none', hover: { 'background-color': 'lightGray' } });
+export const buttonStyle = css({
+  padding: '0.3em 0.4em',
+  cursor: 'pointer',
+  border: `${buttonBorderSizePx}px solid darkGray`,
+  'box-sizing': 'border-box',
+  'user-select': 'none',
+  on: $ => [$('hover', { 'background-color': 'lightGray' })]
+});
 
 export const menuZIndex = 1000;
 export const diagramsIndex = 100;

@@ -74,7 +74,7 @@ export const Burger = (props: {
             position: 'absolute',
             top: '3px',
             right: '3px',
-            hover: { 'background-color': 'darkgray' }
+            on: $ => [$("hover", { 'background-color': 'darkgray' })]
           })}
         >
           ⨯

@@ -73,7 +73,7 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
       cursor: `pointer`,
       'text-align': `center`,
       'background-color': 'white',
-      hover: { 'background-color': 'lightgray' },
+      on: $ => [$('hover', { 'background-color': 'lightgray' })],
       ...surfaceOverMap,
       'border-radius': '16px'
     })}

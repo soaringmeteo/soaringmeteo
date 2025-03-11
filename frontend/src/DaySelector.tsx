@@ -18,7 +18,7 @@ export const DaySelector = (props: {
     'padding': '0.4em 0.4em',
     'margin-bottom': `-${buttonBorderSizePx}px`,
     'background-color': isSelected ? 'lightGray' : 'unset',
-    hover: { 'background-color': 'lightGray' },
+    on: $ => [$("hover", { 'background-color': 'lightGray' })],
   });
 
   const [isDaySelectorVisible, makeDaySelectorVisible] = createSignal(false);

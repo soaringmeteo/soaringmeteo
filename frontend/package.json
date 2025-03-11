@@ -11,7 +11,7 @@
   },
   "type": "module",
   "devDependencies": {
-    "@css-hooks/solid": "1.8.2",
+    "@css-hooks/solid": "2.0.4",
     "@inlang/paraglide-js": "1.2.5",
     "@inlang/paraglide-js-adapter-vite": "1.2.14",
     "@types/proj4": "2.5.4",
