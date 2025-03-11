@@ -19,7 +19,7 @@ export const HelpButton = (props: { domain: Domain, overMap: boolean }): JSX.Ele
         'border': '1px solid lightgray',
         'box-sizing': 'border-box',
         'background-color': 'white',
-        hover: { 'background-color': 'lightgray' }
+        on: $ => [$('hover', { 'background-color': 'lightgray' })]
       })}
        onClick={ () => makeVisible(true) }
        title={ m().help() }

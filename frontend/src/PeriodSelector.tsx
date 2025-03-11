@@ -38,7 +38,7 @@ const PeriodSelector = (props: {
                   'box-sizing': 'border-box',
                   'text-align': 'center',
                   'background-color': state.hourOffset === hourOffset ? 'lightGray' : 'unset',
-                  'hover': {  'background-color': 'lightGray' }
+                  on: $ => [$('hover', {  'background-color': 'lightGray' })]
                 })
               }
               onClick={() => props.domain.setHourOffset(hourOffset)}
@@ -94,7 +94,7 @@ const PeriodSelector = (props: {
                 'border-right': 'thin solid darkGray',
                 'border-left': 'thin solid darkGray',
                 'line-height': '13px',
-                'hover': { 'background-color': 'lightGray' }
+                on: $ => [$('hover', { 'background-color': 'lightGray' })]
               })
             }
             onClick={() => props.domain.setHourOffset(periods[Math.floor(maxPeriodsPerDay / 2)][1])}

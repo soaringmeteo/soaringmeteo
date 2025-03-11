@@ -45,7 +45,7 @@ export const LocationDetails = (props: {
   return <Show when={ props.domain.state.detailedView } keyed>
     { detailedView =>
       <div
-        style={{
+        style={css({
           ...surfaceOverMap,
           'border-radius': '0 0 3px 0',
           'display': 'inline-block',
@@ -55,7 +55,8 @@ export const LocationDetails = (props: {
           'max-width': '100vw',
           'box-sizing': 'border-box',
           'user-select': 'text',
-        }}
+          on: $ => [$('small-width', { width: '100vw' })]
+        })}
       >
         <Show
           when={ detailedView.viewType !== 'summary' /* The summary view shows the location by itself */ }
@@ -104,6 +105,8 @@ export const LocationDetails = (props: {
           >
             { m().locationSounding() }
           </span>
+
+          <div style={{'flex-grow': 1}}></div>
 
           <HelpButton domain={ props.domain } overMap={ false } />
 

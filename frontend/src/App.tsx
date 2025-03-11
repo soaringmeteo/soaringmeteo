@@ -5,7 +5,7 @@ import {MapBrowserEvent} from "ol";
 import {initializeMap, MapHooks} from './map/Map';
 import {Domain} from './State';
 import {BurgerButton} from './BurgerButton';
-import {hooks} from "./css-hooks";
+import { styleSheet } from "./css-hooks";
 import {LayerKeys} from "./LayerKeys";
 import {HelpButton} from './help/HelpButton';
 import {Localized} from "./i18n";
@@ -67,7 +67,7 @@ const App = (props: {
   });
 
   return <>
-    <style innerHTML={ hooks } />
+    <style innerHTML={ styleSheet() } />
     <AppLayout domain={props.domain} mapHooks={props.mapHooks} />
   </>
 };
