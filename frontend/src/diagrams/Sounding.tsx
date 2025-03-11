@@ -97,7 +97,6 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
       position: `relative`,
       display: `inline-block`,
       'background-color': 'white',
-      'padding-bottom': '4px', // For unknown reason, there is a small gap here…
     }}
   >
     { canvas }

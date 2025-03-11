@@ -1,28 +1,22 @@
-import {Accessor, createEffect, createMemo, createSignal, JSX, Match, Show, Switch} from 'solid-js';
+import {createEffect, createMemo, createSignal, JSX} from 'solid-js';
 
 import {forecastOffsets, wrfForecastOffsets} from './data/ForecastMetadata';
-import {showDate} from './shared';
 import {type Domain} from './State';
 import {
-  buttonBorderSizePx,
-  buttonStyle,
   keyWidth,
   meteogramColumnWidth,
   periodSelectorHeight,
   surfaceOverMap
 } from './styles/Styles';
 import { css } from "./css-hooks";
-import {LocationDetails} from "./LocationDetails";
-import {MapBrowserEvent} from "ol";
-import {useI18n} from "./i18n";
-import {gfsName, wrfName} from "./data/Model";
+import {gfsName} from "./data/Model";
 
 const marginLeft = keyWidth;
 const marginTop = periodSelectorHeight;
 
 const PeriodSelector = (props: {
   forecastOffsetAndDates: Array<[number, Date]>
-  detailedView: JSX.Element
+  meteogram: JSX.Element
   domain: Domain
 }): JSX.Element => {
 
@@ -125,16 +119,16 @@ const PeriodSelector = (props: {
     <div
       style={{
         'border-radius': '0 0 3px 0',
-        'overflow-x': 'auto',
         'margin-left': `${marginLeft}px`,
         'user-select': 'none',
         cursor: 'default',
-        'pointer-events': 'auto' // Disable 'pointer-events: none' from parent
+        'pointer-events': 'auto', // Disable 'pointer-events: none' from parent
+        display: 'inline-block'
     }}
     >
       <div style={{ 'min-width': `${length() * meteogramColumnWidth + keyWidth}px` }}>
         <div>{periodSelectors()}</div>
-        {props.detailedView}
+        {props.meteogram}
       </div>
     </div>;
   return scrollablePeriodSelector
@@ -142,10 +136,10 @@ const PeriodSelector = (props: {
 
 /**
  * Note: this function has to be invoked _after_ the state has been initialized and registered.
- * @returns A pair of a reactive element for the detailed view key, and a
- *          reactive element for the detailed view.
+ * @returns A pair of a reactive element for the meteogram left axis, and a
+ *          reactive element for the meteogram content.
  */
-const detailedView = (props: { domain: Domain }): (() => { key: JSX.Element, view: JSX.Element }) => {
+const meteogram = (props: { domain: Domain }): (() => { key: JSX.Element, view: JSX.Element }) => {
 
   const state = props.domain.state;
 
@@ -156,166 +150,36 @@ const detailedView = (props: { domain: Domain }): (() => { key: JSX.Element, vie
 
   createEffect(() => {
     const detailedView = state.detailedView;
-    if (detailedView === undefined || detailedView.viewType === 'summary') {
+    if (detailedView === undefined || detailedView.viewType !== 'meteogram') {
       set(noDetailedView);
     } else {
-      if (detailedView.viewType === 'meteogram') {
-        import('./diagrams/Meteogram').then(module => {
-          const { key, view } = module.meteogram(detailedView.locationForecasts, state);
-          set({
-            key,
-            view: <div style={{ ...surfaceOverMap, 'background-color': 'white' }}>
-              {view}
-            </div>
-          });
+      import('./diagrams/Meteogram').then(module => {
+        const { key, view } = module.meteogram(detailedView.locationForecasts, state);
+        set({
+          key,
+          view: <div style={{ ...surfaceOverMap, 'background-color': 'white' }}>
+            {view}
+          </div>
         });
-      } else if (detailedView.viewType === 'sounding') {
-        const forecast = detailedView.locationForecasts.atHourOffset(state.hourOffset);
-        if (forecast === undefined) set(noDetailedView);
-        else {
-          import('./diagrams/Sounding').then(module => {
-            set(module.sounding(forecast, detailedView.locationForecasts.elevation, true, state));
-          });
-        }
-      }
+      });
     }
   });
 
   return accessor
 }
 
-/**
- * @returns Both the period selector shown at the top of the window (which
- *          shows all the available days of forecast, and for each day, the
- *          available periods of forecast), and the one shown at the bottom
- *          of the screen (which shows the current date).
- */
-export const PeriodSelectors = (props: {
+export const HourSelectorAndMeteogram = (props: {
   domain: Domain
-  locationClicks: Accessor<MapBrowserEvent<any> | undefined>
 }): JSX.Element => {
-
-  const { m } = useI18n();
-
   const state = props.domain.state;
 
-  const getDetailedView = detailedView({ domain: props.domain });
+  const getMeteogram = meteogram({ domain: props.domain });
 
-  const detailedViewKeyEl = 
+  // We use a separate element for the vertical axis of the meteogram to make it sticky
+  // while the meteogram can be scrolled horizontally.
+  const meteogramVerticalAxis =
     <div style={{ position: 'absolute', width: `${marginLeft}px`, left: 0, top: `${marginTop}px`, 'background-color': 'white', 'pointer-events': 'auto' }}>
-      { getDetailedView().key }
-    </div>;
-
-  const inlineButtonStyle = { ...buttonStyle, padding: '0.5em 0.5em', display: 'inline-block' };
-  const daySelectorButttonStyle = (isSelected: boolean): JSX.CSSProperties => css({
-    ...buttonStyle,
-    'padding': '0.4em 0.4em',
-    'margin-bottom': `-${buttonBorderSizePx}px`,
-    'background-color': isSelected ? 'lightGray' : 'unset',
-    hover: { 'background-color': 'lightGray' },
-  });
-
-  const [isDaySelectorVisible, makeDaySelectorVisible] = createSignal(false);
-  const currentDayEl =
-    <div>
-      <Show when={ isDaySelectorVisible() }>
-        <Switch>
-          <Match when={ props.domain.state.model.name === gfsName }>
-            {
-              (() => {
-                const run = props.domain.state.forecastMetadata;
-                const selectedTimeStep = props.domain.state.hourOffset;
-                const lastTimeStep = new Date(run.firstTimeStep);
-                lastTimeStep.setUTCHours(lastTimeStep.getUTCHours() + run.latest);
-                const numberOfPreviousDays =
-                  Math.floor((run.firstTimeStep.getHours() + selectedTimeStep) / 24);
-                const timeSteps: Array<number> =
-                  Array.from({ length: numberOfPreviousDays })
-                    .map((_, i) => selectedTimeStep - (numberOfPreviousDays - i) * 24);
-                timeSteps.push(selectedTimeStep);
-                const numberOfNextDays = (run.latest - selectedTimeStep + (23 - run.dateAtHourOffset(run.latest).getHours())) / 24;
-                const nextTimeSteps =
-                  Array.from({ length: numberOfNextDays })
-                    .map((_, i) => selectedTimeStep + (i + 1) * 24);
-                timeSteps.push(...nextTimeSteps);
-                return timeSteps.map(timeStep => {
-                  const date = props.domain.state.forecastMetadata.dateAtHourOffset(timeStep);
-                  const isSelected = timeStep === selectedTimeStep;
-                  return <div
-                    style={ daySelectorButttonStyle(isSelected) }
-                    onClick={ () => { props.domain.setHourOffset(timeStep); makeDaySelectorVisible(false); } }
-                  >
-                    { showDate(date, { showHour: false, showWeekDay: true, timeZone: props.domain.timeZone() }) }
-                  </div>
-                })
-              })()
-            }
-          </Match>
-          <Match when={ props.domain.state.model.name === wrfName }>
-            {
-              props.domain.wrfRuns.map(run => {
-                const isSelected =
-                  run.firstTimeStep.getTime() === props.domain.state.forecastMetadata.firstTimeStep.getTime();
-                return <div
-                  style={ daySelectorButttonStyle(isSelected) }
-                  onClick={ () => { props.domain.setForecastMetadata(run, props.domain.state.hourOffset); makeDaySelectorVisible(false); } }
-                >
-                  { showDate(run.firstTimeStep, { showHour: false, showWeekDay: true, timeZone: props.domain.timeZone() }) }
-                </div>
-              })
-            }
-          </Match>
-        </Switch>
-      </Show>
-      <div
-        style={ daySelectorButttonStyle(false) }
-        onClick={ () => makeDaySelectorVisible(!isDaySelectorVisible()) }
-      >
-        {
-          showDate(
-            state.forecastMetadata.dateAtHourOffset(state.hourOffset),
-            { showWeekDay: true, timeZone: props.domain.timeZone() }
-          )
-        }
-      </div>
-    </div>;
-
-  const previousDayBtn =
-    <div
-      title={ m().period24HoursBefore() }
-      style={{ ...inlineButtonStyle }}
-      onClick={ () => props.domain.previousDay() }
-    >
-      -24
-    </div>;
-
-  // FIXME jump to previous day afternoon if we are on the morning period
-  const previousPeriodBtn =
-    <div
-      title={ m().periodPrevious() }
-      style={{ ...inlineButtonStyle, 'margin-left': `-${buttonBorderSizePx}px` }}
-      onClick={ () => props.domain.previousHourOffset() }
-    >
-      -{ props.domain.state.model.timeStep }
-    </div>;
-
-  // FIXME jump to next day morning if we are on the afternoon period
-  const nextPeriodBtn =
-    <div
-      title={ m().periodNext() }
-      style={{ ...inlineButtonStyle, 'margin-left': `-${buttonBorderSizePx}px` }}
-      onClick={ () => props.domain.nextHourOffset() }
-    >
-      +{ props.domain.state.model.timeStep }
-    </div>;
-
-  const nextDayBtn =
-    <div
-      title={ m().period24HoursAfter() }
-      style={{ ...inlineButtonStyle, 'margin-left': `-${buttonBorderSizePx}px` }}
-      onClick={ () => props.domain.nextDay() }
-    >
-      +24
+      { getMeteogram().key }
     </div>;
 
   const periodSelectorEl =
@@ -324,53 +188,16 @@ export const PeriodSelectors = (props: {
         // If there is no selected location, infer the available periods from the forecast metadata
         (state.detailedView === undefined || state.detailedView.viewType === 'summary') ?
           state.model.name === gfsName ? forecastOffsets(state.forecastMetadata.firstTimeStep, 9, state.forecastMetadata) : wrfForecastOffsets(state.forecastMetadata)
-        :
+          :
           state.detailedView.locationForecasts.offsetAndDates()
       }
-      detailedView={ getDetailedView().view }
+      meteogram={ getMeteogram().view }
       domain={ props.domain }
     />;
-
-  // Period selector and close button for the meteogram
   // Note: we use 'pointer-events: none' to prevent the parent div from intercepting clicks on the map. As
   // a consequence, we have to reset 'pointer-events: auto' on every child element.
-  const periodSelectorContainer =
-    <div style={{ position: 'absolute', top: 0, left: 0, 'z-index': 100, 'max-width': '100%', 'font-size': '0.8125rem', 'pointer-events': 'none' }}>
-      {periodSelectorEl}
-      {detailedViewKeyEl}
-      <LocationDetails locationClicks={props.locationClicks} domain={props.domain} /> {/* TODO Move out of PeriodSelector */}
-    </div>;
-
-  // Current period
-  const currentDayContainer =
-    <div
-      style={{
-        ...surfaceOverMap,
-        display: 'block',
-        position: 'absolute',
-        bottom: 0,
-        left: '50%',
-        transform: 'translate(-50%,0)',
-        'background-color': 'white',
-        'border-radius': '3px 3px 0 0',
-        'font-size': '0.8125rem',
-        'text-align': 'center',
-        'user-select': 'none',
-        cursor: 'default',
-        padding: '0'
-      }}
-    >
-      {currentDayEl}
-      <div>
-        {previousDayBtn}
-        {previousPeriodBtn}
-        {nextPeriodBtn}
-        {nextDayBtn}
-      </div>
-    </div>;
-
-  return <>
-    {periodSelectorContainer}
-    {currentDayContainer}
-  </>
+  return <div style={{ 'max-width': '100%', 'overflow-x': 'auto', 'pointer-events': 'none' }}>
+    {periodSelectorEl}
+    {meteogramVerticalAxis}
+  </div>;
 };
