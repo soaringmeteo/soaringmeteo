@@ -64,3 +64,5 @@ We promise to continue to publish the CSM annual accounts on this website. So, w
 # Powered by
 
 [![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSourceSupport)
+
+This project is tested with BrowserStack.
