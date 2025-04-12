@@ -13,8 +13,10 @@ export const keyWidth = 40;
 export const soundingWidth =
   Math.max(Math.min(600, document.documentElement.clientWidth - keyWidth), 250);
 
+export const daySelectorHeight = 15;
+export const hourSelectorHeight = 22;
 // height of the period selector shown at the top of the screen
-export const periodSelectorHeight = 13 /* day height */ + 22 /* hour height */;
+export const periodSelectorHeight = daySelectorHeight + hourSelectorHeight + 2 /* border */;
 // available height in the viewport for drawing the diagrams (sounding and meteogram)
 export const diagramsAvailableHeight =
   document.documentElement.clientHeight - periodSelectorHeight - 61 /* bottom time selector */ - 64 /* text information and help */ - 10 /* arbitrary margin */;

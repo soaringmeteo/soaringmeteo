@@ -3,6 +3,7 @@ import {createEffect, createMemo, createSignal, JSX} from 'solid-js';
 import {forecastOffsets, wrfForecastOffsets} from './data/ForecastMetadata';
 import {type Domain} from './State';
 import {
+  daySelectorHeight, hourSelectorHeight,
   keyWidth,
   meteogramColumnWidth,
   periodSelectorHeight,
@@ -34,7 +35,7 @@ const PeriodSelector = (props: {
                   cursor: 'pointer',
                   border: 'thin solid darkGray',
                   width: `${meteogramColumnWidth}px`,
-                  'line-height': '20px',
+                  'line-height': `${hourSelectorHeight}px`,
                   'box-sizing': 'border-box',
                   'text-align': 'center',
                   'background-color': state.hourOffset === hourOffset ? 'lightGray' : 'unset',
@@ -45,7 +46,7 @@ const PeriodSelector = (props: {
             >
               {
                 date.toLocaleTimeString(
-                  undefined,
+                  'en-US', // Avoid fancy, locale-specific, content (we just want the hour value)
                   { hour12: false, hour: '2-digit', timeZone: props.domain.timeZone() }
                 )
               }
@@ -93,7 +94,7 @@ const PeriodSelector = (props: {
                 'box-sizing': 'border-box',
                 'border-right': 'thin solid darkGray',
                 'border-left': 'thin solid darkGray',
-                'line-height': '13px',
+                'line-height': `${daySelectorHeight}px`,
                 on: $ => [$('hover', { 'background-color': 'lightGray' })]
               })
             }
@@ -127,7 +128,7 @@ const PeriodSelector = (props: {
     }}
     >
       <div style={{ 'min-width': `${length() * meteogramColumnWidth + keyWidth}px` }}>
-        <div>{periodSelectors()}</div>
+        <div style={{ 'height': `${periodSelectorHeight}px`, 'overflow': 'hidden' }}>{periodSelectors()}</div>
         {props.meteogram}
       </div>
     </div>;
