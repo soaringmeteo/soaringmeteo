@@ -123,7 +123,6 @@ const PeriodSelector = (props: {
         'margin-left': `${marginLeft}px`,
         'user-select': 'none',
         cursor: 'default',
-        'pointer-events': 'auto', // Disable 'pointer-events: none' from parent
         display: 'inline-block'
     }}
     >
@@ -179,7 +178,7 @@ export const HourSelectorAndMeteogram = (props: {
   // We use a separate element for the vertical axis of the meteogram to make it sticky
   // while the meteogram can be scrolled horizontally.
   const meteogramVerticalAxis =
-    <div style={{ position: 'absolute', width: `${marginLeft}px`, left: 0, top: `${marginTop}px`, 'background-color': 'white', 'pointer-events': 'auto' }}>
+    <div style={{ position: 'absolute', width: `${marginLeft}px`, left: 0, top: `${marginTop}px`, 'background-color': 'white' }}>
       { getMeteogram().key }
     </div>;
 
@@ -197,7 +196,7 @@ export const HourSelectorAndMeteogram = (props: {
     />;
   // Note: we use 'pointer-events: none' to prevent the parent div from intercepting clicks on the map. As
   // a consequence, we have to reset 'pointer-events: auto' on every child element.
-  return <div style={{ 'max-width': '100%', 'overflow-x': 'auto', 'pointer-events': 'none' }}>
+  return <div style={{ 'max-width': '100%', 'overflow-x': 'auto', 'pointer-events': 'auto', 'display': 'inline-block' }}>
     {periodSelectorEl}
     {meteogramVerticalAxis}
   </div>;
