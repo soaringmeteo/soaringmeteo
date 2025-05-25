@@ -12,10 +12,10 @@ case class Grid(outputPath: String, label: String, vectorTileSize: Int)
 object Grid {
 
   val all: Map[String, Grid] = Map(
-    "d02" -> Grid("alps-overview", "Alps Overview", 450),
+    "d02" -> Grid("alps-overview", "Alps Overview", 370),
     "d03" -> Grid("central-alps", "Central Alps", 350),
-    "d04" -> Grid("southern-alps", "Southern Alps", 350),
-    "d05" -> Grid("eastern-alps", "Eastern Alps", 400),
+    "d04" -> Grid("southern-alps", "Southern Alps", 310),
+    "d05" -> Grid("eastern-alps", "Eastern Alps", 475),
   )
 
   def find(netCdfPath: os.Path): Grid = {
