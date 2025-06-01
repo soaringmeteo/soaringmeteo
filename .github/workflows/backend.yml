@@ -25,5 +25,7 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: sbt # Cache the artifacts downloaded by sbt accross CI runs
+      - name: Setup sbt launcher
+        uses: sbt/setup-sbt@v1
       - name: Unit tests # Custom action consisting of a shell command
         run: sbt +test
