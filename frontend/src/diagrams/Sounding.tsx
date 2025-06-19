@@ -286,7 +286,7 @@ const drawSounding = (
     'black'
   );
   leftDiagram.text('m', [keyWidth - textOffset, height - textOffset], 'black', 'center', 'middle');
-  const elevationLevels = computeElevationLevels(elevation, 1000 /* m */, maxElevation);
+  const elevationLevels = computeElevationLevels(elevation, zoomed ? 500 : 1000 /* m */, maxElevation);
   elevationLevels.forEach(elevationLevel => {
     const y = elevationScale.apply(elevationLevel);
     diagram.line([0, y], [width, y], 'gray');
