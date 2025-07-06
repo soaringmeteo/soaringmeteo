@@ -13,6 +13,8 @@
 	"menuInitializationTime": "Initialisierungszeit",
 	"menuInitializationTimeLegend": "Initialisierungszeit des Prognoselaufs",
 	"menuZone": "Zone",
+	"menuCenterOnMyLocation": "Auf meinen Standort zentrieren",
+    "menuCouldNotGetLocation": "Ihr Standort konnte nicht ermittelt werden. Bitte erlauben Sie den Zugriff auf Ihren Standort in den Browser-Einstellungen und aktivieren Sie die Standortfreigabe auf Ihrem Gerät.",
 	"menuSettings": "Einstellungen",
 	"menuAbout": "Über",
 	"menuSupport": "Unterstützen Sie Soaringmeteo",

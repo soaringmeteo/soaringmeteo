@@ -1,4 +1,4 @@
-import {createSignal, JSX} from "solid-js";
+import {createSignal, JSX, Show} from "solid-js";
 import { Domain } from "./State";
 import {
   burgerBorderTopStyle,
@@ -81,6 +81,13 @@ export const Burger = (props: {
         </div>
       </div>
       <LayersSelector domain={props.domain} />
+      <Show when={ window.navigator.geolocation }>
+        <div
+          style={{...burgerOptionStyle, ...burgerBorderTopStyle, cursor: 'pointer' }}
+          onClick={ () => props.domain.centerMapOnClientLocation() }>
+          ⊕ { m().menuCenterOnMyLocation() }
+        </div>
+      </Show>
       <div
         style={{...burgerOptionStyle, ...burgerBorderTopStyle, cursor: 'pointer' }}
         onClick={ () => makeSettingsVisible(true) }>

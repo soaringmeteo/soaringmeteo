@@ -12,6 +12,8 @@
 	"menuWRFLegend": "Previsione basata sul modello WRF",
 	"menuInitializationTime": "Ora di inizializzazione",
 	"menuInitializationTimeLegend": "Ora di inizializzazione della previsione",
+	"menuCenterOnMyLocation": "Centra sulla mia posizione",
+	"menuCouldNotGetLocation": "Impossibile ottenere la tua posizione. Consenti l'accesso alla posizione nelle impostazioni del browser e attiva la condivisione della posizione sul tuo dispositivo.",
 	"menuSettings": "Impostazioni",
 	"menuAbout": "A proposito",
 	"menuSupport": "Sostieni Soaringmeteo",

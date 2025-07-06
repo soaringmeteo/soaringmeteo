@@ -13,6 +13,8 @@
   "menuInitializationTime": "Hora de inicio",
   "menuInitializationTimeLegend": "Hora de inicio de las previsiones",
   "menuZone": "Zona",
+  "menuCenterOnMyLocation": "Centrar en mi ubicación",
+  "menuCouldNotGetLocation": "No se pudo obtener tu ubicación. Por favor, permite el acceso a tu ubicación en la configuración del navegador y activa la compartición de ubicación en tu dispositivo.",
   "menuSettings": "Ajustes",
   "menuAbout": "Acerca de",
   "menuSupport": "Apoyar Soaringmeteo",

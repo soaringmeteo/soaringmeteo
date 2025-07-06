@@ -8,6 +8,8 @@ import {Accessor, batch, createMemo, mergeProps, splitProps} from 'solid-js';
 import {DetailedView, DetailedViewType} from "./DetailedView";
 import {Plausible} from "./Plausible";
 import { gfsName, Model, ModelName, wrfName, Zone } from "./data/Model";
+import {MapHooks} from "./map/Map";
+import {useI18n, Messages} from "./i18n";
 
 export type State = {
   // Currently selected numerical weather prediction model (GFS, WRF2, or WRF6)
@@ -173,6 +175,7 @@ export class Domain {
   private readonly plausible: Plausible;
   private readonly gfsModel: Model;
   private readonly wrfModel: Model;
+  private readonly m: Accessor<Messages>;
 
   // Since those reactive components depend on the state, we can not make them part of the state
   readonly primaryLayerReactiveComponents: Accessor<ReactiveComponents>;
@@ -182,7 +185,8 @@ export class Domain {
     readonly gfsRuns: Array<ForecastMetadata>,
     gfsZones: Array<Zone>,
     readonly wrfRuns: Array<ForecastMetadata>,
-    wrfZones: Array<Zone>
+    wrfZones: Array<Zone>,
+    private readonly mapHooks: MapHooks,
   ) {
     this.plausible = new Plausible();
     this.gfsModel = {
@@ -239,6 +243,8 @@ export class Domain {
       createMemo(() => this.state.primaryLayer.reactiveComponents(props));
     this.windLayerReactiveComponents =
       createMemo(() => this.state.windLayer.reactiveComponents(props));
+
+    this.m = useI18n().m;
 
     // Fire a page view event for the initial page view
     this.plausible.trackPageView(modelName);
@@ -382,6 +388,16 @@ export class Domain {
   /** The timezone to use according to the user’s preferences */
   timeZone(): string | undefined {
     return this.state.utcTimeShown ? 'UTC' : undefined
+  }
+
+  centerMapOnClientLocation(): void {
+    if (window.navigator.geolocation) {
+      window.navigator.geolocation.getCurrentPosition(position => {
+        this.mapHooks.centerToLocation(position.coords.latitude, position.coords.longitude);
+      }, () => {
+        alert(this.m().menuCouldNotGetLocation());
+      });
+    }
   }
 
   /** Display the detailed view (meteogram or sounding) at the given location */

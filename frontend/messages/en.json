@@ -13,6 +13,8 @@
   "menuInitializationTime": "Initialization Time",
   "menuInitializationTimeLegend": "Initialization time of the forecast run",
   "menuZone": "Zone",
+  "menuCenterOnMyLocation": "Center on my location",
+  "menuCouldNotGetLocation": "Could not get your location. Please allow access to your location in the browser settings, and enable location sharing on your device.",
   "menuSettings": "Settings",
   "menuAbout": "About",
   "menuSupport": "Support Soaringmeteo",

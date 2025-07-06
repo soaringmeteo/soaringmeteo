@@ -91,6 +91,7 @@ export type MapHooks = {
   enableWindNumericalValues: (value: boolean) => void
   showMarker: (latitude: number, longitude: number) => void
   hideMarker: () => void
+  centerToLocation: (latitude: number, longitude: number) => void
 }
 
 export const initializeMap = (element: HTMLElement): MapHooks => {
@@ -220,6 +221,10 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     },
     hideMarker: (): void => {
       markerLayer.setVisible(false);
+    },
+    centerToLocation: (latitude: number, longitude: number): void => {
+      const view = map.getView();
+      view.setCenter(fromLonLat([longitude, latitude], webMercatorProjection));
     }
   }
 };

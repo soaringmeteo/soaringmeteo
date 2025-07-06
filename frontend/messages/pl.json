@@ -13,6 +13,8 @@
 	"menuInitializationTime": "Czas obliczeń",
 	"menuInitializationTimeLegend": "Czas startowy obliczeń pogodowych",
 	"menuZone": "Strefa",
+	"menuCenterOnMyLocation": "Centruj na mojej lokalizacji",
+	"menuCouldNotGetLocation": "Nie można uzyskać Twojej lokalizacji. Proszę zezwolić na dostęp do lokalizacji w ustawieniach przeglądarki i włączyć udostępnianie lokalizacji na swoim urządzeniu.",
 	"menuSettings": "Ustawienia",
 	"menuAbout": "O nas",
 	"menuSupport": "Wesprzyj Soaringmeteo",

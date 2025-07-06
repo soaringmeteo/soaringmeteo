@@ -13,6 +13,8 @@
     "menuInitializationTime": "Čas inicializácie",
     "menuInitializationTimeLegend": "Čas inicializácie spúšťania prognózy",
     "menuZone": "Zóna",
+    "menuCenterOnMyLocation": "Zamerať na moju polohu",
+    "menuCouldNotGetLocation": "Nepodarilo sa získať vašu polohu. Prosím, povoľte prístup k vašej polohe v nastaveniach prehliadača a zapnite zdieľanie polohy na svojom zariadení.",
     "menuSettings": "Nastavenia",
     "menuAbout": "O stránke",
     "menuSupport": "Podpora Soaringmeteo",

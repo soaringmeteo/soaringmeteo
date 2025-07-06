@@ -16,7 +16,7 @@ import {
   sourceLanguageTag
 } from './generated-i18n/runtime';
 
-type Messages = typeof import('./generated-i18n/messages/en');
+export type Messages = typeof import('./generated-i18n/messages/en');
 
 /** Translation utilities provided by `useI18n()` */
 type I18n = {

@@ -168,7 +168,7 @@ const Loader = ((props: {
             fetchWrfForecastRuns()
           ])
           .then(([[gfsRuns, gfsZones], [wrfRuns, wrfZones]]) => {
-            return runWithOwner(owner, () => new Domain(gfsRuns, gfsZones, wrfRuns, wrfZones));
+            return runWithOwner(owner, () => new Domain(gfsRuns, gfsZones, wrfRuns, wrfZones, props.mapHooks));
           })
           .catch(error => {
             console.log(error);

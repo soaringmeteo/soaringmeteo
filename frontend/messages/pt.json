@@ -13,6 +13,8 @@
 	"menuInitializationTime": "Tempo de inicialização",
 	"menuInitializationTimeLegend": "Tempo de inicialização da execução da previsão",
 	"menuZone": "Zona",
+	"menuCenterOnMyLocation": "Centralizar no meu local",
+	"menuCouldNotGetLocation": "Não foi possível obter sua localização. Por favor, permita o acesso à sua localização nas configurações do navegador e ative o compartilhamento de localização no seu dispositivo.",
 	"menuSettings": "Configurações",
 	"menuAbout": "Sobre",
 	"menuSupport": "Apoie o Soaringmeteo",
