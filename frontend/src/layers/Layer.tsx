@@ -32,6 +32,7 @@ export type ReactiveComponents = {
     zone: Zone,
     hourOffset: number,
     windNumericValuesShown: boolean,
+    daltonianThqEnabled: boolean,
     timeZone: string | undefined,
     setHourOffset: (value: number) => void
   }): ReactiveComponents

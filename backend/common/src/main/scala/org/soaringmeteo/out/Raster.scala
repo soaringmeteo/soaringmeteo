@@ -20,6 +20,34 @@ object Raster {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
+  private val defaultXcPotentialColorMap: ColorMap =
+    ColorMap(
+      10  -> 0x333333,
+      20  -> 0x990099,
+      30  -> 0xff0000,
+      40  -> 0xff9900,
+      50  -> 0xffcc00,
+      60  -> 0xffff00,
+      70  -> 0x66ff00,
+      80  -> 0x00ffff,
+      90  -> 0x99ffff,
+      100 -> 0xffffff
+    )
+
+  private val daltonianXcPotentialColorMap: ColorMap =
+    ColorMap(
+      10  -> 0x00224d,
+      20  -> 0x17375e,
+      30  -> 0x2c4b6e,
+      40  -> 0x42607e,
+      50  -> 0x59768b,
+      60  -> 0x728b93,
+      70  -> 0x8ca190,
+      80  -> 0xacb67f,
+      90  -> 0xd0cd64,
+      100 -> 0xfdea45
+    )
+
   def apply(path: String, extractor: DataExtractor, colorMap: ColorMap, pngColorEncoding: PngColorEncoding): Raster = {
     val pathArgument = path
     new Raster {
@@ -66,18 +94,13 @@ object Raster {
     Raster(
       "xc-potential",
       intData(_.xcFlyingPotential),
-      ColorMap(
-        10  -> 0x333333,
-        20  -> 0x990099,
-        30  -> 0xff0000,
-        40  -> 0xff9900,
-        50  -> 0xffcc00,
-        60  -> 0xffff00,
-        70  -> 0x66ff00,
-        80  -> 0x00ffff,
-        90  -> 0x99ffff,
-        100 -> 0xffffff
-      ),
+      defaultXcPotentialColorMap,
+      RgbPngEncoding
+    ),
+    Raster(
+      "xc-potential-daltonian",
+      intData(_.xcFlyingPotential),
+      daltonianXcPotentialColorMap,
       RgbPngEncoding
     ),
     // Thermals

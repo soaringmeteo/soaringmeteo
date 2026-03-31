@@ -73,5 +73,15 @@ export const Settings = (props: {
         labelPosition='right'
       />
     </fieldset>
+    <fieldset style={{ 'margin-top': '.1em' }}>
+      <legend>{ m().settingsAccessibility() }</legend>
+      <Checkbox
+        label={ m().settingsDaltonianThq() }
+        title={ m().settingsDaltonianThqLegend() }
+        checked={ props.domain.state.daltonianThqEnabled }
+        onChange={ value => props.domain.showDaltonianThq(value) }
+        labelPosition='right'
+      />
+    </fieldset>
   </Overlay>
 };

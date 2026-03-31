@@ -7,7 +7,7 @@ import type { LocationForecasts, DetailedForecast } from "../data/LocationForeca
 import {useI18n, usingMessages} from "../i18n";
 import {type Zone} from "../data/Model";
 
-export const colorScale = new ColorScale([
+export const defaultColorScale = new ColorScale([
   [10, new Color(0x33, 0x33, 0x33, 1)],
   [20, new Color(0x99, 0x00, 0x99, 1)],
   [30, new Color(0xff, 0x00, 0x00, 1)],
@@ -19,6 +19,22 @@ export const colorScale = new ColorScale([
   [90, new Color(0x99, 0xff, 0xff, 1)],
   [100, new Color(0xff, 0xff, 0xff, 1)]
 ]);
+
+export const daltonianColorScale = new ColorScale([
+  [10, new Color(0x00, 0x22, 0x4d, 1)],
+  [20, new Color(0x17, 0x37, 0x5e, 1)],
+  [30, new Color(0x2c, 0x4b, 0x6e, 1)],
+  [40, new Color(0x42, 0x60, 0x7e, 1)],
+  [50, new Color(0x59, 0x76, 0x8b, 1)],
+  [60, new Color(0x72, 0x8b, 0x93, 1)],
+  [70, new Color(0x8c, 0xa1, 0x90, 1)],
+  [80, new Color(0xac, 0xb6, 0x7f, 1)],
+  [90, new Color(0xd0, 0xcd, 0x64, 1)],
+  [100, new Color(0xfd, 0xea, 0x45, 1)]
+]);
+
+export const colorScale = (daltonianThqEnabled: boolean): ColorScale =>
+  daltonianThqEnabled ? daltonianColorScale : defaultColorScale;
 
 export const xcFlyingPotentialLayer: Layer = {
 
@@ -34,11 +50,13 @@ export const xcFlyingPotentialLayer: Layer = {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number,
+    daltonianThqEnabled: boolean,
     timeZone: string | undefined,
     setHourOffset: (value: number) => void
   }): ReactiveComponents {
 
     const { m } = useI18n();
+    const activeColorScale = colorScale(props.daltonianThqEnabled);
 
     const thqElement = (detailedForecast: DetailedForecast, addGutter: boolean): JSX.Element =>
         <div
@@ -46,7 +64,7 @@ export const xcFlyingPotentialLayer: Layer = {
               display: 'inline-block',
               height: '1.1em',
               width: '1.1em',
-              'background-color': colorScale.closest(detailedForecast.xcPotential).css(),
+              'background-color': activeColorScale.closest(detailedForecast.xcPotential).css(),
               'border': '1px solid dimgray',
               'margin-left': addGutter ? '1px' : '0',
               'box-sizing': 'border-box',
@@ -81,7 +99,7 @@ export const xcFlyingPotentialLayer: Layer = {
       ]);
     });
 
-    const mapKey = colorScaleEl(colorScale, value => `${value}% `);
+    const mapKey = colorScaleEl(activeColorScale, value => `${value}% `);
 
     const help = <p>
       { m().helpLayerThQ() }

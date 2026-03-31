@@ -17,7 +17,8 @@ export const soaringLayerDepthLayer: Layer = {
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
-    hourOffset: number
+    hourOffset: number,
+    daltonianThqEnabled: boolean
   }): ReactiveComponents {
 
     const { m } = useI18n();

@@ -35,6 +35,8 @@ export type State = {
   utcTimeShown: boolean
   // Whether to show the map key
   mapKeyShown: boolean
+  // Whether to use a color-blind-friendly palette for thermal quality
+  daltonianThqEnabled: boolean
 }
 
 // Keys used to store the current display settings in the local storage
@@ -47,6 +49,7 @@ const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 const utcTimeShownKey           = 'utc-time-shown';
 const mapKeyShownKey = 'map-key-shown';
+const daltonianThqEnabledKey = 'daltonian-thq-enabled';
 
 const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValue: A): A => {
   const maybeItem = window.localStorage.getItem(key);
@@ -162,6 +165,13 @@ const saveMapKeyShown = (value: boolean): void => {
   window.localStorage.setItem(mapKeyShownKey, JSON.stringify(value))
 }
 
+const loadDaltonianThqEnabled = (): boolean =>
+  loadStoredState(daltonianThqEnabledKey, raw => JSON.parse(raw), false);
+
+const saveDaltonianThqEnabled = (value: boolean): void => {
+  window.localStorage.setItem(daltonianThqEnabledKey, JSON.stringify(value))
+}
+
 /**
  * Manages the interactions with the state of the system.
  * 
@@ -209,6 +219,7 @@ export class Domain {
     const windNumericValuesShown = loadWindNumericValuesShown();
     const utcTimeShown = loadUtcTimeShown();
     const mapKeyShown = loadMapKeyShown();
+    const daltonianThqEnabled = loadDaltonianThqEnabled();
   
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
     const [get, set] = createStore<State>({
@@ -223,7 +234,8 @@ export class Domain {
       detailedView: undefined,
       windNumericValuesShown,
       utcTimeShown,
-      mapKeyShown
+      mapKeyShown,
+      daltonianThqEnabled
     }, { name: 'state' }); // See https://github.com/solidjs/solid/discussions/1414
 
     this.state = get;
@@ -231,7 +243,7 @@ export class Domain {
     const self = this;
 
     const [projectedProps] =
-      splitProps(this.state, ['forecastMetadata', 'hourOffset', 'windNumericValuesShown']);
+      splitProps(this.state, ['forecastMetadata', 'hourOffset', 'windNumericValuesShown', 'daltonianThqEnabled']);
     const props =
       mergeProps(projectedProps, {
         setHourOffset: (value: number) => this.setHourOffset(value),
@@ -385,6 +397,12 @@ export class Domain {
     this.setState({ mapKeyShown })
   }
 
+  /** Whether to use the Daltonian-friendly thermal-quality palette */
+  showDaltonianThq(daltonianThqEnabled: boolean): void {
+    saveDaltonianThqEnabled(daltonianThqEnabled);
+    this.setState({ daltonianThqEnabled });
+  }
+
   /** The timezone to use according to the user’s preferences */
   timeZone(): string | undefined {
     return this.state.utcTimeShown ? 'UTC' : undefined
@@ -443,7 +461,7 @@ export class Domain {
   readonly urlOfRasterAtCurrentHourOffset: Accessor<string> =
     (): string => this.state.forecastMetadata.urlOfRasterAtHourOffset(
         this.effectiveZone().id,
-        this.state.primaryLayer.dataPath,
+        this.currentPrimaryRasterPath(),
         this.state.hourOffset
       );
 
@@ -454,6 +472,14 @@ export class Domain {
         this.state.windLayer.dataPath,
         this.state.hourOffset
       );
+
+  private currentPrimaryRasterPath(): string {
+    if (this.state.primaryLayer.key === xcFlyingPotentialLayer.key && this.state.daltonianThqEnabled) {
+      return 'xc-potential-daltonian'
+    } else {
+      return this.state.primaryLayer.dataPath
+    }
+  }
 
 }
 

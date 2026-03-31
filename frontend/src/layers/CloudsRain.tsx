@@ -33,7 +33,8 @@ export const cloudsRainLayer: Layer = {
   reactiveComponents(props: {
     zone: Zone,
     forecastMetadata: ForecastMetadata,
-    hourOffset: number
+    hourOffset: number,
+    daltonianThqEnabled: boolean
   }): ReactiveComponents {
 
     const { m } = useI18n();
