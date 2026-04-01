@@ -48,6 +48,62 @@ object Raster {
       100 -> 0xfdea45
     )
 
+  private val defaultSoaringLayerDepthColorMap: ColorMap =
+    ColorMap(
+      250  -> 0x333333,
+      500  -> 0x990099,
+      750  -> 0xff0000,
+      1000 -> 0xff9900,
+      1250 -> 0xffcc00,
+      1500 -> 0xffff00,
+      1750 -> 0x66ff00,
+      2000 -> 0x00ffff,
+      2250 -> 0x99ffff,
+      2500 -> 0xffffff
+    ).withFallbackColor(0xffffff)
+
+  private val daltonianSoaringLayerDepthColorMap: ColorMap =
+    ColorMap(
+      250  -> 0x00224d,
+      500  -> 0x17375e,
+      750  -> 0x2c4b6e,
+      1000 -> 0x42607e,
+      1250 -> 0x59768b,
+      1500 -> 0x728b93,
+      1750 -> 0x8ca190,
+      2000 -> 0xacb67f,
+      2250 -> 0xd0cd64,
+      2500 -> 0xfdea45
+    ).withFallbackColor(0xfdea45)
+
+  private val defaultThermalVelocityColorMap: ColorMap =
+    ColorMap(
+      0.25 -> 0x333333,
+      0.50 -> 0x990099,
+      0.75 -> 0xff0000,
+      1.00 -> 0xff9900,
+      1.25 -> 0xffcc00,
+      1.50 -> 0xffff00,
+      1.75 -> 0x66ff00,
+      2.00 -> 0x00ffff,
+      2.50 -> 0x99ffff,
+      3.00 -> 0xffffff
+    ).withFallbackColor(0xffffff)
+
+  private val daltonianThermalVelocityColorMap: ColorMap =
+    ColorMap(
+      0.25 -> 0x00224d,
+      0.50 -> 0x17375e,
+      0.75 -> 0x2c4b6e,
+      1.00 -> 0x42607e,
+      1.25 -> 0x59768b,
+      1.50 -> 0x728b93,
+      1.75 -> 0x8ca190,
+      2.00 -> 0xacb67f,
+      2.50 -> 0xd0cd64,
+      3.00 -> 0xfdea45
+    ).withFallbackColor(0xfdea45)
+
   def apply(path: String, extractor: DataExtractor, colorMap: ColorMap, pngColorEncoding: PngColorEncoding): Raster = {
     val pathArgument = path
     new Raster {
@@ -107,35 +163,25 @@ object Raster {
     Raster(
       "soaring-layer-depth",
       intData(_.soaringLayerDepth.toMeters.round.intValue),
-      ColorMap(
-        250  -> 0x333333,
-        500  -> 0x990099,
-        750  -> 0xff0000,
-        1000 -> 0xff9900,
-        1250 -> 0xffcc00,
-        1500 -> 0xffff00,
-        1750 -> 0x66ff00,
-        2000 -> 0x00ffff,
-        2250 -> 0x99ffff,
-        2500 -> 0xffffff
-      ).withFallbackColor(0xffffff),
+      defaultSoaringLayerDepthColorMap,
+      RgbPngEncoding
+    ),
+    Raster(
+      "soaring-layer-depth-daltonian",
+      intData(_.soaringLayerDepth.toMeters.round.intValue),
+      daltonianSoaringLayerDepthColorMap,
       RgbPngEncoding
     ),
     Raster(
       "thermal-velocity",
       doubleData(_.thermalVelocity.toMetersPerSecond),
-      ColorMap(
-        0.25 -> 0x333333,
-        0.50 -> 0x990099,
-        0.75 -> 0xff0000,
-        1.00 -> 0xff9900,
-        1.25 -> 0xffcc00,
-        1.50 -> 0xffff00,
-        1.75 -> 0x66ff00,
-        2.00 -> 0x00ffff,
-        2.50 -> 0x99ffff,
-        3.00 -> 0xffffff
-      ).withFallbackColor(0xffffff),
+      defaultThermalVelocityColorMap,
+      RgbPngEncoding
+    ),
+    Raster(
+      "thermal-velocity-daltonian",
+      doubleData(_.thermalVelocity.toMetersPerSecond),
+      daltonianThermalVelocityColorMap,
       RgbPngEncoding
     ),
     // Clouds and Rain

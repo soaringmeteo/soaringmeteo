@@ -4,13 +4,13 @@
 
 This document explains the Daltonian-compatible thermal-quality change.
 
-The goal is to let users switch the Thermal Quality visualization to a color-blind-friendly palette without changing the underlying forecast metric.
+The goal is to let users switch the Thermal Quality, Thermal Velocity, and Soaring Layer Depth visualizations to a color-blind-friendly palette without changing the underlying forecast metrics.
 
 The metric itself remains `xcFlyingPotential`. Only its visual encoding changes.
 
 ## Why This Change Touches Both Backend And Frontend
 
-Thermal Quality is rendered in two different ways:
+These layers are rendered in two different ways:
 
 - backend-generated raster PNGs for the map overlay
 - frontend color scales for the map key, location summary, and meteogram
@@ -23,9 +23,11 @@ The implementation is additive:
 
 - the backend still generates the existing `xc-potential` raster
 - the backend also generates `xc-potential-daltonian`
+- the backend also generates `thermal-velocity-daltonian`
+- the backend also generates `soaring-layer-depth-daltonian`
 - the frontend stores a user preference in local storage
-- when the selected primary layer is Thermal Quality and the option is enabled, the frontend requests `xc-potential-daltonian`
-- the frontend also switches the legend, summary squares, and meteogram to the matching palette
+- when the selected primary layer is one of the supported layers and the option is enabled, the frontend requests the matching `*-daltonian` raster
+- the frontend also switches the matching legends and meteogram colors to the same palette
 
 This keeps the feature user-specific while preserving the existing default behavior.
 
@@ -35,17 +37,22 @@ File:
 
 - `backend/common/src/main/scala/org/soaringmeteo/out/Raster.scala`
 
-The backend now defines two color maps for thermal quality:
+The backend now defines default and Daltonian variants for:
 
-- `defaultXcPotentialColorMap`
-- `daltonianXcPotentialColorMap`
+- Thermal Quality
+- Thermal Velocity
+- Soaring Layer Depth
 
-It publishes two rasters with the same extracted value:
+It publishes these extra raster paths:
 
 - `xc-potential`
 - `xc-potential-daltonian`
+- `thermal-velocity`
+- `thermal-velocity-daltonian`
+- `soaring-layer-depth`
+- `soaring-layer-depth-daltonian`
 
-The extracted data is still `_.xcFlyingPotential`, so this change does not alter the meteorological computation.
+The extracted data is unchanged, so this change does not alter the meteorological computation.
 
 ## Frontend Changes
 
@@ -71,16 +78,18 @@ File:
 
 The `Domain` chooses the raster path dynamically:
 
-- if the active primary layer is Thermal Quality and the Daltonian setting is enabled, it uses `xc-potential-daltonian`
+- if the active primary layer is Thermal Quality, Thermal Velocity, or Soaring Layer Depth and the Daltonian setting is enabled, it uses the corresponding `*-daltonian` raster
 - otherwise it uses the layer’s normal `dataPath`
 
-This ensures that only the Thermal Quality overlay is affected.
+This ensures that only the supported overlays are affected.
 
 ### Frontend color scale selection
 
 Files:
 
 - `frontend/src/layers/ThQ.tsx`
+- `frontend/src/layers/ThermalVelocity.tsx`
+- `frontend/src/layers/SoaringLayerDepth.tsx`
 - `frontend/src/diagrams/Meteogram.tsx`
 
 The frontend defines:
@@ -93,6 +102,7 @@ The selected scale is used consistently for:
 - the map key
 - the Thermal Quality squares in location summaries
 - the Thermal Quality strip in the meteogram
+- the Thermal Velocity strip in the meteogram
 
 ## Palette
 
@@ -116,7 +126,6 @@ Only the colors change. This preserves the meaning of the scale and avoids chang
 This change does not:
 
 - modify the `xcFlyingPotential` computation
-- change other layers such as thermal velocity or soaring layer depth
 - change wind rendering
 - require a forecast data format version bump
 

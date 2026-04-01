@@ -148,6 +148,7 @@ const drawMeteogram = (
 ): void => {
 
   const activeThqColorScale = thqColorScale(daltonianThqEnabled);
+  const activeThermalVelocityColorScale = thermalVelocityColorScale(daltonianThqEnabled);
 
   // Clear everything first
   ctx.save();
@@ -226,7 +227,7 @@ const drawMeteogram = (
     thermalVelocityDiagram.fillRect(
       [columnStart, 0],
       [columnEnd, thermalVelocityDiagramHeight],
-      `${thermalVelocityColorScale.closest(forecast.thermalVelocity).css()}`
+      `${activeThermalVelocityColorScale.closest(forecast.thermalVelocity).css()}`
     );
     thermalVelocityDiagram.rect(
       [columnStart, 0],

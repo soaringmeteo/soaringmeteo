@@ -3,6 +3,8 @@ import { ForecastMetadata } from './data/ForecastMetadata';
 import { Layer, ReactiveComponents } from './layers/Layer';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
 import { layerByKey } from './layers/Layers';
+import { soaringLayerDepthLayer } from './layers/SoaringLayerDepth';
+import { thermalVelocityLayer } from './layers/ThermalVelocity';
 import { boundaryLayerWindLayer } from './layers/Wind';
 import {Accessor, batch, createMemo, mergeProps, splitProps} from 'solid-js';
 import {DetailedView, DetailedViewType} from "./DetailedView";
@@ -474,10 +476,19 @@ export class Domain {
       );
 
   private currentPrimaryRasterPath(): string {
-    if (this.state.primaryLayer.key === xcFlyingPotentialLayer.key && this.state.daltonianThqEnabled) {
-      return 'xc-potential-daltonian'
-    } else {
+    if (!this.state.daltonianThqEnabled) {
       return this.state.primaryLayer.dataPath
+    }
+
+    switch (this.state.primaryLayer.key) {
+      case xcFlyingPotentialLayer.key:
+        return 'xc-potential-daltonian'
+      case thermalVelocityLayer.key:
+        return 'thermal-velocity-daltonian'
+      case soaringLayerDepthLayer.key:
+        return 'soaring-layer-depth-daltonian'
+      default:
+        return this.state.primaryLayer.dataPath
     }
   }
 
