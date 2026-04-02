@@ -163,3 +163,34 @@ Frontend:
 Generating two raster variants in the backend is simpler and more robust than trying to recolor the overlay client-side.
 
 Keeping the switch in the frontend is also the right ownership boundary, because this is a per-user accessibility preference rather than a global forecast property.
+
+## Regenerating Local Assets
+
+When testing palette changes locally, removing only `backend/target/forecast/data/...` is not enough for GFS.
+
+The local GFS dev task also reuses an intermediate H2 store in:
+
+- `backend/gfs/data.mv.db`
+
+If that file is still present, `makeGfsAssets` may decide the forecast data is already stored locally and skip regenerating raster PNGs.
+
+To force a clean local regeneration:
+
+```bash
+cd backend
+rm -rf target/forecast/data/7/gfs
+rm -f gfs/data.mv.db gfs/data.trace.db
+sbt
+reload
+makeGfsAssets
+```
+
+Then verify that the expected Daltonian raster directories exist, for example:
+
+```bash
+find target/forecast/data -path '*xc-potential-daltonian*' | head
+find target/forecast/data -path '*thermal-velocity-daltonian*' | head
+find target/forecast/data -path '*soaring-layer-depth-daltonian*' | head
+```
+
+After that, reload the frontend and test the overlay toggle again.

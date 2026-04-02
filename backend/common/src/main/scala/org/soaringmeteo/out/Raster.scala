@@ -36,16 +36,16 @@ object Raster {
 
   private val daltonianXcPotentialColorMap: ColorMap =
     ColorMap(
-      10  -> 0x00224d,
-      20  -> 0x17375e,
-      30  -> 0x2c4b6e,
-      40  -> 0x42607e,
-      50  -> 0x59768b,
-      60  -> 0x728b93,
-      70  -> 0x8ca190,
-      80  -> 0xacb67f,
-      90  -> 0xd0cd64,
-      100 -> 0xfdea45
+      10  -> 0x333333,
+      20  -> 0x7a1fa2,
+      30  -> 0xd73027,
+      40  -> 0xf46d43,
+      50  -> 0xfdae61,
+      60  -> 0xffffbf,
+      70  -> 0xa6d96a,
+      80  -> 0x66c2a5,
+      90  -> 0x3288bd,
+      100 -> 0xffffff
     )
 
   private val defaultSoaringLayerDepthColorMap: ColorMap =
@@ -64,17 +64,17 @@ object Raster {
 
   private val daltonianSoaringLayerDepthColorMap: ColorMap =
     ColorMap(
-      250  -> 0x00224d,
-      500  -> 0x17375e,
-      750  -> 0x2c4b6e,
-      1000 -> 0x42607e,
-      1250 -> 0x59768b,
-      1500 -> 0x728b93,
-      1750 -> 0x8ca190,
-      2000 -> 0xacb67f,
-      2250 -> 0xd0cd64,
-      2500 -> 0xfdea45
-    ).withFallbackColor(0xfdea45)
+      250  -> 0x333333,
+      500  -> 0x7a1fa2,
+      750  -> 0xd73027,
+      1000 -> 0xf46d43,
+      1250 -> 0xfdae61,
+      1500 -> 0xffffbf,
+      1750 -> 0xa6d96a,
+      2000 -> 0x66c2a5,
+      2250 -> 0x3288bd,
+      2500 -> 0xffffff
+    ).withFallbackColor(0xffffff)
 
   private val defaultThermalVelocityColorMap: ColorMap =
     ColorMap(
@@ -92,17 +92,17 @@ object Raster {
 
   private val daltonianThermalVelocityColorMap: ColorMap =
     ColorMap(
-      0.25 -> 0x00224d,
-      0.50 -> 0x17375e,
-      0.75 -> 0x2c4b6e,
-      1.00 -> 0x42607e,
-      1.25 -> 0x59768b,
-      1.50 -> 0x728b93,
-      1.75 -> 0x8ca190,
-      2.00 -> 0xacb67f,
-      2.50 -> 0xd0cd64,
-      3.00 -> 0xfdea45
-    ).withFallbackColor(0xfdea45)
+      0.25 -> 0x333333,
+      0.50 -> 0x7a1fa2,
+      0.75 -> 0xd73027,
+      1.00 -> 0xf46d43,
+      1.25 -> 0xfdae61,
+      1.50 -> 0xffffbf,
+      1.75 -> 0xa6d96a,
+      2.00 -> 0x66c2a5,
+      2.50 -> 0x3288bd,
+      3.00 -> 0xffffff
+    ).withFallbackColor(0xffffff)
 
   def apply(path: String, extractor: DataExtractor, colorMap: ColorMap, pngColorEncoding: PngColorEncoding): Raster = {
     val pathArgument = path
