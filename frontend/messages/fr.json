@@ -36,7 +36,7 @@
   "settingsMapKey": "Légende",
   "settingsShowMapKey": "Afficher la légende sur la carte",
   "settingsAccessibility": "Accessibilité",
-  "settingsDaltonianThq": "Utiliser des couleurs compatibles avec le daltonisme pour la qualité thermique",
+  "settingsDaltonianThq": "Couleurs compatibles avec le daltonisme",
   "settingsDaltonianThqLegend": "Affiche la couche, la légende et les détails de qualité thermique avec une palette adaptée au daltonisme",
   "locationSummary": "Résumé",
   "locationSummaryLegend": "Résumé des prévisions pour ce lieu",

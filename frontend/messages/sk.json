@@ -36,7 +36,7 @@
     "settingsMapKey": "Legenda",
     "settingsShowMapKey": "Zobraziť legendu mapy",
     "settingsAccessibility": "Prístupnosť",
-    "settingsDaltonianThq": "Použiť farby kompatibilné s daltonizmom pre tepelnú kvalitu",
+    "settingsDaltonianThq": "Farby kompatibilné s daltonizmom",
     "settingsDaltonianThqLegend": "Zobrazí vrstvu, legendu a detailné farby tepelnej kvality pomocou palety vhodnej pre farboslepých",
     "locationSummary": "Súhrn",
     "locationSummaryLegend": "Súhrn predpovede pre toto miesto",

@@ -36,7 +36,7 @@
 	"settingsMapKey": "Legende",
 	"settingsShowMapKey": "Legende auf der Karte anzeigen",
 	"settingsAccessibility": "Barrierefreiheit",
-	"settingsDaltonianThq": "Daltonismus-kompatible Farben für die Thermikqualität verwenden",
+	"settingsDaltonianThq": "Daltonismus-kompatible Farben",
 	"settingsDaltonianThqLegend": "Zeigt die Thermikqualitäts-Ebene, die Legende und die Detailfarben mit einer farbenblindfreundlichen Palette an",
 	"locationSummary": "Zusammenfassung",
 	"locationSummaryLegend": "Zusammenfassung der Prognose für diesen Standort",
