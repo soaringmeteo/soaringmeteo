@@ -56,6 +56,15 @@ const App = (props: {
     props.mapHooks.enableWindNumericalValues(props.domain.state.windNumericValuesShown);
   });
 
+  createEffect(() => {
+    const currentLocation = props.domain.state.currentLocation;
+    if (currentLocation !== undefined) {
+      props.mapHooks.showCurrentLocation(currentLocation.latitude, currentLocation.longitude);
+    } else {
+      props.mapHooks.hideCurrentLocation();
+    }
+  });
+
   // Marker when detailed view is open
   createEffect(() => {
     const detailedView = props.domain.state.detailedView;

@@ -7,7 +7,7 @@ import { defaults as defaultInteractions } from "ol/interaction";
 import { Coordinate } from "ol/coordinate";
 import { Point } from 'ol/geom';
 import { MVT } from "ol/format";
-import { Style, Icon, Text, Fill } from 'ol/style';
+import { Style, Icon, Text, Fill, Stroke, Circle as CircleStyle } from 'ol/style';
 import { Accessor, createSignal } from 'solid-js';
 import windImg0 from '../images/wind-0.png';
 import windImg1 from '../images/wind-1.png';
@@ -89,6 +89,8 @@ export type MapHooks = {
   setWindLayerSource: (url: string, minViewZoom: number, extent: Extent, maxZoom: number, tileSize: number) => void
   hideWindLayer: () => void
   enableWindNumericalValues: (value: boolean) => void
+  showCurrentLocation: (latitude: number, longitude: number) => void
+  hideCurrentLocation: () => void
   showMarker: (latitude: number, longitude: number) => void
   hideMarker: () => void
   centerToLocation: (latitude: number, longitude: number) => void
@@ -114,6 +116,24 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     declutter: true, // That seems to “fix” the `renderBuffer` issue, but that might be temporary, see https://github.com/openlayers/openlayers/issues/11191
   });
 
+  const currentLocationFeature = new Feature();
+  const currentLocationLayer = new VectorLayer({
+    source: new VectorSource({ features: [currentLocationFeature] }),
+    visible: false,
+    style: new Style({
+      image: new CircleStyle({
+        radius: 8,
+        fill: new Fill({
+          color: 'rgba(212, 0, 0, 0.2)',
+        }),
+        stroke: new Stroke({
+          color: '#d40000',
+          width: 3,
+        }),
+      }),
+    }),
+  });
+
   // Marker on the position of the selected location
   const markerFeature = new Feature();
   const markerLayer = new VectorLayer({
@@ -134,6 +154,7 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
       baseLayer,
       primaryLayer,
       secondaryLayer,
+      currentLocationLayer,
       markerLayer
     ],
     view: new View({
@@ -214,6 +235,13 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
         });
         return new Style(value ? { image: imageStyle, text: textStyle } : { image: imageStyle })
       })
+    },
+    showCurrentLocation: (latitude: number, longitude: number): void => {
+      currentLocationFeature.setGeometry(new Point(fromLonLat([longitude, latitude], webMercatorProjection)));
+      currentLocationLayer.setVisible(true);
+    },
+    hideCurrentLocation: (): void => {
+      currentLocationLayer.setVisible(false);
     },
     showMarker: (latitude: number, longitude: number): void => {
       markerFeature.setGeometry(new Point(fromLonLat([longitude, latitude])));
