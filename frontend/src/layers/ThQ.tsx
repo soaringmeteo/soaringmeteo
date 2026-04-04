@@ -33,8 +33,8 @@ export const daltonianColorScale = new ColorScale([
   [100, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
-export const colorScale = (daltonianThqEnabled: boolean): ColorScale =>
-  daltonianThqEnabled ? daltonianColorScale : defaultColorScale;
+export const colorScale = (daltonianColorScaleEnabled: boolean): ColorScale =>
+  daltonianColorScaleEnabled ? daltonianColorScale : defaultColorScale;
 
 export const xcFlyingPotentialLayer: Layer = {
 
@@ -50,13 +50,13 @@ export const xcFlyingPotentialLayer: Layer = {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number,
-    daltonianThqEnabled: boolean,
+    daltonianColorScaleEnabled: boolean,
     timeZone: string | undefined,
     setHourOffset: (value: number) => void
   }): ReactiveComponents {
 
     const { m } = useI18n();
-    const activeColorScale = colorScale(props.daltonianThqEnabled);
+    const activeColorScale = colorScale(props.daltonianColorScaleEnabled);
 
     const thqElement = (detailedForecast: DetailedForecast, addGutter: boolean): JSX.Element =>
         <div

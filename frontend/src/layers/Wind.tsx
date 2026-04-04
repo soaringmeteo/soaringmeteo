@@ -10,7 +10,7 @@ const windComponents = (
   forecastMetadata: ForecastMetadata,
   zone: Zone,
   hourOffset: number,
-  daltonianThqEnabled: boolean,
+  daltonianColorScaleEnabled: boolean,
 }): ReactiveComponents => {
 
   const { m } = useI18n();

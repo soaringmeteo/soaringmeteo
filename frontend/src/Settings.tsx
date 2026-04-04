@@ -76,10 +76,10 @@ export const Settings = (props: {
     <fieldset style={{ 'margin-top': '.1em' }}>
       <legend>{ m().settingsAccessibility() }</legend>
       <Checkbox
-        label={ m().settingsDaltonianThq() }
-        title={ m().settingsDaltonianThqLegend() }
-        checked={ props.domain.state.daltonianThqEnabled }
-        onChange={ value => props.domain.showDaltonianThq(value) }
+        label={ m().settingsDaltonianColorScale() }
+        title={ m().settingsDaltonianColorScaleLegend() }
+        checked={ props.domain.state.daltonianColorScaleEnabled }
+        onChange={ value => props.domain.enableDaltonianColorScale(value) }
         labelPosition='right'
       />
     </fieldset>

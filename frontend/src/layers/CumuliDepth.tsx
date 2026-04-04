@@ -21,7 +21,7 @@ export const cumuliDepthLayer: Layer = {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number,
-    daltonianThqEnabled: boolean
+    daltonianColorScaleEnabled: boolean
   }): ReactiveComponents {
 
     const { m } = useI18n();

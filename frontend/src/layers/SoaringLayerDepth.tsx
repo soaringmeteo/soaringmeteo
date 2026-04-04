@@ -30,8 +30,8 @@ export const daltonianSoaringLayerDepthColorScale = new ColorScale([
   [2500, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
-export const soaringLayerDepthColorScale = (daltonianThqEnabled: boolean): ColorScale =>
-  daltonianThqEnabled ? daltonianSoaringLayerDepthColorScale : defaultSoaringLayerDepthColorScale;
+export const soaringLayerDepthColorScale = (daltonianColorScaleEnabled: boolean): ColorScale =>
+  daltonianColorScaleEnabled ? daltonianSoaringLayerDepthColorScale : defaultSoaringLayerDepthColorScale;
 
 export const soaringLayerDepthLayer: Layer = {
 
@@ -47,11 +47,11 @@ export const soaringLayerDepthLayer: Layer = {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number,
-    daltonianThqEnabled: boolean
+    daltonianColorScaleEnabled: boolean
   }): ReactiveComponents {
 
     const { m } = useI18n();
-    const activeColorScale = soaringLayerDepthColorScale(props.daltonianThqEnabled);
+    const activeColorScale = soaringLayerDepthColorScale(props.daltonianColorScaleEnabled);
 
     const summarizer = summarizerFromLocationDetails(props, detailedForecast => [
       [() => m().summarySoaringLayerDepth(), <span>{ detailedForecast.boundaryLayer.soaringLayerDepth } m</span>]

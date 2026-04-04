@@ -30,8 +30,8 @@ export const daltonianThermalVelocityColorScale = new ColorScale([
   [3.00, new Color(0xff, 0xff, 0xff, 1)]
 ]);
 
-export const thermalVelocityColorScale = (daltonianThqEnabled: boolean): ColorScale =>
-  daltonianThqEnabled ? daltonianThermalVelocityColorScale : defaultThermalVelocityColorScale;
+export const thermalVelocityColorScale = (daltonianColorScaleEnabled: boolean): ColorScale =>
+  daltonianColorScaleEnabled ? daltonianThermalVelocityColorScale : defaultThermalVelocityColorScale;
 
 export const thermalVelocityLayer: Layer = {
   key: 'thermal-velocity',
@@ -42,11 +42,11 @@ export const thermalVelocityLayer: Layer = {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number,
-    daltonianThqEnabled: boolean
+    daltonianColorScaleEnabled: boolean
   }): ReactiveComponents {
 
     const { m } = useI18n();
-    const activeColorScale = thermalVelocityColorScale(props.daltonianThqEnabled);
+    const activeColorScale = thermalVelocityColorScale(props.daltonianColorScaleEnabled);
 
     const summarizer = summarizerFromLocationDetails(props, detailedForecast => [
       [() => m().summaryThermalVelocity(), <span>{ detailedForecast.thermalVelocity } m/s</span>]

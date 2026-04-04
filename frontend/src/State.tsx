@@ -38,7 +38,7 @@ export type State = {
   // Whether to show the map key
   mapKeyShown: boolean
   // Whether to use a color-blind-friendly palette for thermal quality
-  daltonianThqEnabled: boolean
+  daltonianColorScaleEnabled: boolean
 }
 
 // Keys used to store the current display settings in the local storage
@@ -51,7 +51,7 @@ const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 const utcTimeShownKey           = 'utc-time-shown';
 const mapKeyShownKey = 'map-key-shown';
-const daltonianThqEnabledKey = 'daltonian-thq-enabled';
+const daltonianColorScaleEnabledKey = 'daltonian-thq-enabled';
 
 const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValue: A): A => {
   const maybeItem = window.localStorage.getItem(key);
@@ -167,11 +167,11 @@ const saveMapKeyShown = (value: boolean): void => {
   window.localStorage.setItem(mapKeyShownKey, JSON.stringify(value))
 }
 
-const loadDaltonianThqEnabled = (): boolean =>
-  loadStoredState(daltonianThqEnabledKey, raw => JSON.parse(raw), false);
+const loadDaltonianColorScaleEnabled = (): boolean =>
+  loadStoredState(daltonianColorScaleEnabledKey, raw => JSON.parse(raw), false);
 
-const saveDaltonianThqEnabled = (value: boolean): void => {
-  window.localStorage.setItem(daltonianThqEnabledKey, JSON.stringify(value))
+const saveDaltonianColorScaleEnabled = (value: boolean): void => {
+  window.localStorage.setItem(daltonianColorScaleEnabledKey, JSON.stringify(value))
 }
 
 /**
@@ -221,7 +221,7 @@ export class Domain {
     const windNumericValuesShown = loadWindNumericValuesShown();
     const utcTimeShown = loadUtcTimeShown();
     const mapKeyShown = loadMapKeyShown();
-    const daltonianThqEnabled = loadDaltonianThqEnabled();
+    const daltonianColorScaleEnabled = loadDaltonianColorScaleEnabled();
   
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
     const [get, set] = createStore<State>({
@@ -237,7 +237,7 @@ export class Domain {
       windNumericValuesShown,
       utcTimeShown,
       mapKeyShown,
-      daltonianThqEnabled
+      daltonianColorScaleEnabled
     }, { name: 'state' }); // See https://github.com/solidjs/solid/discussions/1414
 
     this.state = get;
@@ -245,7 +245,7 @@ export class Domain {
     const self = this;
 
     const [projectedProps] =
-      splitProps(this.state, ['forecastMetadata', 'hourOffset', 'windNumericValuesShown', 'daltonianThqEnabled']);
+      splitProps(this.state, ['forecastMetadata', 'hourOffset', 'windNumericValuesShown', 'daltonianColorScaleEnabled']);
     const props =
       mergeProps(projectedProps, {
         setHourOffset: (value: number) => this.setHourOffset(value),
@@ -400,9 +400,9 @@ export class Domain {
   }
 
   /** Whether to use the Daltonian-friendly thermal-quality palette */
-  showDaltonianThq(daltonianThqEnabled: boolean): void {
-    saveDaltonianThqEnabled(daltonianThqEnabled);
-    this.setState({ daltonianThqEnabled });
+  enableDaltonianColorScale(daltonianColorScaleEnabled: boolean): void {
+    saveDaltonianColorScaleEnabled(daltonianColorScaleEnabled);
+    this.setState({ daltonianColorScaleEnabled });
   }
 
   /** The timezone to use according to the user’s preferences */
@@ -476,7 +476,7 @@ export class Domain {
       );
 
   private currentPrimaryRasterPath(): string {
-    if (!this.state.daltonianThqEnabled) {
+    if (!this.state.daltonianColorScaleEnabled) {
       return this.state.primaryLayer.dataPath
     }
 

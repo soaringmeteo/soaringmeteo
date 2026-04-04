@@ -6,7 +6,7 @@ This document explains the Daltonian-compatible thermal-quality change.
 
 The goal is to let users switch the Thermal Quality, Thermal Velocity, and Soaring Layer Depth visualizations to a color-blind-friendly palette without changing the underlying forecast metrics.
 
-The metric itself remains `xcFlyingPotential`. Only its visual encoding changes.
+The metric for THQ for example, itself remains `xcFlyingPotential`. Only its visual encoding changes.
 
 ## Why This Change Touches Both Backend And Frontend
 
@@ -19,7 +19,7 @@ Because of that split, changing only one side would make the UI inconsistent.
 
 ## Design
 
-The implementation is additive:
+The implementation is additive, e.g. for THQ:
 
 - the backend still generates the existing `xc-potential` raster
 - the backend also generates `xc-potential-daltonian`
@@ -66,7 +66,7 @@ Files:
 
 The frontend adds a new persisted boolean setting:
 
-- `daltonianThqEnabled`
+- `daltonianColorScaleEnabled`
 
 This setting is exposed in the settings dialog and stored in local storage, following the same pattern as the existing display settings.
 
@@ -121,15 +121,6 @@ The Daltonian-compatible palette keeps the same threshold values as the default 
 
 Only the colors change. This preserves the meaning of the scale and avoids changing any forecast data semantics.
 
-## What This Change Does Not Do
-
-This change does not:
-
-- modify the `xcFlyingPotential` computation
-- change wind rendering
-- require a forecast data format version bump
-
-The change is additive because it introduces one extra raster path and a frontend preference that uses it.
 
 ## Affected Files
 

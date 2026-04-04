@@ -108,7 +108,7 @@ export const meteogram = (forecasts: LocationForecasts, state: State): { key: JS
             canvasWidth,
             canvasHeight,
             state.windNumericValuesShown,
-            state.daltonianThqEnabled
+            state.daltonianColorScaleEnabled
           );
         });
       },
@@ -144,11 +144,11 @@ const drawMeteogram = (
   canvasWidth: number,
   canvasHeight: number,
   windNumericValuesShown: boolean,
-  daltonianThqEnabled: boolean
+  daltonianColorScaleEnabled: boolean
 ): void => {
 
-  const activeThqColorScale = thqColorScale(daltonianThqEnabled);
-  const activeThermalVelocityColorScale = thermalVelocityColorScale(daltonianThqEnabled);
+  const activeThqColorScale = thqColorScale(daltonianColorScaleEnabled);
+  const activeThermalVelocityColorScale = thermalVelocityColorScale(daltonianColorScaleEnabled);
 
   // Clear everything first
   ctx.save();
