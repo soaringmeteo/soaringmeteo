@@ -5,14 +5,15 @@ import {MapBrowserEvent} from "ol";
 import {initializeMap, MapHooks} from './map/Map';
 import {Domain} from './State';
 import {BurgerButton} from './BurgerButton';
-import { css, styleSheet } from "./css-hooks";
+import { styleSheet } from "./css-hooks";
 import {CurrentLocationButton} from "./CurrentLocationButton";
 import {LayerKeys} from "./LayerKeys";
+import {ChevronIcon, RoundIconButton} from "./RoundIconButton";
 import {HelpButton} from './help/HelpButton';
 import {Localized, useI18n} from "./i18n";
 import {fetchGfsForecastRuns, fetchWrfForecastRuns} from "./data/ForecastMetadata";
 import {LocationDetails, SoundingDiagram} from "./LocationDetails";
-import {diagramsIndex, roundButtonStyle, surfaceOverMap} from "./styles/Styles";
+import {diagramsIndex} from "./styles/Styles";
 
 const HourSelectorAndMeteogram =
   lazy(() => import('./PeriodSelector').then(module => ({ default: module.HourSelectorAndMeteogram })));
@@ -189,20 +190,12 @@ const BottomZone = (props: {
           margin: '3px'
         }}
       >
-        <div
-        style={css({
-          ...surfaceOverMap,
-          ...roundButtonStyle,
-            'border': '1px solid lightgray',
-            'box-sizing': 'border-box',
-          'background-color': 'white',
-          on: $ => [$('hover', { 'background-color': 'lightgray' })]
-        })}
+        <RoundIconButton
           onClick={ props.toggleMapControls }
           title={ props.mapControlsToggleTitle }
         >
-          { props.mapControlsVisible ? '↓' : '↑' }
-        </div>
+          <ChevronIcon direction={ props.mapControlsVisible ? 'down' : 'up' } />
+        </RoundIconButton>
       </span>
     </div>
   </div>;

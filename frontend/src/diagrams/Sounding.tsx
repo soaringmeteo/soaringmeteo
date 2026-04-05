@@ -13,9 +13,9 @@ import { AboveGround, DetailedForecast } from "../data/LocationForecasts";
 import { drawCloudCover } from './Clouds';
 import { drawWindArrow } from '../shapes';
 import { createEffect, createSignal, JSX } from 'solid-js';
-import {diagramsAvailableHeight, keyWidth, soundingWidth, surfaceOverMap} from '../styles/Styles';
+import {diagramsAvailableHeight, keyWidth, soundingWidth} from '../styles/Styles';
 import { State } from '../State';
-import { css } from "../css-hooks";
+import { ChevronIcon, RoundIconButton } from "../RoundIconButton";
 
 // Difference between two temperatures shown on the temperature axis
 const temperatureScaleStep = 10;
@@ -63,34 +63,17 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
 
   const [zoomed, zoom] = createSignal(zoomedDefaultValue);
 
-  const zoomButton = <div
-    style={css({
-      position: 'absolute',
-      top: `10px`,
-      right: `10px`,
-      width: `32px`,
-      height: `32px`,
-      cursor: `pointer`,
-      'text-align': `center`,
-      'background-color': 'white',
-      on: $ => [$('hover', { 'background-color': 'lightgray' })],
-      ...surfaceOverMap,
-      'border-radius': '16px'
-    })}
+  const zoomButton = <RoundIconButton
     onClick={ () => zoom(!zoomed()) }
     title={ zoomed() ? 'Zoom out' : 'Zoom in' }
+    style={{
+      position: 'absolute',
+      top: '10px',
+      right: '10px',
+    }}
   >
-    <div style={{
-      display: 'inline-block',
-      width: '10px',
-      height: '10px',
-      'margin-top': '16px',
-      'margin-bottom': '16px',
-      'border-top': '2px solid black',
-      'border-right': '2px solid black',
-      transform: zoomed() ? 'translateY(-50%) rotate(-45deg)' : 'translateY(-50%) rotate(135deg)'
-    }} />
-  </div>;
+    <ChevronIcon direction={ zoomed() ? 'up' : 'down' } />
+  </RoundIconButton>;
 
   const view = <div
     style={{
