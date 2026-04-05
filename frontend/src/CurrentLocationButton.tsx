@@ -24,7 +24,7 @@ export const CurrentLocationButton = (props: { domain: Domain }): JSX.Element =>
             on: $ => [$('hover', { 'background-color': 'lightgray' })]
           })}
           onClick={ () => props.domain.centerMapOnClientLocation() }
-          title={ m().menuCenterOnMyLocation() }
+          title={ m().mapCenterOnMyLocation() }
         >
           ◎
         </div>

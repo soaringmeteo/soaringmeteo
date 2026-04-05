@@ -1,4 +1,4 @@
-import {createEffect, createResource, createSignal, getOwner, JSX, lazy, runWithOwner, Accessor, Show} from 'solid-js';
+import {createEffect, createResource, getOwner, JSX, lazy, runWithOwner, Accessor, Show} from 'solid-js';
 import {insert, render, style} from 'solid-js/web';
 import {MapBrowserEvent} from "ol";
 
@@ -87,7 +87,6 @@ const AppLayout = (props: {
   mapHooks: MapHooks
 }): JSX.Element => {
   const { m } = useI18n();
-  const [mapControlsVisible, setMapControlsVisible] = createSignal(true);
 
   return <>
     <div style={{
@@ -105,12 +104,7 @@ const AppLayout = (props: {
     }}>
       <TopZone domain={props.domain} />
       <MiddleZone domain={props.domain} locationClicks={props.mapHooks.locationClicks} />
-      <BottomZone
-        domain={props.domain}
-        mapControlsVisible={ mapControlsVisible() }
-        toggleMapControls={ () => setMapControlsVisible(!mapControlsVisible()) }
-        mapControlsToggleTitle={ mapControlsVisible() ? m().mapControlsHide() : m().mapControlsShow() }
-      />
+      <BottomZone domain={props.domain} />
     </div>
     <BurgerButton domain={props.domain} />
   </>;
@@ -156,11 +150,9 @@ const MiddleZone = (props: {
 // day selector and help button
 const BottomZone = (props: {
   domain: Domain,
-  mapControlsVisible: boolean,
-  toggleMapControls: () => void,
-  mapControlsToggleTitle: string
-}): JSX.Element =>
-  <div style={{
+}): JSX.Element => {
+  const { m } = useI18n();
+  return <div style={{
     display: 'flex',
     'justify-content': 'center',
     position: 'relative',
@@ -179,7 +171,7 @@ const BottomZone = (props: {
         'align-items': 'flex-end',
       }}
     >
-      <Show when={ props.mapControlsVisible }>
+      <Show when={ props.domain.state.mapControlsVisible }>
         <LayerKeys domain={props.domain} />
         <CurrentLocationButton domain={props.domain} />
         <HelpButton domain={props.domain} overMap={true}/>
@@ -191,14 +183,15 @@ const BottomZone = (props: {
         }}
       >
         <RoundIconButton
-          onClick={ props.toggleMapControls }
-          title={ props.mapControlsToggleTitle }
+          onClick={ () => props.domain.toggleMapControls() }
+          title={ props.domain.state.mapControlsVisible ? m().mapControlsHide() : m().mapControlsShow() }
         >
-          <ChevronIcon direction={ props.mapControlsVisible ? 'down' : 'up' } />
+          <ChevronIcon direction={ props.domain.state.mapControlsVisible ? 'down' : 'up' } />
         </RoundIconButton>
       </span>
     </div>
   </div>;
+};
 
 const Loader = ((props: {
   mapHooks: MapHooks

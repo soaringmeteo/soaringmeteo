@@ -39,6 +39,8 @@ export type State = {
   windNumericValuesShown: boolean
   // Whether to show UTC time instead of using the user timezone
   utcTimeShown: boolean
+  // Whether the bottom-right map controls are expanded
+  mapControlsVisible: boolean
 }
 
 // Keys used to store the current display settings in the local storage
@@ -50,6 +52,7 @@ const primaryLayerEnabledKey = 'primary-layer-enabled';
 const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 const utcTimeShownKey           = 'utc-time-shown';
+const mapControlsVisibleKey     = 'map-controls-visible';
 
 const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValue: A): A => {
   const maybeItem = window.localStorage.getItem(key);
@@ -158,6 +161,13 @@ const saveUtcTimeShown = (value: boolean): void => {
   window.localStorage.setItem(utcTimeShownKey, JSON.stringify(value));
 };
 
+const loadMapControlsVisible = (): boolean =>
+  loadStoredState(mapControlsVisibleKey, raw => JSON.parse(raw), true);
+
+const saveMapControlsVisible = (value: boolean): void => {
+  window.localStorage.setItem(mapControlsVisibleKey, JSON.stringify(value));
+};
+
 /**
  * Manages the interactions with the state of the system.
  * 
@@ -204,6 +214,7 @@ export class Domain {
     const windLayerEnabled = loadWindLayerEnabled();
     const windNumericValuesShown = loadWindNumericValuesShown();
     const utcTimeShown = loadUtcTimeShown();
+    const mapControlsVisible = loadMapControlsVisible();
   
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
     const [get, set] = createStore<State>({
@@ -218,7 +229,8 @@ export class Domain {
       detailedView: undefined,
       currentLocation: undefined,
       windNumericValuesShown,
-      utcTimeShown
+      utcTimeShown,
+      mapControlsVisible
     }, { name: 'state' }); // See https://github.com/solidjs/solid/discussions/1414
 
     this.state = get;
@@ -372,6 +384,12 @@ export class Domain {
   showUtcTime(utcTimeShown: boolean): void {
     saveUtcTimeShown(utcTimeShown);
     this.setState({ utcTimeShown });
+  }
+
+  toggleMapControls(): void {
+    const nextValue = !this.state.mapControlsVisible;
+    saveMapControlsVisible(nextValue);
+    this.setState({ mapControlsVisible: nextValue });
   }
 
   /** The timezone to use according to the user’s preferences */
