@@ -87,30 +87,6 @@ const AppLayout = (props: {
 }): JSX.Element => {
   const { m } = useI18n();
   const [mapControlsVisible, setMapControlsVisible] = createSignal(true);
-  const mapControlsToggle =
-    <div
-      style={{
-        position: 'absolute',
-        top: '.5rem',
-        right: '.5rem',
-        ...enablePointerEvents,
-      }}
-    >
-      <div
-        style={css({
-          ...surfaceOverMap,
-          ...roundButtonStyle,
-          'border': '1px solid lightgray',
-          'box-sizing': 'border-box',
-          'background-color': 'white',
-          on: $ => [$('hover', { 'background-color': 'lightgray' })]
-        })}
-        onClick={ () => setMapControlsVisible(!mapControlsVisible()) }
-        title={ mapControlsVisible() ? m().mapControlsHide() : m().mapControlsShow() }
-      >
-        { mapControlsVisible() ? '↑' : '↓' }
-      </div>
-    </div>;
 
   return <>
     <div style={{
@@ -128,9 +104,13 @@ const AppLayout = (props: {
     }}>
       <TopZone domain={props.domain} />
       <MiddleZone domain={props.domain} locationClicks={props.mapHooks.locationClicks} />
-      <BottomZone domain={props.domain} mapControlsVisible={ mapControlsVisible() } />
+      <BottomZone
+        domain={props.domain}
+        mapControlsVisible={ mapControlsVisible() }
+        toggleMapControls={ () => setMapControlsVisible(!mapControlsVisible()) }
+        mapControlsToggleTitle={ mapControlsVisible() ? m().mapControlsHide() : m().mapControlsShow() }
+      />
     </div>
-    { mapControlsToggle }
     <BurgerButton domain={props.domain} />
   </>;
 };
@@ -173,7 +153,12 @@ const MiddleZone = (props: {
   </div>;
 
 // day selector and help button
-const BottomZone = (props: { domain: Domain, mapControlsVisible: boolean }): JSX.Element =>
+const BottomZone = (props: {
+  domain: Domain,
+  mapControlsVisible: boolean,
+  toggleMapControls: () => void,
+  mapControlsToggleTitle: string
+}): JSX.Element =>
   <div style={{
     display: 'flex',
     'justify-content': 'center',
@@ -182,23 +167,44 @@ const BottomZone = (props: { domain: Domain, mapControlsVisible: boolean }): JSX
     <span style={ enablePointerEvents }>
       <DaySelector domain={props.domain} />
     </span>
-    <Show when={ props.mapControlsVisible }>
-      <div
-        style={{
-          position: 'absolute',
-          right: '.5rem',
-          bottom: '.5rem',
-          ...enablePointerEvents,
-          display: 'flex',
-          'flex-direction': 'column',
-          'align-items': 'flex-end',
-        }}
-      >
+    <div
+      style={{
+        position: 'absolute',
+        right: '.5rem',
+        bottom: '.5rem',
+        ...enablePointerEvents,
+        display: 'flex',
+        'flex-direction': 'column',
+        'align-items': 'flex-end',
+      }}
+    >
+      <Show when={ props.mapControlsVisible }>
         <LayerKeys domain={props.domain} />
         <CurrentLocationButton domain={props.domain} />
         <HelpButton domain={props.domain} overMap={true}/>
-      </div>
-    </Show>
+      </Show>
+      <span
+        style={{
+          display: 'block',
+          margin: '3px'
+        }}
+      >
+        <div
+        style={css({
+          ...surfaceOverMap,
+          ...roundButtonStyle,
+            'border': '1px solid lightgray',
+            'box-sizing': 'border-box',
+          'background-color': 'white',
+          on: $ => [$('hover', { 'background-color': 'lightgray' })]
+        })}
+          onClick={ props.toggleMapControls }
+          title={ props.mapControlsToggleTitle }
+        >
+          { props.mapControlsVisible ? '↓' : '↑' }
+        </div>
+      </span>
+    </div>
   </div>;
 
 const Loader = ((props: {

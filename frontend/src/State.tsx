@@ -39,10 +39,6 @@ export type State = {
   windNumericValuesShown: boolean
   // Whether to show UTC time instead of using the user timezone
   utcTimeShown: boolean
-  // Whether to show the map key
-  mapKeyShown: boolean
-  // Whether to show the current-location button on the map
-  currentLocationButtonShown: boolean
 }
 
 // Keys used to store the current display settings in the local storage
@@ -54,8 +50,6 @@ const primaryLayerEnabledKey = 'primary-layer-enabled';
 const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 const utcTimeShownKey           = 'utc-time-shown';
-const mapKeyShownKey = 'map-key-shown';
-const currentLocationButtonShownKey = 'current-location-button-shown';
 
 const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValue: A): A => {
   const maybeItem = window.localStorage.getItem(key);
@@ -164,20 +158,6 @@ const saveUtcTimeShown = (value: boolean): void => {
   window.localStorage.setItem(utcTimeShownKey, JSON.stringify(value));
 };
 
-const loadMapKeyShown = (): boolean =>
-  loadStoredState(mapKeyShownKey, raw => JSON.parse(raw), true);
-
-const saveMapKeyShown = (value: boolean): void => {
-  window.localStorage.setItem(mapKeyShownKey, JSON.stringify(value))
-}
-
-const loadCurrentLocationButtonShown = (): boolean =>
-  loadStoredState(currentLocationButtonShownKey, raw => JSON.parse(raw), true);
-
-const saveCurrentLocationButtonShown = (value: boolean): void => {
-  window.localStorage.setItem(currentLocationButtonShownKey, JSON.stringify(value))
-}
-
 /**
  * Manages the interactions with the state of the system.
  * 
@@ -224,8 +204,6 @@ export class Domain {
     const windLayerEnabled = loadWindLayerEnabled();
     const windNumericValuesShown = loadWindNumericValuesShown();
     const utcTimeShown = loadUtcTimeShown();
-    const mapKeyShown = loadMapKeyShown();
-    const currentLocationButtonShown = loadCurrentLocationButtonShown();
   
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
     const [get, set] = createStore<State>({
@@ -240,9 +218,7 @@ export class Domain {
       detailedView: undefined,
       currentLocation: undefined,
       windNumericValuesShown,
-      utcTimeShown,
-      mapKeyShown,
-      currentLocationButtonShown
+      utcTimeShown
     }, { name: 'state' }); // See https://github.com/solidjs/solid/discussions/1414
 
     this.state = get;
@@ -396,18 +372,6 @@ export class Domain {
   showUtcTime(utcTimeShown: boolean): void {
     saveUtcTimeShown(utcTimeShown);
     this.setState({ utcTimeShown });
-  }
-
-  /** Whether to show the map key */
-  showMapKey(mapKeyShown: boolean): void {
-    saveMapKeyShown(mapKeyShown);
-    this.setState({ mapKeyShown })
-  }
-
-  /** Whether to show the current-location button on the map */
-  showCurrentLocationButton(currentLocationButtonShown: boolean): void {
-    saveCurrentLocationButtonShown(currentLocationButtonShown);
-    this.setState({ currentLocationButtonShown })
   }
 
   /** The timezone to use according to the user’s preferences */

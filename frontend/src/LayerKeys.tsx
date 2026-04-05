@@ -7,7 +7,7 @@ export const LayerKeys = (props: {
   const primaryLayerComponents = () => props.domain.primaryLayerReactiveComponents();
 
   return <Show when={
-    props.domain.state.primaryLayerEnabled && props.domain.state.mapKeyShown
+    props.domain.state.primaryLayerEnabled
   }>
     <div style={{
       'background-color': '#d6d6c5', // “neutral” color in the basemap

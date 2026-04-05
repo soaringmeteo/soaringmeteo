@@ -5,7 +5,7 @@ import { roundButtonStyle, surfaceOverMap } from "./styles/Styles";
 import {useI18n} from "./i18n";
 
 export const CurrentLocationButton = (props: { domain: Domain }): JSX.Element =>
-  <Show when={ window.navigator.geolocation && props.domain.state.currentLocationButtonShown }>
+  <Show when={ window.navigator.geolocation }>
     {(() => {
       const { m } = useI18n();
       return <span

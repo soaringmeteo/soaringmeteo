@@ -64,20 +64,5 @@ export const Settings = (props: {
         onChange={ () => props.domain.showUtcTime(true) }
       />
     </fieldset>
-    <fieldset style={{ 'margin-top': '.1em' }}>
-      <legend>{ m().settingsMapKey() }</legend>
-      <Checkbox
-        label={ m().settingsShowMapKey() }
-        checked={ props.domain.state.mapKeyShown }
-        onChange={ value => props.domain.showMapKey(value) }
-        labelPosition='right'
-      />
-      <Checkbox
-        label={ m().settingsShowCurrentLocationButton() }
-        checked={ props.domain.state.currentLocationButtonShown }
-        onChange={ value => props.domain.showCurrentLocationButton(value) }
-        labelPosition='right'
-      />
-    </fieldset>
   </Overlay>
 };
