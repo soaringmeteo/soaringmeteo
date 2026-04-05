@@ -1,17 +1,18 @@
-import {createEffect, createResource, getOwner, JSX, lazy, runWithOwner, Accessor, Show} from 'solid-js';
+import {createEffect, createResource, createSignal, getOwner, JSX, lazy, runWithOwner, Accessor, Show} from 'solid-js';
 import {insert, render, style} from 'solid-js/web';
 import {MapBrowserEvent} from "ol";
 
 import {initializeMap, MapHooks} from './map/Map';
 import {Domain} from './State';
 import {BurgerButton} from './BurgerButton';
-import { styleSheet } from "./css-hooks";
+import { css, styleSheet } from "./css-hooks";
+import {CurrentLocationButton} from "./CurrentLocationButton";
 import {LayerKeys} from "./LayerKeys";
 import {HelpButton} from './help/HelpButton';
 import {Localized, useI18n} from "./i18n";
 import {fetchGfsForecastRuns, fetchWrfForecastRuns} from "./data/ForecastMetadata";
 import {LocationDetails, SoundingDiagram} from "./LocationDetails";
-import {diagramsIndex} from "./styles/Styles";
+import {diagramsIndex, roundButtonStyle, surfaceOverMap} from "./styles/Styles";
 
 const HourSelectorAndMeteogram =
   lazy(() => import('./PeriodSelector').then(module => ({ default: module.HourSelectorAndMeteogram })));
@@ -22,8 +23,6 @@ const App = (props: {
   domain: Domain,
   mapHooks: MapHooks
 }): JSX.Element => {
-  const { m } = useI18n();
-
   // Update primary layer
   createEffect(() => {
     const url = props.domain.urlOfRasterAtCurrentHourOffset();
@@ -59,19 +58,11 @@ const App = (props: {
 
   createEffect(() => {
     const currentLocation = props.domain.state.currentLocation;
-    if (props.domain.state.currentLocationShown && currentLocation !== undefined) {
+    if (currentLocation !== undefined) {
       props.mapHooks.showCurrentLocation(currentLocation.latitude, currentLocation.longitude, currentLocation.accuracy);
     } else {
       props.mapHooks.hideCurrentLocation();
     }
-  });
-
-  createEffect(() => {
-    props.mapHooks.configureCurrentLocationButton(
-      window.navigator.geolocation !== undefined && props.domain.state.currentLocationButtonShown,
-      m().menuCenterOnMyLocation(),
-      () => props.domain.centerMapOnClientLocation()
-    );
   });
 
   // Marker when detailed view is open
@@ -93,8 +84,35 @@ const App = (props: {
 const AppLayout = (props: {
   domain: Domain
   mapHooks: MapHooks
-}): JSX.Element =>
-  <>
+}): JSX.Element => {
+  const { m } = useI18n();
+  const [mapControlsVisible, setMapControlsVisible] = createSignal(true);
+  const mapControlsToggle =
+    <div
+      style={{
+        position: 'absolute',
+        top: '.5rem',
+        right: '.5rem',
+        ...enablePointerEvents,
+      }}
+    >
+      <div
+        style={css({
+          ...surfaceOverMap,
+          ...roundButtonStyle,
+          'border': '1px solid lightgray',
+          'box-sizing': 'border-box',
+          'background-color': 'white',
+          on: $ => [$('hover', { 'background-color': 'lightgray' })]
+        })}
+        onClick={ () => setMapControlsVisible(!mapControlsVisible()) }
+        title={ mapControlsVisible() ? m().mapControlsHide() : m().mapControlsShow() }
+      >
+        { mapControlsVisible() ? '↑' : '↓' }
+      </div>
+    </div>;
+
+  return <>
     <div style={{
       position: 'absolute',
       top: 0,
@@ -110,10 +128,12 @@ const AppLayout = (props: {
     }}>
       <TopZone domain={props.domain} />
       <MiddleZone domain={props.domain} locationClicks={props.mapHooks.locationClicks} />
-      <BottomZone domain={props.domain} />
+      <BottomZone domain={props.domain} mapControlsVisible={ mapControlsVisible() } />
     </div>
+    { mapControlsToggle }
     <BurgerButton domain={props.domain} />
   </>;
+};
 
 const enablePointerEvents: JSX.CSSProperties = { 'pointer-events': 'auto' };
 
@@ -140,7 +160,6 @@ const MiddleZone = (props: {
       'align-items': 'flex-start',
     }}
   >
-    <LayerKeys domain={props.domain} />
     <SoundingDiagram domain={props.domain} />
     <span
       style={{
@@ -154,7 +173,7 @@ const MiddleZone = (props: {
   </div>;
 
 // day selector and help button
-const BottomZone = (props: { domain: Domain }): JSX.Element =>
+const BottomZone = (props: { domain: Domain, mapControlsVisible: boolean }): JSX.Element =>
   <div style={{
     display: 'flex',
     'justify-content': 'center',
@@ -163,16 +182,23 @@ const BottomZone = (props: { domain: Domain }): JSX.Element =>
     <span style={ enablePointerEvents }>
       <DaySelector domain={props.domain} />
     </span>
-    <span
-      style={{
-        position: 'absolute',
-        right: '.5rem',
-        bottom: '.5rem',
-        ...enablePointerEvents,
-      }}
-    >
-      <HelpButton domain={props.domain} overMap={true}/>
-    </span>
+    <Show when={ props.mapControlsVisible }>
+      <div
+        style={{
+          position: 'absolute',
+          right: '.5rem',
+          bottom: '.5rem',
+          ...enablePointerEvents,
+          display: 'flex',
+          'flex-direction': 'column',
+          'align-items': 'flex-end',
+        }}
+      >
+        <LayerKeys domain={props.domain} />
+        <CurrentLocationButton domain={props.domain} />
+        <HelpButton domain={props.domain} overMap={true}/>
+      </div>
+    </Show>
   </div>;
 
 const Loader = ((props: {

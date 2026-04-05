@@ -2,7 +2,7 @@ import { Feature, Map, MapBrowserEvent, View } from 'ol';
 import { Tile as TileLayer, Image as ImageLayer, Vector as VectorLayer, VectorTile as VectorTileLayer } from 'ol/layer';
 import { ImageStatic, Vector as VectorSource, VectorTile as VectorTileSource, XYZ } from "ol/source";
 import { fromLonLat, get as getProjection, Projection, toLonLat } from "ol/proj";
-import { Control, ScaleLine } from "ol/control";
+import { ScaleLine } from "ol/control";
 import { defaults as defaultInteractions } from "ol/interaction";
 import { Coordinate } from "ol/coordinate";
 import { Point } from 'ol/geom';
@@ -92,7 +92,6 @@ export type MapHooks = {
   enableWindNumericalValues: (value: boolean) => void
   showCurrentLocation: (latitude: number, longitude: number, accuracy: number) => void
   hideCurrentLocation: () => void
-  configureCurrentLocationButton: (visible: boolean, title: string, onClick: () => void) => void
   showMarker: (latitude: number, longitude: number) => void
   hideMarker: () => void
   centerToLocation: (latitude: number, longitude: number) => void
@@ -163,31 +162,7 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
       })
     }),
   });
-
   const [location, zoom] = loadLocationAndZoom();
-  const currentLocationButton = document.createElement('button');
-  currentLocationButton.type = 'button';
-  currentLocationButton.textContent = '◎';
-  currentLocationButton.style.fontSize = '1.1rem';
-  currentLocationButton.style.lineHeight = '1';
-  currentLocationButton.style.padding = '0';
-  currentLocationButton.style.cursor = 'pointer';
-  currentLocationButton.setAttribute('aria-label', 'Center on my location');
-  currentLocationButton.title = 'Center on my location';
-  let currentLocationButtonClickHandler: undefined | (() => void);
-  currentLocationButton.addEventListener('click', event => {
-    event.preventDefault();
-    currentLocationButtonClickHandler?.();
-  });
-  const currentLocationControlElement = document.createElement('div');
-  currentLocationControlElement.className = 'ol-unselectable ol-control';
-  currentLocationControlElement.style.top = '.5em';
-  currentLocationControlElement.style.right = '.5em';
-  currentLocationControlElement.style.display = 'none';
-  currentLocationControlElement.appendChild(currentLocationButton);
-  const currentLocationControl = new Control({
-    element: currentLocationControlElement,
-  });
   const map = new Map({
     target: element,
     layers: [
@@ -204,7 +179,6 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
       zoom: zoom
     }),
     controls: [
-      currentLocationControl,
       new ScaleLine({
         units: 'metric',
         bar: true,
@@ -314,12 +288,6 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     hideCurrentLocation: (): void => {
       currentLocation = undefined;
       refreshCurrentLocationGeometry();
-    },
-    configureCurrentLocationButton: (visible: boolean, title: string, onClick: () => void): void => {
-      currentLocationButtonClickHandler = onClick;
-      currentLocationControlElement.style.display = visible ? '' : 'none';
-      currentLocationButton.title = title;
-      currentLocationButton.setAttribute('aria-label', title);
     },
     showMarker: (latitude: number, longitude: number): void => {
       markerFeature.setGeometry(new Point(fromLonLat([longitude, latitude])));

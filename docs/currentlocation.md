@@ -1,34 +1,29 @@
 # Current Location
 
-This document describes the current-location feature on the map: the location overlay and the optional current-location button.
+This document describes the current-location feature on the map: the location overlay and the current-location button.
 
 ## Purpose
 
 The feature gives the user a visual reference for their own position on top of the forecast layers and provides a quick way to recenter the map on the browser geolocation.
 
-The current design separates two concerns:
-
-- showing the user's current location on the map,
-- showing a map button that recenters on the user's current location.
-
-This follows the more standard interaction pattern where a location button recenters the map instead of acting as a visibility toggle.
+The current design uses a standard interaction pattern where a location button recenters the map instead of acting as a visibility toggle.
 
 ## Implementation
 
 The feature is implemented in the frontend in four parts:
 
 - `frontend/src/State.tsx`
-  Stores the geolocated position in `state.currentLocation` with `latitude`, `longitude`, and `accuracy`, and persists two separate settings:
-  `state.currentLocationShown` controls whether the current-location overlay is visible;
-  `state.currentLocationButtonShown` controls whether the map button is visible.
+  Stores the geolocated position in `state.currentLocation` with `latitude`, `longitude`, and `accuracy`.
+  It also persists `state.currentLocationButtonShown`, which controls whether the map button is visible.
 - `frontend/src/App.tsx`
-  Reacts to `state.currentLocationShown` and `state.currentLocation` to show or hide the overlay, and configures the visibility and label of the map button.
+  Reacts to `state.currentLocation` to show or hide the overlay, renders the bottom-right stack of map controls, and renders the top-right toggle used to collapse or restore that stack.
 - `frontend/src/map/Map.ts`
   Defines dedicated OpenLayers layers for the current-location overlay:
   one polygon layer for the accuracy area and one point layer for the center dot.
-  It also defines an OpenLayers control button for "Center on my location".
+- `frontend/src/CurrentLocationButton.tsx`
+  Renders the current-location button in the shared bottom-right control stack, between the map key and the help button.
 - `frontend/src/Settings.tsx`
-  Exposes separate settings for the current-location overlay and the current-location button.
+  Exposes the setting for the current-location button.
 
 ## Rendering
 
@@ -41,11 +36,12 @@ The accuracy area is based on `position.coords.accuracy` from browser geolocatio
 
 ## Behavior
 
-- Choosing "Center on my location" from the burger menu or clicking the map button requests browser geolocation and recenters the map.
-- The map button does not toggle the overlay on and off.
-- If `Show my current location on the map` is enabled, a successful geolocation request updates and displays the center dot and accuracy area.
-- If `Show my current location on the map` is disabled, the overlay is hidden immediately and subsequent recenter actions do not redraw it.
-- If `Show the current-location button` is disabled, the map button is hidden, but the burger-menu action still works.
+- Clicking the map button requests browser geolocation and recenters the map.
+- A successful geolocation request updates and displays the center dot and accuracy area.
+- If `Show the current-location button` is disabled, the map button is hidden.
+- The map key, current-location button, and help button are stacked together at the bottom right so they keep consistent spacing on desktop and mobile browsers.
+- A top-right arrow can hide or restore the entire bottom-right stack.
+- The top-right toggle uses up/down arrow glyphs and translated tooltips for hide/show behavior.
 - The existing marker used for forecast detail selection remains unchanged.
 - The current-location overlay uses its own layers so it can coexist with the detailed forecast marker.
 

@@ -41,8 +41,6 @@ export type State = {
   utcTimeShown: boolean
   // Whether to show the map key
   mapKeyShown: boolean
-  // Whether to show the current location overlay on the map
-  currentLocationShown: boolean
   // Whether to show the current-location button on the map
   currentLocationButtonShown: boolean
 }
@@ -57,7 +55,6 @@ const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 const utcTimeShownKey           = 'utc-time-shown';
 const mapKeyShownKey = 'map-key-shown';
-const currentLocationShownKey = 'current-location-shown';
 const currentLocationButtonShownKey = 'current-location-button-shown';
 
 const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValue: A): A => {
@@ -174,15 +171,8 @@ const saveMapKeyShown = (value: boolean): void => {
   window.localStorage.setItem(mapKeyShownKey, JSON.stringify(value))
 }
 
-const loadCurrentLocationShown = (): boolean =>
-  loadStoredState(currentLocationShownKey, raw => JSON.parse(raw), true);
-
-const saveCurrentLocationShown = (value: boolean): void => {
-  window.localStorage.setItem(currentLocationShownKey, JSON.stringify(value))
-}
-
 const loadCurrentLocationButtonShown = (): boolean =>
-  loadStoredState(currentLocationButtonShownKey, raw => JSON.parse(raw), false);
+  loadStoredState(currentLocationButtonShownKey, raw => JSON.parse(raw), true);
 
 const saveCurrentLocationButtonShown = (value: boolean): void => {
   window.localStorage.setItem(currentLocationButtonShownKey, JSON.stringify(value))
@@ -235,7 +225,6 @@ export class Domain {
     const windNumericValuesShown = loadWindNumericValuesShown();
     const utcTimeShown = loadUtcTimeShown();
     const mapKeyShown = loadMapKeyShown();
-    const currentLocationShown = loadCurrentLocationShown();
     const currentLocationButtonShown = loadCurrentLocationButtonShown();
   
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
@@ -253,7 +242,6 @@ export class Domain {
       windNumericValuesShown,
       utcTimeShown,
       mapKeyShown,
-      currentLocationShown,
       currentLocationButtonShown
     }, { name: 'state' }); // See https://github.com/solidjs/solid/discussions/1414
 
@@ -416,15 +404,6 @@ export class Domain {
     this.setState({ mapKeyShown })
   }
 
-  /** Whether to show the current location overlay on the map */
-  showCurrentLocation(currentLocationShown: boolean): void {
-    saveCurrentLocationShown(currentLocationShown);
-    this.setState({
-      currentLocationShown,
-      currentLocation: currentLocationShown ? this.state.currentLocation : undefined
-    })
-  }
-
   /** Whether to show the current-location button on the map */
   showCurrentLocationButton(currentLocationButtonShown: boolean): void {
     saveCurrentLocationButtonShown(currentLocationButtonShown);
@@ -439,15 +418,13 @@ export class Domain {
   centerMapOnClientLocation(): void {
     if (window.navigator.geolocation) {
       window.navigator.geolocation.getCurrentPosition(position => {
-        if (this.state.currentLocationShown) {
-          this.setState({
-            currentLocation: {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              accuracy: position.coords.accuracy
-            }
-          });
-        }
+        this.setState({
+          currentLocation: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          }
+        });
         this.mapHooks.centerToLocation(position.coords.latitude, position.coords.longitude);
       }, () => {
         alert(this.m().menuCouldNotGetLocation());
