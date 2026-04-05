@@ -72,6 +72,18 @@ export const Settings = (props: {
         onChange={ value => props.domain.showMapKey(value) }
         labelPosition='right'
       />
+      <Checkbox
+        label={ m().settingsShowCurrentLocation() }
+        checked={ props.domain.state.currentLocationShown }
+        onChange={ value => props.domain.showCurrentLocation(value) }
+        labelPosition='right'
+      />
+      <Checkbox
+        label={ m().settingsShowCurrentLocationButton() }
+        checked={ props.domain.state.currentLocationButtonShown }
+        onChange={ value => props.domain.showCurrentLocationButton(value) }
+        labelPosition='right'
+      />
     </fieldset>
   </Overlay>
 };

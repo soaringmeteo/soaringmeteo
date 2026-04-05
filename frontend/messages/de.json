@@ -35,6 +35,8 @@
 	"settingsTimeUTCLegend": "UTC Zeit anzeigen, anstatt meine aktuelle Zeitzone zu verwenden",
 	"settingsMapKey": "Legende",
 	"settingsShowMapKey": "Legende auf der Karte anzeigen",
+	"settingsShowCurrentLocation": "Meinen aktuellen Standort auf der Karte anzeigen",
+	"settingsShowCurrentLocationButton": "Schaltfläche für den aktuellen Standort anzeigen",
 	"locationSummary": "Zusammenfassung",
 	"locationSummaryLegend": "Zusammenfassung der Prognose für diesen Standort",
 	"locationMeteogram": "Meteogramm",

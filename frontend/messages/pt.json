@@ -35,6 +35,8 @@
 	"settingsTimeUTCLegend": "Mostrar a hora UTC em vez de usar meu fuso horário atual",
 	"settingsMapKey": "Legenda",
 	"settingsShowMapKey": "Mostrar legenda do mapa",
+	"settingsShowCurrentLocation": "Mostrar minha localização atual no mapa",
+	"settingsShowCurrentLocationButton": "Mostrar o botão da localização atual",
 	"locationSummary": "Resumo",
 	"locationSummaryLegend": "Resumo da previsão para este local",
 	"locationMeteogram": "Meteograma",

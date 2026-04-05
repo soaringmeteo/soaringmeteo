@@ -8,7 +8,7 @@ import {BurgerButton} from './BurgerButton';
 import { styleSheet } from "./css-hooks";
 import {LayerKeys} from "./LayerKeys";
 import {HelpButton} from './help/HelpButton';
-import {Localized} from "./i18n";
+import {Localized, useI18n} from "./i18n";
 import {fetchGfsForecastRuns, fetchWrfForecastRuns} from "./data/ForecastMetadata";
 import {LocationDetails, SoundingDiagram} from "./LocationDetails";
 import {diagramsIndex} from "./styles/Styles";
@@ -22,6 +22,7 @@ const App = (props: {
   domain: Domain,
   mapHooks: MapHooks
 }): JSX.Element => {
+  const { m } = useI18n();
 
   // Update primary layer
   createEffect(() => {
@@ -58,11 +59,19 @@ const App = (props: {
 
   createEffect(() => {
     const currentLocation = props.domain.state.currentLocation;
-    if (currentLocation !== undefined) {
-      props.mapHooks.showCurrentLocation(currentLocation.latitude, currentLocation.longitude);
+    if (props.domain.state.currentLocationShown && currentLocation !== undefined) {
+      props.mapHooks.showCurrentLocation(currentLocation.latitude, currentLocation.longitude, currentLocation.accuracy);
     } else {
       props.mapHooks.hideCurrentLocation();
     }
+  });
+
+  createEffect(() => {
+    props.mapHooks.configureCurrentLocationButton(
+      window.navigator.geolocation !== undefined && props.domain.state.currentLocationButtonShown,
+      m().menuCenterOnMyLocation(),
+      () => props.domain.centerMapOnClientLocation()
+    );
   });
 
   // Marker when detailed view is open

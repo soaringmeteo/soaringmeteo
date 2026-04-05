@@ -32,6 +32,7 @@ export type State = {
   currentLocation: undefined | {
     latitude: number
     longitude: number
+    accuracy: number
   }
   // --- Settings
   // Whether to show numerical values instead of showing a barb
@@ -40,6 +41,10 @@ export type State = {
   utcTimeShown: boolean
   // Whether to show the map key
   mapKeyShown: boolean
+  // Whether to show the current location overlay on the map
+  currentLocationShown: boolean
+  // Whether to show the current-location button on the map
+  currentLocationButtonShown: boolean
 }
 
 // Keys used to store the current display settings in the local storage
@@ -52,6 +57,8 @@ const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 const utcTimeShownKey           = 'utc-time-shown';
 const mapKeyShownKey = 'map-key-shown';
+const currentLocationShownKey = 'current-location-shown';
+const currentLocationButtonShownKey = 'current-location-button-shown';
 
 const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValue: A): A => {
   const maybeItem = window.localStorage.getItem(key);
@@ -167,6 +174,20 @@ const saveMapKeyShown = (value: boolean): void => {
   window.localStorage.setItem(mapKeyShownKey, JSON.stringify(value))
 }
 
+const loadCurrentLocationShown = (): boolean =>
+  loadStoredState(currentLocationShownKey, raw => JSON.parse(raw), true);
+
+const saveCurrentLocationShown = (value: boolean): void => {
+  window.localStorage.setItem(currentLocationShownKey, JSON.stringify(value))
+}
+
+const loadCurrentLocationButtonShown = (): boolean =>
+  loadStoredState(currentLocationButtonShownKey, raw => JSON.parse(raw), false);
+
+const saveCurrentLocationButtonShown = (value: boolean): void => {
+  window.localStorage.setItem(currentLocationButtonShownKey, JSON.stringify(value))
+}
+
 /**
  * Manages the interactions with the state of the system.
  * 
@@ -214,6 +235,8 @@ export class Domain {
     const windNumericValuesShown = loadWindNumericValuesShown();
     const utcTimeShown = loadUtcTimeShown();
     const mapKeyShown = loadMapKeyShown();
+    const currentLocationShown = loadCurrentLocationShown();
+    const currentLocationButtonShown = loadCurrentLocationButtonShown();
   
     // FIXME handle map location and zoom here? (currently handled in /map/Map.ts)
     const [get, set] = createStore<State>({
@@ -229,7 +252,9 @@ export class Domain {
       currentLocation: undefined,
       windNumericValuesShown,
       utcTimeShown,
-      mapKeyShown
+      mapKeyShown,
+      currentLocationShown,
+      currentLocationButtonShown
     }, { name: 'state' }); // See https://github.com/solidjs/solid/discussions/1414
 
     this.state = get;
@@ -391,6 +416,21 @@ export class Domain {
     this.setState({ mapKeyShown })
   }
 
+  /** Whether to show the current location overlay on the map */
+  showCurrentLocation(currentLocationShown: boolean): void {
+    saveCurrentLocationShown(currentLocationShown);
+    this.setState({
+      currentLocationShown,
+      currentLocation: currentLocationShown ? this.state.currentLocation : undefined
+    })
+  }
+
+  /** Whether to show the current-location button on the map */
+  showCurrentLocationButton(currentLocationButtonShown: boolean): void {
+    saveCurrentLocationButtonShown(currentLocationButtonShown);
+    this.setState({ currentLocationButtonShown })
+  }
+
   /** The timezone to use according to the user’s preferences */
   timeZone(): string | undefined {
     return this.state.utcTimeShown ? 'UTC' : undefined
@@ -399,12 +439,15 @@ export class Domain {
   centerMapOnClientLocation(): void {
     if (window.navigator.geolocation) {
       window.navigator.geolocation.getCurrentPosition(position => {
-        this.setState({
-          currentLocation: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          }
-        });
+        if (this.state.currentLocationShown) {
+          this.setState({
+            currentLocation: {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy
+            }
+          });
+        }
         this.mapHooks.centerToLocation(position.coords.latitude, position.coords.longitude);
       }, () => {
         alert(this.m().menuCouldNotGetLocation());

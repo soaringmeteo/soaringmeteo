@@ -2,10 +2,11 @@ import { Feature, Map, MapBrowserEvent, View } from 'ol';
 import { Tile as TileLayer, Image as ImageLayer, Vector as VectorLayer, VectorTile as VectorTileLayer } from 'ol/layer';
 import { ImageStatic, Vector as VectorSource, VectorTile as VectorTileSource, XYZ } from "ol/source";
 import { fromLonLat, get as getProjection, Projection, toLonLat } from "ol/proj";
-import { ScaleLine } from "ol/control";
+import { Control, ScaleLine } from "ol/control";
 import { defaults as defaultInteractions } from "ol/interaction";
 import { Coordinate } from "ol/coordinate";
 import { Point } from 'ol/geom';
+import { circular as circularPolygon } from 'ol/geom/Polygon';
 import { MVT } from "ol/format";
 import { Style, Icon, Text, Fill, Stroke, Circle as CircleStyle } from 'ol/style';
 import { Accessor, createSignal } from 'solid-js';
@@ -89,14 +90,16 @@ export type MapHooks = {
   setWindLayerSource: (url: string, minViewZoom: number, extent: Extent, maxZoom: number, tileSize: number) => void
   hideWindLayer: () => void
   enableWindNumericalValues: (value: boolean) => void
-  showCurrentLocation: (latitude: number, longitude: number) => void
+  showCurrentLocation: (latitude: number, longitude: number, accuracy: number) => void
   hideCurrentLocation: () => void
+  configureCurrentLocationButton: (visible: boolean, title: string, onClick: () => void) => void
   showMarker: (latitude: number, longitude: number) => void
   hideMarker: () => void
   centerToLocation: (latitude: number, longitude: number) => void
 }
 
 export const initializeMap = (element: HTMLElement): MapHooks => {
+  const minimumCurrentLocationRadiusPixels = 12;
 
   const baseLayer = new TileLayer({
     source: new XYZ({
@@ -117,18 +120,32 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
   });
 
   const currentLocationFeature = new Feature();
+  const currentLocationCenterFeature = new Feature();
   const currentLocationLayer = new VectorLayer({
     source: new VectorSource({ features: [currentLocationFeature] }),
     visible: false,
     style: new Style({
+      fill: new Fill({
+        color: 'rgba(212, 0, 0, 0.12)',
+      }),
+      stroke: new Stroke({
+        color: '#d40000',
+        width: 2,
+      }),
+    }),
+  });
+  const currentLocationCenterLayer = new VectorLayer({
+    source: new VectorSource({ features: [currentLocationCenterFeature] }),
+    visible: false,
+    style: new Style({
       image: new CircleStyle({
-        radius: 8,
+        radius: 4,
         fill: new Fill({
-          color: 'rgba(212, 0, 0, 0.2)',
+          color: '#d40000',
         }),
         stroke: new Stroke({
-          color: '#d40000',
-          width: 3,
+          color: 'white',
+          width: 1,
         }),
       }),
     }),
@@ -148,6 +165,29 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
   });
 
   const [location, zoom] = loadLocationAndZoom();
+  const currentLocationButton = document.createElement('button');
+  currentLocationButton.type = 'button';
+  currentLocationButton.textContent = '◎';
+  currentLocationButton.style.fontSize = '1.1rem';
+  currentLocationButton.style.lineHeight = '1';
+  currentLocationButton.style.padding = '0';
+  currentLocationButton.style.cursor = 'pointer';
+  currentLocationButton.setAttribute('aria-label', 'Center on my location');
+  currentLocationButton.title = 'Center on my location';
+  let currentLocationButtonClickHandler: undefined | (() => void);
+  currentLocationButton.addEventListener('click', event => {
+    event.preventDefault();
+    currentLocationButtonClickHandler?.();
+  });
+  const currentLocationControlElement = document.createElement('div');
+  currentLocationControlElement.className = 'ol-unselectable ol-control';
+  currentLocationControlElement.style.top = '.5em';
+  currentLocationControlElement.style.right = '.5em';
+  currentLocationControlElement.style.display = 'none';
+  currentLocationControlElement.appendChild(currentLocationButton);
+  const currentLocationControl = new Control({
+    element: currentLocationControlElement,
+  });
   const map = new Map({
     target: element,
     layers: [
@@ -155,6 +195,7 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
       primaryLayer,
       secondaryLayer,
       currentLocationLayer,
+      currentLocationCenterLayer,
       markerLayer
     ],
     view: new View({
@@ -163,6 +204,7 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
       zoom: zoom
     }),
     controls: [
+      currentLocationControl,
       new ScaleLine({
         units: 'metric',
         bar: true,
@@ -173,12 +215,41 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     interactions: defaultInteractions({ pinchRotate: false })
   });
 
+  let currentLocation: undefined | {
+    latitude: number
+    longitude: number
+    accuracy: number
+  };
+
+  const refreshCurrentLocationGeometry = (): void => {
+    if (currentLocation === undefined) {
+      currentLocationFeature.setGeometry(undefined);
+      currentLocationCenterFeature.setGeometry(undefined);
+      currentLocationLayer.setVisible(false);
+      currentLocationCenterLayer.setVisible(false);
+      return;
+    }
+    const center4326: [number, number] = [currentLocation.longitude, currentLocation.latitude];
+    const resolution = map.getView().getResolution() ?? 1;
+    const visibleRadiusMeters = Math.max(
+      currentLocation.accuracy,
+      resolution * minimumCurrentLocationRadiusPixels
+    );
+    currentLocationFeature.setGeometry(
+      circularPolygon(center4326, Math.max(visibleRadiusMeters, 1), 128).transform('EPSG:4326', webMercatorProjection)
+    );
+    currentLocationCenterFeature.setGeometry(new Point(fromLonLat(center4326, webMercatorProjection)));
+    currentLocationLayer.setVisible(true);
+    currentLocationCenterLayer.setVisible(true);
+  };
+
   map.on('moveend', () => {
     const center = map.getView().getCenter();
     const zoom = map.getView().getZoom();
     if (center !== undefined && zoom !== undefined) {
       saveLocationAndZoom(center as [number, number], zoom);
     }
+    refreshCurrentLocationGeometry();
   });
 
   // Signal of “popup requests”: when the users click on the map, they request a popup
@@ -236,12 +307,19 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
         return new Style(value ? { image: imageStyle, text: textStyle } : { image: imageStyle })
       })
     },
-    showCurrentLocation: (latitude: number, longitude: number): void => {
-      currentLocationFeature.setGeometry(new Point(fromLonLat([longitude, latitude], webMercatorProjection)));
-      currentLocationLayer.setVisible(true);
+    showCurrentLocation: (latitude: number, longitude: number, accuracy: number): void => {
+      currentLocation = { latitude, longitude, accuracy };
+      refreshCurrentLocationGeometry();
     },
     hideCurrentLocation: (): void => {
-      currentLocationLayer.setVisible(false);
+      currentLocation = undefined;
+      refreshCurrentLocationGeometry();
+    },
+    configureCurrentLocationButton: (visible: boolean, title: string, onClick: () => void): void => {
+      currentLocationButtonClickHandler = onClick;
+      currentLocationControlElement.style.display = visible ? '' : 'none';
+      currentLocationButton.title = title;
+      currentLocationButton.setAttribute('aria-label', title);
     },
     showMarker: (latitude: number, longitude: number): void => {
       markerFeature.setGeometry(new Point(fromLonLat([longitude, latitude])));
