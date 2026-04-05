@@ -9,10 +9,12 @@ type Summarizer = {
   summary(lat: number, lng: number): Promise<[LocationForecasts, Array<[Accessor<string>, JSX.Element]> | undefined] | undefined>
 }
 
-// Non-static parts of layers
-export type ReactiveComponents = {
+// State-derived parts of layers
+export type LayerRuntime = {
   /** The current summarizer (shown in popups) of a layer. */
   readonly summarizer: Accessor<Summarizer>
+  /** The current data path of the layer. */
+  readonly dataPath: Accessor<string>
   /** The map key of the layer. */
   readonly mapKey: JSX.Element
   /** The documentation of the layer (shown in the help modal). */
@@ -26,7 +28,6 @@ export type ReactiveComponents = {
   readonly key: string
   readonly name: Accessor<string>
   readonly title: Accessor<string>
-  readonly dataPath: string
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
@@ -35,7 +36,7 @@ export type ReactiveComponents = {
     daltonianColorScaleEnabled: boolean,
     timeZone: string | undefined,
     setHourOffset: (value: number) => void
-  }): ReactiveComponents
+  }): LayerRuntime
 }
 
 export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => string): JSX.Element => {

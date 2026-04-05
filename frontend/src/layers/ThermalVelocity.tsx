@@ -1,6 +1,6 @@
 import { ColorScale, Color } from "../ColorScale";
 import {type ForecastMetadata} from '../data/ForecastMetadata';
-import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from './Layer';
+import {colorScaleEl, Layer, LayerRuntime, summarizerFromLocationDetails} from './Layer';
 import {useI18n, usingMessages} from "../i18n";
 import {type Zone} from "../data/Model";
 
@@ -37,13 +37,12 @@ export const thermalVelocityLayer: Layer = {
   key: 'thermal-velocity',
   name: usingMessages(m => m.layerThermalVelocity()),
   title: usingMessages(m => m.layerThermalVelocityLegend()),
-  dataPath: 'thermal-velocity',
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number,
     daltonianColorScaleEnabled: boolean
-  }): ReactiveComponents {
+  }): LayerRuntime {
 
     const { m } = useI18n();
     const activeColorScale = thermalVelocityColorScale(props.daltonianColorScaleEnabled);
@@ -54,6 +53,7 @@ export const thermalVelocityLayer: Layer = {
 
     return {
       summarizer,
+      dataPath: () => props.daltonianColorScaleEnabled ? 'thermal-velocity-daltonian' : 'thermal-velocity',
       mapKey: colorScaleEl(activeColorScale, value => `${value} m/s `),
       help: <p>
         { m().helpLayerThermalVelocity() }

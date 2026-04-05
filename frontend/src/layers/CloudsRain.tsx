@@ -1,6 +1,6 @@
 import { ColorScale, Color } from "../ColorScale";
 import {ForecastMetadata} from '../data/ForecastMetadata';
-import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
+import {colorScaleEl, Layer, LayerRuntime, summarizerFromLocationDetails} from "./Layer";
 import {useI18n, usingMessages} from "../i18n";
 import {Zone} from "../data/Model";
 
@@ -29,13 +29,12 @@ export const cloudsRainLayer: Layer = {
   key: 'clouds-rain',
   name: usingMessages(m => m.layerCloudsAndRain()),
   title: usingMessages(m => m.layerCloudsAndRainLegend()),
-  dataPath: 'clouds-rain',
   reactiveComponents(props: {
     zone: Zone,
     forecastMetadata: ForecastMetadata,
     hourOffset: number,
     daltonianColorScaleEnabled: boolean
-  }): ReactiveComponents {
+  }): LayerRuntime {
 
     const { m } = useI18n();
 
@@ -54,6 +53,7 @@ export const cloudsRainLayer: Layer = {
 
     return {
       summarizer,
+      dataPath: () => 'clouds-rain',
       mapKey,
       help
     }

@@ -1,5 +1,5 @@
 import { ColorScale, Color } from "../ColorScale";
-import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
+import {colorScaleEl, Layer, LayerRuntime, summarizerFromLocationDetails} from "./Layer";
 import {Accessor, JSX} from "solid-js";
 import { type ForecastMetadata } from "../data/ForecastMetadata";
 import { showDate } from "../shared";
@@ -43,9 +43,6 @@ export const xcFlyingPotentialLayer: Layer = {
   name: usingMessages(m => m.layerThQ()),
 
   title: usingMessages(m => m.layerThQLegend()),
-
-  dataPath: 'xc-potential',
-
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
@@ -53,7 +50,7 @@ export const xcFlyingPotentialLayer: Layer = {
     daltonianColorScaleEnabled: boolean,
     timeZone: string | undefined,
     setHourOffset: (value: number) => void
-  }): ReactiveComponents {
+  }): LayerRuntime {
 
     const { m } = useI18n();
     const activeColorScale = colorScale(props.daltonianColorScaleEnabled);
@@ -107,6 +104,7 @@ export const xcFlyingPotentialLayer: Layer = {
 
     return {
       summarizer,
+      dataPath: () => props.daltonianColorScaleEnabled ? 'xc-potential-daltonian' : 'xc-potential',
       mapKey,
       help
     }

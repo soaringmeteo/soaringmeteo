@@ -1,10 +1,8 @@
 import { createStore, SetStoreFunction } from 'solid-js/store';
 import { ForecastMetadata } from './data/ForecastMetadata';
-import { Layer, ReactiveComponents } from './layers/Layer';
+import { Layer, LayerRuntime } from './layers/Layer';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
 import { layerByKey } from './layers/Layers';
-import { soaringLayerDepthLayer } from './layers/SoaringLayerDepth';
-import { thermalVelocityLayer } from './layers/ThermalVelocity';
 import { boundaryLayerWindLayer } from './layers/Wind';
 import {Accessor, batch, createMemo, mergeProps, splitProps} from 'solid-js';
 import {DetailedView, DetailedViewType} from "./DetailedView";
@@ -190,8 +188,8 @@ export class Domain {
   private readonly m: Accessor<Messages>;
 
   // Since those reactive components depend on the state, we can not make them part of the state
-  readonly primaryLayerReactiveComponents: Accessor<ReactiveComponents>;
-  readonly windLayerReactiveComponents: Accessor<ReactiveComponents>;
+  readonly primaryLayerReactiveComponents: Accessor<LayerRuntime>;
+  readonly windLayerReactiveComponents: Accessor<LayerRuntime>;
 
   constructor (
     readonly gfsRuns: Array<ForecastMetadata>,
@@ -463,7 +461,7 @@ export class Domain {
   readonly urlOfRasterAtCurrentHourOffset: Accessor<string> =
     (): string => this.state.forecastMetadata.urlOfRasterAtHourOffset(
         this.effectiveZone().id,
-        this.currentPrimaryRasterPath(),
+        this.primaryLayerReactiveComponents().dataPath(),
         this.state.hourOffset
       );
 
@@ -471,26 +469,9 @@ export class Domain {
     (): string =>
       this.state.forecastMetadata.urlOfVectorTilesAtHourOffset(
         this.effectiveZone().id,
-        this.state.windLayer.dataPath,
+        this.windLayerReactiveComponents().dataPath(),
         this.state.hourOffset
       );
-
-  private currentPrimaryRasterPath(): string {
-    if (!this.state.daltonianColorScaleEnabled) {
-      return this.state.primaryLayer.dataPath
-    }
-
-    switch (this.state.primaryLayer.key) {
-      case xcFlyingPotentialLayer.key:
-        return 'xc-potential-daltonian'
-      case thermalVelocityLayer.key:
-        return 'thermal-velocity-daltonian'
-      case soaringLayerDepthLayer.key:
-        return 'soaring-layer-depth-daltonian'
-      default:
-        return this.state.primaryLayer.dataPath
-    }
-  }
 
 }
 

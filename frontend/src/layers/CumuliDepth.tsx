@@ -1,5 +1,5 @@
 import { ColorScale, Color } from "../ColorScale";
-import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
+import {colorScaleEl, Layer, LayerRuntime, summarizerFromLocationDetails} from "./Layer";
 import {ForecastMetadata} from "../data/ForecastMetadata";
 import {useI18n, usingMessages} from "../i18n";
 import {Zone} from "../data/Model";
@@ -16,13 +16,12 @@ export const cumuliDepthLayer: Layer = {
   key: 'cumuli-depth',
   name: usingMessages(m => m.layerCumulusDepth()),
   title: usingMessages(m => m.layerCumulusDepthLegend()),
-  dataPath: 'cumulus-depth',
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number,
     daltonianColorScaleEnabled: boolean
-  }): ReactiveComponents {
+  }): LayerRuntime {
 
     const { m } = useI18n();
 
@@ -48,6 +47,7 @@ export const cumuliDepthLayer: Layer = {
 
     return {
       summarizer,
+      dataPath: () => 'cumulus-depth',
       mapKey,
       help
     }  

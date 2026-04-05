@@ -1,5 +1,5 @@
 import { ColorScale, Color } from "../ColorScale";
-import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from './Layer';
+import {colorScaleEl, Layer, LayerRuntime, summarizerFromLocationDetails} from './Layer';
 import {type ForecastMetadata} from '../data/ForecastMetadata';
 import {useI18n, usingMessages} from "../i18n";
 import {type Zone} from "../data/Model";
@@ -40,15 +40,12 @@ export const soaringLayerDepthLayer: Layer = {
   name: usingMessages(m => m.layerSoaringLayerDepth()),
 
   title: usingMessages(m => m.layerSoaringLayerDepthLegend()),
-
-  dataPath: 'soaring-layer-depth',
-
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number,
     daltonianColorScaleEnabled: boolean
-  }): ReactiveComponents {
+  }): LayerRuntime {
 
     const { m } = useI18n();
     const activeColorScale = soaringLayerDepthColorScale(props.daltonianColorScaleEnabled);
@@ -74,6 +71,7 @@ export const soaringLayerDepthLayer: Layer = {
 
     return {
       summarizer,
+      dataPath: () => props.daltonianColorScaleEnabled ? 'soaring-layer-depth-daltonian' : 'soaring-layer-depth',
       mapKey,
       help
     }
