@@ -60,15 +60,28 @@ sbt
 
 3. Run the `gfs` and the `wrf` programs:
 
-  * Put the `.nc` files given by the project maintainer in the `backend` folder.
-  
-  * Run all the necessary steps and generate the assets (in the `sbt` console in the `backend` folder)
+  * Download WRF data (requires SSH access to `soarwrf3.soaringmeteo.org`):
 
-	```
-	makeGfsAssets
-	makeWrfAssets
-	```
-	
+    ```
+    fetchWrfData
+    ```
+
+    This lists the available forecast runs on the server and lets you pick one.
+    The files are downloaded into `backend/wrf-data/`.
+    To use a different server, pass it as a second argument: `fetchWrfData soarwrf4`.
+    Note that the files are large (several GB), so the download may take a while.
+
+  * Generate the assets:
+
+    ```
+    makeGfsAssets
+    makeWrfAssets
+    ```
+
+    `makeWrfAssets` automatically picks one of the previously downloaded WRF run.
+    To process a specific run, pass its identifier: `makeWrfAssets 2026040506Z+24h`
+    (tab-completion available).
+
 `makeGfsAssets` downloads a subset of the usual data to speed up the development workflow.
 
 You can customize the settings by changing the configuration file [dev.conf](gfs/dev.conf). Look at the file [reference.conf](gfs/src/main/resources/reference.conf) for an overview of all the configuration options.
@@ -174,16 +187,16 @@ To translate the user interface in a new language, we need to 1) add the languag
 From the sbt shell (started in the `backend` directory), deploy the content of your working directory by running the task `deploy` in the project `gfs` or `wrf`:
 
 ~~~
-gfs/deploy soarwrf1
-# or
 gfs/deploy soarwrf3
-
-wrf/deploy soarwrf1
 # or
+gfs/deploy soarwrf4
+
 wrf/deploy soarwrf3
+# or
+wrf/deploy soarwrf4
 ~~~
 
-The task packages the app, uploads it to the server `soarwrf1.soaringmeteo.org`, and replaces the previous version of the app.
+The task packages the app, uploads it to the server, and replaces the previous version of the app.
 
 ## Deploy the frontend
 

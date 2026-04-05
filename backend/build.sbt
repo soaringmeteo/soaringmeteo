@@ -1,4 +1,4 @@
-import org.soaringmeteo.build.Dependencies
+import org.soaringmeteo.build.{Dependencies, MakeAssets}
 
 // Build settings
 inThisBuild(Seq(
@@ -89,35 +89,7 @@ val soaringmeteo =
     .settings(
       name := "soaringmeteo"
     )
+    .settings(MakeAssets.makeAssetsSettings)
     .aggregate(common, gfs, wrf)
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
-
-// Task that runs the gfs pipeline locally. It takes an optional parameter indicating the initialization
-// time of the GFS run to download (00, 06, 12, or 18)
-InputKey[Unit]("makeGfsAssets") := Def.inputTaskDyn {
-  import sbt.complete.DefaultParsers._
-  val maybeGfsRunInitTime = (Space ~> (literal("00") | literal("06") | literal("12") | literal("18"))).?.parsed
-  val requiredArgs = List(
-    "-r", // always reuse previous files in dev mode
-    "target/grib",
-    ((soaringmeteo / target).value / "forecast" / "data").absolutePath
-  )
-  val args =
-    maybeGfsRunInitTime.fold(requiredArgs)(t => s"-t ${t}" :: requiredArgs)
-  (gfs / Compile / runMain).toTask(s" -Dconfig.file=dev.conf org.soaringmeteo.gfs.Main ${args.mkString(" ")}")
-}.evaluated
-
-TaskKey[Unit]("makeWrfAssets") := Def.taskDyn {
-  val inputFiles =
-    Seq("d02", "d03", "d04", "d05")
-      .map(domain => s"wrfout_${domain}_2023-10-30_Init2023102918Z+12h.nc")
-  val args = List(
-    ((soaringmeteo / target).value / "forecast" / "data").absolutePath,
-    "2023-10-29T18:00Z",
-    "2023-10-30T06:00Z"
-  ) ++ inputFiles.map(file =>
-    ((soaringmeteo / baseDirectory).value / file).absolutePath
-  )
-  (wrf / Compile / runMain).toTask(s" org.soaringmeteo.wrf.Main ${args.mkString(" ")}")
-}.value

@@ -5,7 +5,6 @@ import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport.{Universal, packageZipTarball}
 import sbt.*
 import sbt.Keys.{ name, streams }
-import sbt.internal.util.complete.Parser
 
 import scala.sys.process.Process
 
@@ -18,19 +17,12 @@ object Deploy extends AutoPlugin {
     val deploy = inputKey[Unit]("Deploy the application to the server")
   }
 
-  // Instances
-  val soarwrf1 = "soarwrf1"
-  val soarwrf3 = "soarwrf3"
-  val soarwrf4 = "soarwrf4"
-
-  private val instanceParser: Parser[String] = {
-    import sbt.complete.DefaultParsers.*
-    Space ~> (literal(soarwrf1) | literal(soarwrf3) | literal(soarwrf4))
-  }
-
   override lazy val projectSettings: Seq[Def.Setting[?]] = Seq(
     autoImport.deploy := {
-      val instance = instanceParser.parsed
+      val instance = {
+        import sbt.complete.DefaultParsers.*
+        (Space ~> Servers.instanceParser).parsed
+      }
 
       val sbtOut = streams.value.log
       val appName = (Universal / packageName).value
