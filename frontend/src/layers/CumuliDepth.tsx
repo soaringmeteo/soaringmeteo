@@ -1,5 +1,5 @@
 import { ColorScale, Color } from "../ColorScale";
-import {colorScaleEl, Layer, LayerRuntime, summarizerFromLocationDetails} from "./Layer";
+import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
 import {ForecastMetadata} from "../data/ForecastMetadata";
 import {useI18n, usingMessages} from "../i18n";
 import {Zone} from "../data/Model";
@@ -21,7 +21,7 @@ export const cumuliDepthLayer: Layer = {
     zone: Zone,
     hourOffset: number,
     daltonianColorScaleEnabled: boolean
-  }): LayerRuntime {
+  }): ReactiveComponents {
 
     const { m } = useI18n();
 

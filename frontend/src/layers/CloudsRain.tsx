@@ -1,6 +1,6 @@
 import { ColorScale, Color } from "../ColorScale";
 import {ForecastMetadata} from '../data/ForecastMetadata';
-import {colorScaleEl, Layer, LayerRuntime, summarizerFromLocationDetails} from "./Layer";
+import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
 import {useI18n, usingMessages} from "../i18n";
 import {Zone} from "../data/Model";
 
@@ -34,7 +34,7 @@ export const cloudsRainLayer: Layer = {
     forecastMetadata: ForecastMetadata,
     hourOffset: number,
     daltonianColorScaleEnabled: boolean
-  }): LayerRuntime {
+  }): ReactiveComponents {
 
     const { m } = useI18n();
 

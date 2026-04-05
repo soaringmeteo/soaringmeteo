@@ -1,6 +1,6 @@
 import { ColorScale, Color } from "../ColorScale";
 import {type ForecastMetadata} from '../data/ForecastMetadata';
-import {colorScaleEl, Layer, LayerRuntime, summarizerFromLocationDetails} from './Layer';
+import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from './Layer';
 import {useI18n, usingMessages} from "../i18n";
 import {type Zone} from "../data/Model";
 
@@ -42,7 +42,7 @@ export const thermalVelocityLayer: Layer = {
     zone: Zone,
     hourOffset: number,
     daltonianColorScaleEnabled: boolean
-  }): LayerRuntime {
+  }): ReactiveComponents {
 
     const { m } = useI18n();
     const activeColorScale = thermalVelocityColorScale(props.daltonianColorScaleEnabled);

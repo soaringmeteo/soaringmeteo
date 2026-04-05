@@ -1,6 +1,6 @@
 import { createStore, SetStoreFunction } from 'solid-js/store';
 import { ForecastMetadata } from './data/ForecastMetadata';
-import { Layer, LayerRuntime } from './layers/Layer';
+import { Layer, ReactiveComponents } from './layers/Layer';
 import { xcFlyingPotentialLayer } from './layers/ThQ';
 import { layerByKey } from './layers/Layers';
 import { boundaryLayerWindLayer } from './layers/Wind';
@@ -188,8 +188,8 @@ export class Domain {
   private readonly m: Accessor<Messages>;
 
   // Since those reactive components depend on the state, we can not make them part of the state
-  readonly primaryLayerReactiveComponents: Accessor<LayerRuntime>;
-  readonly windLayerReactiveComponents: Accessor<LayerRuntime>;
+  readonly primaryLayerReactiveComponents: Accessor<ReactiveComponents>;
+  readonly windLayerReactiveComponents: Accessor<ReactiveComponents>;
 
   constructor (
     readonly gfsRuns: Array<ForecastMetadata>,

@@ -1,4 +1,4 @@
-import {Layer, LayerRuntime, summarizerFromLocationDetails} from "./Layer";
+import {Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
 import {type ForecastMetadata} from "../data/ForecastMetadata";
 import {DetailedForecast, Wind} from "../data/LocationForecasts";
 import {useI18n, usingMessages} from "../i18n";
@@ -12,7 +12,7 @@ const windComponents = (
   zone: Zone,
   hourOffset: number,
   daltonianColorScaleEnabled: boolean,
-}): LayerRuntime => {
+}): ReactiveComponents => {
 
   const { m } = useI18n();
 

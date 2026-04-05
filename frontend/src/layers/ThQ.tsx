@@ -1,5 +1,5 @@
 import { ColorScale, Color } from "../ColorScale";
-import {colorScaleEl, Layer, LayerRuntime, summarizerFromLocationDetails} from "./Layer";
+import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
 import {Accessor, JSX} from "solid-js";
 import { type ForecastMetadata } from "../data/ForecastMetadata";
 import { showDate } from "../shared";
@@ -50,7 +50,7 @@ export const xcFlyingPotentialLayer: Layer = {
     daltonianColorScaleEnabled: boolean,
     timeZone: string | undefined,
     setHourOffset: (value: number) => void
-  }): LayerRuntime {
+  }): ReactiveComponents {
 
     const { m } = useI18n();
     const activeColorScale = colorScale(props.daltonianColorScaleEnabled);
