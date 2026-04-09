@@ -35,7 +35,7 @@ export type State = {
   utcTimeShown: boolean
   // Whether to show the map key
   mapKeyShown: boolean
-  // Whether to use a color-blind-friendly palette for thermal quality
+  // Whether to use a color-blind-friendly palette for supported color scales
   daltonianColorScaleEnabled: boolean
 }
 
@@ -49,7 +49,7 @@ const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
 const utcTimeShownKey           = 'utc-time-shown';
 const mapKeyShownKey = 'map-key-shown';
-const daltonianColorScaleEnabledKey = 'daltonian-thq-enabled';
+const daltonianColorScaleEnabledKey = 'daltonian-color-scale-enabled';
 
 const loadStoredState = <A,>(key: string, parse: (raw: string) => A, defaultValue: A): A => {
   const maybeItem = window.localStorage.getItem(key);
