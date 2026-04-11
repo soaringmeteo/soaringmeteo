@@ -57,15 +57,6 @@ const App = (props: {
     props.mapHooks.enableWindNumericalValues(props.domain.state.windNumericValuesShown);
   });
 
-  createEffect(() => {
-    const currentLocation = props.domain.state.currentLocation;
-    if (currentLocation !== undefined) {
-      props.mapHooks.showCurrentLocation(currentLocation.latitude, currentLocation.longitude, currentLocation.accuracy);
-    } else {
-      props.mapHooks.hideCurrentLocation();
-    }
-  });
-
   // Marker when detailed view is open
   createEffect(() => {
     const detailedView = props.domain.state.detailedView;
@@ -163,12 +154,14 @@ const BottomZone = (props: {
     <div
       style={{
         position: 'absolute',
-        right: '.5rem',
+        right: '.25rem',
         bottom: '.5rem',
         ...enablePointerEvents,
         display: 'flex',
         'flex-direction': 'column',
-        'align-items': 'flex-end',
+        'align-items': 'center',
+        gap: '7px',
+        padding: '3px',
       }}
     >
       <Show when={ props.domain.state.mapControlsVisible }>
@@ -176,19 +169,12 @@ const BottomZone = (props: {
         <CurrentLocationButton domain={props.domain} />
         <HelpButton domain={props.domain} overMap={true}/>
       </Show>
-      <span
-        style={{
-          display: 'block',
-          margin: '3px'
-        }}
+      <RoundIconButton
+        onClick={ () => props.domain.toggleMapControls() }
+        title={ props.domain.state.mapControlsVisible ? m().mapControlsHide() : m().mapControlsShow() }
       >
-        <RoundIconButton
-          onClick={ () => props.domain.toggleMapControls() }
-          title={ props.domain.state.mapControlsVisible ? m().mapControlsHide() : m().mapControlsShow() }
-        >
-          <ChevronIcon direction={ props.domain.state.mapControlsVisible ? 'down' : 'up' } />
-        </RoundIconButton>
-      </span>
+        <ChevronIcon direction={ props.domain.state.mapControlsVisible ? 'down' : 'up' } />
+      </RoundIconButton>
     </div>
   </div>;
 };

@@ -28,12 +28,6 @@ export type State = {
   windLayerEnabled: boolean
   // If defined, the detailed forecast data for the selected location, and the type of detailed view to display
   detailedView: undefined | DetailedView
-  // If defined, the user's current geolocated position
-  currentLocation: undefined | {
-    latitude: number
-    longitude: number
-    accuracy: number
-  }
   // --- Settings
   // Whether to show numerical values instead of showing a barb
   windNumericValuesShown: boolean
@@ -227,7 +221,6 @@ export class Domain {
       windLayerEnabled,
       hourOffset: forecastMetadata.defaultHourOffset(),
       detailedView: undefined,
-      currentLocation: undefined,
       windNumericValuesShown,
       utcTimeShown,
       mapControlsVisible
@@ -400,14 +393,7 @@ export class Domain {
   centerMapOnClientLocation(): void {
     if (window.navigator.geolocation) {
       window.navigator.geolocation.getCurrentPosition(position => {
-        this.setState({
-          currentLocation: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy
-          }
-        });
-        this.mapHooks.centerToLocation(position.coords.latitude, position.coords.longitude);
+        this.mapHooks.centerToUserLocation(position.coords);
       }, () => {
         alert(this.m().menuCouldNotGetLocation());
       });

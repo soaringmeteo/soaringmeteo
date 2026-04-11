@@ -90,12 +90,16 @@ export type MapHooks = {
   setWindLayerSource: (url: string, minViewZoom: number, extent: Extent, maxZoom: number, tileSize: number) => void
   hideWindLayer: () => void
   enableWindNumericalValues: (value: boolean) => void
-  showCurrentLocation: (latitude: number, longitude: number, accuracy: number) => void
-  hideCurrentLocation: () => void
   showMarker: (latitude: number, longitude: number) => void
   hideMarker: () => void
-  centerToLocation: (latitude: number, longitude: number) => void
+  centerToUserLocation: (userLocation: UserLocation) => void
 }
+
+type UserLocation = {
+  latitude: number
+  longitude: number
+  accuracy: number
+};
 
 export const initializeMap = (element: HTMLElement): MapHooks => {
   const minimumCurrentLocationRadiusPixels = 12;
@@ -118,10 +122,10 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     declutter: true, // That seems to “fix” the `renderBuffer` issue, but that might be temporary, see https://github.com/openlayers/openlayers/issues/11191
   });
 
-  const currentLocationFeature = new Feature();
-  const currentLocationCenterFeature = new Feature();
-  const currentLocationLayer = new VectorLayer({
-    source: new VectorSource({ features: [currentLocationFeature] }),
+  const userLocationFeature = new Feature();
+  const userLocationCenterFeature = new Feature();
+  const userLocationLayer = new VectorLayer({
+    source: new VectorSource({ features: [userLocationFeature] }),
     visible: false,
     style: new Style({
       fill: new Fill({
@@ -133,8 +137,8 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
       }),
     }),
   });
-  const currentLocationCenterLayer = new VectorLayer({
-    source: new VectorSource({ features: [currentLocationCenterFeature] }),
+  const userLocationCenterLayer = new VectorLayer({
+    source: new VectorSource({ features: [userLocationCenterFeature] }),
     visible: false,
     style: new Style({
       image: new CircleStyle({
@@ -169,8 +173,8 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
       baseLayer,
       primaryLayer,
       secondaryLayer,
-      currentLocationLayer,
-      currentLocationCenterLayer,
+      userLocationLayer,
+      userLocationCenterLayer,
       markerLayer
     ],
     view: new View({
@@ -189,32 +193,19 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     interactions: defaultInteractions({ pinchRotate: false })
   });
 
-  let currentLocation: undefined | {
-    latitude: number
-    longitude: number
-    accuracy: number
-  };
-
-  const refreshCurrentLocationGeometry = (): void => {
-    if (currentLocation === undefined) {
-      currentLocationFeature.setGeometry(undefined);
-      currentLocationCenterFeature.setGeometry(undefined);
-      currentLocationLayer.setVisible(false);
-      currentLocationCenterLayer.setVisible(false);
-      return;
-    }
-    const center4326: [number, number] = [currentLocation.longitude, currentLocation.latitude];
+  const setUserLocationGeometry = (userLocation: UserLocation): void => {
+    const center4326: [number, number] = [userLocation.longitude, userLocation.latitude];
     const resolution = map.getView().getResolution() ?? 1;
     const visibleRadiusMeters = Math.max(
-      currentLocation.accuracy,
+      userLocation.accuracy,
       resolution * minimumCurrentLocationRadiusPixels
     );
-    currentLocationFeature.setGeometry(
+    userLocationFeature.setGeometry(
       circularPolygon(center4326, Math.max(visibleRadiusMeters, 1), 128).transform('EPSG:4326', webMercatorProjection)
     );
-    currentLocationCenterFeature.setGeometry(new Point(fromLonLat(center4326, webMercatorProjection)));
-    currentLocationLayer.setVisible(true);
-    currentLocationCenterLayer.setVisible(true);
+    userLocationCenterFeature.setGeometry(new Point(fromLonLat(center4326, webMercatorProjection)));
+    userLocationLayer.setVisible(true);
+    userLocationCenterLayer.setVisible(true);
   };
 
   map.on('moveend', () => {
@@ -223,7 +214,6 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     if (center !== undefined && zoom !== undefined) {
       saveLocationAndZoom(center as [number, number], zoom);
     }
-    refreshCurrentLocationGeometry();
   });
 
   // Signal of “popup requests”: when the users click on the map, they request a popup
@@ -281,14 +271,6 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
         return new Style(value ? { image: imageStyle, text: textStyle } : { image: imageStyle })
       })
     },
-    showCurrentLocation: (latitude: number, longitude: number, accuracy: number): void => {
-      currentLocation = { latitude, longitude, accuracy };
-      refreshCurrentLocationGeometry();
-    },
-    hideCurrentLocation: (): void => {
-      currentLocation = undefined;
-      refreshCurrentLocationGeometry();
-    },
     showMarker: (latitude: number, longitude: number): void => {
       markerFeature.setGeometry(new Point(fromLonLat([longitude, latitude])));
       markerLayer.setVisible(true);
@@ -296,9 +278,10 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     hideMarker: (): void => {
       markerLayer.setVisible(false);
     },
-    centerToLocation: (latitude: number, longitude: number): void => {
+    centerToUserLocation: (userLocation: UserLocation): void => {
       const view = map.getView();
-      view.setCenter(fromLonLat([longitude, latitude], webMercatorProjection));
+      setUserLocationGeometry(userLocation);
+      view.setCenter(fromLonLat([userLocation.longitude, userLocation.latitude], webMercatorProjection));
     }
   }
 };

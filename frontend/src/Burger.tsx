@@ -6,6 +6,7 @@ import {
   roundButtonStyle,
 } from "./styles/Styles";
 import { surfaceOverMap } from "./styles/Styles";
+import { CloseIcon } from "./RoundIconButton";
 import { Settings } from "./Settings";
 import {LayersSelector} from "./LayersSelector";
 import {OverlayContainer} from "./map/Overlay";
@@ -74,10 +75,13 @@ export const Burger = (props: {
             position: 'absolute',
             top: '3px',
             right: '3px',
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
             on: $ => [$("hover", { 'background-color': 'darkgray' })]
           })}
         >
-          ⨯
+          <CloseIcon />
         </div>
       </div>
       <LayersSelector domain={props.domain} />
