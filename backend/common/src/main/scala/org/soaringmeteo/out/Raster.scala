@@ -1,7 +1,7 @@
 package org.soaringmeteo.out
 
 import geotrellis.proj4.CRS
-import geotrellis.raster.{DoubleArrayTile, FloatArrayTile, FloatCellType, IntArrayTile, Tile}
+import geotrellis.raster.{FloatArrayTile, FloatConstantNoDataCellType, Tile}
 import geotrellis.raster.io.geotiff.{GeoTiffOptions, SinglebandGeoTiff, Tags, Tiled}
 import geotrellis.raster.io.geotiff.compression.DeflateCompression
 import geotrellis.raster.resample.NearestNeighbor
@@ -126,7 +126,7 @@ object Raster {
       type Data = Int
       def extract(forecast: Forecast): Int = extractArgument(forecast)
       def makeTile(arrayData: Seq[Int], width: Int, height: Int): Tile =
-        FloatArrayTile(arrayData.map(_.toFloat).toArray, width, height, FloatCellType)
+        FloatArrayTile(arrayData.map(_.toFloat).toArray, width, height, FloatConstantNoDataCellType)
     }
   }
 
@@ -136,7 +136,7 @@ object Raster {
       type Data = Double
       def extract(forecast: Forecast): Double = extractArgument(forecast)
       def makeTile(arrayData: Seq[Double], width: Int, height: Int): Tile =
-        FloatArrayTile(arrayData.map(_.toFloat).toArray, width, height, FloatCellType)
+        FloatArrayTile(arrayData.map(_.toFloat).toArray, width, height, FloatConstantNoDataCellType)
     }
   }
 
