@@ -104,11 +104,19 @@ object DataPipeline {
 
     def generateSubgridResults(subgrid: Subgrid, hourOffset: Int, forecasts: IndexedSeq[IndexedSeq[Forecast]]): Future[Unit] = {
       Future {
-        // We create one PNG file per forecast time and per output variable (e.g., `2021-01-08T12/europe-africa/soaring-layer-depth/0.png`,
-        // `2021-01-08T12/america/wind-300m-agl/3.png`, etc.).
+        // We create one COG file per forecast time and per output variable (e.g., `2021-01-08T12/europe-africa/soaring-layer-depth/0.tif`,
+        // `2021-01-08T12/america/wind-300m-agl/3.tif`, etc.).
         // Each file contains the forecast for that parameter (soaring layer depth, wind, etc.) within the subgrid
         val subgridTargetDir = subgridTargetPath(runTargetDir, subgrid)
-        Raster.writeAllPngFiles(subgrid.width, subgrid.height, subgridTargetDir, hourOffset, forecasts)
+        // TODO Remove duplication with content in JsonWriter
+        val resolution = Settings.gfsForecastSpaceResolution / BigDecimal(100)
+        val extent = geotrellis.vector.Extent(
+          subgrid.leftLongitude.doubleValue - resolution.doubleValue / 2,
+          subgrid.bottomLatitude.doubleValue - resolution.doubleValue / 2,
+          subgrid.rightLongitude.doubleValue + resolution.doubleValue / 2,
+          subgrid.topLatitude.doubleValue + resolution.doubleValue / 2
+        )
+        Raster.writeAllCogFiles(subgrid.width, subgrid.height, extent, geotrellis.proj4.LatLng, subgridTargetDir, hourOffset, forecasts)
         VectorTiles.writeAllVectorTiles(subgrid.vectorTilesParameters, subgridTargetDir, hourOffset, forecasts)
       }(generatingSubgridResults)
     }.tap(_.foreach(_ => subgridResultsReporter.notifyCompleted())(ExecutionContext.global))

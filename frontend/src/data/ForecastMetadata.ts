@@ -17,7 +17,7 @@ type ForecastMetadataData = {
 }
 
 // Version of the forecast data format we consume (see backend/common/src/main/scala/org/soaringmeteo/out/package.scala)
-const formatVersion = 7
+const formatVersion = 8
 // Base path to access forecast data
 const dataPath = `data/${formatVersion}`
 export class ForecastMetadata {
@@ -107,7 +107,7 @@ export class ForecastMetadata {
    * Never completes in case of failure (but logs the error).
    */
   urlOfRasterAtHourOffset(zone: string, variablePath: string, hourOffset: number): string {
-    return `${dataPath}/${this.modelPath}/${this.runPath}/${zone}/${variablePath}/${hourOffset}.png`
+    return `${dataPath}/${this.modelPath}/${this.runPath}/${zone}/${variablePath}/${hourOffset}.tif`
   }
 
   urlOfVectorTilesAtHourOffset(zone: string, variablePath: string, hourOffset: number): string {

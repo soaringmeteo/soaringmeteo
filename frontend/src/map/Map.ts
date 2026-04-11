@@ -1,6 +1,8 @@
 import { Feature, Map, MapBrowserEvent, View } from 'ol';
-import { Tile as TileLayer, Image as ImageLayer, Vector as VectorLayer, VectorTile as VectorTileLayer } from 'ol/layer';
-import { ImageStatic, Vector as VectorSource, VectorTile as VectorTileSource, XYZ } from "ol/source";
+import { Tile as TileLayer, Vector as VectorLayer, VectorTile as VectorTileLayer } from 'ol/layer';
+import WebGLTileLayer from 'ol/layer/WebGLTile';
+import { Vector as VectorSource, VectorTile as VectorTileSource, XYZ } from "ol/source";
+import GeoTIFF from 'ol/source/GeoTIFF';
 import { fromLonLat, get as getProjection, Projection, toLonLat } from "ol/proj";
 import { ScaleLine } from "ol/control";
 import { defaults as defaultInteractions } from "ol/interaction";
@@ -85,7 +87,7 @@ const saveLocationAndZoom = (location: [number, number], zoom: number) => {
 
 export type MapHooks = {
   locationClicks: Accessor<MapBrowserEvent<any> | undefined>
-  setPrimaryLayerSource: (url: string, projection: string, extent: Extent) => void
+  setPrimaryLayerSource: (url: string, projection: string, extent: Extent, webglStyle: object) => void
   hidePrimaryLayer: () => void
   setWindLayerSource: (url: string, minViewZoom: number, extent: Extent, maxZoom: number, tileSize: number) => void
   hideWindLayer: () => void
@@ -112,7 +114,7 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     })
   });
 
-  const primaryLayer = new ImageLayer({
+  const primaryLayer = new WebGLTileLayer({
     opacity: 0.35,
   });
 
@@ -225,14 +227,17 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
 
   return {
     locationClicks: locationClicks,
-    setPrimaryLayerSource: (url: string, projection: string, extent: Extent): void => {
-      primaryLayer.setSource(new ImageStatic({
-        url: url,
+    setPrimaryLayerSource: (url: string, projection: string, extent: Extent, webglStyle: object): void => {
+      console.log(`projection = ${projection}`)
+      const source = new GeoTIFF({
+        sources: [{ url }],
+        convertToRGB: false,
+        normalize: false,
         projection: projection,
-        imageExtent: extent,
-        interpolate: false
-      }));
-    },
+      });
+      primaryLayer.setSource(source);
+      primaryLayer.setStyle(webglStyle);
+   },
     hidePrimaryLayer: (): void => {
       primaryLayer.setSource(null);
     },

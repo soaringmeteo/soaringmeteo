@@ -25,11 +25,56 @@ const rainColorScale = new ColorScale([
   [99, new Color(172, 0, 219, 1.00)],
 ]);
 
+/**
+ * Custom WebGL style for the clouds-rain layer.
+ * The backend encodes cloud cover as 0–100 and rain as value + 100.
+ * We use a 'case' expression to switch between cloud and rain color ramps.
+ */
+const cloudsRainWebGLStyle = {
+  color: [
+    'case',
+    ['<', ['band', 1], 0],
+    [0, 0, 0, 0], // transparent padding
+    // If band value <= 100, use cloud cover color ramp
+    ['<', ['band', 1], 20],
+    [255, 255, 255, 1],
+    ['<', ['band', 1], 40],
+    [189, 189, 189, 1.0],
+    ['<', ['band', 1], 60],
+    [136, 136, 136, 1.0],
+    ['<', ['band', 1], 80],
+    [77, 77, 77, 1.0],
+    ['<', ['band', 1], 100],
+    [17, 17, 17, 1.0],
+    // Otherwise use rain color ramp (value = rain_mm + 100)
+    ['<', ['band', 1], 101],
+    [157, 248, 246, 1.0],
+    ['<', ['band', 1], 102],
+    [0, 0, 255, 1.0],
+    ['<', ['band', 1], 104],
+    [42, 147, 59, 1.0],
+    ['<', ['band', 1], 106],
+    [73, 255, 54, 1.0],
+    ['<', ['band', 1], 1010],
+    [252, 255, 45, 1.0],
+    ['<', ['band', 1], 1020],
+    [250, 202, 30, 1.0],
+    ['<', ['band', 1], 1030],
+    [248, 124, 0, 1.0],
+    ['<', ['band', 1], 1050],
+    [247, 12, 0, 1.0],
+    ['<', ['band', 1], 1100],
+    [172, 0, 219, 1.0],
+    [172, 0, 219, 1.0]
+  ]
+};
+
 export const cloudsRainLayer: Layer = {
   key: 'clouds-rain',
   name: usingMessages(m => m.layerCloudsAndRain()),
   title: usingMessages(m => m.layerCloudsAndRainLegend()),
   dataPath: 'clouds-rain',
+  webglStyle: cloudsRainWebGLStyle,
   reactiveComponents(props: {
     zone: Zone,
     forecastMetadata: ForecastMetadata,

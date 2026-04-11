@@ -30,8 +30,10 @@ const App = (props: {
     const zone = props.domain.effectiveZone();
     const projection = zone.raster.proj;
     const extent = zone.raster.extent;
+    const primaryLayer = props.domain.state.primaryLayer;
+    const webglStyle = primaryLayer.webglStyle;
     if (props.domain.state.primaryLayerEnabled) {
-      props.mapHooks.setPrimaryLayerSource(url, projection, extent);
+      props.mapHooks.setPrimaryLayerSource(url, projection, extent, webglStyle);
     } else {
       props.mapHooks.hidePrimaryLayer();
     }

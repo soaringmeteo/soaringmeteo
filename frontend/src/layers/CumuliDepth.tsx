@@ -1,5 +1,5 @@
 import { ColorScale, Color } from "../ColorScale";
-import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
+import {colorScaleEl, colorScaleToWebGLStyle, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
 import {ForecastMetadata} from "../data/ForecastMetadata";
 import {useI18n, usingMessages} from "../i18n";
 import {Zone} from "../data/Model";
@@ -17,6 +17,7 @@ export const cumuliDepthLayer: Layer = {
   name: usingMessages(m => m.layerCumulusDepth()),
   title: usingMessages(m => m.layerCumulusDepthLegend()),
   dataPath: 'cumulus-depth',
+  webglStyle: colorScaleToWebGLStyle(cumuliDepthColorScale),
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,

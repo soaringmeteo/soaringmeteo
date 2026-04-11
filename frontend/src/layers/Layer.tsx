@@ -27,6 +27,8 @@ export type ReactiveComponents = {
   readonly name: Accessor<string>
   readonly title: Accessor<string>
   readonly dataPath: string
+  /** WebGL style expression for rendering the COG raster on the map (TODO introduce on RasterLayer only) */
+  readonly webglStyle: object
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
@@ -82,3 +84,21 @@ export const colorScaleEl = (colorScale: ColorScale, format: (value: number) => 
     }
   }
 }
+
+/**
+ * Converts a ColorScale into an OpenLayers WebGL style object.
+ */
+export const colorScaleToWebGLStyle = (colorScale: ColorScale): object => {
+  const cases: any[] = [];
+  for (const [value, color] of colorScale.points) {
+    cases.push(['<', ['band', 1], value]);
+    cases.push([color.red, color.green, color.blue, color.opacity]);
+  }
+  return {
+    color: [
+      'case',
+      ...cases,
+      cases[cases.length - 1]
+    ]
+  };
+};

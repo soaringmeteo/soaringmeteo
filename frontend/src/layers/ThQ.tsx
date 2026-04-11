@@ -1,5 +1,5 @@
 import { ColorScale, Color } from "../ColorScale";
-import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
+import {colorScaleEl, colorScaleToWebGLStyle, Layer, ReactiveComponents, summarizerFromLocationDetails} from "./Layer";
 import {Accessor, JSX} from "solid-js";
 import { type ForecastMetadata } from "../data/ForecastMetadata";
 import { showDate } from "../shared";
@@ -29,6 +29,8 @@ export const xcFlyingPotentialLayer: Layer = {
   title: usingMessages(m => m.layerThQLegend()),
 
   dataPath: 'xc-potential',
+
+  webglStyle: colorScaleToWebGLStyle(colorScale),
 
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,

@@ -33,11 +33,15 @@ const windComponents = (
   }
 };
 
+// Wind layers use vector tiles, not raster overlays, so webglStyle is unused but required by the Layer type
+const emptyWebGLStyle = {};
+
 export const boundaryLayerWindLayer: Layer = {
   key: 'boundary-layer-wind',
   name: usingMessages(m => m.layerWindBoundaryLayer()),
   title: usingMessages(m => m.layerWindBoundaryLayerLegend()),
   dataPath: 'wind-boundary-layer',
+  webglStyle: emptyWebGLStyle,
   reactiveComponents: windComponents(data => data.boundaryLayer.wind)
 };
 
@@ -46,6 +50,7 @@ export const surfaceWindLayer: Layer = {
   name: usingMessages(m => m.layerWindSurface()),
   title: usingMessages(m => m.layerWindSurfaceLegend()),
   dataPath: 'wind-surface',
+  webglStyle: emptyWebGLStyle,
   reactiveComponents: windComponents(data => data.surface.wind)
 };
 
@@ -54,6 +59,7 @@ export const soaringLayerTopWindLayer: Layer = {
   name: usingMessages(m => m.layerWindSoaringLayerTop()),
   title: usingMessages(m => m.layerWindSoaringLayerTopLegend()),
   dataPath: 'wind-soaring-layer-top',
+  webglStyle: emptyWebGLStyle,
   reactiveComponents: windComponents(data => data.winds.soaringLayerTop)
 };
 
@@ -62,6 +68,7 @@ export const _300MAGLWindLayer: Layer = {
   name: usingMessages(m => m.layerWind300MAGL()),
   title: usingMessages(m => m.layerWind300MAGLLegend()),
   dataPath: 'wind-300m-agl',
+  webglStyle: emptyWebGLStyle,
   reactiveComponents: windComponents(data => data.winds._300MAGL)
 };
 
@@ -70,6 +77,7 @@ export const _2000MAMSLWindLayer: Layer = {
   name: usingMessages(m => m.layerWind2000AMSL()),
   title: usingMessages(m => m.layerWind2000AMSLLegend()),
   dataPath: 'wind-2000m-amsl',
+  webglStyle: emptyWebGLStyle,
   reactiveComponents: windComponents( data => data.winds._2000MAMSL)
 };
 
@@ -78,6 +86,7 @@ export const _3000MAMSLWindLayer: Layer = {
   name: usingMessages(m => m.layerWind3000AMSL()),
   title: usingMessages(m => m.layerWind3000AMSLLegend()),
   dataPath: 'wind-3000m-amsl',
+  webglStyle: emptyWebGLStyle,
   reactiveComponents: windComponents(data => data.winds._3000MAMSL)
 };
 
@@ -86,5 +95,6 @@ export const _4000MAMSLWindLayer: Layer = {
   name: usingMessages(m => m.layerWind4000AMSL()),
   title: usingMessages(m => m.layerWind4000AMSLLegend()),
   dataPath: 'wind-4000m-amsl',
+  webglStyle: emptyWebGLStyle,
   reactiveComponents: windComponents(data => data.winds._4000MAMSL)
 };

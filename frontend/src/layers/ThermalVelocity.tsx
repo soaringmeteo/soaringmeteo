@@ -1,6 +1,6 @@
 import { ColorScale, Color } from "../ColorScale";
 import {type ForecastMetadata} from '../data/ForecastMetadata';
-import {colorScaleEl, Layer, ReactiveComponents, summarizerFromLocationDetails} from './Layer';
+import {colorScaleEl, colorScaleToWebGLStyle, Layer, ReactiveComponents, summarizerFromLocationDetails} from './Layer';
 import {useI18n, usingMessages} from "../i18n";
 import {type Zone} from "../data/Model";
 
@@ -22,6 +22,7 @@ export const thermalVelocityLayer: Layer = {
   name: usingMessages(m => m.layerThermalVelocity()),
   title: usingMessages(m => m.layerThermalVelocityLegend()),
   dataPath: 'thermal-velocity',
+  webglStyle: colorScaleToWebGLStyle(thermalVelocityColorScale),
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,

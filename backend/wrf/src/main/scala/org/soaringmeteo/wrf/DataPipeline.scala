@@ -63,8 +63,10 @@ object DataPipeline {
   ): Unit = {
     logger.info(s"Generating raster images and vector tiles")
     val forecastsByHour = netCdfResult.forecastsByHour
+    val (_, rasterExtent) = netCdfResult.metadata.raster
+    val wrfCrs = geotrellis.proj4.CRS.fromString("+proj=lcc +lat_1=46 +lat_2=46 +lat_0=46 +lon_0=10 +a=6370000 +b=6370000 +units=m")
     for ((forecasts, t) <- forecastsByHour.zipWithIndex) {
-      Raster.writeAllPngFiles(netCdfResult.metadata.width, netCdfResult.metadata.height, outputDir, t, forecasts)
+      Raster.writeAllCogFiles(netCdfResult.metadata.width, netCdfResult.metadata.height, rasterExtent, wrfCrs, outputDir, t, forecasts)
       VectorTiles.writeAllVectorTiles(netCdfResult.metadata.vectorTilesParameters, outputDir, t, forecasts)
     }
   }
