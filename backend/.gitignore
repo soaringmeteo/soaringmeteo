@@ -4,3 +4,4 @@ target/
 .bsp/
 gfs/data.mv.db
 gfs/data.trace.db
+wrf-data/**
