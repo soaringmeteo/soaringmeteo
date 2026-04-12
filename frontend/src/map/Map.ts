@@ -228,7 +228,6 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
   return {
     locationClicks: locationClicks,
     setPrimaryLayerSource: (url: string, projection: string, extent: Extent, webglStyle: object): void => {
-      console.log(`projection = ${projection}`)
       const source = new GeoTIFF({
         sources: [{ url }],
         convertToRGB: false,
