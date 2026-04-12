@@ -2,6 +2,14 @@
 
 SoaringMeteo (<https://soaringmeteo.org>) is an open-source weather forecast website for soaring (glider) pilots. It processes numerical weather prediction model output and displays meteorological data relevant to soaring flight — thermals, cloud cover, wind at various altitudes, soaring layer depth, XC flying potential, and more — as interactive map overlays with detailed per-location forecasts.
 
+## Scope
+
+This file applies to the whole repository.
+
+More specific instructions in `backend/AGENTS.md` and `frontend/AGENTS.md` extend this file for work in those directories and take precedence there.
+
+For contributor workflow details such as setup, local development, testing, asset generation, deployment, and forecast format versioning, see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
 ## Architecture
 
 The project is split into two main parts: a Scala backend that produces forecast data assets, and a TypeScript/SolidJS frontend that displays them on an interactive map.
@@ -60,4 +68,3 @@ NWP Model Run (NOAA GFS / WRF)
         ▼
   Interactive soaring weather map
 ```
-

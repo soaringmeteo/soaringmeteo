@@ -2,6 +2,14 @@
 
 The frontend is a single-page application that renders an interactive map with soaring weather overlays. It consumes static assets (PNG rasters, MVT vector tiles, JSON files) produced by the backend and displays them on an OpenLayers map. Built with TypeScript, SolidJS, OpenLayers, Vite, and Paraglide-JS.
 
+## Scope
+
+This file applies to work under `frontend/`.
+
+It extends the repository-wide instructions in [`../AGENTS.md`](../AGENTS.md) and takes precedence for frontend files.
+
+For setup, local development commands, build steps, deployment, and forecast format versioning, see [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
+
 ## Entry Point & Bootstrap
 
 - `index.ts` — Registers the PWA service worker and calls `start()` from `App.tsx`.
@@ -242,4 +250,3 @@ npm run deploy      # compile + build + rsync to production
 - **`@css-hooks/solid`** — CSS-in-JS with hover/media support in SolidJS.
 - **`vite-plugin-pwa`** — Service worker generation for offline capability.
 - **plausible-tracker** — Privacy-friendly analytics.
-
