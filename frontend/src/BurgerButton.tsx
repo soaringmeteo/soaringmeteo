@@ -14,7 +14,6 @@ const Burger = lazy(() => import('./Burger').then(module => ({ default: module.B
 export const BurgerButton = (props: {
   domain: Domain
 }): JSX.Element => {
-
   const [expanded, setExpanded] = createSignal(false);
 
   const menuBtn =

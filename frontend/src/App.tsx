@@ -6,9 +6,11 @@ import {initializeMap, MapHooks} from './map/Map';
 import {Domain} from './State';
 import {BurgerButton} from './BurgerButton';
 import { styleSheet } from "./css-hooks";
+import {CurrentLocationButton} from "./CurrentLocationButton";
 import {LayerKeys} from "./LayerKeys";
+import {ChevronIcon, RoundIconButton} from "./RoundIconButton";
 import {HelpButton} from './help/HelpButton';
-import {Localized} from "./i18n";
+import {Localized, useI18n} from "./i18n";
 import {fetchGfsForecastRuns, fetchWrfForecastRuns} from "./data/ForecastMetadata";
 import {LocationDetails, SoundingDiagram} from "./LocationDetails";
 import {diagramsIndex} from "./styles/Styles";
@@ -22,7 +24,6 @@ const App = (props: {
   domain: Domain,
   mapHooks: MapHooks
 }): JSX.Element => {
-
   // Update primary layer
   createEffect(() => {
     const url = props.domain.urlOfRasterAtCurrentHourOffset();
@@ -75,8 +76,10 @@ const App = (props: {
 const AppLayout = (props: {
   domain: Domain
   mapHooks: MapHooks
-}): JSX.Element =>
-  <>
+}): JSX.Element => {
+  const { m } = useI18n();
+
+  return <>
     <div style={{
       position: 'absolute',
       top: 0,
@@ -96,6 +99,7 @@ const AppLayout = (props: {
     </div>
     <BurgerButton domain={props.domain} />
   </>;
+};
 
 const enablePointerEvents: JSX.CSSProperties = { 'pointer-events': 'auto' };
 
@@ -122,7 +126,6 @@ const MiddleZone = (props: {
       'align-items': 'flex-start',
     }}
   >
-    <LayerKeys domain={props.domain} />
     <SoundingDiagram domain={props.domain} />
     <span
       style={{
@@ -136,8 +139,11 @@ const MiddleZone = (props: {
   </div>;
 
 // day selector and help button
-const BottomZone = (props: { domain: Domain }): JSX.Element =>
-  <div style={{
+const BottomZone = (props: {
+  domain: Domain,
+}): JSX.Element => {
+  const { m } = useI18n();
+  return <div style={{
     display: 'flex',
     'justify-content': 'center',
     position: 'relative',
@@ -145,17 +151,33 @@ const BottomZone = (props: { domain: Domain }): JSX.Element =>
     <span style={ enablePointerEvents }>
       <DaySelector domain={props.domain} />
     </span>
-    <span
+    <div
       style={{
         position: 'absolute',
-        right: '.5rem',
+        right: '.25rem',
         bottom: '.5rem',
         ...enablePointerEvents,
+        display: 'flex',
+        'flex-direction': 'column',
+        'align-items': 'flex-end',
+        gap: '7px',
+        padding: '3px',
       }}
     >
-      <HelpButton domain={props.domain} overMap={true}/>
-    </span>
+      <Show when={ props.domain.state.mapControlsVisible }>
+        <LayerKeys domain={props.domain} />
+        <CurrentLocationButton domain={props.domain} />
+        <HelpButton domain={props.domain} overMap={true}/>
+      </Show>
+      <RoundIconButton
+        onClick={ () => props.domain.toggleMapControls() }
+        title={ props.domain.state.mapControlsVisible ? m().mapControlsHide() : m().mapControlsShow() }
+      >
+        <ChevronIcon direction={ props.domain.state.mapControlsVisible ? 'down' : 'up' } />
+      </RoundIconButton>
+    </div>
   </div>;
+};
 
 const Loader = ((props: {
   mapHooks: MapHooks

@@ -6,7 +6,8 @@ import {toLonLat} from "ol/proj";
 import {MapBrowserEvent} from "ol";
 import {Meteogram, Sounding} from "./DetailedView";
 import { HelpButton } from "./help/HelpButton";
-import {buttonStyle, diagramsIndex, roundButtonStyle, surfaceOverMap} from "./styles/Styles";
+import { RoundIconButton, CloseIcon } from "./RoundIconButton";
+import {buttonStyle, diagramsIndex, surfaceOverMap} from "./styles/Styles";
 import { css } from "./css-hooks";
 import {useI18n} from "./i18n";
 import {gfsName} from "./data/Model";
@@ -110,18 +111,14 @@ export const LocationDetails = (props: {
 
           <HelpButton domain={ props.domain } overMap={ false } />
 
-          <div
-            style={css({
-              ...roundButtonStyle,
-              'flex-shrink': 0,
-              'border': '1px solid lightgray',
-              hover: { 'background-color': 'lightgray' }
-            } as JSX.CSSProperties)}
+          <RoundIconButton
             title='Hide'
             onClick={ () => props.domain.hideLocationForecast() }
+            overMap={ false }
+            style={{ 'flex-shrink': 0 }}
           >
-            ⨯
-          </div>
+            <CloseIcon />
+          </RoundIconButton>
         </div>
       </div>
     }

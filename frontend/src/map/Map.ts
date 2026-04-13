@@ -6,8 +6,9 @@ import { ScaleLine } from "ol/control";
 import { defaults as defaultInteractions } from "ol/interaction";
 import { Coordinate } from "ol/coordinate";
 import { Point } from 'ol/geom';
+import { circular as circularPolygon } from 'ol/geom/Polygon';
 import { MVT } from "ol/format";
-import { Style, Icon, Text, Fill } from 'ol/style';
+import { Style, Icon, Text, Fill, Stroke, Circle as CircleStyle } from 'ol/style';
 import { Accessor, createSignal } from 'solid-js';
 import windImg0 from '../images/wind-0.png';
 import windImg1 from '../images/wind-1.png';
@@ -91,10 +92,17 @@ export type MapHooks = {
   enableWindNumericalValues: (value: boolean) => void
   showMarker: (latitude: number, longitude: number) => void
   hideMarker: () => void
-  centerToLocation: (latitude: number, longitude: number) => void
+  centerToUserLocation: (userLocation: UserLocation) => void
 }
 
+type UserLocation = {
+  latitude: number
+  longitude: number
+  accuracy: number
+};
+
 export const initializeMap = (element: HTMLElement): MapHooks => {
+  const minimumCurrentLocationRadiusPixels = 12;
 
   const baseLayer = new TileLayer({
     source: new XYZ({
@@ -114,6 +122,38 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     declutter: true, // That seems to “fix” the `renderBuffer` issue, but that might be temporary, see https://github.com/openlayers/openlayers/issues/11191
   });
 
+  const userLocationFeature = new Feature();
+  const userLocationCenterFeature = new Feature();
+  const userLocationLayer = new VectorLayer({
+    source: new VectorSource({ features: [userLocationFeature] }),
+    visible: false,
+    style: new Style({
+      fill: new Fill({
+        color: 'rgba(212, 0, 0, 0.12)',
+      }),
+      stroke: new Stroke({
+        color: '#d40000',
+        width: 2,
+      }),
+    }),
+  });
+  const userLocationCenterLayer = new VectorLayer({
+    source: new VectorSource({ features: [userLocationCenterFeature] }),
+    visible: false,
+    style: new Style({
+      image: new CircleStyle({
+        radius: 4,
+        fill: new Fill({
+          color: '#d40000',
+        }),
+        stroke: new Stroke({
+          color: 'white',
+          width: 1,
+        }),
+      }),
+    }),
+  });
+
   // Marker on the position of the selected location
   const markerFeature = new Feature();
   const markerLayer = new VectorLayer({
@@ -126,7 +166,6 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
       })
     }),
   });
-
   const [location, zoom] = loadLocationAndZoom();
   const map = new Map({
     target: element,
@@ -134,6 +173,8 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
       baseLayer,
       primaryLayer,
       secondaryLayer,
+      userLocationLayer,
+      userLocationCenterLayer,
       markerLayer
     ],
     view: new View({
@@ -151,6 +192,21 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     ],
     interactions: defaultInteractions({ pinchRotate: false })
   });
+
+  const setUserLocationGeometry = (userLocation: UserLocation): void => {
+    const center4326: [number, number] = [userLocation.longitude, userLocation.latitude];
+    const resolution = map.getView().getResolution() ?? 1;
+    const visibleRadiusMeters = Math.max(
+      userLocation.accuracy,
+      resolution * minimumCurrentLocationRadiusPixels
+    );
+    userLocationFeature.setGeometry(
+      circularPolygon(center4326, Math.max(visibleRadiusMeters, 1), 128).transform('EPSG:4326', webMercatorProjection)
+    );
+    userLocationCenterFeature.setGeometry(new Point(fromLonLat(center4326, webMercatorProjection)));
+    userLocationLayer.setVisible(true);
+    userLocationCenterLayer.setVisible(true);
+  };
 
   map.on('moveend', () => {
     const center = map.getView().getCenter();
@@ -222,9 +278,10 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     hideMarker: (): void => {
       markerLayer.setVisible(false);
     },
-    centerToLocation: (latitude: number, longitude: number): void => {
+    centerToUserLocation: (userLocation: UserLocation): void => {
       const view = map.getView();
-      view.setCenter(fromLonLat([longitude, latitude], webMercatorProjection));
+      setUserLocationGeometry(userLocation);
+      view.setCenter(fromLonLat([userLocation.longitude, userLocation.latitude], webMercatorProjection));
     }
   }
 };
