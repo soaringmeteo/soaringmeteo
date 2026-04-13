@@ -159,7 +159,7 @@ const BottomZone = (props: {
         ...enablePointerEvents,
         display: 'flex',
         'flex-direction': 'column',
-        'align-items': 'center',
+        'align-items': 'flex-end',
         gap: '7px',
         padding: '3px',
       }}
