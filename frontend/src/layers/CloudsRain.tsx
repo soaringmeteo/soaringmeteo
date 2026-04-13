@@ -29,11 +29,11 @@ export const cloudsRainLayer: Layer = {
   key: 'clouds-rain',
   name: usingMessages(m => m.layerCloudsAndRain()),
   title: usingMessages(m => m.layerCloudsAndRainLegend()),
-  dataPath: 'clouds-rain',
   reactiveComponents(props: {
     zone: Zone,
     forecastMetadata: ForecastMetadata,
-    hourOffset: number
+    hourOffset: number,
+    daltonianColorScaleEnabled: boolean
   }): ReactiveComponents {
 
     const { m } = useI18n();
@@ -53,6 +53,7 @@ export const cloudsRainLayer: Layer = {
 
     return {
       summarizer,
+      dataPath: () => 'clouds-rain',
       mapKey,
       help
     }

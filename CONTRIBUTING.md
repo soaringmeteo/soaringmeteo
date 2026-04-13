@@ -84,6 +84,17 @@ sbt
 
 `makeGfsAssets` downloads a subset of the usual data to speed up the development workflow.
 
+Note that there are situations, e.g. when makeing changes to colours, that one make need to completed rebuits GFS assets:
+
+```bash
+cd backend
+rm -rf target/forecast/data/7/gfs
+rm -f gfs/data.mv.db gfs/data.trace.db
+sbt
+reload
+makeGfsAssets
+```
+
 You can customize the settings by changing the configuration file [dev.conf](gfs/dev.conf). Look at the file [reference.conf](gfs/src/main/resources/reference.conf) for an overview of all the configuration options.
 
 The different backend options are documented [here](backend/README.md)

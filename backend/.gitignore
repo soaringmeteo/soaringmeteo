@@ -2,4 +2,6 @@ target/
 /application.conf
 .scala-build/
 .bsp/
+gfs/data.mv.db
+gfs/data.trace.db
 wrf-data/**

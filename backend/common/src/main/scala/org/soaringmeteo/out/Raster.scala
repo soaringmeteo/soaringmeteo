@@ -20,6 +20,90 @@ object Raster {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
+  private val defaultXcPotentialColorMap: ColorMap =
+    ColorMap(
+      10  -> 0x333333,
+      20  -> 0x990099,
+      30  -> 0xff0000,
+      40  -> 0xff9900,
+      50  -> 0xffcc00,
+      60  -> 0xffff00,
+      70  -> 0x66ff00,
+      80  -> 0x00ffff,
+      90  -> 0x99ffff,
+      100 -> 0xffffff
+    )
+
+  private val daltonianXcPotentialColorMap: ColorMap =
+    ColorMap(
+      10  -> 0x333333,
+      20  -> 0x7a1fa2,
+      30  -> 0xd73027,
+      40  -> 0xf46d43,
+      50  -> 0xfdae61,
+      60  -> 0xffffbf,
+      70  -> 0xa6d96a,
+      80  -> 0x66c2a5,
+      90  -> 0x3288bd,
+      100 -> 0xffffff
+    )
+
+  private val defaultSoaringLayerDepthColorMap: ColorMap =
+    ColorMap(
+      250  -> 0x333333,
+      500  -> 0x990099,
+      750  -> 0xff0000,
+      1000 -> 0xff9900,
+      1250 -> 0xffcc00,
+      1500 -> 0xffff00,
+      1750 -> 0x66ff00,
+      2000 -> 0x00ffff,
+      2250 -> 0x99ffff,
+      2500 -> 0xffffff
+    ).withFallbackColor(0xffffff)
+
+  private val daltonianSoaringLayerDepthColorMap: ColorMap =
+    ColorMap(
+      250  -> 0x333333,
+      500  -> 0x7a1fa2,
+      750  -> 0xd73027,
+      1000 -> 0xf46d43,
+      1250 -> 0xfdae61,
+      1500 -> 0xffffbf,
+      1750 -> 0xa6d96a,
+      2000 -> 0x66c2a5,
+      2250 -> 0x3288bd,
+      2500 -> 0xffffff
+    ).withFallbackColor(0xffffff)
+
+  private val defaultThermalVelocityColorMap: ColorMap =
+    ColorMap(
+      0.25 -> 0x333333,
+      0.50 -> 0x990099,
+      0.75 -> 0xff0000,
+      1.00 -> 0xff9900,
+      1.25 -> 0xffcc00,
+      1.50 -> 0xffff00,
+      1.75 -> 0x66ff00,
+      2.00 -> 0x00ffff,
+      2.50 -> 0x99ffff,
+      3.00 -> 0xffffff
+    ).withFallbackColor(0xffffff)
+
+  private val daltonianThermalVelocityColorMap: ColorMap =
+    ColorMap(
+      0.25 -> 0x333333,
+      0.50 -> 0x7a1fa2,
+      0.75 -> 0xd73027,
+      1.00 -> 0xf46d43,
+      1.25 -> 0xfdae61,
+      1.50 -> 0xffffbf,
+      1.75 -> 0xa6d96a,
+      2.00 -> 0x66c2a5,
+      2.50 -> 0x3288bd,
+      3.00 -> 0xffffff
+    ).withFallbackColor(0xffffff)
+
   def apply(path: String, extractor: DataExtractor, colorMap: ColorMap, pngColorEncoding: PngColorEncoding): Raster = {
     val pathArgument = path
     new Raster {
@@ -66,53 +150,38 @@ object Raster {
     Raster(
       "xc-potential",
       intData(_.xcFlyingPotential),
-      ColorMap(
-        10  -> 0x333333,
-        20  -> 0x990099,
-        30  -> 0xff0000,
-        40  -> 0xff9900,
-        50  -> 0xffcc00,
-        60  -> 0xffff00,
-        70  -> 0x66ff00,
-        80  -> 0x00ffff,
-        90  -> 0x99ffff,
-        100 -> 0xffffff
-      ),
+      defaultXcPotentialColorMap,
+      RgbPngEncoding
+    ),
+    Raster(
+      "xc-potential-daltonian",
+      intData(_.xcFlyingPotential),
+      daltonianXcPotentialColorMap,
       RgbPngEncoding
     ),
     // Thermals
     Raster(
       "soaring-layer-depth",
       intData(_.soaringLayerDepth.toMeters.round.intValue),
-      ColorMap(
-        250  -> 0x333333,
-        500  -> 0x990099,
-        750  -> 0xff0000,
-        1000 -> 0xff9900,
-        1250 -> 0xffcc00,
-        1500 -> 0xffff00,
-        1750 -> 0x66ff00,
-        2000 -> 0x00ffff,
-        2250 -> 0x99ffff,
-        2500 -> 0xffffff
-      ).withFallbackColor(0xffffff),
+      defaultSoaringLayerDepthColorMap,
+      RgbPngEncoding
+    ),
+    Raster(
+      "soaring-layer-depth-daltonian",
+      intData(_.soaringLayerDepth.toMeters.round.intValue),
+      daltonianSoaringLayerDepthColorMap,
       RgbPngEncoding
     ),
     Raster(
       "thermal-velocity",
       doubleData(_.thermalVelocity.toMetersPerSecond),
-      ColorMap(
-        0.25 -> 0x333333,
-        0.50 -> 0x990099,
-        0.75 -> 0xff0000,
-        1.00 -> 0xff9900,
-        1.25 -> 0xffcc00,
-        1.50 -> 0xffff00,
-        1.75 -> 0x66ff00,
-        2.00 -> 0x00ffff,
-        2.50 -> 0x99ffff,
-        3.00 -> 0xffffff
-      ).withFallbackColor(0xffffff),
+      defaultThermalVelocityColorMap,
+      RgbPngEncoding
+    ),
+    Raster(
+      "thermal-velocity-daltonian",
+      doubleData(_.thermalVelocity.toMetersPerSecond),
+      daltonianThermalVelocityColorMap,
       RgbPngEncoding
     ),
     // Clouds and Rain

@@ -16,11 +16,11 @@ export const cumuliDepthLayer: Layer = {
   key: 'cumuli-depth',
   name: usingMessages(m => m.layerCumulusDepth()),
   title: usingMessages(m => m.layerCumulusDepthLegend()),
-  dataPath: 'cumulus-depth',
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
-    hourOffset: number
+    hourOffset: number,
+    daltonianColorScaleEnabled: boolean
   }): ReactiveComponents {
 
     const { m } = useI18n();
@@ -47,6 +47,7 @@ export const cumuliDepthLayer: Layer = {
 
     return {
       summarizer,
+      dataPath: () => 'cumulus-depth',
       mapKey,
       help
     }  

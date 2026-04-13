@@ -13,6 +13,8 @@ type Summarizer = {
 export type ReactiveComponents = {
   /** The current summarizer (shown in popups) of a layer. */
   readonly summarizer: Accessor<Summarizer>
+  /** The current data path of the layer. */
+  readonly dataPath: Accessor<string>
   /** The map key of the layer. */
   readonly mapKey: JSX.Element
   /** The documentation of the layer (shown in the help modal). */
@@ -26,12 +28,12 @@ export type ReactiveComponents = {
   readonly key: string
   readonly name: Accessor<string>
   readonly title: Accessor<string>
-  readonly dataPath: string
   reactiveComponents(props: {
     forecastMetadata: ForecastMetadata,
     zone: Zone,
     hourOffset: number,
     windNumericValuesShown: boolean,
+    daltonianColorScaleEnabled: boolean,
     timeZone: string | undefined,
     setHourOffset: (value: number) => void
   }): ReactiveComponents

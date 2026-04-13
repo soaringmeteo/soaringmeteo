@@ -107,7 +107,8 @@ export const meteogram = (forecasts: LocationForecasts, state: State): { key: JS
             rainDiagramHeight,
             canvasWidth,
             canvasHeight,
-            state.windNumericValuesShown
+            state.windNumericValuesShown,
+            state.daltonianColorScaleEnabled
           );
         });
       },
@@ -142,8 +143,12 @@ const drawMeteogram = (
   rainDiagramHeight: number,
   canvasWidth: number,
   canvasHeight: number,
-  windNumericValuesShown: boolean
+  windNumericValuesShown: boolean,
+  daltonianColorScaleEnabled: boolean
 ): void => {
+
+  const activeThqColorScale = thqColorScale(daltonianColorScaleEnabled);
+  const activeThermalVelocityColorScale = thermalVelocityColorScale(daltonianColorScaleEnabled);
 
   // Clear everything first
   ctx.save();
@@ -205,7 +210,7 @@ const drawMeteogram = (
     thqDiagram.fillRect(
       [columnStart, 0],
       [columnEnd, thqDiagramHeight],
-      `${thqColorScale.closest(thq).css()}`
+      `${activeThqColorScale.closest(thq).css()}`
     );
     thqDiagram.rect(
       [columnStart, 0],
@@ -222,7 +227,7 @@ const drawMeteogram = (
     thermalVelocityDiagram.fillRect(
       [columnStart, 0],
       [columnEnd, thermalVelocityDiagramHeight],
-      `${thermalVelocityColorScale.closest(forecast.thermalVelocity).css()}`
+      `${activeThermalVelocityColorScale.closest(forecast.thermalVelocity).css()}`
     );
     thermalVelocityDiagram.rect(
       [columnStart, 0],

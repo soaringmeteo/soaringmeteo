@@ -73,5 +73,15 @@ export const Settings = (props: {
         labelPosition='right'
       />
     </fieldset>
+    <fieldset style={{ 'margin-top': '.1em' }}>
+      <legend>{ m().settingsAccessibility() }</legend>
+      <Checkbox
+        label={ m().settingsDaltonianColorScale() }
+        title={ m().settingsDaltonianColorScaleLegend() }
+        checked={ props.domain.state.daltonianColorScaleEnabled }
+        onChange={ value => props.domain.enableDaltonianColorScale(value) }
+        labelPosition='right'
+      />
+    </fieldset>
   </Overlay>
 };
