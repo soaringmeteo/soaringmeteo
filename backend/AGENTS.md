@@ -2,6 +2,14 @@
 
 The backend processes numerical weather prediction (NWP) model output and produces static assets (PNG rasters, MVT vector tiles, JSON files) consumed by the frontend. It is written in Scala 2.13, built with sbt, and runs on JDK 17.
 
+## Scope
+
+This file applies to work under `backend/`.
+
+It extends the repository-wide instructions in [`../AGENTS.md`](../AGENTS.md) and takes precedence for backend files.
+
+For setup, local development commands, testing, asset generation, deployment, and forecast format versioning, see [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
+
 ## Modules
 
 The backend is organized into three sbt modules.
@@ -145,4 +153,3 @@ bin/wrf <output-dir> <init-time> <first-time-step> <input-files>...
 - **Decline** — Command-line argument parsing.
 - **Slick + H2** (GFS only) — Local database for intermediate forecast data storage.
 - **Logback** — Logging.
-
