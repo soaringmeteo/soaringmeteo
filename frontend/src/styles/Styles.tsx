@@ -10,7 +10,7 @@ export const roundButtonSize = 24;
 // width of the left key shown on the diagrams
 export const keyWidth = 40;
 // width of the sounding diagrams
-export const soundingWidth =
+export const soundingWidth = (): number =>
   Math.max(Math.min(600, document.documentElement.clientWidth - keyWidth), 250);
 
 export const daySelectorHeight = 15;
@@ -18,7 +18,7 @@ export const hourSelectorHeight = 22;
 // height of the period selector shown at the top of the screen
 export const periodSelectorHeight = daySelectorHeight + hourSelectorHeight + 2 /* border */;
 // available height in the viewport for drawing the diagrams (sounding and meteogram)
-export const diagramsAvailableHeight =
+export const diagramsAvailableHeight = (): number =>
   document.documentElement.clientHeight - periodSelectorHeight - 61 /* bottom time selector */ - 64 /* text information and help */ - 10 /* arbitrary margin */;
 
 // width of one time period in meteograms
