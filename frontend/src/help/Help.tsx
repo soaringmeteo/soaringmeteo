@@ -160,7 +160,7 @@ const SoundingHelp = (props: { domain: Domain }): JSX.Element => {
       { m().helpSoundingIntro1() } <a href="https://soaringmeteo.org/profilEN.pdf" target="_blank">{ m().helpSoundingIntro2() }</a>).
       {' '}{ m().helpSoundingIntro3() }
     </p>
-    <div style={{ float: 'left', 'margin-right': '1em', 'min-width': `${ keyWidth + soundingWidth }px` }}>
+    <div style={{ float: 'left', 'margin-right': '1em', 'min-width': `${ keyWidth + soundingWidth() }px` }}>
       { lazySounding({ domain: props.domain }) }
     </div>
     <p>

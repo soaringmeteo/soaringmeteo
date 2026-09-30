@@ -53,7 +53,7 @@ export const sounding = (forecast: DetailedForecast, elevation: number, zoomedDe
 
   // Main canvas contains the sounding diagram
   const canvas = document.createElement('canvas');
-  setupCanvas(canvas, soundingWidth, canvasHeight);
+  setupCanvas(canvas, soundingWidth(), canvasHeight);
   const ctx = canvas.getContext('2d');
 
   // Left key contains the vertical axis of the sounding diagram
@@ -126,15 +126,15 @@ const drawSounding = (
   const [canvasHeight, maxElevation] =
     computeSoundingHeightAndMaxElevation(zoomed, elevation, forecast);
 
-  rootView.style.width = `${soundingWidth}px`;
+  rootView.style.width = `${soundingWidth()}px`;
   rootView.style.height = `${canvasHeight}px`;
-  setupCanvas(canvas, soundingWidth, canvasHeight);
+  setupCanvas(canvas, soundingWidth(), canvasHeight);
   setupCanvas(canvasLeftKey, keyWidth, canvasHeight);
 
   // Clear everything first
   ctx.save();
   ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, soundingWidth, canvasHeight);
+  ctx.fillRect(0, 0, soundingWidth(), canvasHeight);
   ctx.restore();
   leftCtx.save();
   leftCtx.fillStyle = 'white';
@@ -147,7 +147,7 @@ const drawSounding = (
   const textOffset = offset / 2;
 
   // Dimensions of the sounding diagram
-  const width  = soundingWidth - 5;
+  const width  = soundingWidth() - 5;
   const height = canvasHeight - 5;
 
   const elevationScale = new Scale([elevation, maxElevation], [offset, height], false);
@@ -396,6 +396,6 @@ const computeSoundingHeightAndMaxElevation = (zoomed: boolean, elevation: number
   const numberOfEntries = forecast.aboveGround.findIndex(aboveGround => aboveGround.elevation >= maxElevation)
   const preferredHeight =
     (numberOfEntries >= 0 ? numberOfEntries : forecast.aboveGround.length) * windArrowSize * 1.2;
-  const canvasHeight = Math.min(preferredHeight, diagramsAvailableHeight);
+  const canvasHeight = Math.min(preferredHeight, diagramsAvailableHeight());
   return [canvasHeight, maxElevation];
 }

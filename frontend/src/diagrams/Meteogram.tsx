@@ -59,7 +59,7 @@ export const meteogram = (forecasts: LocationForecasts, state: State): { key: JS
   // The preferred height is the height where the density of information is optimal
   const airDiagramPreferredHeight =
     (numberOfEntries >= 0 ? numberOfEntries : flatForecasts[0].aboveGround.length) * meteogramColumnWidth;
-  const airDiagramAvailableHeight = diagramsAvailableHeight - highAirDiagramHeight - thermalVelocityDiagramHeight - thqDiagramHeight - rainDiagramHeight - 11 - gutterHeight * 7; // px
+  const airDiagramAvailableHeight = Math.max(0, diagramsAvailableHeight() - highAirDiagramHeight - thermalVelocityDiagramHeight - thqDiagramHeight - rainDiagramHeight - 11 - gutterHeight * 7); // px
   // If possible, use the preferred height, but if there is not enough space (e.g. on small screens), take the available height
   const airDiagramHeight = Math.min(airDiagramPreferredHeight, airDiagramAvailableHeight);
   const airDiagramTop    = highAirDiagramTop + highAirDiagramHeight; // No gutter between high air diagram and air diagram
