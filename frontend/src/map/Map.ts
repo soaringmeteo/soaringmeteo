@@ -28,7 +28,7 @@ import { register } from "ol/proj/proj4";
 const windImages = [windImg0, windImg1, windImg2, windImg3, windImg4, windImg5, windImg6, windImg7, windImg8, windImg9];
 
 const mapTilerUrl = 'https://api.maptiler.com/maps/topo/{z}/{x}/{y}.png?key=6hEH9bUrAyDHR6nLDUf6';
-const smUrl = 'https://tiles.soaringmeteo.org/{z}/{x}/{y}.png';
+const smUrl = 'https://soaringmeteo.org/tiles/v26.10/{z}/{x}/{y}.webp';
 const osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 const webMercatorProjection: Projection = (() => {
