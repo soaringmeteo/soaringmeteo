@@ -2,7 +2,7 @@ package org.soaringmeteo.wrf
 
 import cats.data.NonEmptyList
 import org.slf4j.LoggerFactory
-import org.soaringmeteo.InitDateString
+import org.soaringmeteo.{FoehnValleys, InitDateString}
 import org.soaringmeteo.out.{ForecastMetadata, JsonData, Raster, VectorTiles, deleteOldData, formatVersion, touchMarkerFile}
 
 import java.time.OffsetDateTime
@@ -51,10 +51,18 @@ object DataPipeline {
 
   private def processFile(inputFile: os.Path, grid: Grid, runTargetDir: os.Path): NetCdf.Metadata = {
     val gridOutputDir = runTargetDir / grid.outputPath
-    val result = NetCdf.read(inputFile)
+    val (result, valleyScoresByHour) = withFoehnValleys(NetCdf.read(inputFile))
     generateRasterImagesAndVectorTiles(gridOutputDir, result)
     generateLocationForecasts(gridOutputDir, grid.outputPath, result)
+    os.write.over(gridOutputDir / "foehn-valleys.json", FoehnValleys.toJson(valleyScoresByHour).noSpaces, createFolders = true)
     result.metadata
+  }
+
+  // Separate method so that the grid without diagnostics can be garbage collected
+  private def withFoehnValleys(result: NetCdf.Result): (NetCdf.Result, IndexedSeq[IndexedSeq[FoehnValleys.ValleyScore]]) = {
+    logger.info("Computing foehn valley similarity")
+    val valleys = FoehnValleys.diagnose(result.forecastsByHour, result.metadata.vectorTilesParameters.gridCoordinates)
+    (result.copy(forecastsByHour = valleys.forecastsByHour), valleys.valleyScoresByHour)
   }
 
   private def generateRasterImagesAndVectorTiles(
@@ -64,7 +72,7 @@ object DataPipeline {
     logger.info(s"Generating raster images and vector tiles")
     val forecastsByHour = netCdfResult.forecastsByHour
     for ((forecasts, t) <- forecastsByHour.zipWithIndex) {
-      Raster.writeAllPngFiles(netCdfResult.metadata.width, netCdfResult.metadata.height, outputDir, t, forecasts)
+      Raster.writeAllPngFiles(netCdfResult.metadata.width, netCdfResult.metadata.height, outputDir, t, forecasts, Raster.wrfRasters)
       VectorTiles.writeAllVectorTiles(netCdfResult.metadata.vectorTilesParameters, outputDir, t, forecasts)
     }
   }

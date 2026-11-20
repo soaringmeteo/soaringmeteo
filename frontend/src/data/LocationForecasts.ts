@@ -55,6 +55,7 @@ export class DetailedForecast {
   readonly isothermZero: number | undefined; // m
   readonly aboveGround: Array<AboveGround>; // Sorted by ascending elevation
   readonly winds: DetailedWinds;
+  readonly valleyFoehn: FoehnValleyDetails | undefined;
 
   constructor(data: DetailedForecastData, elevation: number) {
     this.time = new Date(data.t);
@@ -106,6 +107,15 @@ export class DetailedForecast {
       _3000MAMSL: data.w[3],
       _4000MAMSL: data.w[4]
     };
+
+    const fv = data.fv;
+    this.valleyFoehn = fv === undefined ? undefined : {
+      similarity: fv.s === null ? undefined : fv.s / 1000,
+      index: fv.i === null ? undefined : fv.i / 1000,
+      direction: fv.k === 0 ? 'south' : fv.k === 1 ? 'north' : undefined,
+      valleyId: fv.id === null ? undefined : fv.id,
+      distance: fv.d
+    };
   }
 
   hourOffsetSinceFirstTimeStep(firstTimeStep: Date): number {
@@ -120,6 +130,15 @@ export type DetailedWinds = {
   _2000MAMSL: Wind
   _3000MAMSL: Wind
   _4000MAMSL: Wind
+};
+
+/** Similarity between the 10 m wind and the nearest foehn flow line (see backend `FoehnValleys.scala`) */
+export type FoehnValleyDetails = {
+  similarity: number | undefined // 0–1
+  index: number | undefined // 0–1, `similarity` gated by the cross-Alpine pressure difference
+  direction: 'south' | 'north' | undefined
+  valleyId: string | undefined
+  distance: number // m
 };
 
 export type DetailedSurface = {
@@ -211,4 +230,5 @@ export type DetailedForecastData = {
   mslet: number, // hPa
   c: number // Between 0 and 100
   w: Array<{u: number, v: number}>
+  fv?: { s: number | null, i: number | null, k: number | null, id: string | null, d: number } // WRF only
 }

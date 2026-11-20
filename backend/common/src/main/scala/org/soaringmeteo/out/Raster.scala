@@ -46,10 +46,11 @@ object Raster {
     height: Int,
     targetDir: os.Path,
     hourOffset: Int,
-    forecasts: IndexedSeq[IndexedSeq[Forecast]]
+    forecasts: IndexedSeq[IndexedSeq[Forecast]],
+    rasters: List[Raster] = gfsRasters
   ): Unit = {
     logger.debug(s"Generating images for hour offset n°${hourOffset}")
-    for (raster <- gfsRasters) {
+    for (raster <- rasters) {
       val fileName = s"${hourOffset}.png" // e.g., "3.png", "6.png", etc.
       val path = targetDir / raster.path / fileName
       logger.trace(s"Generating image ${path}")
@@ -160,6 +161,24 @@ object Raster {
       RgbaPngEncoding
     ),
   )
+
+  // Colors must stay in sync with `frontend/src/layers/FoehnValleys.tsx`
+  val wrfRasters: List[Raster] =
+    gfsRasters :+ Raster(
+      "foehn-valley-similarity",
+      doubleData(_.valleyFoehn.fold(0.0)(_.index)),
+      ColorMap(
+        0.00 -> 0x00000000,
+        0.15 -> 0x00000000,
+        0.20 -> 0xedf8fbff,
+        0.35 -> 0xb2e2e2ff,
+        0.50 -> 0x66c2a4ff,
+        0.65 -> 0x2ca25fff,
+        0.80 -> 0x006d2cff,
+        1.00 -> 0x00441bff
+      ).withFallbackColor(0x00441bff),
+      RgbaPngEncoding
+    )
 
   /** Abstract over the type of data extracted from the forecast */
   trait DataExtractor {

@@ -5,6 +5,7 @@ import { soaringLayerTopWindLayer, boundaryLayerWindLayer, surfaceWindLayer, _30
 import { xcFlyingPotentialLayer } from "./ThQ";
 import { Layer } from "./Layer";
 import { cumuliDepthLayer } from "./CumuliDepth";
+import { foehnValleySimilarityLayer } from "./FoehnValleys";
 
 const layersByKey: Map<string, Layer> =
   new Map(
@@ -20,7 +21,8 @@ const layersByKey: Map<string, Layer> =
       _3000MAMSLWindLayer,
       _4000MAMSLWindLayer,
       boundaryLayerWindLayer,
-      soaringLayerTopWindLayer
+      soaringLayerTopWindLayer,
+      foehnValleySimilarityLayer
     ].map(layer => [layer.key, layer])
   );
 

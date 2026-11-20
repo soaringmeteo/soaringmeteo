@@ -16,6 +16,7 @@ import {
 import {cloudsRainLayer} from './layers/CloudsRain';
 import {thermalVelocityLayer} from './layers/ThermalVelocity';
 import {cumuliDepthLayer} from './layers/CumuliDepth';
+import {foehnValleySimilarityLayer} from './layers/FoehnValleys';
 import {showDate} from './shared';
 import {Checkbox, Radio, Select} from './styles/Forms';
 import {burgerBorderTopStyle, burgerPaddingStyle} from "./styles/Styles";
@@ -148,6 +149,7 @@ export const LayersSelector = (props: {
 
   const cloudsRainEl = setupLayerBtn(cloudsRainLayer, 'primary-layer');
   const cumuliDepthEl = setupLayerBtn(cumuliDepthLayer, 'primary-layer');
+  const foehnValleySimilarityEl = setupLayerBtn(foehnValleySimilarityLayer, 'primary-layer');
 
   const primaryLayerEl =
     <fieldset style={ fieldsetPaddingStyle }>
@@ -164,6 +166,9 @@ export const LayersSelector = (props: {
       {thermalVelocityEl}
       {cloudsRainEl}
       {cumuliDepthEl}
+      <Show when={ props.domain.state.model.name === wrfName }>
+        {foehnValleySimilarityEl}
+      </Show>
     </fieldset>;
 
   return <>

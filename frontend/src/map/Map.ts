@@ -7,7 +7,7 @@ import { defaults as defaultInteractions } from "ol/interaction";
 import { Coordinate } from "ol/coordinate";
 import { Point } from 'ol/geom';
 import { circular as circularPolygon } from 'ol/geom/Polygon';
-import { MVT } from "ol/format";
+import { GeoJSON, MVT } from "ol/format";
 import { Style, Icon, Text, Fill, Stroke, Circle as CircleStyle } from 'ol/style';
 import { Accessor, createSignal } from 'solid-js';
 import windImg0 from '../images/wind-0.png';
@@ -21,6 +21,8 @@ import windImg7 from '../images/wind-7.png';
 import windImg8 from '../images/wind-8.png';
 import windImg9 from '../images/wind-9.png';
 import markerImg from '../images/marker-icon.png';
+import foehnValleysUrl from '../data/foehn-valleys.geojson?url';
+import { foehnValleyStyle } from './foehnValleyStyle';
 import { Extent } from "ol/extent";
 import proj4 from 'proj4';
 import { register } from "ol/proj/proj4";
@@ -87,6 +89,8 @@ export type MapHooks = {
   locationClicks: Accessor<MapBrowserEvent<any> | undefined>
   setPrimaryLayerSource: (url: string, projection: string, extent: Extent) => void
   hidePrimaryLayer: () => void
+  /** Show the foehn flow lines styled by the index of each valley, or hide them when `undefined` */
+  setFoehnValleyScores: (scores: ReadonlyMap<string, number> | undefined) => void
   setWindLayerSource: (url: string, minViewZoom: number, extent: Extent, maxZoom: number, tileSize: number) => void
   hideWindLayer: () => void
   enableWindNumericalValues: (value: boolean) => void
@@ -115,6 +119,14 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
   const primaryLayer = new ImageLayer({
     opacity: 0.35,
   });
+
+  const foehnValleysSource = new VectorSource();
+  const foehnValleysLayer = new VectorLayer({
+    source: foehnValleysSource,
+    visible: false,
+    style: foehnValleyStyle,
+  });
+  let foehnValleysLoading: Promise<void> | undefined = undefined;
 
   const secondaryLayer = new VectorTileLayer({
     renderMode: 'hybrid',
@@ -172,6 +184,7 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     layers: [
       baseLayer,
       primaryLayer,
+      foehnValleysLayer,
       secondaryLayer,
       userLocationLayer,
       userLocationCenterLayer,
@@ -235,6 +248,19 @@ export const initializeMap = (element: HTMLElement): MapHooks => {
     },
     hidePrimaryLayer: (): void => {
       primaryLayer.setSource(null);
+    },
+    setFoehnValleyScores: (scores: ReadonlyMap<string, number> | undefined): void => {
+      foehnValleysLayer.setVisible(scores !== undefined);
+      if (scores === undefined) return;
+      if (foehnValleysLoading === undefined) {
+        foehnValleysLoading = fetch(foehnValleysUrl)
+          .then(response => response.json())
+          .then(json => foehnValleysSource.addFeatures(new GeoJSON().readFeatures(json, { featureProjection: viewProjection })));
+      }
+      foehnValleysLoading.then(() => {
+        foehnValleysSource.getFeatures().forEach(feature => feature.set('foehnIndex', scores.get(feature.get('id'))));
+        foehnValleysSource.changed();
+      });
     },
     setWindLayerSource: (url: string, minViewZoom: number, extent: Extent, maxZoom: number, tileSize: number): void => {
       secondaryLayer.setMinZoom(minViewZoom);

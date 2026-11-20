@@ -54,7 +54,8 @@ case class DetailedForecast(
   cin: SpecificEnergy,
   downwardShortWaveRadiationFlux: Irradiance,
   isothermZero: Option[Length],
-  winds: Winds
+  winds: Winds,
+  valleyFoehn: Option[FoehnValleys.Diagnostics]
 )
 
 object LocationForecasts {
@@ -85,7 +86,8 @@ object LocationForecasts {
             forecast.cin,
             forecast.downwardShortWaveRadiationFlux,
             forecast.isothermZero,
-            forecast.winds
+            forecast.winds,
+            forecast.valleyFoehn
           )
       }
     LocationForecasts(
@@ -227,6 +229,20 @@ object LocationForecasts {
                         "v" -> Json.fromInt(wind.v.toKilometersPerHour.round.toInt)
                       )): _*
                     )
+                  ).deepMerge(
+                    forecast.valleyFoehn.fold(Json.obj()) { valleyFoehn =>
+                      def permille(value: Double): Json =
+                        if (java.lang.Double.isFinite(value)) Json.fromInt((value * 1000).round.toInt) else Json.Null
+                      Json.obj(
+                        "fv" -> Json.obj(
+                          "s" -> permille(valleyFoehn.similarity),
+                          "i" -> permille(valleyFoehn.index),
+                          "k" -> valleyFoehn.direction.fold(Json.Null)(direction => Json.fromInt(direction.code)),
+                          "id" -> valleyFoehn.valleyId.fold(Json.Null)(Json.fromString),
+                          "d" -> Json.fromInt(valleyFoehn.distanceMeters.round.toInt)
+                        )
+                      )
+                    }
                     // TODO Irradiance, CIN, snow
                   )
                 }: _*

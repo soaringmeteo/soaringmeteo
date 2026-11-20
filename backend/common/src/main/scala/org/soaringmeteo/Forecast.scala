@@ -39,7 +39,8 @@ case class Forecast(
   isothermZero: Option[Length],
   winds: Winds, // wind value at some specific elevation levels
   xcFlyingPotential: Int,
-  soaringLayerDepth: Length // m (AGL)
+  soaringLayerDepth: Length, // m (AGL)
+  valleyFoehn: Option[FoehnValleys.Diagnostics] = None // WRF only
 )
 
 /**

@@ -12,6 +12,8 @@ import {ChevronIcon, RoundIconButton} from "./RoundIconButton";
 import {HelpButton} from './help/HelpButton';
 import {Localized, useI18n} from "./i18n";
 import {fetchGfsForecastRuns, fetchWrfForecastRuns} from "./data/ForecastMetadata";
+import {fetchFoehnValleys, foehnValleyScores} from "./data/FoehnValleys";
+import {foehnValleySimilarityLayer} from "./layers/FoehnValleys";
 import {LocationDetails, SoundingDiagram} from "./LocationDetails";
 import {diagramsIndex} from "./styles/Styles";
 
@@ -35,6 +37,21 @@ const App = (props: {
     } else {
       props.mapHooks.hidePrimaryLayer();
     }
+  });
+
+  // Foehn flow lines, shown with the valley similarity layer
+  const [foehnValleys] = createResource(
+    () =>
+      props.domain.state.primaryLayerEnabled && props.domain.state.primaryLayer.key === foehnValleySimilarityLayer.key
+        ? props.domain.state.forecastMetadata.urlOfFoehnValleys(props.domain.effectiveZone().id)
+        : undefined,
+    fetchFoehnValleys
+  );
+  createEffect(() => {
+    const data = foehnValleys();
+    props.mapHooks.setFoehnValleyScores(
+      data === undefined ? undefined : foehnValleyScores(data, props.domain.state.hourOffset)
+    );
   });
 
   // Update wind layer

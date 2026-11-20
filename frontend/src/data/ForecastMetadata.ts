@@ -114,6 +114,10 @@ export class ForecastMetadata {
     return `${dataPath}/${this.modelPath}/${this.runPath}/${zone}/${variablePath}/${hourOffset}/{z}-{x}-{y}.mvt`
   }
 
+  urlOfFoehnValleys(zone: string): string {
+    return `${dataPath}/${this.modelPath}/${this.runPath}/${zone}/foehn-valleys.json`
+  }
+
   defaultHourOffset(): number {
     const noonOffset = 12; // TODO Support other zones
     // Time (in number of hours since 00:00Z) at which the forecast model was initialized (ie, 0, 6, 12, or 18 for GFS)
