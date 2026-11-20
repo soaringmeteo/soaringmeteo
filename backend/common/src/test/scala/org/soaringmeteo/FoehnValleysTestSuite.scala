@@ -1,7 +1,15 @@
 package org.soaringmeteo
 
 import FoehnValleys.{Direction, NearestSample, ValleyScore, allSamples, chooseTemplate, pressureGatedIndex, valleys, windSimilarity}
+import squants.energy.Grays
+import squants.motion.{MetersPerSecond, Pascals}
+import squants.radio.WattsPerSquareMeter
+import squants.space.Meters
+import squants.thermal.Celsius
 import verify.BasicTestSuite
+
+import java.time.OffsetDateTime
+import scala.collection.immutable.SortedMap
 
 object FoehnValleysTestSuite extends BasicTestSuite {
 
@@ -61,6 +69,63 @@ object FoehnValleysTestSuite extends BasicTestSuite {
     assert(valley.downField("hours").downArray.get[Int]("s").contains(800))
     assert(valley.downField("hours").downArray.get[Int]("i").contains(600))
     assert(valley.downField("hours").downArray.get[Int]("dp").contains(45))
+  }
+
+  // Grid over the Lugano–Zurich region, x west → east, y north → south, with a 10 m/s northward wind
+  private val latitudes = (0 until 33).map(i => 47.5 - i * 0.05)
+  private val longitudes = (0 until 15).map(i => 8.4 + i * 0.05)
+  private val coordinates = longitudes.map(lon => latitudes.map(lat => Point(BigDecimal(lat), BigDecimal(lon))))
+
+  private def forecast(mslpHPa: Double): Forecast = {
+    val calm = Wind(MetersPerSecond(0), MetersPerSecond(0))
+    Forecast(
+      OffsetDateTime.parse("2026-11-15T12:00Z"), Meters(500), Meters(1000), calm, MetersPerSecond(0), 0, 0, None,
+      SortedMap.empty, Pascals(mslpHPa * 100), Meters(0), Celsius(10), Celsius(0),
+      Wind(MetersPerSecond(0), MetersPerSecond(10)), Meters(0), Meters(0),
+      WattsPerSquareMeter(0), WattsPerSquareMeter(0), Grays(0), Grays(0), WattsPerSquareMeter(0), None,
+      Winds(calm, calm, calm, calm, calm), 0, Meters(0)
+    )
+  }
+
+  // MSLP is `south` hPa south of 46.7° N and `north` hPa elsewhere
+  private def diagnose(south: Double, north: Double): FoehnValleys.Result =
+    FoehnValleys.diagnose(
+      IndexedSeq(coordinates.map(_.map(point => forecast(if (point.latitude < 46.7) south else north)))),
+      coordinates
+    )
+
+  test("a south-to-north pressure difference keeps the index of south foehn lines") {
+    val result = diagnose(south = 1010, north = 1004)
+    val scores = result.valleyScoresByHour.head
+    val south = scores.filter(_.direction == Direction.South)
+    assert(south.exists(_.similarity > 0))
+    assert(scores.forall(score => math.abs(score.pressureDifference - 6.0) < 1e-9))
+    assert(south.forall(score => math.abs(score.index - score.similarity) < 1e-9))
+    assert(scores.filter(_.direction == Direction.North).forall(_.index == 0))
+    val cells = result.forecastsByHour.head.flatten.flatMap(_.valleyFoehn)
+    assert(cells.exists(_.index > 0))
+    assert(cells.filter(_.direction.contains(Direction.South)).forall(cell => math.abs(cell.index - cell.similarity) < 1e-9))
+  }
+
+  test("a north-to-south pressure difference zeroes the index of south foehn lines") {
+    val result = diagnose(south = 1004, north = 1010)
+    val south = result.valleyScoresByHour.head.filter(_.direction == Direction.South)
+    assert(south.exists(_.similarity > 0))
+    assert(south.forall(_.index == 0))
+    assert(result.forecastsByHour.head.flatten.flatMap(_.valleyFoehn).filter(_.direction.contains(Direction.South)).forall(_.index == 0))
+  }
+
+  test("a weak pressure difference reduces the index") {
+    val south = diagnose(south = 1007, north = 1003).valleyScoresByHour.head.filter(_.direction == Direction.South)
+    assert(south.exists(score => score.index > 0 && score.index < score.similarity))
+  }
+
+  test("the index is zero when the pressure difference is unavailable") {
+    val result = diagnose(south = 0, north = 0)
+    val scores = result.valleyScoresByHour.head
+    assert(scores.forall(_.pressureDifference.isNaN))
+    assert(scores.forall(_.index == 0))
+    assert(result.forecastsByHour.head.flatten.flatMap(_.valleyFoehn).forall(_.index == 0))
   }
 
 }
