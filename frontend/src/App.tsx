@@ -14,6 +14,7 @@ import {Localized, useI18n} from "./i18n";
 import {fetchGfsForecastRuns, fetchWrfForecastRuns} from "./data/ForecastMetadata";
 import {fetchFoehnValleys, foehnValleyScores} from "./data/FoehnValleys";
 import {foehnValleySimilarityLayer} from "./layers/FoehnValleys";
+import {wrfName} from "./data/Model";
 import {LocationDetails, SoundingDiagram} from "./LocationDetails";
 import {diagramsIndex} from "./styles/Styles";
 
@@ -39,18 +40,20 @@ const App = (props: {
     }
   });
 
-  // Foehn flow lines, shown with the valley similarity layer
+  // Foehn flow lines, styled by their score when the valley similarity layer is shown
+  const valleyScoresShown = (): boolean =>
+    props.domain.state.foehnValleysShown && props.domain.state.primaryLayerEnabled &&
+    props.domain.state.primaryLayer.key === foehnValleySimilarityLayer.key && props.domain.state.model.name === wrfName;
   const [foehnValleys] = createResource(
-    () =>
-      props.domain.state.primaryLayerEnabled && props.domain.state.primaryLayer.key === foehnValleySimilarityLayer.key
-        ? props.domain.state.forecastMetadata.urlOfFoehnValleys(props.domain.effectiveZone().id)
-        : undefined,
+    () => valleyScoresShown() ? props.domain.state.forecastMetadata.urlOfFoehnValleys(props.domain.effectiveZone().id) : undefined,
     fetchFoehnValleys
   );
   createEffect(() => {
-    const data = foehnValleys();
+    const data = valleyScoresShown() ? foehnValleys() : undefined;
     props.mapHooks.setFoehnValleyScores(
-      data === undefined ? undefined : foehnValleyScores(data, props.domain.state.hourOffset)
+      !props.domain.state.foehnValleysShown ? undefined :
+      data === undefined ? new Map() :
+      foehnValleyScores(data, props.domain.state.hourOffset)
     );
   });
 

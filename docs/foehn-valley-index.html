@@ -631,10 +631,10 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
 </ul>
 
 <h3>8.2 Flow-line overlay</h3>
-<p>The lines are shown only while the valley layer is the active primary layer. The steps are:</p>
+<p>The checkbox <em>Foehn valleys</em> in the layers menu shows or hides the lines, over any layer and for both models. It is off by default and remembered in the browser (<code>foehn-valleys-shown</code> in local storage, <code>State.foehnValleysShown</code>). The steps are:</p>
 <ol>
-  <li><code>App.tsx</code> creates a resource whose URL is <code>urlOfFoehnValleys(zone)</code> while the layer is selected and the overlay is enabled, and <code>undefined</code> otherwise. <code>fetchFoehnValleys</code> returns <code>undefined</code> when the request fails, for example for runs produced before this feature.</li>
-  <li>An effect converts the data to a <code>Map&lt;id, index&gt;</code> for the current hour (<code>foehnValleyScores</code>) and calls <code>mapHooks.setFoehnValleyScores</code>. Changing the hour only re-applies the scores; it doesn't fetch the file again.</li>
+  <li><code>App.tsx</code> creates a resource whose URL is <code>urlOfFoehnValleys(zone)</code> when the lines are shown, the valley layer is the active primary layer, and the model is soarWRF; otherwise the URL is <code>undefined</code>. <code>fetchFoehnValleys</code> returns <code>undefined</code> when the request fails, for example for runs produced before this feature.</li>
+  <li>An effect calls <code>mapHooks.setFoehnValleyScores</code> with <code>undefined</code> when the checkbox is off (lines hidden), with the scores of the current hour (<code>foehnValleyScores</code>) when they are available, and with an empty map otherwise, so that the lines are drawn without a score. Changing the hour only re-applies the scores; it doesn't fetch the file again.</li>
   <li><code>Map.ts</code> loads the bundled GeoJSON on first use only. It sets each feature's <code>foehnIndex</code> property and refreshes the layer. Passing <code>undefined</code> hides the layer. The line layer sits above the raster and below the wind barbs.</li>
 </ol>
 <p><code>foehnValleyStyle</code> draws each line:</p>

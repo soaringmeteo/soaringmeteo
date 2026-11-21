@@ -147,6 +147,18 @@ export const LayersSelector = (props: {
       {_4000MAMSLWindEl}
     </fieldset>;
 
+  const foehnValleysEl =
+    <fieldset style={ fieldsetPaddingStyle }>
+      <legend>
+        <Checkbox
+          label={ m().menuFoehnValleys() }
+          title={ m().menuFoehnValleysLegend() }
+          checked={ props.domain.state.foehnValleysShown }
+          onChange={ (value) => props.domain.showFoehnValleys(value) }
+        />
+      </legend>
+    </fieldset>;
+
   const cloudsRainEl = setupLayerBtn(cloudsRainLayer, 'primary-layer');
   const cumuliDepthEl = setupLayerBtn(cumuliDepthLayer, 'primary-layer');
   const foehnValleySimilarityEl = setupLayerBtn(foehnValleySimilarityLayer, 'primary-layer');
@@ -175,6 +187,7 @@ export const LayersSelector = (props: {
     <div style={{ ...burgerPaddingStyle, ...burgerPaddingStyle, 'padding-bottom': 0 }}>{ m().menuDisplayOnMap() }</div>
     {primaryLayerEl}
     {windLayersEl}
+    {foehnValleysEl}
     {selectForecastEl}
   </>
 };

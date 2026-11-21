@@ -26,6 +26,7 @@ export type State = {
   // It is possible to also show a wind layer as an overlay
   windLayer: Layer
   windLayerEnabled: boolean
+  foehnValleysShown: boolean
   // If defined, the detailed forecast data for the selected location, and the type of detailed view to display
   detailedView: undefined | DetailedView
   // --- Settings
@@ -45,6 +46,7 @@ const zoneKey = (name: ModelName): string => `zone-${name}`;
 const primaryLayerEnabledKey = 'primary-layer-enabled';
 const windLayerEnabledKey       = 'wind-layer-enabled';
 const windNumericValuesShownKey = 'wind-numeric-values-shown';
+const foehnValleysShownKey      = 'foehn-valleys-shown';
 const utcTimeShownKey           = 'utc-time-shown';
 const mapControlsVisibleKey     = 'map-controls-visible';
 
@@ -141,6 +143,13 @@ const saveWindLayerEnabled = (value: boolean): void => {
   window.localStorage.setItem(windLayerEnabledKey, JSON.stringify(value));
 };
 
+const loadFoehnValleysShown = (): boolean =>
+  loadStoredState(foehnValleysShownKey, raw => JSON.parse(raw), false);
+
+const saveFoehnValleysShown = (value: boolean): void => {
+  window.localStorage.setItem(foehnValleysShownKey, JSON.stringify(value));
+};
+
 const loadWindNumericValuesShown = (): boolean =>
   loadStoredState(windNumericValuesShownKey, raw => JSON.parse(raw), true);
 
@@ -206,6 +215,7 @@ export class Domain {
     const primaryLayerEnabled = loadPrimaryLayerEnabled();
     const windLayer = loadWindLayer();
     const windLayerEnabled = loadWindLayerEnabled();
+    const foehnValleysShown = loadFoehnValleysShown();
     const windNumericValuesShown = loadWindNumericValuesShown();
     const utcTimeShown = loadUtcTimeShown();
     const mapControlsVisible = loadMapControlsVisible();
@@ -219,6 +229,7 @@ export class Domain {
       primaryLayerEnabled,
       windLayer: windLayer,
       windLayerEnabled,
+      foehnValleysShown,
       hourOffset: forecastMetadata.defaultHourOffset(),
       detailedView: undefined,
       windNumericValuesShown,
@@ -365,6 +376,11 @@ export class Domain {
   enableWindLayer(enabled: boolean): void {
     saveWindLayerEnabled(enabled);
     this.setState({ windLayerEnabled: enabled });
+  }
+
+  showFoehnValleys(foehnValleysShown: boolean): void {
+    saveFoehnValleysShown(foehnValleysShown);
+    this.setState({ foehnValleysShown });
   }
 
   /** Whether numerical values should be displayed instead of wind barbs */
