@@ -8,9 +8,9 @@ import scala.collection.immutable.ArraySeq
 import scala.collection.mutable
 
 /**
- * Foehn index (WRF only): 10 m wind component along the nearest foehn flow line of
- * `frontend/src/data/foehn-valleys.geojson` (within `corridorKm`), gated by the angle
- * between the wind and the line and by the cross-Alpine pressure difference.
+ * Foehn index (WRF only): 10 m wind speed, gated by the angle between the wind and the
+ * nearest foehn flow line of `frontend/src/data/foehn-valleys.geojson` (within `corridorKm`)
+ * and by the cross-Alpine pressure difference.
  */
 object FoehnValleys {
 
@@ -19,8 +19,8 @@ object FoehnValleys {
   // --- Tuning
   val corridorKm: Double        = 10.0  // grid cells farther from any flow line get no value
   val sampleSpacingKm: Double   = 1.5   // densification of the digitised lines
-  val alongWindMinMps: Double   = 2.0   // along-line wind ramp start
-  val alongWindFullMps: Double  = 6.0   // along-line wind ramp saturation
+  val speedMinMps: Double       = 2.0   // wind-speed ramp start
+  val speedFullMps: Double      = 6.0   // wind-speed ramp saturation
   val directionFullDeg: Double  = 30.0  // direction gate is 1 up to this angle between wind and line
   val directionZeroDeg: Double  = 60.0  // direction gate is 0 from this angle
   val pressureMinHPa: Double    = 2.0   // pressure ramp start
@@ -78,7 +78,7 @@ object FoehnValleys {
   /**
    * Foehn similarity at a grid point.
    *
-   * @param similarity       0–1, along-line wind ramp times direction gate, for the nearest flow line
+   * @param similarity       0–1, wind-speed ramp times direction gate, for the nearest flow line
    * @param index            `similarity` gated by the cross-Alpine pressure difference
    * @param direction        Direction of the nearest flow line, if any
    * @param valleyId         Identifier of the nearest flow line, if any
@@ -335,14 +335,13 @@ object FoehnValleys {
       forecast.surfaceWind.v.toMetersPerSecond
     )
 
-  /** Ramp of the wind component along the flow line tangent, times the direction gate */
+  /** Wind-speed ramp times the gate on the angle between the wind and the flow line tangent */
   private[soaringmeteo] def windSimilarity(sample: Sample, u: Double, v: Double): Double = {
-    val along = u * sample.east + v * sample.north
     val speed = math.hypot(u, v)
     if (speed < 1e-9) 0.0
     else {
-      val angle = math.toDegrees(math.acos(math.max(-1.0, math.min(1.0, along / speed))))
-      ramp(alongWindMinMps, alongWindFullMps, along) * (1 - ramp(directionFullDeg, directionZeroDeg, angle))
+      val cosine = math.max(-1.0, math.min(1.0, (u * sample.east + v * sample.north) / speed))
+      ramp(speedMinMps, speedFullMps, speed) * (1 - ramp(directionFullDeg, directionZeroDeg, math.toDegrees(math.acos(cosine))))
     }
   }
 

@@ -28,23 +28,24 @@ object FoehnValleysTestSuite extends BasicTestSuite {
     assert(north.samples.head.north < 0)
   }
 
-  test("wind similarity is a ramp of the along-line wind times a direction gate") {
+  test("wind similarity is a wind-speed ramp times a direction gate") {
     val sample = valleys.find(_.id == "S18").get.samples.head
-    def along(speed: Double, degrees: Double): Double = {
+    def similarity(speed: Double, degrees: Double): Double = {
       val angle = math.toRadians(degrees)
       val east = sample.east * math.cos(angle) - sample.north * math.sin(angle)
       val north = sample.east * math.sin(angle) + sample.north * math.cos(angle)
       windSimilarity(sample, east * speed, north * speed)
     }
-    assert(math.abs(along(10, 0) - 1.0) < 1e-9)
-    assert(math.abs(along(4, 0) - 0.5) < 1e-9)
-    assert(math.abs(along(10, 30) - 1.0) < 1e-9)
-    assert(math.abs(along(10, 45) - 0.5) < 1e-9)
-    assert(along(10, 60) < 1e-9)
-    assert(along(15, 80) == 0.0)
-    assert(along(2, 0) == 0.0)
-    assert(along(10, 180) == 0.0)
-    assert(along(0, 0) == 0.0)
+    assert(math.abs(similarity(10, 0) - 1.0) < 1e-9)
+    assert(math.abs(similarity(10, 30) - 1.0) < 1e-9)
+    assert(math.abs(similarity(4, 0) - 0.5) < 1e-9)
+    assert(math.abs(similarity(10, 45) - 0.5) < 1e-9)
+    assert(math.abs(similarity(4, 45) - 0.25) < 1e-9)
+    assert(similarity(10, 60) < 1e-9)
+    assert(similarity(15, 80) == 0.0)
+    assert(similarity(2, 0) == 0.0)
+    assert(similarity(10, 180) == 0.0)
+    assert(similarity(0, 0) == 0.0)
   }
 
   test("the pressure direction falls back to the other line when the preferred direction is missing") {
