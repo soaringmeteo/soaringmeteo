@@ -70,6 +70,7 @@ object FoehnValleysTestSuite extends BasicTestSuite {
     val json = FoehnValleys.toJson(IndexedSeq(IndexedSeq(
       ValleyScore("S18", Direction.South, similarity = 0.8, index = 0.6, pressureDifference = 4.5)
     )))
+    assert(json.hcursor.get[String]("version").contains(FoehnValleys.version))
     val valley = json.hcursor.downField("valleys").downArray
     assert(valley.get[String]("id").contains("S18"))
     assert(valley.downField("hours").downArray.get[Int]("s").contains(800))

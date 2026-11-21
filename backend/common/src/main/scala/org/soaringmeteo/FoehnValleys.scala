@@ -16,6 +16,9 @@ object FoehnValleys {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
+  /** Version of the formula, written to `foehn-valleys.json` */
+  val version: String = "0.1"
+
   // --- Tuning
   val corridorKm: Double        = 10.0  // grid cells farther from any flow line get no value
   val sampleSpacingKm: Double   = 1.5   // densification of the digitised lines
@@ -494,7 +497,7 @@ object FoehnValleys {
           )
         )
       }
-    Json.obj("valleys" -> Json.arr(valleysJson: _*))
+    Json.obj("version" -> Json.fromString(version), "valleys" -> Json.arr(valleysJson: _*))
   }
 
   private def permille(value: Double): Json =

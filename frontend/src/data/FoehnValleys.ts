@@ -1,5 +1,6 @@
 /** Content of `foehn-valleys.json` (see backend `FoehnValleys.scala`), one element per hour offset in `hours` */
 export type FoehnValleys = {
+  version?: string // version of the formula, absent before 0.1
   valleys: Array<{
     id: string
     foehn: 'south' | 'north'

@@ -144,7 +144,8 @@
 <body>
 <header>
   <h1>Foehn valley similarity index</h1>
-  <p>Logic and data flow of the soarWRF foehn valley index with its pressure gate, as implemented on the branch <code>foehn-valley-index</code>.</p>
+  <p><strong>Version 0.1 (alpha, experimental).</strong> Logic and data flow of the soarWRF foehn valley index with its pressure gate, as implemented on the branch <code>foehn-valley-index</code>.</p>
+  <p>The version is written to <code>foehn-valleys.json</code> (<code>FoehnValleys.version</code>). It stays below 1.0 until the thresholds are calibrated against observations; see section 11.</p>
   <p>The index estimates, for each grid point and each hour, how much the model surface wind looks like foehn flowing down a known foehn valley, when the pressure difference across the Alps drives foehn in that direction.</p>
 </header>
 
@@ -250,7 +251,7 @@ ramp(x, a, b) = clamp((x − a) / (b − a), 0, 1)</div>
 
   <rect x="20" y="484" width="270" height="62" rx="8" class="box"/>
   <text x="34" y="508" class="title">Primary raster layer</text>
-  <text x="34" y="528" class="small">"Foehn: valley wind match"</text>
+  <text x="34" y="528" class="small">"Foehn: valley wind match (experimental)"</text>
 
   <rect x="315" y="484" width="270" height="62" rx="8" class="box"/>
   <text x="329" y="508" class="title">Location popup</text>
@@ -596,6 +597,7 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
 <h3>7.3 <code>foehn-valleys.json</code></h3>
 <p>There is one file per zone and run, covering all hours. <code>hours[n]</code> is the hour offset <code>n</code>, the same index as the raster file names.</p>
 <pre><code>{
+  "version": "0.1",                         // version of the formula (FoehnValleys.version)
   "valleys": [
     {
       "id": "S18",
@@ -666,7 +668,7 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
   <li>The similarity combines the speed ramp and the direction gate: 1 at 10 m/s within 30° of the line, 0.5 at 4 m/s along the line and at 10 m/s with a 45° angle, 0.25 at 4 m/s with a 45° angle, and 0 at 2 m/s, at 60°, for a 15 m/s crosswind at 80°, for an opposite wind, or for calm.</li>
   <li>The line choice follows the sign of Δp, with a fallback to the other direction.</li>
   <li>The gate zeroes a line whose direction contradicts Δp, and also zeroes it when Δp is NaN.</li>
-  <li>The JSON encoding uses per mille and tenths of hPa.</li>
+  <li>The JSON encoding uses per mille and tenths of hPa, and includes the formula version.</li>
 </ul>
 <p><strong>End-to-end tests of <code>diagnose</code></strong>. They use a synthetic 15 × 33 grid over Lugano–Zurich (8.4–9.1° E, 45.9–47.5° N) with a uniform northward 10 m/s wind:</p>
 <ul>
