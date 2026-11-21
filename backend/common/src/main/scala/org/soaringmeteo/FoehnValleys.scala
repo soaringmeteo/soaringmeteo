@@ -9,8 +9,8 @@ import scala.collection.mutable
 
 /**
  * Foehn index (WRF only): 10 m wind component along the nearest foehn flow line of
- * `frontend/src/data/foehn-valleys.geojson` (within `corridorKm`), gated by the
- * cross-Alpine pressure difference.
+ * `frontend/src/data/foehn-valleys.geojson` (within `corridorKm`), gated by the angle
+ * between the wind and the line and by the cross-Alpine pressure difference.
  */
 object FoehnValleys {
 
@@ -21,6 +21,8 @@ object FoehnValleys {
   val sampleSpacingKm: Double   = 1.5   // densification of the digitised lines
   val alongWindMinMps: Double   = 2.0   // along-line wind ramp start
   val alongWindFullMps: Double  = 6.0   // along-line wind ramp saturation
+  val directionFullDeg: Double  = 30.0  // direction gate is 1 up to this angle between wind and line
+  val directionZeroDeg: Double  = 60.0  // direction gate is 0 from this angle
   val pressureMinHPa: Double    = 2.0   // pressure ramp start
   val pressureFullHPa: Double   = 6.0   // pressure ramp saturation
 
@@ -76,7 +78,7 @@ object FoehnValleys {
   /**
    * Foehn similarity at a grid point.
    *
-   * @param similarity       0–1, ramp of the wind component along the nearest flow line
+   * @param similarity       0–1, along-line wind ramp times direction gate, for the nearest flow line
    * @param index            `similarity` gated by the cross-Alpine pressure difference
    * @param direction        Direction of the nearest flow line, if any
    * @param valleyId         Identifier of the nearest flow line, if any
@@ -333,9 +335,16 @@ object FoehnValleys {
       forecast.surfaceWind.v.toMetersPerSecond
     )
 
-  /** Ramp of the wind component along the flow line tangent */
-  private[soaringmeteo] def windSimilarity(sample: Sample, u: Double, v: Double): Double =
-    ramp(alongWindMinMps, alongWindFullMps, u * sample.east + v * sample.north)
+  /** Ramp of the wind component along the flow line tangent, times the direction gate */
+  private[soaringmeteo] def windSimilarity(sample: Sample, u: Double, v: Double): Double = {
+    val along = u * sample.east + v * sample.north
+    val speed = math.hypot(u, v)
+    if (speed < 1e-9) 0.0
+    else {
+      val angle = math.toDegrees(math.acos(math.max(-1.0, math.min(1.0, along / speed))))
+      ramp(alongWindMinMps, alongWindFullMps, along) * (1 - ramp(directionFullDeg, directionZeroDeg, angle))
+    }
+  }
 
   private def pressureGate(pressureDifference: Double): Double =
     if (java.lang.Double.isFinite(pressureDifference)) ramp(pressureMinHPa, pressureFullHPa, math.abs(pressureDifference))
