@@ -8,24 +8,21 @@ import scala.collection.immutable.ArraySeq
 import scala.collection.mutable
 
 /**
- * Foehn index (WRF only): similarity between the 10 m wind and the foehn flow lines of
- * `frontend/src/data/foehn-valleys.geojson`, weighted by the distance to the nearest line,
- * the wind speed, and the cross-Alpine pressure difference.
+ * Foehn index (WRF only): 10 m wind component along the nearest foehn flow line of
+ * `frontend/src/data/foehn-valleys.geojson` (within `corridorKm`), gated by the
+ * cross-Alpine pressure difference.
  */
 object FoehnValleys {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
   // --- Tuning
-  val maxDistanceKm: Double     = 20.0  // no contribution from flow lines farther away
-  val sigmaKm: Double           = 8.0   // Gaussian distance weighting
+  val corridorKm: Double        = 10.0  // grid cells farther from any flow line get no value
   val sampleSpacingKm: Double   = 1.5   // densification of the digitised lines
-  val speedMinMps: Double       = 2.0   // below this wind speed, the index is zero
-  val speedFullMps: Double      = 6.0   // above this wind speed, the index is not reduced
-  val pressureMinHPa: Double    = 2.0   // pressure-gate start
-  val pressureFullHPa: Double   = 6.0   // pressure-gate saturation
-  val dottedConfidence: Double  = 0.5   // foehn is observed less often along dotted lines
-  val solidConfidence: Double   = 1.0
+  val alongWindMinMps: Double   = 2.0   // along-line wind ramp start
+  val alongWindFullMps: Double  = 6.0   // along-line wind ramp saturation
+  val pressureMinHPa: Double    = 2.0   // pressure ramp start
+  val pressureFullHPa: Double   = 6.0   // pressure ramp saturation
 
   private val kmPerDegreeLatitude = 111.2
   private val GeoJsonResource = "/foehn-valleys.geojson"
@@ -67,8 +64,7 @@ object FoehnValleys {
     longitude: Double,
     east: Double,  // unit vector, positive eastward
     north: Double, // unit vector, positive northward
-    direction: Direction,
-    confidence: Double
+    direction: Direction
   )
 
   private[soaringmeteo] case class Valley(
@@ -80,7 +76,7 @@ object FoehnValleys {
   /**
    * Foehn similarity at a grid point.
    *
-   * @param similarity       0–1, wind alignment with the nearest flow line, weighted by distance and wind speed
+   * @param similarity       0–1, ramp of the wind component along the nearest flow line
    * @param index            `similarity` gated by the cross-Alpine pressure difference
    * @param direction        Direction of the nearest flow line, if any
    * @param valleyId         Identifier of the nearest flow line, if any
@@ -165,8 +161,7 @@ object FoehnValleys {
               case None =>
                 forecast
               case Some(nearest) =>
-                val distanceWeight = math.exp(-(nearest.distanceKm * nearest.distanceKm) / (2 * sigmaKm * sigmaKm))
-                val similarity = distanceWeight * similarityAt(forecast, nearest.sample)
+                val similarity = similarityAt(forecast, nearest.sample)
                 val index = pressureGatedIndex(similarity, nearest.sample.direction, pressureDifference)
                 forecast.copy(valleyFoehn = Some(Diagnostics(
                   similarity = similarity,
@@ -281,7 +276,7 @@ object FoehnValleys {
       sampleIndex.nearby(latitude, longitude)
         .filter(_.direction == direction)
         .map(sample => NearestSample(planarDistanceKm(latitude, longitude, sample.latitude, sample.longitude, referenceLatitude), sample))
-        .filter(_.distanceKm <= maxDistanceKm)
+        .filter(_.distanceKm <= corridorKm)
         .minByOption(_.distanceKm)
     CellTemplates(closest(Direction.South), closest(Direction.North))
   }
@@ -294,7 +289,7 @@ object FoehnValleys {
     gridIndex.nearby(sample.latitude, sample.longitude)
       .map(cell => (cell, planarDistanceKm(sample.latitude, sample.longitude, cell.latitude, cell.longitude, referenceLatitude)))
       .minByOption(_._2)
-      .filter(_._2 <= maxDistanceKm)
+      .filter(_._2 <= corridorKm)
       .map { case (cell, _) => (cell.x, cell.y) }
 
   private def chooseTemplate(templates: CellTemplates, pressureDifference: Double): Option[NearestSample] =
@@ -338,25 +333,17 @@ object FoehnValleys {
       forecast.surfaceWind.v.toMetersPerSecond
     )
 
-  /** Alignment between the wind and the flow line tangent, reduced by low wind speeds */
-  private[soaringmeteo] def windSimilarity(sample: Sample, u: Double, v: Double): Double = {
-    val speed = math.hypot(u, v)
-    if (speed < 1e-9) 0.0
-    else {
-      val alignment = math.max(0.0, (u * sample.east + v * sample.north) / speed)
-      sample.confidence * alignment * alignment * smoothstep(speedMinMps, speedFullMps, speed)
-    }
-  }
+  /** Ramp of the wind component along the flow line tangent */
+  private[soaringmeteo] def windSimilarity(sample: Sample, u: Double, v: Double): Double =
+    ramp(alongWindMinMps, alongWindFullMps, u * sample.east + v * sample.north)
 
   private def pressureGate(pressureDifference: Double): Double =
-    if (java.lang.Double.isFinite(pressureDifference)) smoothstep(pressureMinHPa, pressureFullHPa, math.abs(pressureDifference))
+    if (java.lang.Double.isFinite(pressureDifference)) ramp(pressureMinHPa, pressureFullHPa, math.abs(pressureDifference))
     else 0.0
 
-  /** Smooth 0–1 transition between `edge0` and `edge1` */
-  private def smoothstep(edge0: Double, edge1: Double, value: Double): Double = {
-    val t = math.max(0.0, math.min(1.0, (value - edge0) / (edge1 - edge0)))
-    t * t * (3 - 2 * t)
-  }
+  /** Linear 0–1 transition between `from` and `to` */
+  private def ramp(from: Double, to: Double, value: Double): Double =
+    math.max(0.0, math.min(1.0, (value - from) / (to - from)))
 
   private def planarDistanceKm(
     latitude1: Double,
@@ -374,11 +361,11 @@ object FoehnValleys {
     items: IndexedSeq[A],
     position: A => (Double, Double)
   ) {
-    private val latitudeStep = maxDistanceKm / kmPerDegreeLatitude
+    private val latitudeStep = corridorKm / kmPerDegreeLatitude
     // Use the highest latitude of the indexed items, so that a bucket is at least
-    // `maxDistanceKm` wide even at its northern edge (longitude degrees shrink with latitude).
+    // `corridorKm` wide even at its northern edge (longitude degrees shrink with latitude).
     private val maxAbsLatitude = items.iterator.map(item => math.abs(position(item)._1)).maxOption.getOrElse(0.0)
-    private val longitudeStep = maxDistanceKm / (kmPerDegreeLatitude * math.cos(math.toRadians(math.min(80.0, maxAbsLatitude + 1.0))))
+    private val longitudeStep = corridorKm / (kmPerDegreeLatitude * math.cos(math.toRadians(math.min(80.0, maxAbsLatitude + 1.0))))
     private val buckets: Map[(Int, Int), IndexedSeq[A]] = {
       val builder = mutable.HashMap.empty[(Int, Int), mutable.ArrayBuffer[A]]
       items.foreach { item =>
@@ -389,7 +376,7 @@ object FoehnValleys {
       builder.iterator.map { case (key, values) => key -> values.toIndexedSeq }.toMap
     }
 
-    /** Items in the same or an adjacent bucket; contains every item within `maxDistanceKm` */
+    /** Items in the same or an adjacent bucket; contains every item within `corridorKm` */
     def nearby(latitude: Double, longitude: Double): Iterator[A] = {
       val latitudeBucket = math.floor(latitude / latitudeStep).toInt
       val longitudeBucket = math.floor(longitude / longitudeStep).toInt
@@ -419,10 +406,7 @@ object FoehnValleys {
         direction <- properties.get[String]("foehn").toOption.flatMap(Direction.fromJson)
         coordinates <- cursor.downField("geometry").downField("coordinates").as[Vector[Vector[Double]]].toOption
         if coordinates.sizeIs >= 2
-      } yield {
-        val style = properties.get[String]("style").toOption.getOrElse("solid")
-        Valley(id, direction, densify(id, coordinates, direction, style))
-      }
+      } yield Valley(id, direction, densify(id, coordinates, direction))
     }
     logger.info(s"Loaded ${loaded.size} foehn valleys (${loaded.map(_.samples.size).sum} densified samples)")
     loaded
@@ -439,11 +423,9 @@ object FoehnValleys {
   private def densify(
     valleyId: String,
     coordinates: IndexedSeq[Vector[Double]],
-    direction: Direction,
-    style: String
+    direction: Direction
   ): IndexedSeq[Sample] = {
     val points = coordinates.map(coordinate => (coordinate(1), coordinate(0))) // (latitude, longitude)
-    val confidence = if (style == "dotted") dottedConfidence else solidConfidence
     val samples = mutable.ArrayBuffer.empty[Sample]
 
     def unitDirection(from: (Double, Double), to: (Double, Double)): Option[(Double, Double)] = {
@@ -455,7 +437,7 @@ object FoehnValleys {
     }
 
     def addSample(latitude: Double, longitude: Double, unit: (Double, Double)): Unit =
-      samples += Sample(valleyId, latitude, longitude, unit._1, unit._2, direction, confidence)
+      samples += Sample(valleyId, latitude, longitude, unit._1, unit._2, direction)
 
     for (i <- 0 until points.size - 1) {
       val from = points(i)

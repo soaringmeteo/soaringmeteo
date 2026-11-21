@@ -171,15 +171,20 @@
 <p>The index combines three ingredients:</p>
 <ol>
   <li><strong>Geometry.</strong> There are 83 digitised foehn flow lines in Switzerland and its surroundings: 65 <span class="south">south foehn</span> lines and 18 <span class="north">north foehn</span> lines. Each line runs in the direction the foehn flows.</li>
-  <li><strong>Wind.</strong> The WRF 10 m wind at each grid point is compared with the direction of the nearest flow line. The comparison is weighted by the distance to the line and by the wind speed.</li>
+  <li><strong>Wind.</strong> Within 10 km of a flow line, the WRF 10 m wind is projected onto the direction of the nearest line. The result is the wind component blowing down the valley, in m/s.</li>
   <li><strong>Pressure gate.</strong> The mean-sea-level pressure (MSLP) difference between a point south and a point north of the Alps decides which foehn direction is plausible. It also scales the result: a line that contradicts the pressure difference gets an index of 0.</li>
 </ol>
 <p>Two values are reported at every grid point and for every valley:</p>
 <ul>
-  <li><strong>similarity</strong>, called <code>s</code> in the JSON: how well the wind matches the flow line, between 0 and 1, without the pressure gate.</li>
+  <li><strong>similarity</strong>, called <code>s</code> in the JSON: how strongly the wind blows along the flow line, between 0 and 1, without the pressure gate.</li>
   <li><strong>index</strong>, called <code>i</code>: the similarity multiplied by the pressure gate, between 0 and 1. This is the value shown on the map.</li>
 </ul>
 <p>Keeping both makes it possible to explain a low index. For example, the wind may fit the valley well while the pressure difference points the other way.</p>
+<p>In short:</p>
+<div class="formula">index = ramp(w · t, 2, 6 m/s) × [d ≤ 10 km] × ramp(|Δp|, 2, 6 hPa) × [line direction matches the sign of Δp]
+
+ramp(x, a, b) = clamp((x − a) / (b − a), 0, 1)</div>
+<p>Here <code>w · t</code> is the wind component along the line (wind speed × cos θ), <code>d</code> the distance to the line, and <code>Δp</code> the cross-Alpine pressure difference. The parameters are heuristic and not calibrated against observations (see section 11).</p>
 <p>The index is WRF only. It is computed for both WRF zones: <code>alps-overview</code> (6 km, file <code>d02</code>) and <code>central-alps</code> (2 km, file <code>d03</code>).</p>
 
 <h2 id="flow">2. End-to-end data flow</h2>
@@ -215,7 +220,7 @@
   <rect x="210" y="226" width="480" height="118" rx="8" class="box-key"/>
   <text x="226" y="250" class="title">FoehnValleys.diagnose</text>
   <text x="226" y="272" class="small">1. pressureDifferences: MSLP south − north per region, per hour</text>
-  <text x="226" y="291" class="small">2. nearest south/north line sample per grid cell (≤ 20 km)</text>
+  <text x="226" y="291" class="small">2. nearest south/north line sample per grid cell (≤ 10 km)</text>
   <text x="226" y="310" class="small">3. grid-point similarity and gated index → Forecast.valleyFoehn</text>
   <text x="226" y="329" class="small">4. per-valley mean similarity and gated index per hour</text>
 
@@ -249,7 +254,7 @@
 
   <rect x="315" y="484" width="270" height="62" rx="8" class="box"/>
   <text x="329" y="508" class="title">Location popup</text>
-  <text x="329" y="528" class="small">match, alignment, direction, line</text>
+  <text x="329" y="528" class="small">match, along-valley wind, direction, line</text>
 
   <rect x="610" y="484" width="270" height="62" rx="8" class="box"/>
   <text x="624" y="508" class="title">Flow-line overlay</text>
@@ -277,7 +282,7 @@
   <tr><th>Property</th><th>Used by</th><th>Meaning</th></tr>
   <tr><td><code>id</code></td><td>backend, frontend</td><td>Stable identifier, for example <code>S18</code> or <code>N00</code>. It links each line to its score in <code>foehn-valleys.json</code>.</td></tr>
   <tr><td><code>foehn</code></td><td>backend, frontend</td><td><code>"south"</code> or <code>"north"</code>: the foehn type the line represents.</td></tr>
-  <tr><td><code>style</code></td><td>backend, frontend</td><td><code>"solid"</code> (60 lines) or <code>"dotted"</code> (23 lines, where foehn is observed less often). Dotted lines get confidence 0.5 and are drawn dashed.</td></tr>
+  <tr><td><code>style</code></td><td>backend, frontend</td><td><code>"solid"</code> (60 lines) or <code>"dotted"</code> (23 lines, where foehn is observed less often). Dotted lines are drawn dashed; the index treats both styles the same.</td></tr>
   <tr><td><code>length_km</code>, <code>from_near</code>, <code>to_near</code></td><td>none</td><td>Descriptive only.</td></tr>
 </table></div>
 <p><strong>Orientation matters.</strong> Each line runs from its upstream end (tail) to its downstream end (arrow tip). A south foehn line therefore points roughly north, and a north foehn line roughly south.</p>
@@ -288,7 +293,7 @@
   <li>Each segment is cut into <code>ceil(length / 1.5 km)</code> pieces. A sample is placed at the start of each piece.</li>
   <li>Each sample stores the <strong>unit tangent</strong> <code>(east, north)</code> of its segment. The east component is scaled by <code>cos(mean latitude)</code>, so the direction is correct in kilometres rather than degrees.</li>
   <li>The final point (the arrow tip) is added as an extra sample with the direction of the last segment, so the downstream end of the valley is scored too.</li>
-  <li>Each sample also stores its valley id, its foehn direction, and its confidence: 1.0 for solid lines, 0.5 for dotted lines.</li>
+  <li>Each sample also stores its valley id and its foehn direction.</li>
 </ul>
 <figure class="figure-panel">
 <svg viewBox="0 0 860 420" role="img" aria-labelledby="densTitle">
@@ -382,7 +387,7 @@
 </figure>
 
 <h3>3.2 Spatial index (<code>GeoBucketIndex</code>)</h3>
-<p>To keep the nearest-neighbour searches cheap, samples and grid cells are put into latitude/longitude buckets about 20 km wide. A query looks at its own bucket and the 8 around it. That is guaranteed to include every item within the 20 km search radius. The bucket width in longitude is computed at the highest latitude present, so a bucket is never narrower than 20 km.</p>
+<p>To keep the nearest-neighbour searches cheap, samples and grid cells are put into latitude/longitude buckets about 10 km wide (the corridor width). A query looks at its own bucket and the 8 around it. That is guaranteed to include every item within the 10 km search radius. The bucket width in longitude is computed at the highest latitude present, so a bucket is never narrower than 10 km.</p>
 <p>Distances use a local flat-earth approximation: 111.2 km per degree of latitude, and longitude degrees scaled by <code>cos(reference latitude)</code>. The reference latitude is the mean latitude of the grid.</p>
 
 <h2 id="pressure">4. Cross-Alpine pressure difference</h2>
@@ -401,19 +406,17 @@
 <p>A positive Δp means pressure is higher on the south side, which drives <span class="south">south foehn</span>. A negative Δp drives <span class="north">north foehn</span>.</p>
 
 <h3>4.1 The gate</h3>
-<div class="formula">gate(Δp) = smoothstep(2 hPa, 6 hPa, |Δp|)        (0 if Δp is NaN)
-
-smoothstep(a, b, v) = t² (3 − 2t),  t = clamp((v − a) / (b − a), 0, 1)
+<div class="formula">gate(Δp) = ramp(|Δp|, 2 hPa, 6 hPa)        (0 if Δp is NaN)
 
 pressureGatedIndex(similarity, direction, Δp) =
     similarity × gate(Δp)   if (direction = south and Δp &gt; 0) or (direction = north and Δp &lt; 0)
     0                       otherwise (wrong sign, Δp = 0, or NaN)</div>
-<p>Below 2 hPa the gate is 0, and from 6 hPa upwards it is 1. In between it rises smoothly; for example, at 4 hPa it is 0.5.</p>
+<p>Below 2 hPa the gate is 0, and from 6 hPa upwards it is 1. In between it rises linearly; for example, at 4 hPa it is 0.5.</p>
 
 <h2 id="grid">5. Grid-point index</h2>
 <p>For each grid cell, which is done once per run:</p>
 <ul>
-  <li><code>nearestTemplates</code> finds the nearest <span class="south">south</span> line sample and the nearest <span class="north">north</span> line sample within 20 km. Either one may be missing.</li>
+  <li><code>nearestTemplates</code> finds the nearest <span class="south">south</span> line sample and the nearest <span class="north">north</span> line sample within 10 km (the corridor). Either one may be missing.</li>
 </ul>
 <p>Then for each hour and each cell:</p>
 <ol>
@@ -422,19 +425,15 @@ pressureGatedIndex(similarity, direction, Δp) =
       <li>If Δp &gt; 0, prefer the south sample and fall back to the north one.</li>
       <li>If Δp &lt; 0, prefer the north sample and fall back to the south one.</li>
       <li>If Δp is 0 or NaN, take the closer of the two.</li>
-      <li>If there is no sample within 20 km, the cell gets no <code>valleyFoehn</code> at all: the raster is transparent there and the popup says "No foehn valley nearby".</li>
+      <li>If there is no sample within 10 km, the cell is outside every corridor and gets no <code>valleyFoehn</code> at all: the raster is transparent there and the popup says "No foehn valley nearby".</li>
     </ul>
   </li>
-  <li><strong>Wind similarity</strong> (<code>windSimilarity</code>). Let <code>(u, v)</code> be the 10 m wind and <code>(e, n)</code> the line tangent:
-    <div class="formula">speed     = √(u² + v²)
-alignment = max(0, (u·e + v·n) / speed)        (cosine of the angle, negative values cut to 0)
-windSim   = confidence × alignment² × smoothstep(2 m/s, 6 m/s, speed)</div>
-    The square on the alignment sharpens the response: a 45° error keeps half of the value, and 60° keeps a quarter. Winds below 2 m/s give 0. Winds of 6 m/s and more are not reduced.
+  <li><strong>Similarity</strong> (<code>windSimilarity</code>). Let <code>(u, v)</code> be the 10 m wind and <code>(e, n)</code> the unit tangent of the line:
+    <div class="formula">w · t      = u·e + v·n                   (wind component along the line, m/s; = speed × cos θ)
+similarity = ramp(w · t, 2 m/s, 6 m/s)</div>
+    An along-line wind below 2 m/s, a crosswind, or a wind blowing up the valley gives 0. From 6 m/s along the line the similarity is 1. Direction and speed are combined in one quantity: a strong wind tolerates a larger angle than a weak one. At 8 m/s, for example, the similarity is 1 up to about 41° and 0 from about 76°.
   </li>
-  <li><strong>Distance weight</strong>, a Gaussian with σ = 8 km, applied up to the 20 km cut-off:
-    <div class="formula">similarity = exp(−d² / (2 · 8²)) × windSim        (d in km)</div>
-    The weight is 1 on the line, about 0.46 at 10 km, and about 0.04 at 20 km.
-  </li>
+  <li><strong>Corridor.</strong> Every cell within 10 km of a line gets the full similarity; there is no further distance weighting.</li>
   <li><strong>Index</strong>: <code>index = pressureGatedIndex(similarity, direction of the chosen line, Δp of the cell)</code>.</li>
 </ol>
 <figure class="figure-panel">
@@ -464,29 +463,49 @@ windSim   = confidence × alignment² × smoothstep(2 m/s, 6 m/s, speed)</div>
 <rect x="184.1" y="109.5" width="18" height="18" class="cell"/>
 <text x="177.1" y="123.5" text-anchor="end" class="title">grid cell</text>
 <line x1="193.1" y1="118.5" x2="274.6" y2="69.6" class="tangent ghost"/>
-<line x1="193.1" y1="118.5" x2="239.2" y2="35.5" class="wind" marker-end="url(#wa)"/>
-<text x="243.6" y="27.6" class="label">w</text>
-<path d="M232.6,94.9 A46,46 0 0 0 215.4,78.3" class="arc"/>
-<text x="233.4" y="80.8" class="label">θ</text>
+<line x1="193.1" y1="118.5" x2="224.1" y2="28.7" class="wind" marker-end="url(#wa)"/>
+<text x="227.0" y="20.2" class="label">w</text>
+<path d="M232.6,94.9 A46,46 0 0 0 208.1,75.0" class="arc"/>
+<text x="229.6" y="77.5" class="label">θ</text>
 <text x="480" y="54" class="small">arrow tip (downstream)</text>
 <text x="70" y="324" class="small">tail (upstream), south foehn line</text>
 <text x="560" y="70" class="title">Worked example</text>
-<text x="560" y="94" class="small">d = 5 km, θ = 30°, |w| = 8 m/s, solid line</text>
-<text x="560" y="118" class="small">Δp = +4 hPa (south side higher)</text>
-<text x="560" y="166" class="mono">alignment² = cos²30° = 0.75</text>
-<text x="560" y="190" class="mono">speed ramp = ss(2, 6, 8) = 1.00</text>
-<text x="560" y="214" class="mono">windSim    = 1 × 0.75 × 1 = 0.75</text>
-<text x="560" y="238" class="mono">distance   = exp(−5² / (2 × 8²)) = 0.82</text>
-<text x="560" y="262" class="mono">similarity = 0.75 × 0.82 = 0.62</text>
-<text x="560" y="286" class="mono">gate       = ss(2, 6, 4) = 0.50</text>
-<text x="560" y="310" class="mono">index      = 0.62 × 0.50 = 0.31</text>
+<text x="560" y="94" class="small">d = 5 km, θ = 40°, |w| = 6 m/s</text>
+<text x="560" y="118" class="small">Δp = +5 hPa (south side higher), south foehn line</text>
+<text x="560" y="166" class="mono">w · t      = 6 × cos 40° = 4.60 m/s</text>
+<text x="560" y="190" class="mono">similarity = ramp(2, 6, 4.60) = 0.65</text>
+<text x="560" y="214" class="mono">corridor   = 5 km ≤ 10 km → kept</text>
+<text x="560" y="238" class="mono">gate       = ramp(2, 6, 5) = 0.75</text>
+<text x="560" y="262" class="mono">index      = 0.65 × 0.75 = 0.49</text>
 </svg>
-<figcaption>The quantities used at one grid cell: the nearest sample of the chosen line, the distance <em>d</em> to it, the line tangent <em>t</em> at that sample, the 10 m wind <em>w</em>, and the angle <em>θ</em> between them. <code>ss</code> is the smoothstep function from section 4.1. The example on the right follows the steps above.</figcaption>
+<figcaption>The quantities used at one grid cell: the nearest sample of the chosen line, the distance <em>d</em> to it, the line tangent <em>t</em> at that sample, the 10 m wind <em>w</em>, and the angle <em>θ</em> between them. The example on the right follows the steps above.</figcaption>
 </figure>
-<p>The four factors that make up the index each range from 0 to 1. Hover over a curve to read its value.</p>
+<p>The factors of the index each range from 0 to 1. The second panel shows how the along-line ramp translates into an angular tolerance for an 8 m/s wind. Hover over a curve to read its value.</p>
 <div class="curves">
-<figure class="curve" data-fn="alignment" data-x0="0" data-x1="180" data-unit="°">
-<svg viewBox="0 0 320 210" role="img" aria-label="Wind alignment factor: factor from 0 to 1 against θ between wind and line (°)">
+<figure class="curve" data-fn="along" data-x0="-2" data-x1="10" data-unit=" m/s">
+<svg viewBox="0 0 320 210" role="img" aria-label="Along-line wind ramp: factor from 0 to 1 against wind component along the line, w · t (m/s)">
+<line x1="42" x2="306" y1="170.0" y2="170.0" class="axis"/>
+<text x="36" y="174.0" text-anchor="end" class="tick">0</text>
+<line x1="42" x2="306" y1="92.0" y2="92.0" class="grid"/>
+<text x="36" y="96.0" text-anchor="end" class="tick">0.5</text>
+<line x1="42" x2="306" y1="14.0" y2="14.0" class="grid"/>
+<text x="36" y="18.0" text-anchor="end" class="tick">1</text>
+<text x="42.0" y="186" text-anchor="middle" class="tick">-2</text>
+<text x="86.0" y="186" text-anchor="middle" class="tick">0</text>
+<text x="130.0" y="186" text-anchor="middle" class="tick">2</text>
+<text x="174.0" y="186" text-anchor="middle" class="tick">4</text>
+<text x="218.0" y="186" text-anchor="middle" class="tick">6</text>
+<text x="262.0" y="186" text-anchor="middle" class="tick">8</text>
+<text x="306.0" y="186" text-anchor="middle" class="tick">10</text>
+<text x="174.0" y="204" text-anchor="middle" class="small">wind component along the line, w · t (m/s)</text>
+<polyline points="42.0,170.0 43.1,170.0 44.2,170.0 45.3,170.0 46.4,170.0 47.5,170.0 48.6,170.0 49.7,170.0 50.8,170.0 51.9,170.0 53.0,170.0 54.1,170.0 55.2,170.0 56.3,170.0 57.4,170.0 58.5,170.0 59.6,170.0 60.7,170.0 61.8,170.0 62.9,170.0 64.0,170.0 65.1,170.0 66.2,170.0 67.3,170.0 68.4,170.0 69.5,170.0 70.6,170.0 71.7,170.0 72.8,170.0 73.9,170.0 75.0,170.0 76.1,170.0 77.2,170.0 78.3,170.0 79.4,170.0 80.5,170.0 81.6,170.0 82.7,170.0 83.8,170.0 84.9,170.0 86.0,170.0 87.1,170.0 88.2,170.0 89.3,170.0 90.4,170.0 91.5,170.0 92.6,170.0 93.7,170.0 94.8,170.0 95.9,170.0 97.0,170.0 98.1,170.0 99.2,170.0 100.3,170.0 101.4,170.0 102.5,170.0 103.6,170.0 104.7,170.0 105.8,170.0 106.9,170.0 108.0,170.0 109.1,170.0 110.2,170.0 111.3,170.0 112.4,170.0 113.5,170.0 114.6,170.0 115.7,170.0 116.8,170.0 117.9,170.0 119.0,170.0 120.1,170.0 121.2,170.0 122.3,170.0 123.4,170.0 124.5,170.0 125.6,170.0 126.7,170.0 127.8,170.0 128.9,170.0 130.0,170.0 131.1,168.1 132.2,166.1 133.3,164.1 134.4,162.2 135.5,160.2 136.6,158.3 137.7,156.4 138.8,154.4 139.9,152.4 141.0,150.5 142.1,148.6 143.2,146.6 144.3,144.6 145.4,142.7 146.5,140.8 147.6,138.8 148.7,136.9 149.8,134.9 150.9,132.9 152.0,131.0 153.1,129.1 154.2,127.1 155.3,125.1 156.4,123.2 157.5,121.2 158.6,119.3 159.7,117.4 160.8,115.4 161.9,113.4 163.0,111.5 164.1,109.6 165.2,107.6 166.3,105.6 167.4,103.7 168.5,101.8 169.6,99.8 170.7,97.9 171.8,95.9 172.9,93.9 174.0,92.0 175.1,90.1 176.2,88.1 177.3,86.1 178.4,84.2 179.5,82.2 180.6,80.3 181.7,78.4 182.8,76.4 183.9,74.4 185.0,72.5 186.1,70.6 187.2,68.6 188.3,66.6 189.4,64.7 190.5,62.8 191.6,60.8 192.7,58.9 193.8,56.9 194.9,54.9 196.0,53.0 197.1,51.1 198.2,49.1 199.3,47.1 200.4,45.2 201.5,43.2 202.6,41.3 203.7,39.4 204.8,37.4 205.9,35.4 207.0,33.5 208.1,31.6 209.2,29.6 210.3,27.6 211.4,25.7 212.5,23.8 213.6,21.8 214.7,19.9 215.8,17.9 216.9,15.9 218.0,14.0 219.1,14.0 220.2,14.0 221.3,14.0 222.4,14.0 223.5,14.0 224.6,14.0 225.7,14.0 226.8,14.0 227.9,14.0 229.0,14.0 230.1,14.0 231.2,14.0 232.3,14.0 233.4,14.0 234.5,14.0 235.6,14.0 236.7,14.0 237.8,14.0 238.9,14.0 240.0,14.0 241.1,14.0 242.2,14.0 243.3,14.0 244.4,14.0 245.5,14.0 246.6,14.0 247.7,14.0 248.8,14.0 249.9,14.0 251.0,14.0 252.1,14.0 253.2,14.0 254.3,14.0 255.4,14.0 256.5,14.0 257.6,14.0 258.7,14.0 259.8,14.0 260.9,14.0 262.0,14.0 263.1,14.0 264.2,14.0 265.3,14.0 266.4,14.0 267.5,14.0 268.6,14.0 269.7,14.0 270.8,14.0 271.9,14.0 273.0,14.0 274.1,14.0 275.2,14.0 276.3,14.0 277.4,14.0 278.5,14.0 279.6,14.0 280.7,14.0 281.8,14.0 282.9,14.0 284.0,14.0 285.1,14.0 286.2,14.0 287.3,14.0 288.4,14.0 289.5,14.0 290.6,14.0 291.7,14.0 292.8,14.0 293.9,14.0 295.0,14.0 296.1,14.0 297.2,14.0 298.3,14.0 299.4,14.0 300.5,14.0 301.6,14.0 302.7,14.0 303.8,14.0 304.9,14.0 306.0,14.0" class="curve-line"/>
+<g class="hover" visibility="hidden"><line class="guide" y1="14" y2="170"/><circle r="4.5" class="dot"/></g>
+<rect x="42" y="14" width="264" height="156" class="hit"/>
+</svg>
+<figcaption><strong>Along-line wind ramp</strong> <span class="readout" aria-live="polite"></span></figcaption>
+</figure>
+<figure class="curve" data-fn="angle8" data-x0="0" data-x1="180" data-unit="°">
+<svg viewBox="0 0 320 210" role="img" aria-label="Similarity against angle, at 8 m/s: factor from 0 to 1 against θ between wind and line (°)">
 <line x1="42" x2="306" y1="170.0" y2="170.0" class="axis"/>
 <text x="36" y="174.0" text-anchor="end" class="tick">0</text>
 <line x1="42" x2="306" y1="92.0" y2="92.0" class="grid"/>
@@ -499,14 +518,14 @@ windSim   = confidence × alignment² × smoothstep(2 m/s, 6 m/s, speed)</div>
 <text x="240.0" y="186" text-anchor="middle" class="tick">135</text>
 <text x="306.0" y="186" text-anchor="middle" class="tick">180</text>
 <text x="174.0" y="204" text-anchor="middle" class="small">θ between wind and line (°)</text>
-<polyline points="42.0,14.0 43.1,14.0 44.2,14.1 45.3,14.2 46.4,14.4 47.5,14.7 48.6,15.0 49.7,15.3 50.8,15.7 51.9,16.2 53.0,16.7 54.1,17.2 55.2,17.8 56.3,18.5 57.4,19.2 58.5,19.9 59.6,20.7 60.7,21.6 61.8,22.5 62.9,23.5 64.0,24.5 65.1,25.5 66.2,26.6 67.3,27.7 68.4,28.9 69.5,30.1 70.6,31.4 71.7,32.7 72.8,34.0 73.9,35.4 75.0,36.8 76.1,38.3 77.2,39.8 78.3,41.3 79.4,42.9 80.5,44.5 81.6,46.2 82.7,47.8 83.8,49.5 84.9,51.2 86.0,53.0 87.1,54.8 88.2,56.6 89.3,58.4 90.4,60.3 91.5,62.2 92.6,64.0 93.7,66.0 94.8,67.9 95.9,69.8 97.0,71.8 98.1,73.8 99.2,75.8 100.3,77.8 101.4,79.8 102.5,81.8 103.6,83.8 104.7,85.9 105.8,87.9 106.9,90.0 108.0,92.0 109.1,94.0 110.2,96.1 111.3,98.1 112.4,100.2 113.5,102.2 114.6,104.2 115.7,106.2 116.8,108.2 117.9,110.2 119.0,112.2 120.1,114.2 121.2,116.1 122.3,118.0 123.4,120.0 124.5,121.8 125.6,123.7 126.7,125.6 127.8,127.4 128.9,129.2 130.0,131.0 131.1,132.8 132.2,134.5 133.3,136.2 134.4,137.8 135.5,139.5 136.6,141.1 137.7,142.7 138.8,144.2 139.9,145.7 141.0,147.2 142.1,148.6 143.2,150.0 144.3,151.3 145.4,152.6 146.5,153.9 147.6,155.1 148.7,156.3 149.8,157.4 150.9,158.5 152.0,159.5 153.1,160.5 154.2,161.5 155.3,162.4 156.4,163.3 157.5,164.1 158.6,164.8 159.7,165.5 160.8,166.2 161.9,166.8 163.0,167.3 164.1,167.8 165.2,168.3 166.3,168.7 167.4,169.0 168.5,169.3 169.6,169.6 170.7,169.8 171.8,169.9 172.9,170.0 174.0,170.0 175.1,170.0 176.2,170.0 177.3,170.0 178.4,170.0 179.5,170.0 180.6,170.0 181.7,170.0 182.8,170.0 183.9,170.0 185.0,170.0 186.1,170.0 187.2,170.0 188.3,170.0 189.4,170.0 190.5,170.0 191.6,170.0 192.7,170.0 193.8,170.0 194.9,170.0 196.0,170.0 197.1,170.0 198.2,170.0 199.3,170.0 200.4,170.0 201.5,170.0 202.6,170.0 203.7,170.0 204.8,170.0 205.9,170.0 207.0,170.0 208.1,170.0 209.2,170.0 210.3,170.0 211.4,170.0 212.5,170.0 213.6,170.0 214.7,170.0 215.8,170.0 216.9,170.0 218.0,170.0 219.1,170.0 220.2,170.0 221.3,170.0 222.4,170.0 223.5,170.0 224.6,170.0 225.7,170.0 226.8,170.0 227.9,170.0 229.0,170.0 230.1,170.0 231.2,170.0 232.3,170.0 233.4,170.0 234.5,170.0 235.6,170.0 236.7,170.0 237.8,170.0 238.9,170.0 240.0,170.0 241.1,170.0 242.2,170.0 243.3,170.0 244.4,170.0 245.5,170.0 246.6,170.0 247.7,170.0 248.8,170.0 249.9,170.0 251.0,170.0 252.1,170.0 253.2,170.0 254.3,170.0 255.4,170.0 256.5,170.0 257.6,170.0 258.7,170.0 259.8,170.0 260.9,170.0 262.0,170.0 263.1,170.0 264.2,170.0 265.3,170.0 266.4,170.0 267.5,170.0 268.6,170.0 269.7,170.0 270.8,170.0 271.9,170.0 273.0,170.0 274.1,170.0 275.2,170.0 276.3,170.0 277.4,170.0 278.5,170.0 279.6,170.0 280.7,170.0 281.8,170.0 282.9,170.0 284.0,170.0 285.1,170.0 286.2,170.0 287.3,170.0 288.4,170.0 289.5,170.0 290.6,170.0 291.7,170.0 292.8,170.0 293.9,170.0 295.0,170.0 296.1,170.0 297.2,170.0 298.3,170.0 299.4,170.0 300.5,170.0 301.6,170.0 302.7,170.0 303.8,170.0 304.9,170.0 306.0,170.0" class="curve-line"/>
+<polyline points="42.0,14.0 43.1,14.0 44.2,14.0 45.3,14.0 46.4,14.0 47.5,14.0 48.6,14.0 49.7,14.0 50.8,14.0 51.9,14.0 53.0,14.0 54.1,14.0 55.2,14.0 56.3,14.0 57.4,14.0 58.5,14.0 59.6,14.0 60.7,14.0 61.8,14.0 62.9,14.0 64.0,14.0 65.1,14.0 66.2,14.0 67.3,14.0 68.4,14.0 69.5,14.0 70.6,14.0 71.7,14.0 72.8,14.0 73.9,14.0 75.0,14.0 76.1,14.0 77.2,14.0 78.3,14.0 79.4,14.0 80.5,14.0 81.6,14.0 82.7,14.0 83.8,14.0 84.9,14.0 86.0,14.0 87.1,14.0 88.2,14.0 89.3,14.0 90.4,14.0 91.5,14.0 92.6,14.0 93.7,14.0 94.8,14.0 95.9,14.0 97.0,14.0 98.1,14.0 99.2,14.0 100.3,14.0 101.4,14.0 102.5,14.0 103.6,16.1 104.7,18.9 105.8,21.7 106.9,24.5 108.0,27.4 109.1,30.3 110.2,33.2 111.3,36.2 112.4,39.2 113.5,42.3 114.6,45.4 115.7,48.5 116.8,51.7 117.9,54.8 119.0,58.1 120.1,61.3 121.2,64.6 122.3,67.9 123.4,71.3 124.5,74.7 125.6,78.1 126.7,81.5 127.8,85.0 128.9,88.5 130.0,92.0 131.1,95.6 132.2,99.1 133.3,102.7 134.4,106.4 135.5,110.0 136.6,113.7 137.7,117.4 138.8,121.1 139.9,124.8 141.0,128.6 142.1,132.4 143.2,136.2 144.3,140.0 145.4,143.9 146.5,147.7 147.6,151.6 148.7,155.5 149.8,159.4 150.9,163.3 152.0,167.2 153.1,170.0 154.2,170.0 155.3,170.0 156.4,170.0 157.5,170.0 158.6,170.0 159.7,170.0 160.8,170.0 161.9,170.0 163.0,170.0 164.1,170.0 165.2,170.0 166.3,170.0 167.4,170.0 168.5,170.0 169.6,170.0 170.7,170.0 171.8,170.0 172.9,170.0 174.0,170.0 175.1,170.0 176.2,170.0 177.3,170.0 178.4,170.0 179.5,170.0 180.6,170.0 181.7,170.0 182.8,170.0 183.9,170.0 185.0,170.0 186.1,170.0 187.2,170.0 188.3,170.0 189.4,170.0 190.5,170.0 191.6,170.0 192.7,170.0 193.8,170.0 194.9,170.0 196.0,170.0 197.1,170.0 198.2,170.0 199.3,170.0 200.4,170.0 201.5,170.0 202.6,170.0 203.7,170.0 204.8,170.0 205.9,170.0 207.0,170.0 208.1,170.0 209.2,170.0 210.3,170.0 211.4,170.0 212.5,170.0 213.6,170.0 214.7,170.0 215.8,170.0 216.9,170.0 218.0,170.0 219.1,170.0 220.2,170.0 221.3,170.0 222.4,170.0 223.5,170.0 224.6,170.0 225.7,170.0 226.8,170.0 227.9,170.0 229.0,170.0 230.1,170.0 231.2,170.0 232.3,170.0 233.4,170.0 234.5,170.0 235.6,170.0 236.7,170.0 237.8,170.0 238.9,170.0 240.0,170.0 241.1,170.0 242.2,170.0 243.3,170.0 244.4,170.0 245.5,170.0 246.6,170.0 247.7,170.0 248.8,170.0 249.9,170.0 251.0,170.0 252.1,170.0 253.2,170.0 254.3,170.0 255.4,170.0 256.5,170.0 257.6,170.0 258.7,170.0 259.8,170.0 260.9,170.0 262.0,170.0 263.1,170.0 264.2,170.0 265.3,170.0 266.4,170.0 267.5,170.0 268.6,170.0 269.7,170.0 270.8,170.0 271.9,170.0 273.0,170.0 274.1,170.0 275.2,170.0 276.3,170.0 277.4,170.0 278.5,170.0 279.6,170.0 280.7,170.0 281.8,170.0 282.9,170.0 284.0,170.0 285.1,170.0 286.2,170.0 287.3,170.0 288.4,170.0 289.5,170.0 290.6,170.0 291.7,170.0 292.8,170.0 293.9,170.0 295.0,170.0 296.1,170.0 297.2,170.0 298.3,170.0 299.4,170.0 300.5,170.0 301.6,170.0 302.7,170.0 303.8,170.0 304.9,170.0 306.0,170.0" class="curve-line"/>
 <g class="hover" visibility="hidden"><line class="guide" y1="14" y2="170"/><circle r="4.5" class="dot"/></g>
 <rect x="42" y="14" width="264" height="156" class="hit"/>
 </svg>
-<figcaption><strong>Wind alignment factor</strong> <span class="readout" aria-live="polite"></span></figcaption>
+<figcaption><strong>Similarity against angle, at 8 m/s</strong> <span class="readout" aria-live="polite"></span></figcaption>
 </figure>
-<figure class="curve" data-fn="speed" data-x0="0" data-x1="10" data-unit=" m/s">
-<svg viewBox="0 0 320 210" role="img" aria-label="Wind-speed ramp: factor from 0 to 1 against 10 m wind speed (m/s)">
+<figure class="curve" data-fn="corridor" data-x0="0" data-x1="20" data-unit=" km">
+<svg viewBox="0 0 320 210" role="img" aria-label="Corridor: factor from 0 to 1 against distance to the nearest sample (km)">
 <line x1="42" x2="306" y1="170.0" y2="170.0" class="axis"/>
 <text x="36" y="174.0" text-anchor="end" class="tick">0</text>
 <line x1="42" x2="306" y1="92.0" y2="92.0" class="grid"/>
@@ -514,40 +533,16 @@ windSim   = confidence × alignment² × smoothstep(2 m/s, 6 m/s, speed)</div>
 <line x1="42" x2="306" y1="14.0" y2="14.0" class="grid"/>
 <text x="36" y="18.0" text-anchor="end" class="tick">1</text>
 <text x="42.0" y="186" text-anchor="middle" class="tick">0</text>
-<text x="94.8" y="186" text-anchor="middle" class="tick">2</text>
-<text x="147.6" y="186" text-anchor="middle" class="tick">4</text>
-<text x="200.4" y="186" text-anchor="middle" class="tick">6</text>
-<text x="253.2" y="186" text-anchor="middle" class="tick">8</text>
-<text x="306.0" y="186" text-anchor="middle" class="tick">10</text>
-<text x="174.0" y="204" text-anchor="middle" class="small">10 m wind speed (m/s)</text>
-<polyline points="42.0,170.0 43.1,170.0 44.2,170.0 45.3,170.0 46.4,170.0 47.5,170.0 48.6,170.0 49.7,170.0 50.8,170.0 51.9,170.0 53.0,170.0 54.1,170.0 55.2,170.0 56.3,170.0 57.4,170.0 58.5,170.0 59.6,170.0 60.7,170.0 61.8,170.0 62.9,170.0 64.0,170.0 65.1,170.0 66.2,170.0 67.3,170.0 68.4,170.0 69.5,170.0 70.6,170.0 71.7,170.0 72.8,170.0 73.9,170.0 75.0,170.0 76.1,170.0 77.2,170.0 78.3,170.0 79.4,170.0 80.5,170.0 81.6,170.0 82.7,170.0 83.8,170.0 84.9,170.0 86.0,170.0 87.1,170.0 88.2,170.0 89.3,170.0 90.4,170.0 91.5,170.0 92.6,170.0 93.7,170.0 94.8,170.0 95.9,169.9 97.0,169.8 98.1,169.6 99.2,169.2 100.3,168.8 101.4,168.2 102.5,167.6 103.6,166.9 104.7,166.1 105.8,165.3 106.9,164.3 108.0,163.3 109.1,162.2 110.2,161.0 111.3,159.8 112.4,158.4 113.5,157.1 114.6,155.6 115.7,154.1 116.8,152.5 117.9,150.9 119.0,149.2 120.1,147.4 121.2,145.6 122.3,143.8 123.4,141.9 124.5,139.9 125.6,137.9 126.7,135.9 127.8,133.8 128.9,131.7 130.0,129.6 131.1,127.4 132.2,125.2 133.3,122.9 134.4,120.6 135.5,118.3 136.6,116.0 137.7,113.7 138.8,111.3 139.9,108.9 141.0,106.5 142.1,104.1 143.2,101.7 144.3,99.3 145.4,96.9 146.5,94.4 147.6,92.0 148.7,89.6 149.8,87.1 150.9,84.7 152.0,82.3 153.1,79.9 154.2,77.5 155.3,75.1 156.4,72.7 157.5,70.3 158.6,68.0 159.7,65.7 160.8,63.4 161.9,61.1 163.0,58.8 164.1,56.6 165.2,54.4 166.3,52.3 167.4,50.2 168.5,48.1 169.6,46.1 170.7,44.1 171.8,42.1 172.9,40.2 174.0,38.4 175.1,36.6 176.2,34.8 177.3,33.1 178.4,31.5 179.5,29.9 180.6,28.4 181.7,26.9 182.8,25.6 183.9,24.2 185.0,23.0 186.1,21.8 187.2,20.7 188.3,19.7 189.4,18.7 190.5,17.9 191.6,17.1 192.7,16.4 193.8,15.8 194.9,15.2 196.0,14.8 197.1,14.4 198.2,14.2 199.3,14.1 200.4,14.0 201.5,14.0 202.6,14.0 203.7,14.0 204.8,14.0 205.9,14.0 207.0,14.0 208.1,14.0 209.2,14.0 210.3,14.0 211.4,14.0 212.5,14.0 213.6,14.0 214.7,14.0 215.8,14.0 216.9,14.0 218.0,14.0 219.1,14.0 220.2,14.0 221.3,14.0 222.4,14.0 223.5,14.0 224.6,14.0 225.7,14.0 226.8,14.0 227.9,14.0 229.0,14.0 230.1,14.0 231.2,14.0 232.3,14.0 233.4,14.0 234.5,14.0 235.6,14.0 236.7,14.0 237.8,14.0 238.9,14.0 240.0,14.0 241.1,14.0 242.2,14.0 243.3,14.0 244.4,14.0 245.5,14.0 246.6,14.0 247.7,14.0 248.8,14.0 249.9,14.0 251.0,14.0 252.1,14.0 253.2,14.0 254.3,14.0 255.4,14.0 256.5,14.0 257.6,14.0 258.7,14.0 259.8,14.0 260.9,14.0 262.0,14.0 263.1,14.0 264.2,14.0 265.3,14.0 266.4,14.0 267.5,14.0 268.6,14.0 269.7,14.0 270.8,14.0 271.9,14.0 273.0,14.0 274.1,14.0 275.2,14.0 276.3,14.0 277.4,14.0 278.5,14.0 279.6,14.0 280.7,14.0 281.8,14.0 282.9,14.0 284.0,14.0 285.1,14.0 286.2,14.0 287.3,14.0 288.4,14.0 289.5,14.0 290.6,14.0 291.7,14.0 292.8,14.0 293.9,14.0 295.0,14.0 296.1,14.0 297.2,14.0 298.3,14.0 299.4,14.0 300.5,14.0 301.6,14.0 302.7,14.0 303.8,14.0 304.9,14.0 306.0,14.0" class="curve-line"/>
-<g class="hover" visibility="hidden"><line class="guide" y1="14" y2="170"/><circle r="4.5" class="dot"/></g>
-<rect x="42" y="14" width="264" height="156" class="hit"/>
-</svg>
-<figcaption><strong>Wind-speed ramp</strong> <span class="readout" aria-live="polite"></span></figcaption>
-</figure>
-<figure class="curve" data-fn="distance" data-x0="0" data-x1="25" data-unit=" km">
-<svg viewBox="0 0 320 210" role="img" aria-label="Distance weight: factor from 0 to 1 against distance to the nearest sample (km)">
-<line x1="42" x2="306" y1="170.0" y2="170.0" class="axis"/>
-<text x="36" y="174.0" text-anchor="end" class="tick">0</text>
-<line x1="42" x2="306" y1="92.0" y2="92.0" class="grid"/>
-<text x="36" y="96.0" text-anchor="end" class="tick">0.5</text>
-<line x1="42" x2="306" y1="14.0" y2="14.0" class="grid"/>
-<text x="36" y="18.0" text-anchor="end" class="tick">1</text>
-<text x="42.0" y="186" text-anchor="middle" class="tick">0</text>
-<text x="94.8" y="186" text-anchor="middle" class="tick">5</text>
-<text x="147.6" y="186" text-anchor="middle" class="tick">10</text>
-<text x="200.4" y="186" text-anchor="middle" class="tick">15</text>
-<text x="253.2" y="186" text-anchor="middle" class="tick">20</text>
-<text x="306.0" y="186" text-anchor="middle" class="tick">25</text>
+<text x="108.0" y="186" text-anchor="middle" class="tick">5</text>
+<text x="174.0" y="186" text-anchor="middle" class="tick">10</text>
+<text x="240.0" y="186" text-anchor="middle" class="tick">15</text>
+<text x="306.0" y="186" text-anchor="middle" class="tick">20</text>
 <text x="174.0" y="204" text-anchor="middle" class="small">distance to the nearest sample (km)</text>
-<line x1="253.2" x2="253.2" y1="14" y2="170" class="cutoff"/>
-<text x="249.2" y="26" text-anchor="end" class="tick">cut-off</text>
-<polyline points="42.0,14.0 43.1,14.0 44.2,14.1 45.3,14.1 46.4,14.2 47.5,14.3 48.6,14.5 49.7,14.6 50.8,14.8 51.9,15.1 53.0,15.3 54.1,15.6 55.2,15.9 56.3,16.2 57.4,16.6 58.5,16.9 59.6,17.3 60.7,17.8 61.8,18.2 62.9,18.7 64.0,19.2 65.1,19.7 66.2,20.3 67.3,20.8 68.4,21.4 69.5,22.1 70.6,22.7 71.7,23.3 72.8,24.0 73.9,24.7 75.0,25.5 76.1,26.2 77.2,27.0 78.3,27.8 79.4,28.6 80.5,29.4 81.6,30.2 82.7,31.1 83.8,32.0 84.9,32.9 86.0,33.8 87.1,34.7 88.2,35.7 89.3,36.6 90.4,37.6 91.5,38.6 92.6,39.6 93.7,40.6 94.8,41.7 95.9,42.7 97.0,43.8 98.1,44.9 99.2,46.0 100.3,47.1 101.4,48.2 102.5,49.3 103.6,50.4 104.7,51.6 105.8,52.7 106.9,53.9 108.0,55.0 109.1,56.2 110.2,57.4 111.3,58.6 112.4,59.8 113.5,61.0 114.6,62.2 115.7,63.4 116.8,64.6 117.9,65.8 119.0,67.0 120.1,68.2 121.2,69.5 122.3,70.7 123.4,71.9 124.5,73.2 125.6,74.4 126.7,75.6 127.8,76.9 128.9,78.1 130.0,79.3 131.1,80.6 132.2,81.8 133.3,83.0 134.4,84.2 135.5,85.4 136.6,86.7 137.7,87.9 138.8,89.1 139.9,90.3 141.0,91.5 142.1,92.7 143.2,93.9 144.3,95.1 145.4,96.2 146.5,97.4 147.6,98.6 148.7,99.7 149.8,100.9 150.9,102.0 152.0,103.2 153.1,104.3 154.2,105.4 155.3,106.5 156.4,107.6 157.5,108.7 158.6,109.8 159.7,110.9 160.8,112.0 161.9,113.0 163.0,114.1 164.1,115.1 165.2,116.1 166.3,117.2 167.4,118.2 168.5,119.2 169.6,120.1 170.7,121.1 171.8,122.1 172.9,123.0 174.0,124.0 175.1,124.9 176.2,125.8 177.3,126.7 178.4,127.6 179.5,128.5 180.6,129.4 181.7,130.3 182.8,131.1 183.9,131.9 185.0,132.8 186.1,133.6 187.2,134.4 188.3,135.2 189.4,136.0 190.5,136.7 191.6,137.5 192.7,138.2 193.8,139.0 194.9,139.7 196.0,140.4 197.1,141.1 198.2,141.8 199.3,142.4 200.4,143.1 201.5,143.8 202.6,144.4 203.7,145.0 204.8,145.6 205.9,146.2 207.0,146.8 208.1,147.4 209.2,148.0 210.3,148.6 211.4,149.1 212.5,149.6 213.6,150.2 214.7,150.7 215.8,151.2 216.9,151.7 218.0,152.2 219.1,152.7 220.2,153.1 221.3,153.6 222.4,154.0 223.5,154.5 224.6,154.9 225.7,155.3 226.8,155.7 227.9,156.1 229.0,156.5 230.1,156.9 231.2,157.3 232.3,157.7 233.4,158.0 234.5,158.4 235.6,158.7 236.7,159.0 237.8,159.4 238.9,159.7 240.0,160.0 241.1,160.3 242.2,160.6 243.3,160.9 244.4,161.2 245.5,161.4 246.6,161.7 247.7,162.0 248.8,162.2 249.9,162.4 251.0,162.7 252.1,162.9 253.2,163.1 253.2,170.0 254.3,170.0 255.4,170.0 256.5,170.0 257.6,170.0 258.7,170.0 259.8,170.0 260.9,170.0 262.0,170.0 263.1,170.0 264.2,170.0 265.3,170.0 266.4,170.0 267.5,170.0 268.6,170.0 269.7,170.0 270.8,170.0 271.9,170.0 273.0,170.0 274.1,170.0 275.2,170.0 276.3,170.0 277.4,170.0 278.5,170.0 279.6,170.0 280.7,170.0 281.8,170.0 282.9,170.0 284.0,170.0 285.1,170.0 286.2,170.0 287.3,170.0 288.4,170.0 289.5,170.0 290.6,170.0 291.7,170.0 292.8,170.0 293.9,170.0 295.0,170.0 296.1,170.0 297.2,170.0 298.3,170.0 299.4,170.0 300.5,170.0 301.6,170.0 302.7,170.0 303.8,170.0 304.9,170.0 306.0,170.0" class="curve-line"/>
+<polyline points="42.0,14.0 43.1,14.0 44.2,14.0 45.3,14.0 46.4,14.0 47.5,14.0 48.6,14.0 49.7,14.0 50.8,14.0 51.9,14.0 53.0,14.0 54.1,14.0 55.2,14.0 56.3,14.0 57.4,14.0 58.5,14.0 59.6,14.0 60.7,14.0 61.8,14.0 62.9,14.0 64.0,14.0 65.1,14.0 66.2,14.0 67.3,14.0 68.4,14.0 69.5,14.0 70.6,14.0 71.7,14.0 72.8,14.0 73.9,14.0 75.0,14.0 76.1,14.0 77.2,14.0 78.3,14.0 79.4,14.0 80.5,14.0 81.6,14.0 82.7,14.0 83.8,14.0 84.9,14.0 86.0,14.0 87.1,14.0 88.2,14.0 89.3,14.0 90.4,14.0 91.5,14.0 92.6,14.0 93.7,14.0 94.8,14.0 95.9,14.0 97.0,14.0 98.1,14.0 99.2,14.0 100.3,14.0 101.4,14.0 102.5,14.0 103.6,14.0 104.7,14.0 105.8,14.0 106.9,14.0 108.0,14.0 109.1,14.0 110.2,14.0 111.3,14.0 112.4,14.0 113.5,14.0 114.6,14.0 115.7,14.0 116.8,14.0 117.9,14.0 119.0,14.0 120.1,14.0 121.2,14.0 122.3,14.0 123.4,14.0 124.5,14.0 125.6,14.0 126.7,14.0 127.8,14.0 128.9,14.0 130.0,14.0 131.1,14.0 132.2,14.0 133.3,14.0 134.4,14.0 135.5,14.0 136.6,14.0 137.7,14.0 138.8,14.0 139.9,14.0 141.0,14.0 142.1,14.0 143.2,14.0 144.3,14.0 145.4,14.0 146.5,14.0 147.6,14.0 148.7,14.0 149.8,14.0 150.9,14.0 152.0,14.0 153.1,14.0 154.2,14.0 155.3,14.0 156.4,14.0 157.5,14.0 158.6,14.0 159.7,14.0 160.8,14.0 161.9,14.0 163.0,14.0 164.1,14.0 165.2,14.0 166.3,14.0 167.4,14.0 168.5,14.0 169.6,14.0 170.7,14.0 171.8,14.0 172.9,14.0 174.0,14.0 175.1,170.0 176.2,170.0 177.3,170.0 178.4,170.0 179.5,170.0 180.6,170.0 181.7,170.0 182.8,170.0 183.9,170.0 185.0,170.0 186.1,170.0 187.2,170.0 188.3,170.0 189.4,170.0 190.5,170.0 191.6,170.0 192.7,170.0 193.8,170.0 194.9,170.0 196.0,170.0 197.1,170.0 198.2,170.0 199.3,170.0 200.4,170.0 201.5,170.0 202.6,170.0 203.7,170.0 204.8,170.0 205.9,170.0 207.0,170.0 208.1,170.0 209.2,170.0 210.3,170.0 211.4,170.0 212.5,170.0 213.6,170.0 214.7,170.0 215.8,170.0 216.9,170.0 218.0,170.0 219.1,170.0 220.2,170.0 221.3,170.0 222.4,170.0 223.5,170.0 224.6,170.0 225.7,170.0 226.8,170.0 227.9,170.0 229.0,170.0 230.1,170.0 231.2,170.0 232.3,170.0 233.4,170.0 234.5,170.0 235.6,170.0 236.7,170.0 237.8,170.0 238.9,170.0 240.0,170.0 241.1,170.0 242.2,170.0 243.3,170.0 244.4,170.0 245.5,170.0 246.6,170.0 247.7,170.0 248.8,170.0 249.9,170.0 251.0,170.0 252.1,170.0 253.2,170.0 254.3,170.0 255.4,170.0 256.5,170.0 257.6,170.0 258.7,170.0 259.8,170.0 260.9,170.0 262.0,170.0 263.1,170.0 264.2,170.0 265.3,170.0 266.4,170.0 267.5,170.0 268.6,170.0 269.7,170.0 270.8,170.0 271.9,170.0 273.0,170.0 274.1,170.0 275.2,170.0 276.3,170.0 277.4,170.0 278.5,170.0 279.6,170.0 280.7,170.0 281.8,170.0 282.9,170.0 284.0,170.0 285.1,170.0 286.2,170.0 287.3,170.0 288.4,170.0 289.5,170.0 290.6,170.0 291.7,170.0 292.8,170.0 293.9,170.0 295.0,170.0 296.1,170.0 297.2,170.0 298.3,170.0 299.4,170.0 300.5,170.0 301.6,170.0 302.7,170.0 303.8,170.0 304.9,170.0 306.0,170.0" class="curve-line"/>
 <g class="hover" visibility="hidden"><line class="guide" y1="14" y2="170"/><circle r="4.5" class="dot"/></g>
 <rect x="42" y="14" width="264" height="156" class="hit"/>
 </svg>
-<figcaption><strong>Distance weight</strong> <span class="readout" aria-live="polite"></span></figcaption>
+<figcaption><strong>Corridor</strong> <span class="readout" aria-live="polite"></span></figcaption>
 </figure>
 <figure class="curve" data-fn="gate" data-x0="0" data-x1="10" data-unit=" hPa">
 <svg viewBox="0 0 320 210" role="img" aria-label="Pressure gate: factor from 0 to 1 against |Δp| with the matching sign (hPa)">
@@ -564,14 +559,14 @@ windSim   = confidence × alignment² × smoothstep(2 m/s, 6 m/s, speed)</div>
 <text x="253.2" y="186" text-anchor="middle" class="tick">8</text>
 <text x="306.0" y="186" text-anchor="middle" class="tick">10</text>
 <text x="174.0" y="204" text-anchor="middle" class="small">|Δp| with the matching sign (hPa)</text>
-<polyline points="42.0,170.0 43.1,170.0 44.2,170.0 45.3,170.0 46.4,170.0 47.5,170.0 48.6,170.0 49.7,170.0 50.8,170.0 51.9,170.0 53.0,170.0 54.1,170.0 55.2,170.0 56.3,170.0 57.4,170.0 58.5,170.0 59.6,170.0 60.7,170.0 61.8,170.0 62.9,170.0 64.0,170.0 65.1,170.0 66.2,170.0 67.3,170.0 68.4,170.0 69.5,170.0 70.6,170.0 71.7,170.0 72.8,170.0 73.9,170.0 75.0,170.0 76.1,170.0 77.2,170.0 78.3,170.0 79.4,170.0 80.5,170.0 81.6,170.0 82.7,170.0 83.8,170.0 84.9,170.0 86.0,170.0 87.1,170.0 88.2,170.0 89.3,170.0 90.4,170.0 91.5,170.0 92.6,170.0 93.7,170.0 94.8,170.0 95.9,169.9 97.0,169.8 98.1,169.6 99.2,169.2 100.3,168.8 101.4,168.2 102.5,167.6 103.6,166.9 104.7,166.1 105.8,165.3 106.9,164.3 108.0,163.3 109.1,162.2 110.2,161.0 111.3,159.8 112.4,158.4 113.5,157.1 114.6,155.6 115.7,154.1 116.8,152.5 117.9,150.9 119.0,149.2 120.1,147.4 121.2,145.6 122.3,143.8 123.4,141.9 124.5,139.9 125.6,137.9 126.7,135.9 127.8,133.8 128.9,131.7 130.0,129.6 131.1,127.4 132.2,125.2 133.3,122.9 134.4,120.6 135.5,118.3 136.6,116.0 137.7,113.7 138.8,111.3 139.9,108.9 141.0,106.5 142.1,104.1 143.2,101.7 144.3,99.3 145.4,96.9 146.5,94.4 147.6,92.0 148.7,89.6 149.8,87.1 150.9,84.7 152.0,82.3 153.1,79.9 154.2,77.5 155.3,75.1 156.4,72.7 157.5,70.3 158.6,68.0 159.7,65.7 160.8,63.4 161.9,61.1 163.0,58.8 164.1,56.6 165.2,54.4 166.3,52.3 167.4,50.2 168.5,48.1 169.6,46.1 170.7,44.1 171.8,42.1 172.9,40.2 174.0,38.4 175.1,36.6 176.2,34.8 177.3,33.1 178.4,31.5 179.5,29.9 180.6,28.4 181.7,26.9 182.8,25.6 183.9,24.2 185.0,23.0 186.1,21.8 187.2,20.7 188.3,19.7 189.4,18.7 190.5,17.9 191.6,17.1 192.7,16.4 193.8,15.8 194.9,15.2 196.0,14.8 197.1,14.4 198.2,14.2 199.3,14.1 200.4,14.0 201.5,14.0 202.6,14.0 203.7,14.0 204.8,14.0 205.9,14.0 207.0,14.0 208.1,14.0 209.2,14.0 210.3,14.0 211.4,14.0 212.5,14.0 213.6,14.0 214.7,14.0 215.8,14.0 216.9,14.0 218.0,14.0 219.1,14.0 220.2,14.0 221.3,14.0 222.4,14.0 223.5,14.0 224.6,14.0 225.7,14.0 226.8,14.0 227.9,14.0 229.0,14.0 230.1,14.0 231.2,14.0 232.3,14.0 233.4,14.0 234.5,14.0 235.6,14.0 236.7,14.0 237.8,14.0 238.9,14.0 240.0,14.0 241.1,14.0 242.2,14.0 243.3,14.0 244.4,14.0 245.5,14.0 246.6,14.0 247.7,14.0 248.8,14.0 249.9,14.0 251.0,14.0 252.1,14.0 253.2,14.0 254.3,14.0 255.4,14.0 256.5,14.0 257.6,14.0 258.7,14.0 259.8,14.0 260.9,14.0 262.0,14.0 263.1,14.0 264.2,14.0 265.3,14.0 266.4,14.0 267.5,14.0 268.6,14.0 269.7,14.0 270.8,14.0 271.9,14.0 273.0,14.0 274.1,14.0 275.2,14.0 276.3,14.0 277.4,14.0 278.5,14.0 279.6,14.0 280.7,14.0 281.8,14.0 282.9,14.0 284.0,14.0 285.1,14.0 286.2,14.0 287.3,14.0 288.4,14.0 289.5,14.0 290.6,14.0 291.7,14.0 292.8,14.0 293.9,14.0 295.0,14.0 296.1,14.0 297.2,14.0 298.3,14.0 299.4,14.0 300.5,14.0 301.6,14.0 302.7,14.0 303.8,14.0 304.9,14.0 306.0,14.0" class="curve-line"/>
+<polyline points="42.0,170.0 43.1,170.0 44.2,170.0 45.3,170.0 46.4,170.0 47.5,170.0 48.6,170.0 49.7,170.0 50.8,170.0 51.9,170.0 53.0,170.0 54.1,170.0 55.2,170.0 56.3,170.0 57.4,170.0 58.5,170.0 59.6,170.0 60.7,170.0 61.8,170.0 62.9,170.0 64.0,170.0 65.1,170.0 66.2,170.0 67.3,170.0 68.4,170.0 69.5,170.0 70.6,170.0 71.7,170.0 72.8,170.0 73.9,170.0 75.0,170.0 76.1,170.0 77.2,170.0 78.3,170.0 79.4,170.0 80.5,170.0 81.6,170.0 82.7,170.0 83.8,170.0 84.9,170.0 86.0,170.0 87.1,170.0 88.2,170.0 89.3,170.0 90.4,170.0 91.5,170.0 92.6,170.0 93.7,170.0 94.8,170.0 95.9,168.4 97.0,166.8 98.1,165.1 99.2,163.5 100.3,161.9 101.4,160.2 102.5,158.6 103.6,157.0 104.7,155.4 105.8,153.8 106.9,152.1 108.0,150.5 109.1,148.9 110.2,147.2 111.3,145.6 112.4,144.0 113.5,142.4 114.6,140.8 115.7,139.1 116.8,137.5 117.9,135.9 119.0,134.2 120.1,132.6 121.2,131.0 122.3,129.4 123.4,127.8 124.5,126.1 125.6,124.5 126.7,122.9 127.8,121.2 128.9,119.6 130.0,118.0 131.1,116.4 132.2,114.8 133.3,113.1 134.4,111.5 135.5,109.9 136.6,108.2 137.7,106.6 138.8,105.0 139.9,103.4 141.0,101.8 142.1,100.1 143.2,98.5 144.3,96.9 145.4,95.2 146.5,93.6 147.6,92.0 148.7,90.4 149.8,88.8 150.9,87.1 152.0,85.5 153.1,83.9 154.2,82.2 155.3,80.6 156.4,79.0 157.5,77.4 158.6,75.7 159.7,74.1 160.8,72.5 161.9,70.9 163.0,69.3 164.1,67.6 165.2,66.0 166.3,64.4 167.4,62.8 168.5,61.1 169.6,59.5 170.7,57.9 171.8,56.2 172.9,54.6 174.0,53.0 175.1,51.4 176.2,49.8 177.3,48.1 178.4,46.5 179.5,44.9 180.6,43.2 181.7,41.6 182.8,40.0 183.9,38.4 185.0,36.7 186.1,35.1 187.2,33.5 188.3,31.9 189.4,30.3 190.5,28.6 191.6,27.0 192.7,25.4 193.8,23.8 194.9,22.1 196.0,20.5 197.1,18.9 198.2,17.2 199.3,15.6 200.4,14.0 201.5,14.0 202.6,14.0 203.7,14.0 204.8,14.0 205.9,14.0 207.0,14.0 208.1,14.0 209.2,14.0 210.3,14.0 211.4,14.0 212.5,14.0 213.6,14.0 214.7,14.0 215.8,14.0 216.9,14.0 218.0,14.0 219.1,14.0 220.2,14.0 221.3,14.0 222.4,14.0 223.5,14.0 224.6,14.0 225.7,14.0 226.8,14.0 227.9,14.0 229.0,14.0 230.1,14.0 231.2,14.0 232.3,14.0 233.4,14.0 234.5,14.0 235.6,14.0 236.7,14.0 237.8,14.0 238.9,14.0 240.0,14.0 241.1,14.0 242.2,14.0 243.3,14.0 244.4,14.0 245.5,14.0 246.6,14.0 247.7,14.0 248.8,14.0 249.9,14.0 251.0,14.0 252.1,14.0 253.2,14.0 254.3,14.0 255.4,14.0 256.5,14.0 257.6,14.0 258.7,14.0 259.8,14.0 260.9,14.0 262.0,14.0 263.1,14.0 264.2,14.0 265.3,14.0 266.4,14.0 267.5,14.0 268.6,14.0 269.7,14.0 270.8,14.0 271.9,14.0 273.0,14.0 274.1,14.0 275.2,14.0 276.3,14.0 277.4,14.0 278.5,14.0 279.6,14.0 280.7,14.0 281.8,14.0 282.9,14.0 284.0,14.0 285.1,14.0 286.2,14.0 287.3,14.0 288.4,14.0 289.5,14.0 290.6,14.0 291.7,14.0 292.8,14.0 293.9,14.0 295.0,14.0 296.1,14.0 297.2,14.0 298.3,14.0 299.4,14.0 300.5,14.0 301.6,14.0 302.7,14.0 303.8,14.0 304.9,14.0 306.0,14.0" class="curve-line"/>
 <g class="hover" visibility="hidden"><line class="guide" y1="14" y2="170"/><circle r="4.5" class="dot"/></g>
 <rect x="42" y="14" width="264" height="156" class="hit"/>
 </svg>
 <figcaption><strong>Pressure gate</strong> <span class="readout" aria-live="polite"></span></figcaption>
 </figure>
 </div>
-<p class="figure-note" style="color:var(--muted);font-size:.88rem">Alignment, speed ramp and distance weight multiply into the similarity. The pressure gate (section 4.1) then multiplies the similarity into the index. The confidence of the line (1 or 0.5) is a further constant factor.</p>
+<p class="figure-note" style="color:var(--muted);font-size:.88rem">The along-line ramp and the corridor give the similarity. The pressure gate (section 4.1) then multiplies the similarity into the index.</p>
 <p>Each cell stores the result as <code>Forecast.valleyFoehn = Diagnostics(similarity, index, direction, valleyId, distanceMeters)</code>.</p>
 <div class="note">
   <p><strong>Why fall back to the line of the other direction?</strong> When south foehn is expected but only a north foehn line is nearby, the cell still reports that line and its wind similarity, while the index stays 0. The popup can then show why the index is zero: there is a valley nearby, but the pressure pattern doesn't support foehn there.</p>
@@ -580,14 +575,14 @@ windSim   = confidence × alignment² × smoothstep(2 m/s, 6 m/s, speed)</div>
 <h2 id="valley">6. Per-valley hourly score</h2>
 <p>The score of each flow line feeds the line overlay on the map.</p>
 <ol>
-  <li><strong>Matching cells, once per run.</strong> Each sample of the line is matched to its nearest grid cell within 20 km (<code>nearestGridCell</code>). Lines with no matching cell are outside the domain and are left out of <code>foehn-valleys.json</code>.</li>
+  <li><strong>Matching cells, once per run.</strong> Each sample of the line is matched to its nearest grid cell within 10 km (<code>nearestGridCell</code>). Lines with no matching cell are outside the domain and are left out of <code>foehn-valleys.json</code>.</li>
   <li><strong>Score for each hour</strong> (<code>scoreValley</code>):
-    <div class="formula">similarity = mean over matched samples of windSim(sample, wind at its cell)
+    <div class="formula">similarity = mean over matched samples of ramp(w · t, 2, 6 m/s) at its cell
 meanΔp     = mean of the finite Δp values at those cells (NaN if none)
 index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div>
   </li>
 </ol>
-<p>There is no distance weight here, because each sample is compared with the wind in the cell right next to it. A line crossing the 10.2° E boundary uses the mean Δp of both regions, weighted by how many of its samples lie on each side.</p>
+<p>Each sample is compared with the wind in its nearest cell. A line crossing the 10.2° E boundary uses the mean Δp of both regions, weighted by how many of its samples lie on each side.</p>
 
 <h2 id="outputs">7. Backend outputs</h2>
 <p>All files are written under <code>&lt;output&gt;/7/wrf/&lt;init&gt;/&lt;zone&gt;/</code>, where 7 is the current forecast format version.</p>
@@ -631,7 +626,7 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
     ...
   ]
 }</code></pre>
-<p>Only lines with at least one sample within 20 km of the zone's grid are listed.</p>
+<p>Only lines with at least one sample within 10 km of the zone's grid are listed.</p>
 
 <h2 id="frontend">8. Frontend</h2>
 
@@ -643,7 +638,7 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
   <li>When clicking the map, the popup shows:
     <ul>
       <li><em>Valley match</em>: the index.</li>
-      <li><em>Wind alignment</em>: the similarity before the gate.</li>
+      <li><em>Along-valley wind</em>: the similarity before the gate.</li>
       <li><em>Foehn direction</em> and <em>Nearest flow line</em>: the line id and its distance.</li>
     </ul>
     These values are parsed from <code>fv</code> into <code>DetailedForecast.valleyFoehn</code>.</li>
@@ -672,23 +667,20 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
 <p>All are constants in <code>FoehnValleys.scala</code>:</p>
 <div class="table-wrap"><table>
   <tr><th>Constant</th><th>Value</th><th>Role</th></tr>
-  <tr><td><code>maxDistanceKm</code></td><td>20 km</td><td>Search radius for lines around a cell and for cells around a sample. It is also the bucket size of the spatial index.</td></tr>
-  <tr><td><code>sigmaKm</code></td><td>8 km</td><td>Gaussian distance weight of the grid-point similarity.</td></tr>
+  <tr><td><code>corridorKm</code></td><td>10 km</td><td>Corridor around each line: search radius for lines around a cell and for cells around a sample. It is also the bucket size of the spatial index.</td></tr>
   <tr><td><code>sampleSpacingKm</code></td><td>1.5 km</td><td>Densification step of the flow lines.</td></tr>
-  <tr><td><code>speedMinMps</code> / <code>speedFullMps</code></td><td>2 / 6 m/s</td><td>Wind-speed ramp: 0 below 2 m/s, no reduction from 6 m/s.</td></tr>
+  <tr><td><code>alongWindMinMps</code> / <code>alongWindFullMps</code></td><td>2 / 6 m/s</td><td>Ramp of the along-line wind component: 0 up to 2 m/s, 1 from 6 m/s.</td></tr>
   <tr><td><code>pressureMinHPa</code> / <code>pressureFullHPa</code></td><td>2 / 6 hPa</td><td>Pressure gate ramp on |Δp|.</td></tr>
-  <tr><td><code>solidConfidence</code> / <code>dottedConfidence</code></td><td>1.0 / 0.5</td><td>Weight of solid and dotted lines.</td></tr>
   <tr><td><code>regions</code></td><td>2 regions, split at 10.2° E</td><td>Pressure reference points (section 4).</td></tr>
 </table></div>
 
 <h2 id="tests">10. Tests and verification</h2>
-<p><code>backend/common/src/test/scala/org/soaringmeteo/FoehnValleysTestSuite.scala</code> has 11 tests.</p>
+<p><code>backend/common/src/test/scala/org/soaringmeteo/FoehnValleysTestSuite.scala</code> has 10 tests.</p>
 <p><strong>Unit tests of the building blocks:</strong></p>
 <ul>
   <li>The GeoJSON loads with 83 lines (65 south, 18 north), and every sample has a valley id.</li>
   <li>Densified south lines point north, and north lines point south.</li>
-  <li>Wind similarity is 1 for a 10 m/s wind along the line. It is 0 for an opposite wind, a calm wind, or a wind too weak (2 m/s).</li>
-  <li>Dotted lines have less confidence than solid ones.</li>
+  <li>The similarity is a ramp of the along-line wind: 1 at 10 m/s along the line, 0.5 at 4 m/s along the line and at 8 m/s with a 60° angle, and 0 at 2 m/s, for an opposite wind, or for calm.</li>
   <li>The line choice follows the sign of Δp, with a fallback to the other direction.</li>
   <li>The gate zeroes a line whose direction contradicts Δp, and also zeroes it when Δp is NaN.</li>
   <li>The JSON encoding uses per mille and tenths of hPa.</li>
@@ -708,8 +700,10 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
   <li><strong>Two pressure regions only.</strong> Valleys far from Lugano–Zurich or Bolzano–Innsbruck (for example in the western or eastern Alps) still use one of these two pairs.</li>
   <li><strong>MSLP coverage.</strong> MSLP is 0 above about 800 m in the WRF post-processing. If no valid cells exist near a reference point, its region falls back to the other region, or Δp becomes NaN and every index is 0.</li>
   <li><strong>Surface wind only.</strong> The index uses the 10 m wind. It doesn't check stability, dryness, crest-level wind or descent.</li>
-  <li><strong>Line accuracy.</strong> The digitised lines are accurate to about 1–3 km. The 8 km Gaussian and the 20 km cut-off soften that, but small side valleys can be missed or confused.</li>
-  <li><strong>Similarity is not zeroed by distance alone.</strong> A cell 15 km from a line still gets a small, non-zero similarity if the wind fits.</li>
+  <li><strong>Line accuracy.</strong> The digitised lines are accurate to about 1–3 km. The 10 km corridor absorbs that, but small side valleys can be missed or confused.</li>
+  <li><strong>Sharp corridor edge.</strong> The index drops from its full value to 0 at 10 km from a line, so the map shows clear-cut valley strips.</li>
+  <li><strong>Strong crosswinds.</strong> A strong wind at a large angle still has a component along the line: 15 m/s at 80° gives 2.6 m/s, so a similarity of 0.15.</li>
+  <li><strong>Heuristic parameters.</strong> The corridor width and the two ramps are educated guesses, not calibrated. A natural next step is to tune them against the MeteoSwiss foehn index at valley stations (Dürr 2008) over past runs.</li>
   <li><strong>WRF only.</strong> If the layer was selected with soarWRF and the user then switches to GFS, the layer stays selected but there is no raster to show.</li>
   <li><strong>Older runs.</strong> Runs produced before this feature have no <code>fv</code> block and no <code>foehn-valleys.json</code>. The popup then shows "No foehn valley nearby", and the lines are hidden.</li>
   <li><strong>Translations.</strong> The new texts exist only in <code>messages/en.json</code>.</li>
@@ -742,12 +736,12 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
 </footer>
 <script>
 (() => {
-  const ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const ramp = (a, b, v) => Math.max(0, Math.min(1, (v - a) / (b - a)));
   const fns = {
-    alignment: x => Math.max(0, Math.cos(x * Math.PI / 180)) ** 2,
-    speed: x => ss(2, 6, x),
-    distance: x => x <= 20 ? Math.exp(-x * x / 128) : 0,
-    gate: x => ss(2, 6, x)
+    along: x => ramp(2, 6, x),
+    angle8: x => ramp(2, 6, 8 * Math.cos(x * Math.PI / 180)),
+    corridor: x => x <= 10 ? 1 : 0,
+    gate: x => ramp(2, 6, x)
   };
   const L = 42, R = 14, T = 14, B = 40, W = 320, H = 210, iw = W - L - R, ih = H - T - B;
   document.querySelectorAll('figure.curve').forEach(fig => {

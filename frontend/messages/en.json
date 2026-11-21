@@ -188,13 +188,13 @@
   "helpSoundingThermalVelocity": "The text “2.1 m/s” (in the middle of the soaring layer, on the right of the diagram) tells you the estimated average thermal velocity within the boundary layer. Values above 1 m/s usually mean that thermals should be just strong enough to stay in the air. Values above 2 m/s mean good thermals.",
   "helpSoundingExpand": "By default, the diagram shows only the airmass within the boundary layer and a couple of thousand meters above it. You can expand the diagram to see the whole troposphere by clicking to the button on the top right corner.",
   "layerFoehnValleySimilarity": "Foehn: valley wind match",
-  "layerFoehnValleySimilarityLegend": "how closely the 10 m wind follows the digitised foehn flow lines (transparent: no match, dark green: strong match), weighted by wind speed and the cross-Alpine pressure difference",
+  "layerFoehnValleySimilarityLegend": "how strongly the 10 m wind blows down the nearest foehn flow line (transparent: no match, dark green: strong match), reduced when the cross-Alpine pressure difference is weak or points the other way",
   "foehnValleyMatch": "Valley match",
-  "foehnValleyRawSimilarity": "Wind alignment",
+  "foehnValleyRawSimilarity": "Along-valley wind",
   "foehnValleyDirection": "Foehn direction",
   "foehnValleyNearest": "Nearest flow line",
   "foehnDirectionSouth": "South foehn",
   "foehnDirectionNorth": "North foehn",
   "foehnValleyNoNearbyLine": "No foehn valley nearby",
-  "helpLayerFoehnValleySimilarity": "Similarity between the 10 m wind and the digitised foehn valleys (soarWRF only). The index combines wind alignment, wind speed, and the cross-Alpine pressure gradient. The foehn valley lines are drawn thicker and more opaque where their flow matches the model wind. Click on the map for the value at that location."
+  "helpLayerFoehnValleySimilarity": "Foehn index based on the digitised foehn valleys (soarWRF only). Within 10 km of a flow line, it grows linearly with the 10 m wind component along the line, from 0 at 2 m/s to 100 % at 6 m/s. It is then multiplied by the cross-Alpine pressure difference, from 0 at 2 hPa to 100 % at 6 hPa, and set to 0 when the pressure difference points the other way. The flow lines are drawn thicker and more opaque where they match. Click on the map for the value at that location."
 }

@@ -28,18 +28,20 @@ object FoehnValleysTestSuite extends BasicTestSuite {
     assert(north.samples.head.north < 0)
   }
 
-  test("wind similarity rewards alignment and penalises weak or opposite winds") {
-    val solid = valleys.find(_.id == "S18").get.samples.head
-    assert(math.abs(windSimilarity(solid, solid.east * 10, solid.north * 10) - 1.0) < 1e-9)
-    assert(windSimilarity(solid, -solid.east * 10, -solid.north * 10) == 0.0)
-    assert(windSimilarity(solid, 0, 0) == 0.0)
-    assert(windSimilarity(solid, solid.east * 2, solid.north * 2) == 0.0)
-  }
-
-  test("dotted lines carry less confidence than solid lines") {
-    val dotted = valleys.find(_.id == "S20").get.samples.head
-    val solid = valleys.find(_.id == "S18").get.samples.head
-    assert(dotted.confidence < solid.confidence)
+  test("wind similarity is a ramp of the wind component along the line") {
+    val sample = valleys.find(_.id == "S18").get.samples.head
+    def along(speed: Double, degrees: Double): Double = {
+      val angle = math.toRadians(degrees)
+      val east = sample.east * math.cos(angle) - sample.north * math.sin(angle)
+      val north = sample.east * math.sin(angle) + sample.north * math.cos(angle)
+      windSimilarity(sample, east * speed, north * speed)
+    }
+    assert(math.abs(along(10, 0) - 1.0) < 1e-9)
+    assert(math.abs(along(4, 0) - 0.5) < 1e-9)
+    assert(math.abs(along(8, 60) - 0.5) < 1e-9)
+    assert(along(2, 0) == 0.0)
+    assert(along(10, 180) == 0.0)
+    assert(along(0, 0) == 0.0)
   }
 
   test("the pressure direction falls back to the other line when the preferred direction is missing") {
