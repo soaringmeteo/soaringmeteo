@@ -145,6 +145,7 @@
 <header>
   <h1>Foehn valley similarity index</h1>
   <p><strong>Version 0.1 (alpha, experimental).</strong> Logic and data flow of the soarWRF foehn valley index with its pressure gate, as implemented on the branch <code>foehn-valley-index</code>.</p>
+  <p><strong>Coverage: Switzerland only.</strong> The flow lines cover the Swiss valleys; the map greys out the areas outside Switzerland while the layer is shown.</p>
   <p>The version is written to <code>foehn-valleys.json</code> (<code>FoehnValleys.version</code>). It stays below 1.0 until the thresholds are calibrated against observations; see section 11.</p>
   <p>The index estimates, for each grid point and each hour, how much the model surface wind looks like foehn flowing down a known foehn valley, when the pressure difference across the Alps drives foehn in that direction.</p>
 </header>
@@ -251,7 +252,7 @@ ramp(x, a, b) = clamp((x − a) / (b − a), 0, 1)</div>
 
   <rect x="20" y="484" width="270" height="62" rx="8" class="box"/>
   <text x="34" y="508" class="title">Primary raster layer</text>
-  <text x="34" y="528" class="small">"Foehn: valley wind match (experimental)"</text>
+  <text x="34" y="528" class="small">"Foehn: Swiss valley wind match (experimental)"</text>
 
   <rect x="315" y="484" width="270" height="62" rx="8" class="box"/>
   <text x="329" y="508" class="title">Location popup</text>
@@ -628,6 +629,7 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
     These values are parsed from <code>fv</code> into <code>DetailedForecast.valleyFoehn</code>.</li>
   <li>The layer button appears in the overlay menu only when soarWRF is selected (<code>LayersSelector.tsx</code>).</li>
   <li>The raster is shown like other primary layers: the current hour's PNG, at the default overlay opacity of 0.35.</li>
+  <li>While the layer is shown, <code>App.tsx</code> calls <code>mapHooks.setSwitzerlandMaskVisible(true)</code>. <code>Map.ts</code> then draws a grey mask over everything outside the Swiss border, between the raster and the flow lines. The border is <code>src/data/switzerland.geojson</code>, simplified from Natural Earth (public domain) and loaded on first use.</li>
 </ul>
 
 <h3>8.2 Flow-line overlay</h3>

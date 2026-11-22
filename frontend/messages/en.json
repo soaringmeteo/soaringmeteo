@@ -187,7 +187,7 @@
   "helpSoundingWind": "On the left, the wind speed and direction is shown at various elevation levels by the wind barbs.",
   "helpSoundingThermalVelocity": "The text “2.1 m/s” (in the middle of the soaring layer, on the right of the diagram) tells you the estimated average thermal velocity within the boundary layer. Values above 1 m/s usually mean that thermals should be just strong enough to stay in the air. Values above 2 m/s mean good thermals.",
   "helpSoundingExpand": "By default, the diagram shows only the airmass within the boundary layer and a couple of thousand meters above it. You can expand the diagram to see the whole troposphere by clicking to the button on the top right corner.",
-  "layerFoehnValleySimilarity": "Foehn: valley wind match (experimental)",
+  "layerFoehnValleySimilarity": "Foehn: Swiss valley wind match (experimental)",
   "layerFoehnValleySimilarityLegend": "how well the 10 m wind blows down the nearest foehn flow line (transparent: no match, dark green: strong match), reduced for weak winds, for winds deviating from the line, and when the cross-Alpine pressure difference is weak or points the other way",
   "foehnValleyMatch": "Valley match",
   "foehnValleyRawSimilarity": "Wind match",
@@ -196,7 +196,7 @@
   "foehnDirectionSouth": "South foehn",
   "foehnDirectionNorth": "North foehn",
   "foehnValleyNoNearbyLine": "No foehn valley nearby",
-  "helpLayerFoehnValleySimilarity": "Foehn index based on the digitised foehn valleys (soarWRF only). Within 10 km of a flow line, it grows linearly with the 10 m wind speed, from 0 at 2 m/s to 100 % at 6 m/s, and is reduced when the wind deviates from the line direction, from 100 % up to 30° to 0 from 60°. It is then multiplied by the cross-Alpine pressure difference, from 0 at 2 hPa to 100 % at 6 hPa, and set to 0 when the pressure difference points the other way. The flow lines are drawn thicker and more opaque where they match. Click on the map for the value at that location.",
+  "helpLayerFoehnValleySimilarity": "Foehn index based on the digitised foehn valleys (soarWRF only). Available for Switzerland only; areas outside are greyed out. Within 10 km of a flow line, it grows linearly with the 10 m wind speed, from 0 at 2 m/s to 100 % at 6 m/s, and is reduced when the wind deviates from the line direction, from 100 % up to 30° to 0 from 60°. It is then multiplied by the cross-Alpine pressure difference, from 0 at 2 hPa to 100 % at 6 hPa, and set to 0 when the pressure difference points the other way. The flow lines are drawn thicker and more opaque where they match. Click on the map for the value at that location.",
   "menuFoehnValleys": "Foehn valleys",
-  "menuFoehnValleysLegend": "Show the valleys known for foehn and the direction of the flow (red: south foehn, blue: north foehn, dashed: foehn observed less often). With the soarWRF layer “Foehn: valley wind match”, lines are thicker and more opaque where the valley matches."
+  "menuFoehnValleysLegend": "Show the valleys known for foehn and the direction of the flow (red: south foehn, blue: north foehn, dashed: foehn observed less often). With the soarWRF layer “Foehn: Swiss valley wind match”, lines are thicker and more opaque where the valley matches."
 }

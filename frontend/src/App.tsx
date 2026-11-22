@@ -57,6 +57,13 @@ const App = (props: {
     );
   });
 
+  createEffect(() => {
+    props.mapHooks.setSwitzerlandMaskVisible(
+      props.domain.state.primaryLayerEnabled && props.domain.state.primaryLayer.key === foehnValleySimilarityLayer.key &&
+      props.domain.state.model.name === wrfName
+    );
+  });
+
   // Update wind layer
   createEffect(() => {
     const vectorTiles = props.domain.effectiveZone().vectorTiles;
