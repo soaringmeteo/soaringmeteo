@@ -173,7 +173,7 @@
 <p>The index combines three ingredients:</p>
 <ol>
   <li><strong>Geometry.</strong> There are 83 digitised foehn flow lines in Switzerland and its surroundings: 65 <span class="south">south foehn</span> lines and 18 <span class="north">north foehn</span> lines. Each line runs in the direction the foehn flows.</li>
-  <li><strong>Wind.</strong> Within 10 km of a flow line, the WRF 10 m wind is compared with the direction of the nearest line. A speed ramp removes weak winds, and a direction gate removes winds that deviate too much from the line.</li>
+  <li><strong>Wind.</strong> Within 5 km of a flow line, the WRF 10 m wind is compared with the direction of the nearest line. A speed ramp removes weak winds, and a direction gate removes winds that deviate too much from the line.</li>
   <li><strong>Pressure gate.</strong> The mean-sea-level pressure (MSLP) difference between a point south and a point north of the Alps decides which foehn direction is plausible. It also scales the result: a line that contradicts the pressure difference gets an index of 0.</li>
 </ol>
 <p>Two values are reported at every grid point and for every valley:</p>
@@ -183,7 +183,7 @@
 </ul>
 <p>Keeping both makes it possible to explain a low index. For example, the wind may fit the valley well while the pressure difference points the other way.</p>
 <p>In short:</p>
-<div class="formula">index = ramp(|w|, 2, 6 m/s) × (1 − ramp(θ, 30°, 60°)) × [d ≤ 10 km] × ramp(|Δp|, 2, 6 hPa) × [line direction matches the sign of Δp]
+<div class="formula">index = ramp(|w|, 2, 6 m/s) × (1 − ramp(θ, 30°, 60°)) × [d ≤ 5 km] × ramp(|Δp|, 2, 6 hPa) × [line direction matches the sign of Δp]
 
 ramp(x, a, b) = clamp((x − a) / (b − a), 0, 1)</div>
 <p>Here <code>|w|</code> is the 10 m wind speed, <code>θ</code> the angle between the wind and the line, <code>d</code> the distance to the line, and <code>Δp</code> the cross-Alpine pressure difference. The parameters are heuristic and not calibrated against observations (see section 11).</p>
@@ -222,7 +222,7 @@ ramp(x, a, b) = clamp((x − a) / (b − a), 0, 1)</div>
   <rect x="210" y="226" width="480" height="118" rx="8" class="box-key"/>
   <text x="226" y="250" class="title">FoehnValleys.diagnose</text>
   <text x="226" y="272" class="small">1. pressureDifferences: MSLP south − north per region, per hour</text>
-  <text x="226" y="291" class="small">2. nearest south/north line sample per grid cell (≤ 10 km)</text>
+  <text x="226" y="291" class="small">2. nearest south/north line sample per grid cell (≤ 5 km)</text>
   <text x="226" y="310" class="small">3. grid-point similarity and gated index → Forecast.valleyFoehn</text>
   <text x="226" y="329" class="small">4. per-valley mean similarity and gated index per hour</text>
 
@@ -389,7 +389,7 @@ ramp(x, a, b) = clamp((x − a) / (b − a), 0, 1)</div>
 </figure>
 
 <h3>3.2 Spatial index (<code>GeoBucketIndex</code>)</h3>
-<p>To keep the nearest-neighbour searches cheap, samples and grid cells are put into latitude/longitude buckets about 10 km wide (the corridor width). A query looks at its own bucket and the 8 around it. That is guaranteed to include every item within the 10 km search radius. The bucket width in longitude is computed at the highest latitude present, so a bucket is never narrower than 10 km.</p>
+<p>To keep the nearest-neighbour searches cheap, samples and grid cells are put into latitude/longitude buckets about 5 km wide (the corridor width). A query looks at its own bucket and the 8 around it. That is guaranteed to include every item within the 5 km search radius. The bucket width in longitude is computed at the highest latitude present, so a bucket is never narrower than 10 km.</p>
 <p>Distances use a local flat-earth approximation: 111.2 km per degree of latitude, and longitude degrees scaled by <code>cos(reference latitude)</code>. The reference latitude is the mean latitude of the grid.</p>
 
 <h2 id="pressure">4. Cross-Alpine pressure difference</h2>
@@ -418,7 +418,7 @@ pressureGatedIndex(similarity, direction, Δp) =
 <h2 id="grid">5. Grid-point index</h2>
 <p>For each grid cell, which is done once per run:</p>
 <ul>
-  <li><code>nearestTemplates</code> finds the nearest <span class="south">south</span> line sample and the nearest <span class="north">north</span> line sample within 10 km (the corridor). Either one may be missing.</li>
+  <li><code>nearestTemplates</code> finds the nearest <span class="south">south</span> line sample and the nearest <span class="north">north</span> line sample within 5 km (the corridor). Either one may be missing.</li>
 </ul>
 <p>Then for each hour and each cell:</p>
 <ol>
@@ -427,7 +427,7 @@ pressureGatedIndex(similarity, direction, Δp) =
       <li>If Δp &gt; 0, prefer the south sample and fall back to the north one.</li>
       <li>If Δp &lt; 0, prefer the north sample and fall back to the south one.</li>
       <li>If Δp is 0 or NaN, take the closer of the two.</li>
-      <li>If there is no sample within 10 km, the cell is outside every corridor and gets no <code>valleyFoehn</code> at all: the raster is transparent there and the popup says "No foehn valley nearby".</li>
+      <li>If there is no sample within 5 km, the cell is outside every corridor and gets no <code>valleyFoehn</code> at all: the raster is transparent there and the popup says "No foehn valley nearby".</li>
     </ul>
   </li>
   <li><strong>Similarity</strong> (<code>windSimilarity</code>). Let <code>(u, v)</code> be the 10 m wind and <code>(e, n)</code> the unit tangent of the line:
@@ -436,7 +436,7 @@ cos θ      = (u·e + v·n) / |w|            (θ = angle between the wind and th
 similarity = ramp(|w|, 2 m/s, 6 m/s) × (1 − ramp(θ, 30°, 60°))</div>
     The speed ramp is 0 up to 2 m/s and 1 from 6 m/s, so weak winds and calm give 0. The direction gate is 1 up to 30°, falls linearly to 0 at 60°, and is 0 beyond, so crosswinds and winds blowing up the valley give 0. Speed and direction are separate factors; each has its own threshold.
   </li>
-  <li><strong>Corridor.</strong> Every cell within 10 km of a line gets the full similarity; there is no further distance weighting.</li>
+  <li><strong>Corridor.</strong> Every cell within 5 km of a line gets the full similarity; there is no further distance weighting.</li>
   <li><strong>Index</strong>: <code>index = pressureGatedIndex(similarity, direction of the chosen line, Δp of the cell)</code>.</li>
 </ol>
 <figure class="figure-panel">
@@ -478,7 +478,7 @@ similarity = ramp(|w|, 2 m/s, 6 m/s) × (1 − ramp(θ, 30°, 60°))</div>
 <text x="560" y="158" class="mono">speed ramp = ramp(2, 6, 5) = 0.75</text>
 <text x="560" y="180" class="mono">direction  = 1 − ramp(30, 60, 40) = 0.67</text>
 <text x="560" y="202" class="mono">similarity = 0.75 × 0.67 = 0.50</text>
-<text x="560" y="224" class="mono">corridor   = 5 km ≤ 10 km → kept</text>
+<text x="560" y="224" class="mono">corridor   = 5 km ≤ 5 km → kept</text>
 <text x="560" y="246" class="mono">gate       = ramp(2, 6, 5) = 0.75</text>
 <text x="560" y="268" class="mono">index      = 0.50 × 0.75 = 0.38</text>
 </svg>
@@ -550,7 +550,7 @@ similarity = ramp(|w|, 2 m/s, 6 m/s) × (1 − ramp(θ, 30°, 60°))</div>
 <figcaption><strong>Pressure gate</strong> <span class="readout" aria-live="polite"></span></figcaption>
 </figure>
 </div>
-<p class="figure-note" style="color:var(--muted);font-size:.88rem">The speed ramp and the direction gate give the similarity, inside the 10 km corridor. The pressure gate (section 4.1) then multiplies the similarity into the index.</p>
+<p class="figure-note" style="color:var(--muted);font-size:.88rem">The speed ramp and the direction gate give the similarity, inside the 5 km corridor. The pressure gate (section 4.1) then multiplies the similarity into the index.</p>
 <p>Each cell stores the result as <code>Forecast.valleyFoehn = Diagnostics(similarity, index, direction, valleyId, distanceMeters)</code>.</p>
 <div class="note">
   <p><strong>Why fall back to the line of the other direction?</strong> When south foehn is expected but only a north foehn line is nearby, the cell still reports that line and its wind similarity, while the index stays 0. The popup can then show why the index is zero: there is a valley nearby, but the pressure pattern doesn't support foehn there.</p>
@@ -559,7 +559,7 @@ similarity = ramp(|w|, 2 m/s, 6 m/s) × (1 − ramp(θ, 30°, 60°))</div>
 <h2 id="valley">6. Per-valley hourly score</h2>
 <p>The score of each flow line feeds the line overlay on the map.</p>
 <ol>
-  <li><strong>Matching cells, once per run.</strong> Each sample of the line is matched to its nearest grid cell within 10 km (<code>nearestGridCell</code>). Lines with no matching cell are outside the domain and are left out of <code>foehn-valleys.json</code>.</li>
+  <li><strong>Matching cells, once per run.</strong> Each sample of the line is matched to its nearest grid cell within 5 km (<code>nearestGridCell</code>). Lines with no matching cell are outside the domain and are left out of <code>foehn-valleys.json</code>.</li>
   <li><strong>Score for each hour</strong> (<code>scoreValley</code>):
     <div class="formula">similarity = mean over matched samples of ramp(|w|, 2, 6 m/s) × (1 − ramp(θ, 30°, 60°)) at its cell
 meanΔp     = mean of the finite Δp values at those cells (NaN if none)
@@ -611,7 +611,7 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
     ...
   ]
 }</code></pre>
-<p>Only lines with at least one sample within 10 km of the zone's grid are listed.</p>
+<p>Only lines with at least one sample within 5 km of the zone's grid are listed.</p>
 
 <h2 id="frontend">8. Frontend</h2>
 
@@ -653,7 +653,7 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
 <p>All are constants in <code>FoehnValleys.scala</code>:</p>
 <div class="table-wrap"><table>
   <tr><th>Constant</th><th>Value</th><th>Role</th></tr>
-  <tr><td><code>corridorKm</code></td><td>10 km</td><td>Corridor around each line: search radius for lines around a cell and for cells around a sample. It is also the bucket size of the spatial index.</td></tr>
+  <tr><td><code>corridorKm</code></td><td>5 km</td><td>Corridor around each line: search radius for lines around a cell and for cells around a sample. It is also the bucket size of the spatial index.</td></tr>
   <tr><td><code>sampleSpacingKm</code></td><td>1.5 km</td><td>Densification step of the flow lines.</td></tr>
   <tr><td><code>speedMinMps</code> / <code>speedFullMps</code></td><td>2 / 6 m/s</td><td>Wind-speed ramp: 0 up to 2 m/s, 1 from 6 m/s.</td></tr>
   <tr><td><code>directionFullDeg</code> / <code>directionZeroDeg</code></td><td>30° / 60°</td><td>Direction gate: 1 up to 30° between wind and line, 0 from 60°.</td></tr>
@@ -687,8 +687,8 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
   <li><strong>Two pressure regions only.</strong> Valleys far from Lugano–Zurich or Bolzano–Innsbruck (for example in the western or eastern Alps) still use one of these two pairs.</li>
   <li><strong>MSLP coverage.</strong> MSLP is 0 above about 800 m in the WRF post-processing. If no valid cells exist near a reference point, its region falls back to the other region, or Δp becomes NaN and every index is 0.</li>
   <li><strong>Surface wind only.</strong> The index uses the 10 m wind. It doesn't check stability, dryness, crest-level wind or descent.</li>
-  <li><strong>Line accuracy.</strong> The digitised lines are accurate to about 1–3 km. The 10 km corridor absorbs that, but small side valleys can be missed or confused.</li>
-  <li><strong>Sharp corridor edge.</strong> The index drops from its full value to 0 at 10 km from a line, so the map shows clear-cut valley strips.</li>
+  <li><strong>Line accuracy.</strong> The digitised lines are accurate to about 1–3 km. The 5 km corridor absorbs that, but small side valleys can be missed or confused.</li>
+  <li><strong>Sharp corridor edge.</strong> The index drops from its full value to 0 at 5 km from a line, so the map shows clear-cut valley strips.</li>
   <li><strong>Direction tolerance.</strong> Winds more than 60° off the line direction give 0. Where a digitised line deviates from the model's valley axis (coarse grid, line accuracy), real foehn can be cut off.</li>
   <li><strong>Heuristic parameters.</strong> The corridor width and the three ramps are educated guesses, not calibrated. A natural next step is to tune them against the MeteoSwiss foehn index at valley stations (Dürr 2008) over past runs.</li>
   <li><strong>WRF only.</strong> If the layer was selected with soarWRF and the user then switches to GFS, the layer stays selected but there is no raster to show.</li>

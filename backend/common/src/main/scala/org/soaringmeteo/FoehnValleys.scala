@@ -20,7 +20,7 @@ object FoehnValleys {
   val version: String = "0.1"
 
   // --- Tuning
-  val corridorKm: Double        = 10.0  // grid cells farther from any flow line get no value
+  val corridorKm: Double        = 5.0   // grid cells farther from any flow line get no value
   val sampleSpacingKm: Double   = 1.5   // densification of the digitised lines
   val speedMinMps: Double       = 2.0   // wind-speed ramp start
   val speedFullMps: Double      = 6.0   // wind-speed ramp saturation
