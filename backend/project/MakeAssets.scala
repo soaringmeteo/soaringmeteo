@@ -1,5 +1,6 @@
 package org.soaringmeteo.build
 
+import java.time.OffsetDateTime
 import sbt.*
 import sbt.Keys.*
 
@@ -47,32 +48,37 @@ object MakeAssets {
 
       // 1. List available runs on the remote server
       log.info(s"Listing available runs on $host ...")
-      val remotePath = "/home/soarwrf/domains/alps2km/wrfout/"
-      val listing = Process(Seq("ssh", host, s"ls $remotePath")).!!.trim
+      val remotePath = "/wrf-data/"
+      val lsCommand = Process(Seq("echo", s"ls -l $remotePath")) #| Process(Seq("sftp", "-b", "-", s"reader@$host"))
+      val listing = lsCommand.!!.trim
       val lines = listing.split("\n").filter(_.nonEmpty)
 
-      // Parse filenames to extract run identifiers (InitYYYYMMDDHHZ+Nh)
+      // Parse filenames to extract run identifiers (InitYYYYMMDDHHZ+Nh) and their target date
       // Example: wrfout_d02_2026-04-05_Init2026040506Z+24h.nc
-      val initPattern = """Init(\d{10}Z\+\d+h)\.nc$""".r
-      val runIds = lines.flatMap { name =>
-        initPattern.findFirstMatchIn(name).map(_.group(1))
-      }.distinct.sorted
+      val initPattern = """Init((\d{4})(\d{2})(\d{2})(\d{2})Z\+(\d+)h)\.nc$""".r
+      val runs = lines.flatMap { name =>
+        initPattern.findFirstMatchIn(name).map { m =>
+          val initTime = OffsetDateTime.parse(s"${m.group(2)}-${m.group(3)}-${m.group(4)}T${m.group(5)}:00Z")
+          val targetDate = initTime.plusHours(m.group(6).toLong).toLocalDate
+          (m.group(1), targetDate)
+        }
+      }.distinct.sortBy(_._1)
 
-      if (runIds.isEmpty) {
+      if (runs.isEmpty) {
         sys.error(s"No WRF output files found on $host:$remotePath")
       }
 
       // 2. Display a menu and prompt the user
       println()
       println("Available WRF runs:")
-      runIds.zipWithIndex.foreach { case (id, idx) =>
-        println(s"  ${idx + 1}) $id")
+      runs.zipWithIndex.foreach { case ((id, targetDate), idx) =>
+        println(s"  ${idx + 1}) $id ($targetDate)")
       }
       println()
-      print(s"Select a run [1-${runIds.length}]: ")
+      print(s"Select a run [1-${runs.length}]: ")
       val choice = scala.io.StdIn.readLine().trim.toInt
-      require(choice >= 1 && choice <= runIds.length, s"Invalid choice: $choice")
-      val selectedRun = runIds(choice - 1)
+      require(choice >= 1 && choice <= runs.length, s"Invalid choice: $choice")
+      val selectedRun = runs(choice - 1)._1
       log.info(s"Selected run: $selectedRun")
 
       // 3. Derive the target directory
@@ -82,13 +88,17 @@ object MakeAssets {
       // 4. Download all domain files matching the selected run
       val scpPattern = s"wrfout_d*_*_Init${selectedRun}.nc"
       log.info(s"Downloading files matching $scpPattern from $host ...")
-      Process(
+      val cpCommand = Process(
         Seq(
           "scp",
-          s"$host:$remotePath$scpPattern",
+          s"reader@$host:$remotePath$scpPattern",
           wrfRunDir.absolutePath + "/"
         )
-      ).run(log).exitValue().ensuring(_ == 0, s"scp failed for run $selectedRun")
+      )
+      cpCommand
+        .run(log)
+        .exitValue()
+        .ensuring(_ == 0, s"scp failed for run $selectedRun")
 
       log.info(s"Files downloaded to ${wrfRunDir.absolutePath}")
     },
