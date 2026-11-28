@@ -221,7 +221,7 @@ ramp(x, a, b) = clamp((x − a) / (b − a), 0, 1)</div>
 
   <rect x="210" y="226" width="480" height="118" rx="8" class="box-key"/>
   <text x="226" y="250" class="title">FoehnValleys.diagnose</text>
-  <text x="226" y="272" class="small">1. pressureDifferences: MSLP south − north per region, per hour</text>
+  <text x="226" y="272" class="small">1. pressureDifferences: MSLP Lugano − Zurich, per hour</text>
   <text x="226" y="291" class="small">2. nearest south/north line sample per grid cell (≤ 5 km)</text>
   <text x="226" y="310" class="small">3. grid-point similarity and gated index → Forecast.valleyFoehn</text>
   <text x="226" y="329" class="small">4. per-valley mean similarity and gated index per hour</text>
@@ -393,17 +393,11 @@ ramp(x, a, b) = clamp((x − a) / (b − a), 0, 1)</div>
 <p>Distances use a local flat-earth approximation: 111.2 km per degree of latitude, and longitude degrees scaled by <code>cos(reference latitude)</code>. The reference latitude is the mean latitude of the grid.</p>
 
 <h2 id="pressure">4. Cross-Alpine pressure difference</h2>
-<p>The gate uses the MSLP difference between a southern and a northern reference point. There are two regions, chosen by the <strong>longitude of the grid point</strong>:</p>
-<div class="table-wrap"><table>
-  <tr><th>Region</th><th>Applies to</th><th>South point</th><th>North point</th></tr>
-  <tr><td>Lugano–Zurich</td><td>longitude &lt; 10.2° E</td><td>46.00° N, 8.96° E (Lugano)</td><td>47.38° N, 8.57° E (Zurich)</td></tr>
-  <tr><td>Bolzano–Innsbruck</td><td>longitude ≥ 10.2° E</td><td>46.50° N, 11.33° E (Bolzano)</td><td>47.27° N, 11.39° E (Innsbruck)</td></tr>
-</table></div>
+<p>The gate uses the classic Swiss foehn pressure difference, between Lugano (46.00° N, 8.96° E) south of the Alps and Zurich (47.38° N, 8.57° E) north of them. The same value applies to every grid point.</p>
 <p>The calculation, in <code>pressureDifferences</code>:</p>
 <ol>
-  <li><strong>Pick the cells around each reference point, once per run.</strong> <code>pointsAround</code> collects the grid cells within 20 km of the point. If there are fewer than 3, the radius grows by 10 km at a time, up to 150 km. Only cells with MSLP &gt; 0 in the first hour count, because the WRF post-processing writes 0 for MSLP above about 800 m. If no radius gives 3 cells, that point is unavailable, and so is its region.</li>
-  <li><strong>Compute the difference for each hour.</strong> For each available region: <code>Δp = mean MSLP(south cells) − mean MSLP(north cells)</code>, in hPa.</li>
-  <li><strong>Assign a value to each grid cell.</strong> A cell takes the Δp of the region that matches its longitude. If that region is unavailable, it takes the first available region. If no region is available, Δp is <code>NaN</code>.</li>
+  <li><strong>Pick the cells around each reference point, once per run.</strong> <code>pointsAround</code> collects the grid cells within 20 km of the point. If there are fewer than 3, the radius grows by 10 km at a time, up to 150 km. Only cells with MSLP &gt; 0 in the first hour count, because the WRF post-processing writes 0 for MSLP above about 800 m. If no radius gives 3 cells, that point is unavailable.</li>
+  <li><strong>Compute the difference for each hour.</strong> <code>Δp = mean MSLP(Lugano cells) − mean MSLP(Zurich cells)</code>, in hPa, or <code>NaN</code> if either point is unavailable.</li>
 </ol>
 <p>A positive Δp means pressure is higher on the south side, which drives <span class="south">south foehn</span>. A negative Δp drives <span class="north">north foehn</span>.</p>
 
@@ -566,7 +560,7 @@ meanΔp     = mean of the finite Δp values at those cells (NaN if none)
 index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div>
   </li>
 </ol>
-<p>Each sample is compared with the wind in its nearest cell. A line crossing the 10.2° E boundary uses the mean Δp of both regions, weighted by how many of its samples lie on each side.</p>
+<p>Each sample is compared with the wind in its nearest cell.</p>
 
 <h2 id="outputs">7. Backend outputs</h2>
 <p>All files are written under <code>&lt;output&gt;/7/wrf/&lt;init&gt;/&lt;zone&gt;/</code>, where 7 is the current forecast format version.</p>
@@ -658,7 +652,7 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
   <tr><td><code>speedMinMps</code> / <code>speedFullMps</code></td><td>2 / 6 m/s</td><td>Wind-speed ramp: 0 up to 2 m/s, 1 from 6 m/s.</td></tr>
   <tr><td><code>directionFullDeg</code> / <code>directionZeroDeg</code></td><td>30° / 60°</td><td>Direction gate: 1 up to 30° between wind and line, 0 from 60°.</td></tr>
   <tr><td><code>pressureMinHPa</code> / <code>pressureFullHPa</code></td><td>2 / 6 hPa</td><td>Pressure gate ramp on |Δp|.</td></tr>
-  <tr><td><code>regions</code></td><td>2 regions, split at 10.2° E</td><td>Pressure reference points (section 4).</td></tr>
+  <tr><td><code>lugano</code>, <code>zurich</code></td><td>46.00° N 8.96° E, 47.38° N 8.57° E</td><td>Pressure reference points (section 4).</td></tr>
 </table></div>
 
 <h2 id="tests">10. Tests and verification</h2>
@@ -684,8 +678,8 @@ index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div
 
 <h2 id="limits">11. Limitations and known behaviour</h2>
 <ul>
-  <li><strong>Two pressure regions only.</strong> Valleys far from Lugano–Zurich or Bolzano–Innsbruck (for example in the western or eastern Alps) still use one of these two pairs.</li>
-  <li><strong>MSLP coverage.</strong> MSLP is 0 above about 800 m in the WRF post-processing. If no valid cells exist near a reference point, its region falls back to the other region, or Δp becomes NaN and every index is 0.</li>
+  <li><strong>One pressure difference.</strong> Every valley uses Lugano–Zurich, which fits central Switzerland best. Valleys in the far west (Valais) or east (Engadine) can have a somewhat different cross-Alpine gradient.</li>
+  <li><strong>MSLP coverage.</strong> MSLP is 0 above about 800 m in the WRF post-processing. If no valid cells exist near a reference point, Δp becomes NaN and every index is 0.</li>
   <li><strong>Surface wind only.</strong> The index uses the 10 m wind. It doesn't check stability, dryness, crest-level wind or descent.</li>
   <li><strong>Line accuracy.</strong> The digitised lines are accurate to about 1–3 km. The 5 km corridor absorbs that, but small side valleys can be missed or confused.</li>
   <li><strong>Sharp corridor edge.</strong> The index drops from its full value to 0 at 5 km from a line, so the map shows clear-cut valley strips.</li>

@@ -32,13 +32,9 @@ object FoehnValleys {
   private val kmPerDegreeLatitude = 111.2
   private val GeoJsonResource = "/foehn-valleys.geojson"
 
-  /** MSLP pair (south point, north point) of a region, and the longitudes it applies to */
-  private case class Region(name: String, south: (Double, Double), north: (Double, Double), applies: Double => Boolean)
-
-  private val regions: Seq[Region] = Seq(
-    Region("Lugano-Zurich",     (46.00,  8.96), (47.38,  8.57), lon => lon < 10.2),
-    Region("Bolzano-Innsbruck", (46.50, 11.33), (47.27, 11.39), lon => lon >= 10.2)
-  )
+  // MSLP reference points (latitude, longitude) of the cross-Alpine pressure difference
+  private val lugano = (46.00, 8.96)
+  private val zurich = (47.38, 8.57)
 
   /** Direction of the foehn flow carried by a line */
   sealed trait Direction {
@@ -221,7 +217,7 @@ object FoehnValleys {
     ValleyScore(valley.id, valley.direction, similarity, index, meanPressureDifference)
   }
 
-  /** MSLP(south) − MSLP(north) in hPa of the region of each grid point, at each hour (NaN if unavailable) */
+  /** MSLP(Lugano) − MSLP(Zurich) in hPa, for each grid point at each hour (NaN if unavailable) */
   private def pressureDifferences(
     forecastsByHour: IndexedSeq[IndexedSeq[IndexedSeq[Forecast]]],
     lats: IndexedSeq[IndexedSeq[Double]],
@@ -229,21 +225,15 @@ object FoehnValleys {
   ): IndexedSeq[IndexedSeq[IndexedSeq[Double]]] = {
     // MSLP is zero-filled by the WRF post-processing above 800 m
     val firstGrid = forecastsByHour.head
-    val stationPoints: Map[(Double, Double), Option[Seq[(Int, Int)]]] =
-      regions.flatMap(r => Seq(r.south, r.north)).map { station =>
-        station -> pointsAround(station, lats, lons, (x, y) => firstGrid(x)(y).mslet.toPascals > 0)
-      }.toMap
-    val availableRegions = regions.filter(r => stationPoints(r.south).isDefined && stationPoints(r.north).isDefined)
+    def points(station: (Double, Double)) =
+      pointsAround(station, lats, lons, (x, y) => firstGrid(x)(y).mslet.toPascals > 0)
+    val stationPoints = for (south <- points(lugano); north <- points(zurich)) yield (south, north)
 
     forecastsByHour.map { forecasts =>
       def meanMslp(points: Seq[(Int, Int)]): Double =
         points.map { case (x, y) => forecasts(x)(y).mslet.toPascals / 100 }.sum / points.size
-      val differenceByRegion: Map[String, Double] =
-        availableRegions.map(r => r.name -> (meanMslp(stationPoints(r.south).get) - meanMslp(stationPoints(r.north).get))).toMap
-      lons.map(_.map { lon =>
-        availableRegions.find(_.applies(lon)).orElse(availableRegions.headOption)
-          .fold(Double.NaN)(region => differenceByRegion(region.name))
-      })
+      val difference = stationPoints.fold(Double.NaN) { case (south, north) => meanMslp(south) - meanMslp(north) }
+      lons.map(_.map(_ => difference))
     }
   }
 
