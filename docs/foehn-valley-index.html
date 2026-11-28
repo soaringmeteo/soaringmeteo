@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foehn Valley Index</title>
+<style>
+  :root {
+    --fg: #1f2933;
+    --muted: #5b6875;
+    --bg: #f7f8fa;
+    --panel: #ffffff;
+    --border: #d9e0e7;
+    --code-bg: #eef2f6;
+    --accent: #b42318;
+    --accent-soft: #fdf0ee;
+    --south: #d7261e;
+    --north: #2c3fb0;
+    --green: #1b7a46;
+    --link: #1d4ed8;
+    --box: #ffffff;
+    --box-alt: #f1f5f9;
+    --series: #2563c9;
+    --wind: #00876a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fg: #e4e8ec;
+      --muted: #a0abb6;
+      --bg: #12161b;
+      --panel: #1a2027;
+      --border: #2e3843;
+      --code-bg: #232b34;
+      --accent: #f2836f;
+      --accent-soft: #2a1d1b;
+      --south: #e5554a;
+      --north: #8c9cf5;
+      --green: #5cc58c;
+      --link: #8ab4ff;
+      --box: #1f262e;
+      --box-alt: #252e38;
+      --series: #5f8ff0;
+      --wind: #14a083;
+    }
+  }
+  :root[data-theme="dark"] {
+    --fg: #e4e8ec;
+    --muted: #a0abb6;
+    --bg: #12161b;
+    --panel: #1a2027;
+    --border: #2e3843;
+    --code-bg: #232b34;
+    --accent: #f2836f;
+    --accent-soft: #2a1d1b;
+    --south: #e5554a;
+    --north: #8c9cf5;
+    --green: #5cc58c;
+    --link: #8ab4ff;
+    --box: #1f262e;
+    --box-alt: #252e38;
+    --series: #5f8ff0;
+    --wind: #14a083;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header, main, footer { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+  header { padding-top: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  header h1 { margin: 0 0 .4rem; font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.2; }
+  header p { margin: .3rem 0; color: var(--muted); max-width: 72ch; }
+  h2 { margin: 2.6rem 0 .8rem; font-size: 1.45rem; padding-top: .4rem; border-top: 1px solid var(--border); }
+  h3 { margin: 1.8rem 0 .5rem; font-size: 1.12rem; }
+  p, li { max-width: 78ch; }
+  a { color: var(--link); }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .88em; }
+  code { background: var(--code-bg); padding: .1em .35em; border-radius: 4px; overflow-wrap: anywhere; }
+  pre { background: var(--code-bg); padding: .9rem 1rem; border-radius: 8px; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: .8rem 0 1.2rem; font-size: .93rem; }
+  .table-wrap { overflow-x: auto; }
+  th, td { text-align: left; vertical-align: top; padding: .45rem .6rem; border-bottom: 1px solid var(--border); }
+  th { background: var(--box-alt); font-weight: 600; }
+  .note { background: var(--accent-soft); border-left: 4px solid var(--accent); padding: .7rem 1rem; border-radius: 6px; margin: 1rem 0; }
+  .note p { margin: .3rem 0; }
+  .formula { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: .8rem 1rem; margin: .8rem 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9rem; overflow-x: auto; white-space: pre; }
+  nav.toc { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: .8rem 1.2rem; margin: 1.5rem 0; }
+  nav.toc ol { margin: .3rem 0; padding-left: 1.3rem; }
+  nav.toc li { margin: .15rem 0; }
+  figure { margin: 1.2rem 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { color: var(--muted); font-size: .88rem; margin-top: .4rem; }
+  .swatch { display: inline-block; width: 1.1em; height: 1.1em; border-radius: 3px; vertical-align: -0.2em; border: 1px solid var(--border); }
+  .south { color: var(--south); font-weight: 600; }
+  .north { color: var(--north); font-weight: 600; }
+  footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; padding-bottom: 3rem; }
+  svg .box { fill: var(--box); stroke: var(--border); stroke-width: 1.5; }
+  svg .box-alt { fill: var(--box-alt); stroke: var(--border); stroke-width: 1.5; }
+  svg .box-key { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  svg text { fill: var(--fg); font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  svg text.small { fill: var(--muted); font-size: 11.5px; }
+  svg text.title { font-weight: 600; }
+  svg .arrow { stroke: var(--muted); stroke-width: 1.6; fill: none; }
+  svg .arrowhead { fill: var(--muted); }
+  svg .lane { fill: none; stroke: var(--border); stroke-dasharray: 4 4; }
+  svg .flowline { fill: none; stroke: var(--south); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: .45; }
+  svg .sample { fill: var(--south); stroke: var(--panel); stroke-width: 1.5; }
+  svg .sample-tip { fill: var(--panel); stroke: var(--south); stroke-width: 2.5; }
+  svg .vertex { fill: none; stroke: var(--fg); stroke-width: 1.8; }
+  svg .tangent { stroke: var(--fg); stroke-width: 1.4; }
+  svg .tick-link { stroke: var(--muted); stroke-width: 1; }
+  svg .tangent.thick { stroke-width: 2; }
+  svg .tangent.ghost { stroke: var(--muted); stroke-dasharray: 5 4; }
+  svg .tangent-head { fill: var(--fg); }
+  svg .wind { stroke: var(--wind); stroke-width: 2.5; }
+  svg .wind-head { fill: var(--wind); }
+  svg .dist { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 4; }
+  svg .cell { fill: var(--box-alt); stroke: var(--fg); stroke-width: 1.5; }
+  svg .arc { fill: none; stroke: var(--fg); stroke-width: 1.4; }
+  svg .label { font-style: italic; font-weight: 600; font-size: 16px; }
+  svg .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+  svg .scalebar { stroke: var(--fg); stroke-width: 1.5; }
+  svg .seglabel { font-size: 11px; }
+  .figure-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: .8rem; }
+  .curves { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 1.2rem 0 .4rem; }
+  @media (max-width: 640px) { .curves { grid-template-columns: 1fr; } }
+  figure.curve { margin: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: .6rem .6rem .5rem; }
+  figure.curve figcaption { margin: .2rem .2rem 0; color: var(--fg); font-size: .88rem; min-height: 1.4em; }
+  figure.curve .readout { color: var(--muted); font-variant-numeric: tabular-nums; margin-left: .4rem; }
+  svg .grid { stroke: var(--border); stroke-width: 1; }
+  svg .axis { stroke: var(--muted); stroke-width: 1; }
+  svg .tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  svg .cutoff { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+  svg .curve-line { fill: none; stroke: var(--series); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  svg .guide { stroke: var(--muted); stroke-width: 1; }
+  svg .dot { fill: var(--series); stroke: var(--panel); stroke-width: 2; }
+  svg .hit { fill: transparent; cursor: crosshair; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Foehn valley similarity index</h1>
+  <p><strong>Version 0.1 (alpha, experimental).</strong> Logic and data flow of the soarWRF foehn valley index with its pressure gate, as implemented on the branch <code>foehn-valley-index</code>.</p>
+  <p><strong>Coverage: Switzerland only.</strong> The flow lines cover the Swiss valleys; the map greys out the areas outside Switzerland while the layer is shown.</p>
+  <p>The version is written to <code>foehn-valleys.json</code> (<code>FoehnValleys.version</code>). It stays below 1.0 until the thresholds are calibrated against observations; see section 11.</p>
+  <p>The index estimates, for each grid point and each hour, how much the model surface wind looks like foehn flowing down a known foehn valley, when the pressure difference across the Alps drives foehn in that direction.</p>
+</header>
+
+<main>
+<nav class="toc" aria-label="Contents">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#flow">End-to-end data flow</a></li>
+    <li><a href="#lines">Input: the foehn flow lines</a></li>
+    <li><a href="#pressure">Cross-Alpine pressure difference</a></li>
+    <li><a href="#grid">Grid-point index</a></li>
+    <li><a href="#valley">Per-valley hourly score</a></li>
+    <li><a href="#outputs">Backend outputs</a></li>
+    <li><a href="#frontend">Frontend</a></li>
+    <li><a href="#tuning">Tuning parameters</a></li>
+    <li><a href="#tests">Tests and verification</a></li>
+    <li><a href="#limits">Limitations and known behaviour</a></li>
+    <li><a href="#files">File reference</a></li>
+  </ol>
+</nav>
+
+<h2 id="overview">1. Overview</h2>
+<p>The index combines three ingredients:</p>
+<ol>
+  <li><strong>Geometry.</strong> There are 83 digitised foehn flow lines in Switzerland and its surroundings: 65 <span class="south">south foehn</span> lines and 18 <span class="north">north foehn</span> lines. Each line runs in the direction the foehn flows.</li>
+  <li><strong>Wind.</strong> Within 5 km of a flow line, the WRF 10 m wind is compared with the direction of the nearest line. A speed ramp removes weak winds, and a direction gate removes winds that deviate too much from the line.</li>
+  <li><strong>Pressure gate.</strong> The mean-sea-level pressure (MSLP) difference between a point south and a point north of the Alps decides which foehn direction is plausible. It also scales the result: a line that contradicts the pressure difference gets an index of 0.</li>
+</ol>
+<p>Two values are reported at every grid point and for every valley:</p>
+<ul>
+  <li><strong>similarity</strong>, called <code>s</code> in the JSON: how well the wind matches the flow line in speed and direction, between 0 and 1, without the pressure gate.</li>
+  <li><strong>index</strong>, called <code>i</code>: the similarity multiplied by the pressure gate, between 0 and 1. This is the value shown on the map.</li>
+</ul>
+<p>Keeping both makes it possible to explain a low index. For example, the wind may fit the valley well while the pressure difference points the other way.</p>
+<p>In short:</p>
+<div class="formula">index = ramp(|w|, 2, 6 m/s) × (1 − ramp(θ, 30°, 60°)) × [d ≤ 5 km] × ramp(|Δp|, 2, 6 hPa) × [line direction matches the sign of Δp]
+
+ramp(x, a, b) = clamp((x − a) / (b − a), 0, 1)</div>
+<p>Here <code>|w|</code> is the 10 m wind speed, <code>θ</code> the angle between the wind and the line, <code>d</code> the distance to the line, and <code>Δp</code> the cross-Alpine pressure difference. The parameters are heuristic and not calibrated against observations (see section 11).</p>
+<p>The index is WRF only. It is computed for both WRF zones: <code>alps-overview</code> (6 km, file <code>d02</code>) and <code>central-alps</code> (2 km, file <code>d03</code>).</p>
+
+<h2 id="flow">2. End-to-end data flow</h2>
+<figure>
+<svg viewBox="0 0 900 560" role="img" aria-labelledby="flowTitle">
+  <title id="flowTitle">Data flow from WRF NetCDF and the flow-line GeoJSON through the backend to the frontend map</title>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrowhead"/>
+    </marker>
+  </defs>
+
+  <text x="20" y="22" class="small">INPUTS</text>
+  <rect x="20" y="32" width="250" height="62" rx="8" class="box-alt"/>
+  <text x="34" y="56" class="title">WRF output (NetCDF)</text>
+  <text x="34" y="76" class="small">10 m wind (U10/V10), MSLP, lat/lon</text>
+
+  <rect x="630" y="32" width="250" height="62" rx="8" class="box-alt"/>
+  <text x="644" y="56" class="title">foehn-valleys.geojson</text>
+  <text x="644" y="76" class="small">83 LineStrings: id, foehn, style</text>
+
+  <line x1="10" y1="110" x2="890" y2="110" class="lane"/>
+  <text x="20" y="130" class="small">BACKEND (Scala, wrf pipeline, per input file)</text>
+
+  <rect x="20" y="142" width="250" height="56" rx="8" class="box"/>
+  <text x="34" y="166" class="title">NetCdf.read</text>
+  <text x="34" y="185" class="small">Forecast grid [hour][x][y]</text>
+
+  <rect x="630" y="142" width="250" height="56" rx="8" class="box"/>
+  <text x="644" y="166" class="title">loadValleys + densify</text>
+  <text x="644" y="185" class="small">samples every 1.5 km with tangent</text>
+
+  <rect x="210" y="226" width="480" height="118" rx="8" class="box-key"/>
+  <text x="226" y="250" class="title">FoehnValleys.diagnose</text>
+  <text x="226" y="272" class="small">1. pressureDifferences: MSLP Lugano − Zurich, per hour</text>
+  <text x="226" y="291" class="small">2. nearest south/north line sample per grid cell (≤ 5 km)</text>
+  <text x="226" y="310" class="small">3. grid-point similarity and gated index → Forecast.valleyFoehn</text>
+  <text x="226" y="329" class="small">4. per-valley mean similarity and gated index per hour</text>
+
+  <path d="M145 94 V142" class="arrow" marker-end="url(#ah)"/>
+  <path d="M755 94 V142" class="arrow" marker-end="url(#ah)"/>
+  <path d="M145 198 V258 H210" class="arrow" marker-end="url(#ah)"/>
+  <path d="M755 198 V258 H690" class="arrow" marker-end="url(#ah)"/>
+
+  <rect x="20" y="372" width="270" height="62" rx="8" class="box"/>
+  <text x="34" y="396" class="title">Raster.wrfRasters</text>
+  <text x="34" y="416" class="small">foehn-valley-similarity/&lt;hour&gt;.png</text>
+
+  <rect x="315" y="372" width="270" height="62" rx="8" class="box"/>
+  <text x="329" y="396" class="title">LocationForecasts</text>
+  <text x="329" y="416" class="small">locations/*.json: "fv" per hour</text>
+
+  <rect x="610" y="372" width="270" height="62" rx="8" class="box"/>
+  <text x="624" y="396" class="title">FoehnValleys.toJson</text>
+  <text x="624" y="416" class="small">foehn-valleys.json (all hours)</text>
+
+  <path d="M330 344 V358 H155 V372" class="arrow" marker-end="url(#ah)"/>
+  <path d="M450 344 V372" class="arrow" marker-end="url(#ah)"/>
+  <path d="M570 344 V358 H745 V372" class="arrow" marker-end="url(#ah)"/>
+
+  <line x1="10" y1="452" x2="890" y2="452" class="lane"/>
+  <text x="20" y="472" class="small">FRONTEND (SolidJS + OpenLayers)</text>
+
+  <rect x="20" y="484" width="270" height="62" rx="8" class="box"/>
+  <text x="34" y="508" class="title">Primary raster layer</text>
+  <text x="34" y="528" class="small">"Foehn: Swiss valley wind match (experimental)"</text>
+
+  <rect x="315" y="484" width="270" height="62" rx="8" class="box"/>
+  <text x="329" y="508" class="title">Location popup</text>
+  <text x="329" y="528" class="small">match, wind match, direction, line</text>
+
+  <rect x="610" y="484" width="270" height="62" rx="8" class="box"/>
+  <text x="624" y="508" class="title">Flow-line overlay</text>
+  <text x="624" y="528" class="small">GeoJSON styled by valley index</text>
+
+  <path d="M155 434 V484" class="arrow" marker-end="url(#ah)"/>
+  <path d="M450 434 V484" class="arrow" marker-end="url(#ah)"/>
+  <path d="M745 434 V484" class="arrow" marker-end="url(#ah)"/>
+</svg>
+<figcaption>The GeoJSON is a single file shared by both sides. The backend reads it from its classpath through the symlink <code>backend/common/src/main/resources/foehn-valleys.geojson</code>. The frontend bundles it as a static asset.</figcaption>
+</figure>
+
+<p>Steps in <code>wrf/DataPipeline.processFile</code>, run once per WRF input file (zone):</p>
+<ol>
+  <li><code>NetCdf.read</code> builds the forecast grid for all hours. This step is unchanged by the feature.</li>
+  <li><code>withFoehnValleys</code> calls <code>FoehnValleys.diagnose</code> with the grid and the latitude/longitude of each cell. It returns a copy of the grid where every cell near a flow line has <code>valleyFoehn</code> filled in, plus the per-valley scores. It is a separate method, so the original grid can be garbage-collected.</li>
+  <li><code>generateRasterImagesAndVectorTiles</code> writes the usual rasters plus <code>foehn-valley-similarity</code>, because the WRF pipeline passes <code>Raster.wrfRasters</code>.</li>
+  <li><code>generateLocationForecasts</code> writes the per-location JSON. The <code>fv</code> block is added where <code>valleyFoehn</code> is defined.</li>
+  <li><code>foehn-valleys.json</code> is written next to the zone's other outputs.</li>
+</ol>
+
+<h2 id="lines">3. Input: the foehn flow lines</h2>
+<p>Source file: <code>frontend/src/data/foehn-valleys.geojson</code>. It is a <code>FeatureCollection</code> of <code>LineString</code> features in WGS84 (longitude, latitude). The lines were digitised from a schematic map and adjusted to the topography. Positional accuracy is about 1–3 km.</p>
+<div class="table-wrap"><table>
+  <tr><th>Property</th><th>Used by</th><th>Meaning</th></tr>
+  <tr><td><code>id</code></td><td>backend, frontend</td><td>Stable identifier, for example <code>S18</code> or <code>N00</code>. It links each line to its score in <code>foehn-valleys.json</code>.</td></tr>
+  <tr><td><code>foehn</code></td><td>backend, frontend</td><td><code>"south"</code> or <code>"north"</code>: the foehn type the line represents.</td></tr>
+  <tr><td><code>style</code></td><td>backend, frontend</td><td><code>"solid"</code> (60 lines) or <code>"dotted"</code> (23 lines, where foehn is observed less often). Dotted lines are drawn dashed; the index treats both styles the same.</td></tr>
+  <tr><td><code>length_km</code>, <code>from_near</code>, <code>to_near</code></td><td>none</td><td>Descriptive only.</td></tr>
+</table></div>
+<p><strong>Orientation matters.</strong> Each line runs from its upstream end (tail) to its downstream end (arrow tip). A south foehn line therefore points roughly north, and a north foehn line roughly south.</p>
+
+<h3>3.1 Densification (<code>densify</code>)</h3>
+<p>When <code>FoehnValleys</code> is first used, each line is turned into evenly spaced <em>samples</em>. In total there are about 1,200 samples.</p>
+<ul>
+  <li>Each segment is cut into <code>ceil(length / 1.5 km)</code> pieces. A sample is placed at the start of each piece.</li>
+  <li>Each sample stores the <strong>unit tangent</strong> <code>(east, north)</code> of its segment. The east component is scaled by <code>cos(mean latitude)</code>, so the direction is correct in kilometres rather than degrees.</li>
+  <li>The final point (the arrow tip) is added as an extra sample with the direction of the last segment, so the downstream end of the valley is scored too.</li>
+  <li>Each sample also stores its valley id and its foehn direction.</li>
+</ul>
+<figure class="figure-panel">
+<svg viewBox="0 0 860 420" role="img" aria-labelledby="densTitle">
+<title id="densTitle">Densification of flow line S48: original vertices, samples every 1.5 km or less, and the tangent stored with each sample</title>
+<defs><marker id="tg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="tangent-head"/></marker></defs>
+<line x1="30" y1="396" x2="125.3" y2="396" class="scalebar"/>
+<line x1="30" y1="391" x2="30" y2="401" class="scalebar"/><line x1="125.3" y1="391" x2="125.3" y2="401" class="scalebar"/>
+<text x="77.7" y="387" text-anchor="middle" class="small">5 km</text>
+<polyline points="351.2,380.0 337.9,303.9 321.5,252.1 303.2,215.1 246.6,119.0 208.8,40.0" class="flowline"/>
+<line x1="351.2" y1="380.0" x2="362.0" y2="378.1" class="tick-link"/>
+<line x1="362.0" y1="378.1" x2="358.9" y2="360.4" class="tangent" marker-end="url(#tg)"/>
+<line x1="346.8" y1="354.6" x2="357.6" y2="352.8" class="tick-link"/>
+<line x1="357.6" y1="352.8" x2="354.5" y2="335.0" class="tangent" marker-end="url(#tg)"/>
+<line x1="342.4" y1="329.3" x2="353.2" y2="327.4" class="tick-link"/>
+<line x1="353.2" y1="327.4" x2="350.1" y2="309.7" class="tangent" marker-end="url(#tg)"/>
+<line x1="337.9" y1="303.9" x2="348.4" y2="300.6" class="tick-link"/>
+<line x1="348.4" y1="300.6" x2="343.0" y2="283.5" class="tangent" marker-end="url(#tg)"/>
+<line x1="329.7" y1="278.0" x2="340.2" y2="274.7" class="tick-link"/>
+<line x1="340.2" y1="274.7" x2="334.8" y2="257.5" class="tangent" marker-end="url(#tg)"/>
+<line x1="321.5" y1="252.1" x2="331.3" y2="247.2" class="tick-link"/>
+<line x1="331.3" y1="247.2" x2="323.4" y2="231.1" class="tangent" marker-end="url(#tg)"/>
+<line x1="312.3" y1="233.6" x2="322.2" y2="228.7" class="tick-link"/>
+<line x1="322.2" y1="228.7" x2="314.2" y2="212.5" class="tangent" marker-end="url(#tg)"/>
+<line x1="303.2" y1="215.1" x2="312.7" y2="209.5" class="tick-link"/>
+<line x1="312.7" y1="209.5" x2="303.5" y2="194.0" class="tangent" marker-end="url(#tg)"/>
+<line x1="289.1" y1="191.0" x2="298.5" y2="185.5" class="tick-link"/>
+<line x1="298.5" y1="185.5" x2="289.4" y2="169.9" class="tangent" marker-end="url(#tg)"/>
+<line x1="274.9" y1="167.0" x2="284.4" y2="161.4" class="tick-link"/>
+<line x1="284.4" y1="161.4" x2="275.3" y2="145.9" class="tangent" marker-end="url(#tg)"/>
+<line x1="260.8" y1="143.0" x2="270.2" y2="137.4" class="tick-link"/>
+<line x1="270.2" y1="137.4" x2="261.1" y2="121.9" class="tangent" marker-end="url(#tg)"/>
+<line x1="246.6" y1="119.0" x2="256.6" y2="114.3" class="tick-link"/>
+<line x1="256.6" y1="114.3" x2="248.8" y2="98.0" class="tangent" marker-end="url(#tg)"/>
+<line x1="237.2" y1="99.2" x2="247.1" y2="94.5" class="tick-link"/>
+<line x1="247.1" y1="94.5" x2="239.3" y2="78.3" class="tangent" marker-end="url(#tg)"/>
+<line x1="227.7" y1="79.5" x2="237.7" y2="74.8" class="tick-link"/>
+<line x1="237.7" y1="74.8" x2="229.9" y2="58.5" class="tangent" marker-end="url(#tg)"/>
+<line x1="218.3" y1="59.7" x2="228.2" y2="55.0" class="tick-link"/>
+<line x1="228.2" y1="55.0" x2="220.4" y2="38.8" class="tangent" marker-end="url(#tg)"/>
+<line x1="208.8" y1="40.0" x2="218.8" y2="35.3" class="tick-link"/>
+<line x1="218.8" y1="35.3" x2="211.0" y2="19.0" class="tangent" marker-end="url(#tg)"/>
+<circle cx="351.2" cy="380.0" r="3.6" class="sample"><title>sample: 46.9982 N, 8.8629 E, tangent (-0.17 E, 0.99 N)</title></circle>
+<circle cx="346.8" cy="354.6" r="3.6" class="sample"><title>sample: 47.0102 N, 8.8599 E, tangent (-0.17 E, 0.99 N)</title></circle>
+<circle cx="342.4" cy="329.3" r="3.6" class="sample"><title>sample: 47.0222 N, 8.8568 E, tangent (-0.17 E, 0.99 N)</title></circle>
+<circle cx="337.9" cy="303.9" r="3.6" class="sample"><title>sample: 47.0341 N, 8.8538 E, tangent (-0.30 E, 0.95 N)</title></circle>
+<circle cx="329.7" cy="278.0" r="3.6" class="sample"><title>sample: 47.0464 N, 8.8481 E, tangent (-0.30 E, 0.95 N)</title></circle>
+<circle cx="321.5" cy="252.1" r="3.6" class="sample"><title>sample: 47.0586 N, 8.8424 E, tangent (-0.44 E, 0.90 N)</title></circle>
+<circle cx="312.3" cy="233.6" r="3.6" class="sample"><title>sample: 47.0673 N, 8.8360 E, tangent (-0.44 E, 0.90 N)</title></circle>
+<circle cx="303.2" cy="215.1" r="3.6" class="sample"><title>sample: 47.0761 N, 8.8297 E, tangent (-0.51 E, 0.86 N)</title></circle>
+<circle cx="289.1" cy="191.0" r="3.6" class="sample"><title>sample: 47.0874 N, 8.8199 E, tangent (-0.51 E, 0.86 N)</title></circle>
+<circle cx="274.9" cy="167.0" r="3.6" class="sample"><title>sample: 47.0987 N, 8.8101 E, tangent (-0.51 E, 0.86 N)</title></circle>
+<circle cx="260.8" cy="143.0" r="3.6" class="sample"><title>sample: 47.1101 N, 8.8003 E, tangent (-0.51 E, 0.86 N)</title></circle>
+<circle cx="246.6" cy="119.0" r="3.6" class="sample"><title>sample: 47.1214 N, 8.7905 E, tangent (-0.43 E, 0.90 N)</title></circle>
+<circle cx="237.2" cy="99.2" r="3.6" class="sample"><title>sample: 47.1307 N, 8.7840 E, tangent (-0.43 E, 0.90 N)</title></circle>
+<circle cx="227.7" cy="79.5" r="3.6" class="sample"><title>sample: 47.1400 N, 8.7774 E, tangent (-0.43 E, 0.90 N)</title></circle>
+<circle cx="218.3" cy="59.7" r="3.6" class="sample"><title>sample: 47.1493 N, 8.7709 E, tangent (-0.43 E, 0.90 N)</title></circle>
+<circle cx="208.8" cy="40.0" r="5" class="sample-tip"><title>arrow-tip sample: 47.1587 N, 8.7643 E, tangent (-0.43 E, 0.90 N)</title></circle>
+<rect x="345.2" y="374.0" width="12" height="12" class="vertex"/>
+<text x="362.2" y="384.0" class="small">v0</text>
+<rect x="331.9" y="297.9" width="12" height="12" class="vertex"/>
+<text x="348.9" y="307.9" class="small">v1</text>
+<rect x="315.5" y="246.1" width="12" height="12" class="vertex"/>
+<text x="332.5" y="256.1" class="small">v2</text>
+<rect x="297.2" y="209.1" width="12" height="12" class="vertex"/>
+<text x="314.2" y="219.1" class="small">v3</text>
+<rect x="240.6" y="113.0" width="12" height="12" class="vertex"/>
+<text x="257.6" y="123.0" class="small">v4</text>
+<rect x="202.8" y="34.0" width="12" height="12" class="vertex"/>
+<text x="219.8" y="44.0" class="small">v5</text>
+<text x="330.6" y="342.0" text-anchor="end" class="small seglabel">4.0 km → 3 × 1.35 km</text>
+<text x="315.7" y="278.0" text-anchor="end" class="small seglabel">2.9 km → 2 × 1.43 km</text>
+<text x="298.3" y="233.6" text-anchor="end" class="small seglabel">2.2 km → 2 × 1.08 km</text>
+<text x="260.9" y="167.0" text-anchor="end" class="small seglabel">5.8 km → 4 × 1.46 km</text>
+<text x="213.7" y="79.5" text-anchor="end" class="small seglabel">4.6 km → 4 × 1.15 km</text>
+<text x="580" y="40" class="title">S48, south foehn</text>
+<text x="580" y="58" class="small">Muotathal (8.1 km) → Einsiedeln (3.4 km)</text>
+<rect x="580" y="90" width="12" height="12" class="vertex"/>
+<text x="608" y="100">digitised vertex</text>
+<circle cx="586" cy="124" r="3.6" class="sample"/>
+<text x="608" y="128">sample (start of each piece)</text>
+<circle cx="586" cy="152" r="5" class="sample-tip"/>
+<text x="608" y="156">extra sample at the arrow tip</text>
+<line x1="578" y1="180" x2="598" y2="180" class="tangent" marker-end="url(#tg)"/>
+<text x="608" y="184">unit tangent of the sample</text>
+<text x="580" y="224" class="small">6 vertices, 5 segments</text>
+<text x="580" y="242" class="small">16 samples (incl. the tip)</text>
+<text x="580" y="260" class="small">North is up; tangents of one segment are equal</text>
+</svg>
+
+<figcaption>Densification of the real line S48, computed with the same algorithm as <code>densify</code>. Each segment is split into equal pieces of at most 1.5 km, so the actual spacing differs slightly from one segment to the next. All samples of a segment share its tangent, so the direction changes in steps at the vertices. The tangents are drawn beside the samples so that they don’t hide the line. Hover over a sample to see its coordinates.</figcaption>
+</figure>
+
+<h3>3.2 Spatial index (<code>GeoBucketIndex</code>)</h3>
+<p>To keep the nearest-neighbour searches cheap, samples and grid cells are put into latitude/longitude buckets about 5 km wide (the corridor width). A query looks at its own bucket and the 8 around it. That is guaranteed to include every item within the 5 km search radius. The bucket width in longitude is computed at the highest latitude present, so a bucket is never narrower than 10 km.</p>
+<p>Distances use a local flat-earth approximation: 111.2 km per degree of latitude, and longitude degrees scaled by <code>cos(reference latitude)</code>. The reference latitude is the mean latitude of the grid.</p>
+
+<h2 id="pressure">4. Cross-Alpine pressure difference</h2>
+<p>The gate uses the classic Swiss foehn pressure difference, between Lugano (46.00° N, 8.96° E) south of the Alps and Zurich (47.38° N, 8.57° E) north of them. The same value applies to every grid point.</p>
+<p>The calculation, in <code>pressureDifferences</code>:</p>
+<ol>
+  <li><strong>Pick the cells around each reference point, once per run.</strong> <code>pointsAround</code> collects the grid cells within 20 km of the point. If there are fewer than 3, the radius grows by 10 km at a time, up to 150 km. Only cells with MSLP &gt; 0 in the first hour count, because the WRF post-processing writes 0 for MSLP above about 800 m. If no radius gives 3 cells, that point is unavailable.</li>
+  <li><strong>Compute the difference for each hour.</strong> <code>Δp = mean MSLP(Lugano cells) − mean MSLP(Zurich cells)</code>, in hPa, or <code>NaN</code> if either point is unavailable.</li>
+</ol>
+<p>A positive Δp means pressure is higher on the south side, which drives <span class="south">south foehn</span>. A negative Δp drives <span class="north">north foehn</span>.</p>
+
+<h3>4.1 The gate</h3>
+<div class="formula">gate(Δp) = ramp(|Δp|, 2 hPa, 6 hPa)        (0 if Δp is NaN)
+
+pressureGatedIndex(similarity, direction, Δp) =
+    similarity × gate(Δp)   if (direction = south and Δp &gt; 0) or (direction = north and Δp &lt; 0)
+    0                       otherwise (wrong sign, Δp = 0, or NaN)</div>
+<p>Below 2 hPa the gate is 0, and from 6 hPa upwards it is 1. In between it rises linearly; for example, at 4 hPa it is 0.5.</p>
+
+<h2 id="grid">5. Grid-point index</h2>
+<p>For each grid cell, which is done once per run:</p>
+<ul>
+  <li><code>nearestTemplates</code> finds the nearest <span class="south">south</span> line sample and the nearest <span class="north">north</span> line sample within 5 km (the corridor). Either one may be missing.</li>
+</ul>
+<p>Then for each hour and each cell:</p>
+<ol>
+  <li><strong>Choose a line</strong> (<code>chooseTemplate</code>):
+    <ul>
+      <li>If Δp &gt; 0, prefer the south sample and fall back to the north one.</li>
+      <li>If Δp &lt; 0, prefer the north sample and fall back to the south one.</li>
+      <li>If Δp is 0 or NaN, take the closer of the two.</li>
+      <li>If there is no sample within 5 km, the cell is outside every corridor and gets no <code>valleyFoehn</code> at all: the raster is transparent there and the popup says "No foehn valley nearby".</li>
+    </ul>
+  </li>
+  <li><strong>Similarity</strong> (<code>windSimilarity</code>). Let <code>(u, v)</code> be the 10 m wind and <code>(e, n)</code> the unit tangent of the line:
+    <div class="formula">|w|        = √(u² + v²)                  (wind speed, m/s)
+cos θ      = (u·e + v·n) / |w|            (θ = angle between the wind and the line)
+similarity = ramp(|w|, 2 m/s, 6 m/s) × (1 − ramp(θ, 30°, 60°))</div>
+    The speed ramp is 0 up to 2 m/s and 1 from 6 m/s, so weak winds and calm give 0. The direction gate is 1 up to 30°, falls linearly to 0 at 60°, and is 0 beyond, so crosswinds and winds blowing up the valley give 0. Speed and direction are separate factors; each has its own threshold.
+  </li>
+  <li><strong>Corridor.</strong> Every cell within 5 km of a line gets the full similarity; there is no further distance weighting.</li>
+  <li><strong>Index</strong>: <code>index = pressureGatedIndex(similarity, direction of the chosen line, Δp of the cell)</code>.</li>
+</ol>
+<figure class="figure-panel">
+<svg viewBox="0 0 900 360" role="img" aria-labelledby="geoTitle">
+<title id="geoTitle">Geometry of the grid-point similarity: nearest sample, distance d, line tangent t, wind w and the angle θ between them</title>
+<defs><marker id="ga" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="tangent-head"/></marker><marker id="wa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="wind-head"/></marker></defs>
+<path d="M70,300 Q250,280 470,60" class="flowline"/>
+<circle cx="70.0" cy="300.0" r="3.4" class="sample"/>
+<circle cx="100.3" cy="295.3" r="3.4" class="sample"/>
+<circle cx="131.1" cy="287.8" r="3.4" class="sample"/>
+<circle cx="162.5" cy="277.5" r="3.4" class="sample"/>
+<circle cx="194.4" cy="264.4" r="3.4" class="sample"/>
+<circle cx="226.9" cy="248.6" r="3.4" class="sample"/>
+<circle cx="260.0" cy="230.0" r="3.4" class="sample"/>
+<circle cx="293.6" cy="208.6" r="3.4" class="sample"/>
+<circle cx="327.8" cy="184.4" r="3.4" class="sample"/>
+<circle cx="362.5" cy="157.5" r="3.4" class="sample"/>
+<circle cx="397.8" cy="127.8" r="3.4" class="sample"/>
+<circle cx="433.6" cy="95.3" r="3.4" class="sample"/>
+<circle cx="470.0" cy="60.0" r="3.4" class="sample"/>
+<circle cx="260.0" cy="230.0" r="6" class="sample-tip"/>
+<text x="274.0" y="250.0" class="title">nearest sample</text>
+<line x1="260.0" y1="230.0" x2="320.0" y2="194.0" class="tangent thick" marker-end="url(#ga)"/>
+<text x="330.9" y="193.9" class="label">t</text>
+<line x1="260.0" y1="230.0" x2="193.1" y2="118.5" class="dist"/>
+<text x="210.6" y="178.3" class="label">d</text>
+<rect x="184.1" y="109.5" width="18" height="18" class="cell"/>
+<text x="177.1" y="123.5" text-anchor="end" class="title">grid cell</text>
+<line x1="193.1" y1="118.5" x2="274.6" y2="69.6" class="tangent ghost"/>
+<line x1="193.1" y1="118.5" x2="224.1" y2="28.7" class="wind" marker-end="url(#wa)"/>
+<text x="227.0" y="20.2" class="label">w</text>
+<path d="M232.6,94.9 A46,46 0 0 0 208.1,75.0" class="arc"/>
+<text x="229.6" y="77.5" class="label">θ</text>
+<text x="480" y="54" class="small">arrow tip (downstream)</text>
+<text x="70" y="324" class="small">tail (upstream), south foehn line</text>
+<text x="560" y="70" class="title">Worked example</text>
+<text x="560" y="92" class="small">d = 5 km, θ = 40°, |w| = 5 m/s</text>
+<text x="560" y="114" class="small">Δp = +5 hPa (south side higher), south foehn line</text>
+<text x="560" y="158" class="mono">speed ramp = ramp(2, 6, 5) = 0.75</text>
+<text x="560" y="180" class="mono">direction  = 1 − ramp(30, 60, 40) = 0.67</text>
+<text x="560" y="202" class="mono">similarity = 0.75 × 0.67 = 0.50</text>
+<text x="560" y="224" class="mono">corridor   = 5 km ≤ 5 km → kept</text>
+<text x="560" y="246" class="mono">gate       = ramp(2, 6, 5) = 0.75</text>
+<text x="560" y="268" class="mono">index      = 0.50 × 0.75 = 0.38</text>
+</svg>
+<figcaption>The quantities used at one grid cell: the nearest sample of the chosen line, the distance <em>d</em> to it, the line tangent <em>t</em> at that sample, the 10 m wind <em>w</em>, and the angle <em>θ</em> between them. The example on the right follows the steps above.</figcaption>
+</figure>
+<p>The three factors of the index each range from 0 to 1. Hover over a curve to read its value.</p>
+<div class="curves">
+<figure class="curve" data-fn="speed" data-x0="0" data-x1="10" data-unit=" m/s">
+<svg viewBox="0 0 320 210" role="img" aria-label="Wind-speed ramp: factor from 0 to 1 against 10 m wind speed |w| (m/s)">
+<line x1="42" x2="306" y1="170.0" y2="170.0" class="axis"/>
+<text x="36" y="174.0" text-anchor="end" class="tick">0</text>
+<line x1="42" x2="306" y1="92.0" y2="92.0" class="grid"/>
+<text x="36" y="96.0" text-anchor="end" class="tick">0.5</text>
+<line x1="42" x2="306" y1="14.0" y2="14.0" class="grid"/>
+<text x="36" y="18.0" text-anchor="end" class="tick">1</text>
+<text x="42.0" y="186" text-anchor="middle" class="tick">0</text>
+<text x="94.8" y="186" text-anchor="middle" class="tick">2</text>
+<text x="147.6" y="186" text-anchor="middle" class="tick">4</text>
+<text x="200.4" y="186" text-anchor="middle" class="tick">6</text>
+<text x="253.2" y="186" text-anchor="middle" class="tick">8</text>
+<text x="306.0" y="186" text-anchor="middle" class="tick">10</text>
+<text x="174.0" y="204" text-anchor="middle" class="small">10 m wind speed |w| (m/s)</text>
+<polyline points="42.0,170.0 43.1,170.0 44.2,170.0 45.3,170.0 46.4,170.0 47.5,170.0 48.6,170.0 49.7,170.0 50.8,170.0 51.9,170.0 53.0,170.0 54.1,170.0 55.2,170.0 56.3,170.0 57.4,170.0 58.5,170.0 59.6,170.0 60.7,170.0 61.8,170.0 62.9,170.0 64.0,170.0 65.1,170.0 66.2,170.0 67.3,170.0 68.4,170.0 69.5,170.0 70.6,170.0 71.7,170.0 72.8,170.0 73.9,170.0 75.0,170.0 76.1,170.0 77.2,170.0 78.3,170.0 79.4,170.0 80.5,170.0 81.6,170.0 82.7,170.0 83.8,170.0 84.9,170.0 86.0,170.0 87.1,170.0 88.2,170.0 89.3,170.0 90.4,170.0 91.5,170.0 92.6,170.0 93.7,170.0 94.8,170.0 95.9,168.4 97.0,166.8 98.1,165.1 99.2,163.5 100.3,161.9 101.4,160.2 102.5,158.6 103.6,157.0 104.7,155.4 105.8,153.8 106.9,152.1 108.0,150.5 109.1,148.9 110.2,147.2 111.3,145.6 112.4,144.0 113.5,142.4 114.6,140.8 115.7,139.1 116.8,137.5 117.9,135.9 119.0,134.2 120.1,132.6 121.2,131.0 122.3,129.4 123.4,127.8 124.5,126.1 125.6,124.5 126.7,122.9 127.8,121.2 128.9,119.6 130.0,118.0 131.1,116.4 132.2,114.8 133.3,113.1 134.4,111.5 135.5,109.9 136.6,108.2 137.7,106.6 138.8,105.0 139.9,103.4 141.0,101.8 142.1,100.1 143.2,98.5 144.3,96.9 145.4,95.2 146.5,93.6 147.6,92.0 148.7,90.4 149.8,88.8 150.9,87.1 152.0,85.5 153.1,83.9 154.2,82.2 155.3,80.6 156.4,79.0 157.5,77.4 158.6,75.7 159.7,74.1 160.8,72.5 161.9,70.9 163.0,69.3 164.1,67.6 165.2,66.0 166.3,64.4 167.4,62.8 168.5,61.1 169.6,59.5 170.7,57.9 171.8,56.2 172.9,54.6 174.0,53.0 175.1,51.4 176.2,49.8 177.3,48.1 178.4,46.5 179.5,44.9 180.6,43.2 181.7,41.6 182.8,40.0 183.9,38.4 185.0,36.7 186.1,35.1 187.2,33.5 188.3,31.9 189.4,30.3 190.5,28.6 191.6,27.0 192.7,25.4 193.8,23.8 194.9,22.1 196.0,20.5 197.1,18.9 198.2,17.2 199.3,15.6 200.4,14.0 201.5,14.0 202.6,14.0 203.7,14.0 204.8,14.0 205.9,14.0 207.0,14.0 208.1,14.0 209.2,14.0 210.3,14.0 211.4,14.0 212.5,14.0 213.6,14.0 214.7,14.0 215.8,14.0 216.9,14.0 218.0,14.0 219.1,14.0 220.2,14.0 221.3,14.0 222.4,14.0 223.5,14.0 224.6,14.0 225.7,14.0 226.8,14.0 227.9,14.0 229.0,14.0 230.1,14.0 231.2,14.0 232.3,14.0 233.4,14.0 234.5,14.0 235.6,14.0 236.7,14.0 237.8,14.0 238.9,14.0 240.0,14.0 241.1,14.0 242.2,14.0 243.3,14.0 244.4,14.0 245.5,14.0 246.6,14.0 247.7,14.0 248.8,14.0 249.9,14.0 251.0,14.0 252.1,14.0 253.2,14.0 254.3,14.0 255.4,14.0 256.5,14.0 257.6,14.0 258.7,14.0 259.8,14.0 260.9,14.0 262.0,14.0 263.1,14.0 264.2,14.0 265.3,14.0 266.4,14.0 267.5,14.0 268.6,14.0 269.7,14.0 270.8,14.0 271.9,14.0 273.0,14.0 274.1,14.0 275.2,14.0 276.3,14.0 277.4,14.0 278.5,14.0 279.6,14.0 280.7,14.0 281.8,14.0 282.9,14.0 284.0,14.0 285.1,14.0 286.2,14.0 287.3,14.0 288.4,14.0 289.5,14.0 290.6,14.0 291.7,14.0 292.8,14.0 293.9,14.0 295.0,14.0 296.1,14.0 297.2,14.0 298.3,14.0 299.4,14.0 300.5,14.0 301.6,14.0 302.7,14.0 303.8,14.0 304.9,14.0 306.0,14.0" class="curve-line"/>
+<g class="hover" visibility="hidden"><line class="guide" y1="14" y2="170"/><circle r="4.5" class="dot"/></g>
+<rect x="42" y="14" width="264" height="156" class="hit"/>
+</svg>
+<figcaption><strong>Wind-speed ramp</strong> <span class="readout" aria-live="polite"></span></figcaption>
+</figure>
+<figure class="curve" data-fn="direction" data-x0="0" data-x1="180" data-unit="°">
+<svg viewBox="0 0 320 210" role="img" aria-label="Direction gate: factor from 0 to 1 against θ between wind and line (°)">
+<line x1="42" x2="306" y1="170.0" y2="170.0" class="axis"/>
+<text x="36" y="174.0" text-anchor="end" class="tick">0</text>
+<line x1="42" x2="306" y1="92.0" y2="92.0" class="grid"/>
+<text x="36" y="96.0" text-anchor="end" class="tick">0.5</text>
+<line x1="42" x2="306" y1="14.0" y2="14.0" class="grid"/>
+<text x="36" y="18.0" text-anchor="end" class="tick">1</text>
+<text x="42.0" y="186" text-anchor="middle" class="tick">0</text>
+<text x="86.0" y="186" text-anchor="middle" class="tick">30</text>
+<text x="130.0" y="186" text-anchor="middle" class="tick">60</text>
+<text x="174.0" y="186" text-anchor="middle" class="tick">90</text>
+<text x="240.0" y="186" text-anchor="middle" class="tick">135</text>
+<text x="306.0" y="186" text-anchor="middle" class="tick">180</text>
+<text x="174.0" y="204" text-anchor="middle" class="small">θ between wind and line (°)</text>
+<polyline points="42.0,14.0 43.1,14.0 44.2,14.0 45.3,14.0 46.4,14.0 47.5,14.0 48.6,14.0 49.7,14.0 50.8,14.0 51.9,14.0 53.0,14.0 54.1,14.0 55.2,14.0 56.3,14.0 57.4,14.0 58.5,14.0 59.6,14.0 60.7,14.0 61.8,14.0 62.9,14.0 64.0,14.0 65.1,14.0 66.2,14.0 67.3,14.0 68.4,14.0 69.5,14.0 70.6,14.0 71.7,14.0 72.8,14.0 73.9,14.0 75.0,14.0 76.1,14.0 77.2,14.0 78.3,14.0 79.4,14.0 80.5,14.0 81.6,14.0 82.7,14.0 83.8,14.0 84.9,14.0 86.0,14.0 87.1,17.9 88.2,21.8 89.3,25.7 90.4,29.6 91.5,33.5 92.6,37.4 93.7,41.3 94.8,45.2 95.9,49.1 97.0,53.0 98.1,56.9 99.2,60.8 100.3,64.7 101.4,68.6 102.5,72.5 103.6,76.4 104.7,80.3 105.8,84.2 106.9,88.1 108.0,92.0 109.1,95.9 110.2,99.8 111.3,103.7 112.4,107.6 113.5,111.5 114.6,115.4 115.7,119.3 116.8,123.2 117.9,127.1 119.0,131.0 120.1,134.9 121.2,138.8 122.3,142.7 123.4,146.6 124.5,150.5 125.6,154.4 126.7,158.3 127.8,162.2 128.9,166.1 130.0,170.0 131.1,170.0 132.2,170.0 133.3,170.0 134.4,170.0 135.5,170.0 136.6,170.0 137.7,170.0 138.8,170.0 139.9,170.0 141.0,170.0 142.1,170.0 143.2,170.0 144.3,170.0 145.4,170.0 146.5,170.0 147.6,170.0 148.7,170.0 149.8,170.0 150.9,170.0 152.0,170.0 153.1,170.0 154.2,170.0 155.3,170.0 156.4,170.0 157.5,170.0 158.6,170.0 159.7,170.0 160.8,170.0 161.9,170.0 163.0,170.0 164.1,170.0 165.2,170.0 166.3,170.0 167.4,170.0 168.5,170.0 169.6,170.0 170.7,170.0 171.8,170.0 172.9,170.0 174.0,170.0 175.1,170.0 176.2,170.0 177.3,170.0 178.4,170.0 179.5,170.0 180.6,170.0 181.7,170.0 182.8,170.0 183.9,170.0 185.0,170.0 186.1,170.0 187.2,170.0 188.3,170.0 189.4,170.0 190.5,170.0 191.6,170.0 192.7,170.0 193.8,170.0 194.9,170.0 196.0,170.0 197.1,170.0 198.2,170.0 199.3,170.0 200.4,170.0 201.5,170.0 202.6,170.0 203.7,170.0 204.8,170.0 205.9,170.0 207.0,170.0 208.1,170.0 209.2,170.0 210.3,170.0 211.4,170.0 212.5,170.0 213.6,170.0 214.7,170.0 215.8,170.0 216.9,170.0 218.0,170.0 219.1,170.0 220.2,170.0 221.3,170.0 222.4,170.0 223.5,170.0 224.6,170.0 225.7,170.0 226.8,170.0 227.9,170.0 229.0,170.0 230.1,170.0 231.2,170.0 232.3,170.0 233.4,170.0 234.5,170.0 235.6,170.0 236.7,170.0 237.8,170.0 238.9,170.0 240.0,170.0 241.1,170.0 242.2,170.0 243.3,170.0 244.4,170.0 245.5,170.0 246.6,170.0 247.7,170.0 248.8,170.0 249.9,170.0 251.0,170.0 252.1,170.0 253.2,170.0 254.3,170.0 255.4,170.0 256.5,170.0 257.6,170.0 258.7,170.0 259.8,170.0 260.9,170.0 262.0,170.0 263.1,170.0 264.2,170.0 265.3,170.0 266.4,170.0 267.5,170.0 268.6,170.0 269.7,170.0 270.8,170.0 271.9,170.0 273.0,170.0 274.1,170.0 275.2,170.0 276.3,170.0 277.4,170.0 278.5,170.0 279.6,170.0 280.7,170.0 281.8,170.0 282.9,170.0 284.0,170.0 285.1,170.0 286.2,170.0 287.3,170.0 288.4,170.0 289.5,170.0 290.6,170.0 291.7,170.0 292.8,170.0 293.9,170.0 295.0,170.0 296.1,170.0 297.2,170.0 298.3,170.0 299.4,170.0 300.5,170.0 301.6,170.0 302.7,170.0 303.8,170.0 304.9,170.0 306.0,170.0" class="curve-line"/>
+<g class="hover" visibility="hidden"><line class="guide" y1="14" y2="170"/><circle r="4.5" class="dot"/></g>
+<rect x="42" y="14" width="264" height="156" class="hit"/>
+</svg>
+<figcaption><strong>Direction gate</strong> <span class="readout" aria-live="polite"></span></figcaption>
+</figure>
+<figure class="curve" data-fn="gate" data-x0="0" data-x1="10" data-unit=" hPa">
+<svg viewBox="0 0 320 210" role="img" aria-label="Pressure gate: factor from 0 to 1 against |Δp| with the matching sign (hPa)">
+<line x1="42" x2="306" y1="170.0" y2="170.0" class="axis"/>
+<text x="36" y="174.0" text-anchor="end" class="tick">0</text>
+<line x1="42" x2="306" y1="92.0" y2="92.0" class="grid"/>
+<text x="36" y="96.0" text-anchor="end" class="tick">0.5</text>
+<line x1="42" x2="306" y1="14.0" y2="14.0" class="grid"/>
+<text x="36" y="18.0" text-anchor="end" class="tick">1</text>
+<text x="42.0" y="186" text-anchor="middle" class="tick">0</text>
+<text x="94.8" y="186" text-anchor="middle" class="tick">2</text>
+<text x="147.6" y="186" text-anchor="middle" class="tick">4</text>
+<text x="200.4" y="186" text-anchor="middle" class="tick">6</text>
+<text x="253.2" y="186" text-anchor="middle" class="tick">8</text>
+<text x="306.0" y="186" text-anchor="middle" class="tick">10</text>
+<text x="174.0" y="204" text-anchor="middle" class="small">|Δp| with the matching sign (hPa)</text>
+<polyline points="42.0,170.0 43.1,170.0 44.2,170.0 45.3,170.0 46.4,170.0 47.5,170.0 48.6,170.0 49.7,170.0 50.8,170.0 51.9,170.0 53.0,170.0 54.1,170.0 55.2,170.0 56.3,170.0 57.4,170.0 58.5,170.0 59.6,170.0 60.7,170.0 61.8,170.0 62.9,170.0 64.0,170.0 65.1,170.0 66.2,170.0 67.3,170.0 68.4,170.0 69.5,170.0 70.6,170.0 71.7,170.0 72.8,170.0 73.9,170.0 75.0,170.0 76.1,170.0 77.2,170.0 78.3,170.0 79.4,170.0 80.5,170.0 81.6,170.0 82.7,170.0 83.8,170.0 84.9,170.0 86.0,170.0 87.1,170.0 88.2,170.0 89.3,170.0 90.4,170.0 91.5,170.0 92.6,170.0 93.7,170.0 94.8,170.0 95.9,168.4 97.0,166.8 98.1,165.1 99.2,163.5 100.3,161.9 101.4,160.2 102.5,158.6 103.6,157.0 104.7,155.4 105.8,153.8 106.9,152.1 108.0,150.5 109.1,148.9 110.2,147.2 111.3,145.6 112.4,144.0 113.5,142.4 114.6,140.8 115.7,139.1 116.8,137.5 117.9,135.9 119.0,134.2 120.1,132.6 121.2,131.0 122.3,129.4 123.4,127.8 124.5,126.1 125.6,124.5 126.7,122.9 127.8,121.2 128.9,119.6 130.0,118.0 131.1,116.4 132.2,114.8 133.3,113.1 134.4,111.5 135.5,109.9 136.6,108.2 137.7,106.6 138.8,105.0 139.9,103.4 141.0,101.8 142.1,100.1 143.2,98.5 144.3,96.9 145.4,95.2 146.5,93.6 147.6,92.0 148.7,90.4 149.8,88.8 150.9,87.1 152.0,85.5 153.1,83.9 154.2,82.2 155.3,80.6 156.4,79.0 157.5,77.4 158.6,75.7 159.7,74.1 160.8,72.5 161.9,70.9 163.0,69.3 164.1,67.6 165.2,66.0 166.3,64.4 167.4,62.8 168.5,61.1 169.6,59.5 170.7,57.9 171.8,56.2 172.9,54.6 174.0,53.0 175.1,51.4 176.2,49.8 177.3,48.1 178.4,46.5 179.5,44.9 180.6,43.2 181.7,41.6 182.8,40.0 183.9,38.4 185.0,36.7 186.1,35.1 187.2,33.5 188.3,31.9 189.4,30.3 190.5,28.6 191.6,27.0 192.7,25.4 193.8,23.8 194.9,22.1 196.0,20.5 197.1,18.9 198.2,17.2 199.3,15.6 200.4,14.0 201.5,14.0 202.6,14.0 203.7,14.0 204.8,14.0 205.9,14.0 207.0,14.0 208.1,14.0 209.2,14.0 210.3,14.0 211.4,14.0 212.5,14.0 213.6,14.0 214.7,14.0 215.8,14.0 216.9,14.0 218.0,14.0 219.1,14.0 220.2,14.0 221.3,14.0 222.4,14.0 223.5,14.0 224.6,14.0 225.7,14.0 226.8,14.0 227.9,14.0 229.0,14.0 230.1,14.0 231.2,14.0 232.3,14.0 233.4,14.0 234.5,14.0 235.6,14.0 236.7,14.0 237.8,14.0 238.9,14.0 240.0,14.0 241.1,14.0 242.2,14.0 243.3,14.0 244.4,14.0 245.5,14.0 246.6,14.0 247.7,14.0 248.8,14.0 249.9,14.0 251.0,14.0 252.1,14.0 253.2,14.0 254.3,14.0 255.4,14.0 256.5,14.0 257.6,14.0 258.7,14.0 259.8,14.0 260.9,14.0 262.0,14.0 263.1,14.0 264.2,14.0 265.3,14.0 266.4,14.0 267.5,14.0 268.6,14.0 269.7,14.0 270.8,14.0 271.9,14.0 273.0,14.0 274.1,14.0 275.2,14.0 276.3,14.0 277.4,14.0 278.5,14.0 279.6,14.0 280.7,14.0 281.8,14.0 282.9,14.0 284.0,14.0 285.1,14.0 286.2,14.0 287.3,14.0 288.4,14.0 289.5,14.0 290.6,14.0 291.7,14.0 292.8,14.0 293.9,14.0 295.0,14.0 296.1,14.0 297.2,14.0 298.3,14.0 299.4,14.0 300.5,14.0 301.6,14.0 302.7,14.0 303.8,14.0 304.9,14.0 306.0,14.0" class="curve-line"/>
+<g class="hover" visibility="hidden"><line class="guide" y1="14" y2="170"/><circle r="4.5" class="dot"/></g>
+<rect x="42" y="14" width="264" height="156" class="hit"/>
+</svg>
+<figcaption><strong>Pressure gate</strong> <span class="readout" aria-live="polite"></span></figcaption>
+</figure>
+</div>
+<p class="figure-note" style="color:var(--muted);font-size:.88rem">The speed ramp and the direction gate give the similarity, inside the 5 km corridor. The pressure gate (section 4.1) then multiplies the similarity into the index.</p>
+<p>Each cell stores the result as <code>Forecast.valleyFoehn = Diagnostics(similarity, index, direction, valleyId, distanceMeters)</code>.</p>
+<div class="note">
+  <p><strong>Why fall back to the line of the other direction?</strong> When south foehn is expected but only a north foehn line is nearby, the cell still reports that line and its wind similarity, while the index stays 0. The popup can then show why the index is zero: there is a valley nearby, but the pressure pattern doesn't support foehn there.</p>
+</div>
+
+<h2 id="valley">6. Per-valley hourly score</h2>
+<p>The score of each flow line feeds the line overlay on the map.</p>
+<ol>
+  <li><strong>Matching cells, once per run.</strong> Each sample of the line is matched to its nearest grid cell within 5 km (<code>nearestGridCell</code>). Lines with no matching cell are outside the domain and are left out of <code>foehn-valleys.json</code>.</li>
+  <li><strong>Score for each hour</strong> (<code>scoreValley</code>):
+    <div class="formula">similarity = mean over matched samples of ramp(|w|, 2, 6 m/s) × (1 − ramp(θ, 30°, 60°)) at its cell
+meanΔp     = mean of the finite Δp values at those cells (NaN if none)
+index      = pressureGatedIndex(similarity, direction of the line, meanΔp)</div>
+  </li>
+</ol>
+<p>Each sample is compared with the wind in its nearest cell.</p>
+
+<h2 id="outputs">7. Backend outputs</h2>
+<p>All files are written under <code>&lt;output&gt;/7/wrf/&lt;init&gt;/&lt;zone&gt;/</code>, where 7 is the current forecast format version.</p>
+
+<h3>7.1 Raster <code>foehn-valley-similarity/&lt;hour&gt;.png</code></h3>
+<p>This is an RGBA PNG of the grid-point <strong>index</strong>, defined in <code>Raster.wrfRasters</code> as <code>gfsRasters</code> plus this raster, so GFS doesn't produce it. Cells without <code>valleyFoehn</code> are encoded as 0. The colour breakpoints are:</p>
+<div class="table-wrap"><table>
+  <tr><th>Break</th><th>Colour</th></tr>
+  <tr><td>0.00, 0.15</td><td>transparent</td></tr>
+  <tr><td>0.20</td><td><span class="swatch" style="background:#edf8fb"></span> <code>#edf8fb</code></td></tr>
+  <tr><td>0.35</td><td><span class="swatch" style="background:#b2e2e2"></span> <code>#b2e2e2</code></td></tr>
+  <tr><td>0.50</td><td><span class="swatch" style="background:#66c2a4"></span> <code>#66c2a4</code></td></tr>
+  <tr><td>0.65</td><td><span class="swatch" style="background:#2ca25f"></span> <code>#2ca25f</code></td></tr>
+  <tr><td>0.80</td><td><span class="swatch" style="background:#006d2c"></span> <code>#006d2c</code></td></tr>
+  <tr><td>1.00 and above</td><td><span class="swatch" style="background:#00441b"></span> <code>#00441b</code></td></tr>
+</table></div>
+<p>Values are assigned to classes by the standard GeoTrellis <code>ColorMap</code> rules. The legend in <code>frontend/src/layers/FoehnValleys.tsx</code> must match these colours.</p>
+
+<h3>7.2 Per-location JSON: the <code>fv</code> block</h3>
+<p>The block is added to each hour of the location forecast files (<code>locations/*.json</code>), only where the cell has <code>valleyFoehn</code>:</p>
+<pre><code>"fv": {
+  "s":  612,     // similarity, per mille (0–1000), null if not finite
+  "i":  598,     // index, per mille, null if not finite
+  "k":  0,       // direction of the chosen line: 0 = south, 1 = north
+  "id": "S18",   // id of the chosen line
+  "d":  3400     // distance to it, in metres
+}</code></pre>
+
+<h3>7.3 <code>foehn-valleys.json</code></h3>
+<p>There is one file per zone and run, covering all hours. <code>hours[n]</code> is the hour offset <code>n</code>, the same index as the raster file names.</p>
+<pre><code>{
+  "version": "0.1",                         // version of the formula (FoehnValleys.version)
+  "valleys": [
+    {
+      "id": "S18",
+      "foehn": "south",
+      "hours": [
+        { "s": 712, "i": 712, "dp": 58 },   // s, i per mille; dp in tenths of hPa (5.8 hPa)
+        ...
+      ]
+    },
+    ...
+  ]
+}</code></pre>
+<p>Only lines with at least one sample within 5 km of the zone's grid are listed.</p>
+
+<h2 id="frontend">8. Frontend</h2>
+
+<h3>8.1 Layer</h3>
+<p><code>foehnValleySimilarityLayer</code> in <code>src/layers/FoehnValleys.tsx</code> is defined as follows:</p>
+<ul>
+  <li>Key and raster path <code>foehn-valley-similarity</code>, registered in <code>Layers.tsx</code>.</li>
+  <li>The map key is a colour scale from 20 % to 100 % that uses the backend colours.</li>
+  <li>When clicking the map, the popup shows:
+    <ul>
+      <li><em>Valley match</em>: the index.</li>
+      <li><em>Wind match</em>: the similarity before the pressure gate.</li>
+      <li><em>Foehn direction</em> and <em>Nearest flow line</em>: the line id and its distance.</li>
+    </ul>
+    These values are parsed from <code>fv</code> into <code>DetailedForecast.valleyFoehn</code>.</li>
+  <li>The layer button appears in the overlay menu only when soarWRF is selected (<code>LayersSelector.tsx</code>).</li>
+  <li>The raster is shown like other primary layers: the current hour's PNG, at the default overlay opacity of 0.35.</li>
+  <li>While the layer is shown, <code>App.tsx</code> calls <code>mapHooks.setSwitzerlandMaskVisible(true)</code>. <code>Map.ts</code> then draws a grey mask over everything outside the Swiss border, between the raster and the flow lines. The border is <code>src/data/switzerland.geojson</code>, simplified from Natural Earth (public domain) and loaded on first use.</li>
+</ul>
+
+<h3>8.2 Flow-line overlay</h3>
+<p>The checkbox <em>Foehn valleys</em> in the layers menu shows or hides the lines, over any layer and for both models. It is off by default and remembered in the browser (<code>foehn-valleys-shown</code> in local storage, <code>State.foehnValleysShown</code>). The steps are:</p>
+<ol>
+  <li><code>App.tsx</code> creates a resource whose URL is <code>urlOfFoehnValleys(zone)</code> when the lines are shown, the valley layer is the active primary layer, and the model is soarWRF; otherwise the URL is <code>undefined</code>. <code>fetchFoehnValleys</code> returns <code>undefined</code> when the request fails, for example for runs produced before this feature.</li>
+  <li>An effect calls <code>mapHooks.setFoehnValleyScores</code> with <code>undefined</code> when the checkbox is off (lines hidden), with the scores of the current hour (<code>foehnValleyScores</code>) when they are available, and with an empty map otherwise, so that the lines are drawn without a score. Changing the hour only re-applies the scores; it doesn't fetch the file again.</li>
+  <li><code>Map.ts</code> loads the bundled GeoJSON on first use only. It sets each feature's <code>foehnIndex</code> property and refreshes the layer. Passing <code>undefined</code> hides the layer. The line layer sits above the raster and below the wind barbs.</li>
+</ol>
+<p><code>foehnValleyStyle</code> draws each line:</p>
+<div class="table-wrap"><table>
+  <tr><th>Aspect</th><th>With a score (index 0–1)</th><th>Without a score</th></tr>
+  <tr><td>Colour</td><td colspan="2"><span class="south">#d7261e</span> for south foehn, <span class="north">#2c3fb0</span> for north foehn, with a white halo</td></tr>
+  <tr><td>Width</td><td><code>1.5 + 5.5 × index</code> px</td><td>2.5 px</td></tr>
+  <tr><td>Opacity</td><td><code>0.25 + 0.75 × index</code></td><td>1</td></tr>
+  <tr><td>Dash</td><td colspan="2">dashed (6 px on, 6 px off) for <code>style = "dotted"</code></td></tr>
+  <tr><td>Arrow at tip</td><td>triangle, radius <code>4 + 3 × index</code></td><td>triangle, radius 7</td></tr>
+</table></div>
+
+<h2 id="tuning">9. Tuning parameters</h2>
+<p>All are constants in <code>FoehnValleys.scala</code>:</p>
+<div class="table-wrap"><table>
+  <tr><th>Constant</th><th>Value</th><th>Role</th></tr>
+  <tr><td><code>corridorKm</code></td><td>5 km</td><td>Corridor around each line: search radius for lines around a cell and for cells around a sample. It is also the bucket size of the spatial index.</td></tr>
+  <tr><td><code>sampleSpacingKm</code></td><td>1.5 km</td><td>Densification step of the flow lines.</td></tr>
+  <tr><td><code>speedMinMps</code> / <code>speedFullMps</code></td><td>2 / 6 m/s</td><td>Wind-speed ramp: 0 up to 2 m/s, 1 from 6 m/s.</td></tr>
+  <tr><td><code>directionFullDeg</code> / <code>directionZeroDeg</code></td><td>30° / 60°</td><td>Direction gate: 1 up to 30° between wind and line, 0 from 60°.</td></tr>
+  <tr><td><code>pressureMinHPa</code> / <code>pressureFullHPa</code></td><td>2 / 6 hPa</td><td>Pressure gate ramp on |Δp|.</td></tr>
+  <tr><td><code>lugano</code>, <code>zurich</code></td><td>46.00° N 8.96° E, 47.38° N 8.57° E</td><td>Pressure reference points (section 4).</td></tr>
+</table></div>
+
+<h2 id="tests">10. Tests and verification</h2>
+<p><code>backend/common/src/test/scala/org/soaringmeteo/FoehnValleysTestSuite.scala</code> has 10 tests.</p>
+<p><strong>Unit tests of the building blocks:</strong></p>
+<ul>
+  <li>The GeoJSON loads with 83 lines (65 south, 18 north), and every sample has a valley id.</li>
+  <li>Densified south lines point north, and north lines point south.</li>
+  <li>The similarity combines the speed ramp and the direction gate: 1 at 10 m/s within 30° of the line, 0.5 at 4 m/s along the line and at 10 m/s with a 45° angle, 0.25 at 4 m/s with a 45° angle, and 0 at 2 m/s, at 60°, for a 15 m/s crosswind at 80°, for an opposite wind, or for calm.</li>
+  <li>The line choice follows the sign of Δp, with a fallback to the other direction.</li>
+  <li>The gate zeroes a line whose direction contradicts Δp, and also zeroes it when Δp is NaN.</li>
+  <li>The JSON encoding uses per mille and tenths of hPa, and includes the formula version.</li>
+</ul>
+<p><strong>End-to-end tests of <code>diagnose</code></strong>. They use a synthetic 15 × 33 grid over Lugano–Zurich (8.4–9.1° E, 45.9–47.5° N) with a uniform northward 10 m/s wind:</p>
+<ul>
+  <li>MSLP 1010 hPa south and 1004 hPa north: Δp is exactly +6 hPa, south valleys keep index = similarity, and north valleys get 0.</li>
+  <li>Reversed pressure: south valleys get index 0, while their similarity stays above 0.</li>
+  <li>Δp of +4 hPa: the index is reduced but not zero.</li>
+  <li>MSLP of 0 everywhere (no data): Δp is NaN and every index is 0.</li>
+</ul>
+<p>Measured statement coverage of <code>FoehnValleys.scala</code> is <strong>96 %</strong>. The uncovered parts are error branches: a missing or unparseable resource, an unknown <code>foehn</code> value, and non-finite values in the JSON encoding.</p>
+<p>When the branch was built, the WRF run 2026-11-13 12Z (+42 h) was regenerated with the branch code. Its <code>foehn-valleys.json</code>, the <code>foehn-valley-similarity</code> rasters, and a sample of the location <code>fv</code> blocks were identical to those of the development version they were extracted from.</p>
+
+<h2 id="limits">11. Limitations and known behaviour</h2>
+<ul>
+  <li><strong>One pressure difference.</strong> Every valley uses Lugano–Zurich, which fits central Switzerland best. Valleys in the far west (Valais) or east (Engadine) can have a somewhat different cross-Alpine gradient.</li>
+  <li><strong>MSLP coverage.</strong> MSLP is 0 above about 800 m in the WRF post-processing. If no valid cells exist near a reference point, Δp becomes NaN and every index is 0.</li>
+  <li><strong>Surface wind only.</strong> The index uses the 10 m wind. It doesn't check stability, dryness, crest-level wind or descent.</li>
+  <li><strong>Line accuracy.</strong> The digitised lines are accurate to about 1–3 km. The 5 km corridor absorbs that, but small side valleys can be missed or confused.</li>
+  <li><strong>Sharp corridor edge.</strong> The index drops from its full value to 0 at 5 km from a line, so the map shows clear-cut valley strips.</li>
+  <li><strong>Direction tolerance.</strong> Winds more than 60° off the line direction give 0. Where a digitised line deviates from the model's valley axis (coarse grid, line accuracy), real foehn can be cut off.</li>
+  <li><strong>Heuristic parameters.</strong> The corridor width and the three ramps are educated guesses, not calibrated. A natural next step is to tune them against the MeteoSwiss foehn index at valley stations (Dürr 2008) over past runs.</li>
+  <li><strong>WRF only.</strong> If the layer was selected with soarWRF and the user then switches to GFS, the layer stays selected but there is no raster to show.</li>
+  <li><strong>Older runs.</strong> Runs produced before this feature have no <code>fv</code> block and no <code>foehn-valleys.json</code>. The popup then shows "No foehn valley nearby", and the lines are hidden.</li>
+  <li><strong>Translations.</strong> The new texts exist only in <code>messages/en.json</code>.</li>
+</ul>
+
+<h2 id="files">12. File reference</h2>
+<div class="table-wrap"><table>
+  <tr><th>File</th><th>Content</th></tr>
+  <tr><td><code>frontend/src/data/foehn-valleys.geojson</code></td><td>Flow lines. This is the single source for both the backend and the frontend.</td></tr>
+  <tr><td><code>backend/common/src/main/resources/foehn-valleys.geojson</code></td><td>Symlink to the file above, for the backend classpath.</td></tr>
+  <tr><td><code>backend/common/.../FoehnValleys.scala</code></td><td>Loading, densification, pressure difference, grid-point index, per-valley scores, JSON.</td></tr>
+  <tr><td><code>backend/common/.../Forecast.scala</code></td><td>The <code>valleyFoehn</code> field.</td></tr>
+  <tr><td><code>backend/common/.../LocationForecasts.scala</code></td><td>The <code>fv</code> block of the location JSON.</td></tr>
+  <tr><td><code>backend/common/.../out/Raster.scala</code></td><td><code>wrfRasters</code>, including <code>foehn-valley-similarity</code>.</td></tr>
+  <tr><td><code>backend/wrf/.../DataPipeline.scala</code></td><td>Calls <code>diagnose</code> and writes <code>foehn-valleys.json</code>.</td></tr>
+  <tr><td><code>backend/common/src/test/.../FoehnValleysTestSuite.scala</code></td><td>Tests (section 10).</td></tr>
+  <tr><td><code>frontend/src/layers/FoehnValleys.tsx</code></td><td>Layer definition: legend, popup, help.</td></tr>
+  <tr><td><code>frontend/src/data/FoehnValleys.ts</code></td><td>Type, fetching and per-hour scores of <code>foehn-valleys.json</code>.</td></tr>
+  <tr><td><code>frontend/src/data/LocationForecasts.ts</code></td><td>Parsing of <code>fv</code> into <code>valleyFoehn</code>.</td></tr>
+  <tr><td><code>frontend/src/data/ForecastMetadata.ts</code></td><td><code>urlOfFoehnValleys</code>.</td></tr>
+  <tr><td><code>frontend/src/map/Map.ts</code>, <code>foehnValleyStyle.ts</code></td><td>Line layer, <code>setFoehnValleyScores</code>, line style.</td></tr>
+  <tr><td><code>frontend/src/App.tsx</code></td><td>Fetches the scores and updates the lines when the hour changes.</td></tr>
+  <tr><td><code>frontend/src/LayersSelector.tsx</code>, <code>layers/Layers.tsx</code></td><td>Menu button (WRF only) and layer registry.</td></tr>
+  <tr><td><code>frontend/messages/en.json</code></td><td>Texts of the layer, popup and help.</td></tr>
+</table></div>
+</main>
+
+<footer>
+  SoaringMeteo — documentation of the branch <code>foehn-valley-index</code>.
+</footer>
+<script>
+(() => {
+  const ramp = (a, b, v) => Math.max(0, Math.min(1, (v - a) / (b - a)));
+  const fns = {
+    speed: x => ramp(2, 6, x),
+    direction: x => 1 - ramp(30, 60, x),
+    gate: x => ramp(2, 6, x)
+  };
+  const L = 42, R = 14, T = 14, B = 40, W = 320, H = 210, iw = W - L - R, ih = H - T - B;
+  document.querySelectorAll('figure.curve').forEach(fig => {
+    const svg = fig.querySelector('svg');
+    const fn = fns[fig.dataset.fn];
+    const x0 = +fig.dataset.x0, x1 = +fig.dataset.x1, unit = fig.dataset.unit;
+    const hover = svg.querySelector('.hover'), guide = svg.querySelector('.guide'), dot = svg.querySelector('.dot');
+    const readout = fig.querySelector('.readout');
+    const hit = svg.querySelector('.hit');
+    const show = clientX => {
+      const box = svg.getBoundingClientRect();
+      const px = (clientX - box.left) / box.width * W;
+      const x = x0 + Math.max(0, Math.min(1, (px - L) / iw)) * (x1 - x0);
+      const y = fn(x);
+      const sx = L + (x - x0) / (x1 - x0) * iw, sy = T + (1 - y) * ih;
+      guide.setAttribute('x1', sx); guide.setAttribute('x2', sx);
+      dot.setAttribute('cx', sx); dot.setAttribute('cy', sy);
+      hover.setAttribute('visibility', 'visible');
+      readout.textContent = `${x.toFixed(1)}${unit} → ${y.toFixed(2)}`;
+    };
+    const hide = () => { hover.setAttribute('visibility', 'hidden'); readout.textContent = ''; };
+    hit.addEventListener('pointermove', e => show(e.clientX));
+    hit.addEventListener('pointerdown', e => show(e.clientX));
+    hit.addEventListener('pointerleave', hide);
+  });
+})();
+</script>
+</body>
+</html>

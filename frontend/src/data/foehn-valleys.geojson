@@ -1,0 +1,2891 @@
+{
+ "type": "FeatureCollection",
+ "name": "swiss_foehn_flow_lines_topo",
+ "description": "Foehn flow lines digitised from a schematic map image (south foehn = red arrows, north foehn = blue arrows; lines run from tail to arrow tip). Georeferenced by matching the map's rivers, lakes and national border to swisstopo swissTLMRegio 2026 (2nd-order polynomial, residual ~400 m = 1 map pixel), then each line snapped to the valley floors / saddles of the Copernicus GLO-30 DEM within 2.5 km of its drawn position, centred on flat valley floors and lakes. 'from_near'/'to_near' are the nearest towns, for orientation only. Afterwards some lines were edited by hand in QGIS (2026-11-20).",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N00",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 16.4,
+    "from_near": "Scuol (12.2 km)",
+    "to_near": "Müstair (5.4 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      10.26862,
+      46.69266
+     ],
+     [
+      10.29666,
+      46.66231
+     ],
+     [
+      10.32476,
+      46.63914
+     ],
+     [
+      10.35932,
+      46.6173
+     ],
+     [
+      10.41523,
+      46.58765
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N01",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 19.8,
+    "from_near": "St. Moritz (10.9 km)",
+    "to_near": "Poschiavo (1.6 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.97773,
+      46.47361
+     ],
+     [
+      9.99797,
+      46.43558
+     ],
+     [
+      10.04019,
+      46.37096
+     ],
+     [
+      10.07327,
+      46.30851
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N02",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 11.1,
+    "from_near": "St. Moritz (1.1 km)",
+    "to_near": "St. Moritz (11.8 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.82515,
+      46.49942
+     ],
+     [
+      9.80409,
+      46.47425
+     ],
+     [
+      9.78443,
+      46.45666
+     ],
+     [
+      9.76129,
+      46.44196
+     ],
+     [
+      9.72889,
+      46.4267
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N03",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 28.4,
+    "from_near": "Vicosoprano (2.7 km)",
+    "to_near": "Vicosoprano (23.6 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.5951,
+      46.36768
+     ],
+     [
+      9.46413,
+      46.31637
+     ],
+     [
+      9.43752,
+      46.30193
+     ],
+     [
+      9.4202,
+      46.28728
+     ],
+     [
+      9.41145,
+      46.27245
+     ],
+     [
+      9.40994,
+      46.25617
+     ],
+     [
+      9.41321,
+      46.2425
+     ],
+     [
+      9.42668,
+      46.20683
+     ],
+     [
+      9.43227,
+      46.18169
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N04",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 16.3,
+    "from_near": "Mesocco (12.8 km)",
+    "to_near": "Mesocco (13.9 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.35294,
+      46.46786
+     ],
+     [
+      9.35217,
+      46.42291
+     ],
+     [
+      9.35545,
+      46.39519
+     ],
+     [
+      9.36515,
+      46.36395
+     ],
+     [
+      9.38359,
+      46.32382
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N05",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 19.4,
+    "from_near": "Mesocco (3.8 km)",
+    "to_near": "Roveredo (3.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.22518,
+      46.42406
+     ],
+     [
+      9.22531,
+      46.38634
+     ],
+     [
+      9.21743,
+      46.35464
+     ],
+     [
+      9.20182,
+      46.32283
+     ],
+     [
+      9.16133,
+      46.25724
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N06",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 15.7,
+    "from_near": "Mesocco (11.1 km)",
+    "to_near": "Roveredo (8.6 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.1201,
+      46.45536
+     ],
+     [
+      9.13486,
+      46.42283
+     ],
+     [
+      9.13904,
+      46.39698
+     ],
+     [
+      9.13575,
+      46.37454
+     ],
+     [
+      9.11843,
+      46.31727
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N07",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 61.2,
+    "from_near": "Biasca (4.5 km)",
+    "to_near": "Lugano (14.5 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.94467,
+      46.39664
+     ],
+     [
+      8.96095,
+      46.36401
+     ],
+     [
+      8.98695,
+      46.30279
+     ],
+     [
+      9.01514,
+      46.24938
+     ],
+     [
+      9.02158,
+      46.2263
+     ],
+     [
+      9.02014,
+      46.21204
+     ],
+     [
+      9.01375,
+      46.19727
+     ],
+     [
+      8.94797,
+      46.11081
+     ],
+     [
+      8.93733,
+      46.0912
+     ],
+     [
+      8.93255,
+      46.0732
+     ],
+     [
+      8.93413,
+      46.04832
+     ],
+     [
+      8.95669,
+      45.98324
+     ],
+     [
+      8.97853,
+      45.87119
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N08",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 21.4,
+    "from_near": "Olivone (4.8 km)",
+    "to_near": "Biasca (2.2 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.96062,
+      46.57097
+     ],
+     [
+      8.97157,
+      46.52621
+     ],
+     [
+      8.97615,
+      46.48895
+     ],
+     [
+      8.97598,
+      46.44252
+     ],
+     [
+      8.9715,
+      46.37963
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N09",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 7.1,
+    "from_near": "Olivone (6.9 km)",
+    "to_near": "Olivone (3.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.85434,
+      46.54805
+     ],
+     [
+      8.92293,
+      46.50489
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N10",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 30.7,
+    "from_near": "Airolo (1.1 km)",
+    "to_near": "Biasca (5.0 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.6064,
+      46.53962
+     ],
+     [
+      8.65724,
+      46.53386
+     ],
+     [
+      8.69556,
+      46.52648
+     ],
+     [
+      8.73039,
+      46.51585
+     ],
+     [
+      8.76184,
+      46.50169
+     ],
+     [
+      8.78685,
+      46.48649
+     ],
+     [
+      8.81151,
+      46.46771
+     ],
+     [
+      8.87712,
+      46.40572
+     ],
+     [
+      8.9097,
+      46.37775
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N11",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 15.0,
+    "from_near": "Faido (13.3 km)",
+    "to_near": "Locarno (7.2 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.77995,
+      46.36137
+     ],
+     [
+      8.79251,
+      46.33393
+     ],
+     [
+      8.80952,
+      46.27875
+     ],
+     [
+      8.82925,
+      46.23122
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N12",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 32.7,
+    "from_near": "Airolo (6.6 km)",
+    "to_near": "Locarno (6.4 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.63753,
+      46.47362
+     ],
+     [
+      8.64862,
+      46.42527
+     ],
+     [
+      8.65046,
+      46.39683
+     ],
+     [
+      8.64508,
+      46.37543
+     ],
+     [
+      8.62413,
+      46.33605
+     ],
+     [
+      8.62249,
+      46.3254
+     ],
+     [
+      8.62455,
+      46.31546
+     ],
+     [
+      8.63055,
+      46.30538
+     ],
+     [
+      8.64083,
+      46.29481
+     ],
+     [
+      8.69801,
+      46.25082
+     ],
+     [
+      8.74193,
+      46.21201
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N13",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 35.1,
+    "from_near": "Bellinzona (2.3 km)",
+    "to_near": "Locarno (21.5 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.9931,
+      46.1805
+     ],
+     [
+      8.84691,
+      46.15949
+     ],
+     [
+      8.81046,
+      46.1491
+     ],
+     [
+      8.77773,
+      46.13413
+     ],
+     [
+      8.75208,
+      46.11706
+     ],
+     [
+      8.73282,
+      46.09823
+     ],
+     [
+      8.72117,
+      46.08079
+     ],
+     [
+      8.6972,
+      46.03304
+     ],
+     [
+      8.6854,
+      46.0176
+     ],
+     [
+      8.66779,
+      45.99917
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N14",
+    "foehn": "north",
+    "style": "dotted",
+    "length_km": 12.3,
+    "from_near": "Cevio (12.6 km)",
+    "to_near": "Cevio (11.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.47434,
+      46.24717
+     ],
+     [
+      8.55853,
+      46.23526
+     ],
+     [
+      8.62941,
+      46.22225
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N15",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 10.5,
+    "from_near": "Airolo (11.6 km)",
+    "to_near": "Cevio (4.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.53011,
+      46.44142
+     ],
+     [
+      8.53957,
+      46.41361
+     ],
+     [
+      8.54915,
+      46.39361
+     ],
+     [
+      8.56147,
+      46.37553
+     ],
+     [
+      8.58033,
+      46.35411
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N16",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 44.8,
+    "from_near": "Cevio (16.7 km)",
+    "to_near": "Gondo (28.9 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.3928,
+      46.36664
+     ],
+     [
+      8.38664,
+      46.34194
+     ],
+     [
+      8.37921,
+      46.32232
+     ],
+     [
+      8.34389,
+      46.25936
+     ],
+     [
+      8.33135,
+      46.23075
+     ],
+     [
+      8.2945,
+      46.09709
+     ],
+     [
+      8.29081,
+      46.07727
+     ],
+     [
+      8.29327,
+      46.05683
+     ],
+     [
+      8.30465,
+      46.038
+     ],
+     [
+      8.32713,
+      46.01713
+     ],
+     [
+      8.3643,
+      45.99083
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "N17",
+    "foehn": "north",
+    "style": "solid",
+    "length_km": 12.9,
+    "from_near": "Gondo (3.1 km)",
+    "to_near": "Gondo (10.0 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.12071,
+      46.22467
+     ],
+     [
+      8.16243,
+      46.20863
+     ],
+     [
+      8.19242,
+      46.19458
+     ],
+     [
+      8.22018,
+      46.17821
+     ],
+     [
+      8.25317,
+      46.15497
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S18",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 10.8,
+    "from_near": "Scuol (14.0 km)",
+    "to_near": "Klosters (17.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      10.12469,
+      46.83655
+     ],
+     [
+      10.08656,
+      46.92969
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S19",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 7.8,
+    "from_near": "Klosters (5.6 km)",
+    "to_near": "Klosters (13.2 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.93375,
+      46.90478
+     ],
+     [
+      9.97682,
+      46.96863
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S20",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 21.2,
+    "from_near": "Tiefencastel (13.0 km)",
+    "to_near": "Klosters (2.7 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.74101,
+      46.69689
+     ],
+     [
+      9.79568,
+      46.73505
+     ],
+     [
+      9.82956,
+      46.76372
+     ],
+     [
+      9.86081,
+      46.79774
+     ],
+     [
+      9.90107,
+      46.85059
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S21",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 8.5,
+    "from_near": "Landquart (19.1 km)",
+    "to_near": "Vaduz (21.6 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.77493,
+      47.05765
+     ],
+     [
+      9.80159,
+      47.13221
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S22",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 9.4,
+    "from_near": "St. Moritz (13.1 km)",
+    "to_near": "Tiefencastel (12.2 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.8395,
+      46.61746
+     ],
+     [
+      9.73906,
+      46.66633
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S23",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 10.5,
+    "from_near": "Vaduz (12.0 km)",
+    "to_near": "Vaduz (13.2 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.64037,
+      47.07125
+     ],
+     [
+      9.65799,
+      47.11016
+     ],
+     [
+      9.68952,
+      47.15967
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S24",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 14.2,
+    "from_near": "Altstätten (5.4 km)",
+    "to_near": "Altstätten (13.5 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.61195,
+      47.35676
+     ],
+     [
+      9.63091,
+      47.3883
+     ],
+     [
+      9.64206,
+      47.41636
+     ],
+     [
+      9.64764,
+      47.44546
+     ],
+     [
+      9.6482,
+      47.48069
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S25",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 42.9,
+    "from_near": "Klosters (17.4 km)",
+    "to_near": "Vaduz (11.9 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      10.03609,
+      46.98441
+     ],
+     [
+      9.95991,
+      47.04992
+     ],
+     [
+      9.88808,
+      47.09451
+     ],
+     [
+      9.832,
+      47.13745
+     ],
+     [
+      9.80364,
+      47.15579
+     ],
+     [
+      9.77823,
+      47.16874
+     ],
+     [
+      9.74837,
+      47.18093
+     ],
+     [
+      9.65956,
+      47.21211
+     ],
+     [
+      9.60869,
+      47.22815
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S26",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 28.4,
+    "from_near": "Vaduz (5.6 km)",
+    "to_near": "Altstätten (6.2 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.50235,
+      47.09109
+     ],
+     [
+      9.49585,
+      47.13042
+     ],
+     [
+      9.49358,
+      47.1604
+     ],
+     [
+      9.49505,
+      47.18706
+     ],
+     [
+      9.5004,
+      47.20908
+     ],
+     [
+      9.50711,
+      47.22359
+     ],
+     [
+      9.51683,
+      47.23791
+     ],
+     [
+      9.56844,
+      47.29548
+     ],
+     [
+      9.58972,
+      47.33108
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S27",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 34.8,
+    "from_near": "St. Moritz (16.0 km)",
+    "to_near": "Chur (4.0 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.63171,
+      46.51089
+     ],
+     [
+      9.62254,
+      46.54136
+     ],
+     [
+      9.58947,
+      46.60087
+     ],
+     [
+      9.56182,
+      46.66395
+     ],
+     [
+      9.55224,
+      46.69938
+     ],
+     [
+      9.54696,
+      46.73817
+     ],
+     [
+      9.53803,
+      46.81482
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S28",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 27.4,
+    "from_near": "Chur (10.5 km)",
+    "to_near": "Bad Ragaz (1.4 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.40762,
+      46.80797
+     ],
+     [
+      9.43567,
+      46.82679
+     ],
+     [
+      9.48483,
+      46.85133
+     ],
+     [
+      9.50474,
+      46.86341
+     ],
+     [
+      9.52405,
+      46.88042
+     ],
+     [
+      9.53736,
+      46.89982
+     ],
+     [
+      9.54527,
+      46.92661
+     ],
+     [
+      9.54323,
+      46.95475
+     ],
+     [
+      9.53201,
+      46.98107
+     ],
+     [
+      9.50915,
+      47.01133
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S29",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 9.3,
+    "from_near": "Altstätten (2.4 km)",
+    "to_near": "Altstätten (8.6 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.52751,
+      47.36462
+     ],
+     [
+      9.50925,
+      47.40543
+     ],
+     [
+      9.48887,
+      47.44449
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S30",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 16.5,
+    "from_near": "Vicosoprano (10.1 km)",
+    "to_near": "Tiefencastel (15.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.5173,
+      46.40693
+     ],
+     [
+      9.49756,
+      46.44343
+     ],
+     [
+      9.48664,
+      46.46816
+     ],
+     [
+      9.46346,
+      46.55008
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S31",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 20.3,
+    "from_near": "Chur (10.0 km)",
+    "to_near": "Bad Ragaz (4.2 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.41169,
+      46.8115
+     ],
+     [
+      9.42213,
+      46.84702
+     ],
+     [
+      9.4301,
+      46.88391
+     ],
+     [
+      9.44596,
+      46.99266
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S32",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 26.9,
+    "from_near": "Mesocco (18.3 km)",
+    "to_near": "Thusis (5.7 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.38589,
+      46.51499
+     ],
+     [
+      9.40567,
+      46.54706
+     ],
+     [
+      9.41837,
+      46.57364
+     ],
+     [
+      9.43269,
+      46.61625
+     ],
+     [
+      9.44003,
+      46.64885
+     ],
+     [
+      9.44128,
+      46.67509
+     ],
+     [
+      9.43792,
+      46.70154
+     ],
+     [
+      9.43084,
+      46.72378
+     ],
+     [
+      9.4179,
+      46.74885
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S33",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 8.2,
+    "from_near": "Appenzell (5.3 km)",
+    "to_near": "Appenzell (2.9 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.42917,
+      47.28448
+     ],
+     [
+      9.41702,
+      47.31831
+     ],
+     [
+      9.39269,
+      47.35348
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S34",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 15.4,
+    "from_near": "Mesocco (15.4 km)",
+    "to_near": "Thusis (15.4 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.17762,
+      46.52332
+     ],
+     [
+      9.29812,
+      46.54847
+     ],
+     [
+      9.32944,
+      46.55767
+     ],
+     [
+      9.36573,
+      46.57113
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S35",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 9.7,
+    "from_near": "Ilanz (0.8 km)",
+    "to_near": "Ilanz (10.5 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.20926,
+      46.77342
+     ],
+     [
+      9.32693,
+      46.80528
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S36",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 12.9,
+    "from_near": "Thusis (12.2 km)",
+    "to_near": "Ilanz (10.0 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.31627,
+      46.63089
+     ],
+     [
+      9.32313,
+      46.65662
+     ],
+     [
+      9.32657,
+      46.68053
+     ],
+     [
+      9.32818,
+      46.71426
+     ],
+     [
+      9.32685,
+      46.74679
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S37",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 13.5,
+    "from_near": "Buchs SG (3.5 km)",
+    "to_near": "Wildhaus (4.5 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.469,
+      47.20191
+     ],
+     [
+      9.4228,
+      47.20781
+     ],
+     [
+      9.38452,
+      47.21017
+     ],
+     [
+      9.34372,
+      47.20973
+     ],
+     [
+      9.29159,
+      47.20625
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S38",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 15.3,
+    "from_near": "Olivone (15.5 km)",
+    "to_near": "Ilanz (4.3 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.08943,
+      46.62361
+     ],
+     [
+      9.12635,
+      46.64881
+     ],
+     [
+      9.15347,
+      46.67083
+     ],
+     [
+      9.17828,
+      46.69541
+     ],
+     [
+      9.21053,
+      46.73246
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S39",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 7.0,
+    "from_near": "Olivone (12.9 km)",
+    "to_near": "Olivone (17.8 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.107,
+      46.54703
+     ],
+     [
+      9.12249,
+      46.57549
+     ],
+     [
+      9.14754,
+      46.60296
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S40",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 23.7,
+    "from_near": "Sargans (0.8 km)",
+    "to_near": "Glarus (11.6 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.42935,
+      47.05012
+     ],
+     [
+      9.38981,
+      47.07217
+     ],
+     [
+      9.36372,
+      47.0883
+     ],
+     [
+      9.34744,
+      47.09894
+     ],
+     [
+      9.31944,
+      47.11408
+     ],
+     [
+      9.28615,
+      47.12107
+     ],
+     [
+      9.15374,
+      47.12741
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S41",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 7.7,
+    "from_near": "Elm (1.5 km)",
+    "to_near": "Elm (7.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.18965,
+      46.91855
+     ],
+     [
+      9.18509,
+      46.92596
+     ],
+     [
+      9.17123,
+      46.95438
+     ],
+     [
+      9.15089,
+      46.98251
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S42",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 13.8,
+    "from_near": "Glarus (5.8 km)",
+    "to_near": "Glarus (8.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.10277,
+      46.99321
+     ],
+     [
+      9.08059,
+      47.02727
+     ],
+     [
+      9.0695,
+      47.05397
+     ],
+     [
+      9.06649,
+      47.07975
+     ],
+     [
+      9.07089,
+      47.11243
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S43",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 11.3,
+    "from_near": "Linthal (4.2 km)",
+    "to_near": "Linthal (7.4 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.98388,
+      46.88286
+     ],
+     [
+      9.01051,
+      46.92769
+     ],
+     [
+      9.04697,
+      46.97421
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S44",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 6.1,
+    "from_near": "Linthal (13.1 km)",
+    "to_near": "Linthal (7.0 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.94826,
+      46.80596
+     ],
+     [
+      8.97332,
+      46.85781
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S45",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 9.9,
+    "from_near": "Glarus (13.9 km)",
+    "to_near": "Rapperswil (8.5 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.03615,
+      47.16285
+     ],
+     [
+      8.98366,
+      47.18311
+     ],
+     [
+      8.92871,
+      47.21242
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S46",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 9.5,
+    "from_near": "Faido (10.1 km)",
+    "to_near": "Disentis (5.4 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.81514,
+      46.57058
+     ],
+     [
+      8.82124,
+      46.65597
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S47",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 8.1,
+    "from_near": "Linthal (12.3 km)",
+    "to_near": "Muotathal (5.4 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.83949,
+      46.88223
+     ],
+     [
+      8.76144,
+      46.93165
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S48",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 19.5,
+    "from_near": "Muotathal (8.1 km)",
+    "to_near": "Einsiedeln (3.4 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.86293,
+      46.99824
+     ],
+     [
+      8.85377,
+      47.03412
+     ],
+     [
+      8.84237,
+      47.0586
+     ],
+     [
+      8.8297,
+      47.07606
+     ],
+     [
+      8.79051,
+      47.12138
+     ],
+     [
+      8.76433,
+      47.15865
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S49",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 6.3,
+    "from_near": "Disentis (8.9 km)",
+    "to_near": "Altdorf (12.5 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.79272,
+      46.76923
+     ],
+     [
+      8.71112,
+      46.77916
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S50",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 6.1,
+    "from_near": "Andermatt (10.3 km)",
+    "to_near": "Andermatt (14.7 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.6856,
+      46.69487
+     ],
+     [
+      8.67245,
+      46.749
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S51",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 12.3,
+    "from_near": "Schwyz (4.4 km)",
+    "to_near": "Schwyz (7.7 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.65476,
+      46.98039
+     ],
+     [
+      8.66271,
+      47.00828
+     ],
+     [
+      8.66407,
+      47.0312
+     ],
+     [
+      8.65952,
+      47.05571
+     ],
+     [
+      8.64736,
+      47.08932
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S52",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 45.7,
+    "from_near": "Andermatt (1.5 km)",
+    "to_near": "Schwyz (4.4 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.57873,
+      46.61862
+     ],
+     [
+      8.60438,
+      46.66984
+     ],
+     [
+      8.62739,
+      46.73043
+     ],
+     [
+      8.638,
+      46.76751
+     ],
+     [
+      8.64228,
+      46.80232
+     ],
+     [
+      8.64141,
+      46.82808
+     ],
+     [
+      8.63684,
+      46.85516
+     ],
+     [
+      8.61412,
+      46.93516
+     ],
+     [
+      8.59254,
+      47.02107
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S53",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 14.2,
+    "from_near": "Rapperswil (20.3 km)",
+    "to_near": "Rapperswil (32.9 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.57749,
+      47.30369
+     ],
+     [
+      8.54894,
+      47.34179
+     ],
+     [
+      8.50593,
+      47.38937
+     ],
+     [
+      8.48513,
+      47.4152
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S54",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 13.5,
+    "from_near": "Engelberg (5.8 km)",
+    "to_near": "Stans (5.8 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.37284,
+      46.86879
+     ],
+     [
+      8.40516,
+      46.93263
+     ],
+     [
+      8.43985,
+      46.98067
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S55",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 6.0,
+    "from_near": "Engelberg (9.5 km)",
+    "to_near": "Engelberg (3.5 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.51349,
+      46.78479
+     ],
+     [
+      8.44119,
+      46.80569
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S56",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 19.2,
+    "from_near": "Sarnen (4.3 km)",
+    "to_near": "Lucerne (5.3 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.20635,
+      46.87498
+     ],
+     [
+      8.23383,
+      46.89462
+     ],
+     [
+      8.25678,
+      46.91447
+     ],
+     [
+      8.32418,
+      46.97879
+     ],
+     [
+      8.35432,
+      47.01377
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S57",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 26.8,
+    "from_near": "Schwyz (14.7 km)",
+    "to_near": "Lucerne (30.3 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.5001,
+      47.10247
+     ],
+     [
+      8.48363,
+      47.14004
+     ],
+     [
+      8.47077,
+      47.16271
+     ],
+     [
+      8.41294,
+      47.23309
+     ],
+     [
+      8.37395,
+      47.29405
+     ],
+     [
+      8.3543,
+      47.32096
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S58",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 8.7,
+    "from_near": "Innertkirchen (13.9 km)",
+    "to_near": "Innertkirchen (8.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.37468,
+      46.63488
+     ],
+     [
+      8.33605,
+      46.70812
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S59",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 7.3,
+    "from_near": "Airolo (18.5 km)",
+    "to_near": "Fiesch (18.8 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.3937,
+      46.45479
+     ],
+     [
+      8.3327,
+      46.50522
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S60",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 9.0,
+    "from_near": "Fiesch (11.9 km)",
+    "to_near": "Fiesch (3.0 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.24986,
+      46.32367
+     ],
+     [
+      8.16884,
+      46.38225
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S61",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 6.0,
+    "from_near": "Grindelwald (13.4 km)",
+    "to_near": "Grindelwald (8.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.14074,
+      46.52186
+     ],
+     [
+      8.12251,
+      46.5746
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S62",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 30.6,
+    "from_near": "Innertkirchen (13.7 km)",
+    "to_near": "Brienz (2.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.32259,
+      46.60426
+     ],
+     [
+      8.29837,
+      46.6444
+     ],
+     [
+      8.2759,
+      46.67003
+     ],
+     [
+      8.24314,
+      46.69428
+     ],
+     [
+      8.20112,
+      46.71589
+     ],
+     [
+      8.16017,
+      46.72972
+     ],
+     [
+      8.11668,
+      46.73729
+     ],
+     [
+      8.06937,
+      46.73904
+     ],
+     [
+      8.01464,
+      46.73487
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S63",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 9.5,
+    "from_near": "Lauterbrunnen (12.2 km)",
+    "to_near": "Lauterbrunnen (2.7 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.89474,
+      46.48038
+     ],
+     [
+      7.90641,
+      46.56588
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S64",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 7.5,
+    "from_near": "Lauterbrunnen (1.2 km)",
+    "to_near": "Interlaken (5.6 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.91188,
+      46.57927
+     ],
+     [
+      7.89286,
+      46.64501
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S65",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 15.0,
+    "from_near": "Saas-Fee (6.6 km)",
+    "to_near": "Saas-Fee (8.5 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.97586,
+      46.05947
+     ],
+     [
+      7.95337,
+      46.10397
+     ],
+     [
+      7.92283,
+      46.15206
+     ],
+     [
+      7.90003,
+      46.18395
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S66",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 16.2,
+    "from_near": "Zermatt (6.1 km)",
+    "to_near": "Zermatt (10.1 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.72456,
+      45.96779
+     ],
+     [
+      7.76795,
+      46.06092
+     ],
+     [
+      7.78041,
+      46.10836
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S67",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 14.1,
+    "from_near": "Interlaken (2.4 km)",
+    "to_near": "Thun (9.9 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.89058,
+      46.6846
+     ],
+     [
+      7.82344,
+      46.67844
+     ],
+     [
+      7.78581,
+      46.67747
+     ],
+     [
+      7.75025,
+      46.68078
+     ],
+     [
+      7.70891,
+      46.68967
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S68",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 9.4,
+    "from_near": "Kandersteg (2.5 km)",
+    "to_near": "Frutigen (3.5 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.66357,
+      46.47763
+     ],
+     [
+      7.67016,
+      46.56207
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S69",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 5.9,
+    "from_near": "Kandersteg (10.5 km)",
+    "to_near": "Kandersteg (5.3 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.75769,
+      46.42688
+     ],
+     [
+      7.69212,
+      46.45493
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S70",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 9.4,
+    "from_near": "Frutigen (2.5 km)",
+    "to_near": "Frutigen (8.9 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.68164,
+      46.58539
+     ],
+     [
+      7.67975,
+      46.63158
+     ],
+     [
+      7.67515,
+      46.64861
+     ],
+     [
+      7.66634,
+      46.66908
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S71",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 12.6,
+    "from_near": "Adelboden (8.7 km)",
+    "to_near": "Adelboden (4.3 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.54106,
+      46.41243
+     ],
+     [
+      7.56387,
+      46.46712
+     ],
+     [
+      7.59664,
+      46.51897
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S72",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 39.0,
+    "from_near": "Brig (8.6 km)",
+    "to_near": "Sierre (1.7 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.03674,
+      46.24943
+     ],
+     [
+      7.98177,
+      46.27674
+     ],
+     [
+      7.94271,
+      46.28776
+     ],
+     [
+      7.90122,
+      46.29427
+     ],
+     [
+      7.83038,
+      46.3049
+     ],
+     [
+      7.75649,
+      46.31155
+     ],
+     [
+      7.6456,
+      46.30578
+     ],
+     [
+      7.59893,
+      46.30405
+     ],
+     [
+      7.55187,
+      46.29413
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S73",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 22.3,
+    "from_near": "Thun (6.8 km)",
+    "to_near": "Bern (10.0 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.65732,
+      46.70193
+     ],
+     [
+      7.61019,
+      46.75824
+     ],
+     [
+      7.59516,
+      46.77893
+     ],
+     [
+      7.58307,
+      46.8009
+     ],
+     [
+      7.56044,
+      46.85198
+     ],
+     [
+      7.54064,
+      46.8847
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S74",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 13.2,
+    "from_near": "Evolène (17.0 km)",
+    "to_near": "Evolène (3.9 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.4983,
+      45.95729
+     ],
+     [
+      7.49018,
+      46.01427
+     ],
+     [
+      7.49098,
+      46.0426
+     ],
+     [
+      7.50032,
+      46.07523
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S75",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 12.8,
+    "from_near": "Sierre (11.2 km)",
+    "to_near": "Zweisimmen (8.8 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.43702,
+      46.3675
+     ],
+     [
+      7.44262,
+      46.40067
+     ],
+     [
+      7.4427,
+      46.42765
+     ],
+     [
+      7.43764,
+      46.4523
+     ],
+     [
+      7.42594,
+      46.48085
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S76",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 12.5,
+    "from_near": "Orsières (22.3 km)",
+    "to_near": "Orsières (14.4 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.37906,
+      45.90556
+     ],
+     [
+      7.35829,
+      45.96411
+     ],
+     [
+      7.33698,
+      46.01393
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S77",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 15.1,
+    "from_near": "Sion (12.6 km)",
+    "to_near": "Gstaad (0.8 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.29666,
+      46.33428
+     ],
+     [
+      7.2875,
+      46.38314
+     ],
+     [
+      7.28344,
+      46.41832
+     ],
+     [
+      7.2799,
+      46.46953
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S78",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 12.6,
+    "from_near": "Orsières (18.9 km)",
+    "to_near": "Orsières (7.5 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.18208,
+      45.86155
+     ],
+     [
+      7.19684,
+      45.91099
+     ],
+     [
+      7.20556,
+      45.9739
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S79",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 20.3,
+    "from_near": "Sion (5.6 km)",
+    "to_near": "Martigny (12.0 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.42341,
+      46.25505
+     ],
+     [
+      7.368,
+      46.23115
+     ],
+     [
+      7.26648,
+      46.19716
+     ],
+     [
+      7.23663,
+      46.18372
+     ],
+     [
+      7.19688,
+      46.16304
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S80",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 5.4,
+    "from_near": "Gstaad (9.8 km)",
+    "to_near": "Gstaad (14.3 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.16803,
+      46.49626
+     ],
+     [
+      7.10367,
+      46.4772
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S81",
+    "foehn": "south",
+    "style": "solid",
+    "length_km": 45.9,
+    "from_near": "Orsières (14.0 km)",
+    "to_near": "Monthey (4.7 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      7.13489,
+      45.90472
+     ],
+     [
+      7.14204,
+      45.93491
+     ],
+     [
+      7.1435,
+      45.95821
+     ],
+     [
+      7.13969,
+      45.98087
+     ],
+     [
+      7.13011,
+      46.00468
+     ],
+     [
+      7.00269,
+      46.2247
+     ],
+     [
+      6.98468,
+      46.25294
+     ],
+     [
+      6.95718,
+      46.29179
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "S82",
+    "foehn": "south",
+    "style": "dotted",
+    "length_km": 14.1,
+    "from_near": "Monthey (6.0 km)",
+    "to_near": "Montreux (3.8 km)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      6.94536,
+      46.30409
+     ],
+     [
+      6.91706,
+      46.3452
+     ],
+     [
+      6.89994,
+      46.3703
+     ],
+     [
+      6.88159,
+      46.39491
+     ],
+     [
+      6.86411,
+      46.41794
+     ]
+    ]
+   }
+  }
+ ]
+}
